@@ -13,6 +13,7 @@
   },
   "devDependencies": {
     "@jspsych/plugin-audio-keyboard-response": "^2.0.0",
+    "@jspsych/plugin-call-function": "^2.0.0",
     "@jspsych/plugin-fullscreen": "^2.0.0",
     "@jspsych/plugin-html-button-response": "^2.0.0",
     "@jspsych/plugin-html-keyboard-response": "^2.0.0",

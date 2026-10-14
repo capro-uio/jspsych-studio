@@ -1,4 +1,5 @@
 export { compileSpec } from "./compile.ts";
+export { DATAPIPE_URL } from "./data.ts";
 export type { CompileOptions } from "./compile.ts";
 export { formatSource } from "./format.ts";
 export { emitHtml } from "./targets/html.ts";

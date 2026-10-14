@@ -1,7 +1,8 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
+import { compileDataStep, compileParticipantProperties } from "./data.ts";
 import { literal } from "./emit.ts";
 import { isVariableReference } from "./variables.ts";
-import { validateSpec } from "./validate.ts";
+import { SpecError, validateSpec } from "./validate.ts";
 import type {
   BlockNode,
   CompileResult,
@@ -105,15 +106,23 @@ export function compileSpec(
 ): CompileResult {
   validateSpec(spec, bundle.plugins);
   const plugins = new Set<string>();
-  const timeline = spec.timeline.map((node) => compileNode(node, spec, plugins)).join(",\n");
+  const steps = spec.timeline.map((node) => compileNode(node, spec, plugins));
+  if (spec.data) {
+    const dataStep = compileDataStep(spec.data, spec.name);
+    plugins.add(dataStep.plugin);
+    steps.push(dataStep.source);
+  }
+  const timeline = steps.join(",\n");
   const packages = Object.fromEntries(
-    [...plugins].map((plugin) => [
-      plugin,
-      { name: bundle.plugins[plugin].package, version: bundle.plugins[plugin].version },
-    ]),
+    [...plugins].map((plugin) => {
+      const schema = bundle.plugins[plugin];
+      if (!schema) throw new SpecError(`the schema bundle has no entry for plugin "${plugin}"`);
+      return [plugin, { name: schema.package, version: schema.version }];
+    }),
   );
   const source =
     `const jsPsych = initJsPsych(${options.initOptions ?? ""});\n\n` +
+    (spec.data ? `${compileParticipantProperties()}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
   return { source, plugins: [...plugins], jspsych: bundle.jspsych, packages };
 }

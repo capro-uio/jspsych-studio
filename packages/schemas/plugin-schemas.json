@@ -72,6 +72,30 @@
         "stimulus"
       ]
     },
+    "call-function": {
+      "plugin": "call-function",
+      "package": "@jspsych/plugin-call-function",
+      "version": "2.1.0",
+      "properties": {
+        "func": {
+          "type": "string",
+          "format": "expression",
+          "title": "func",
+          "jspsychType": "FUNCTION",
+          "description": "The function to call."
+        },
+        "async": {
+          "type": "boolean",
+          "title": "async",
+          "jspsychType": "BOOL",
+          "description": "Set to true if `func` is an asynchoronous function. If this is true, then the first argument passed to `func` will be a callback that you should call when the async operation is complete. You can pass data to the callback. See example below.",
+          "default": false
+        }
+      },
+      "required": [
+        "func"
+      ]
+    },
     "fullscreen": {
       "plugin": "fullscreen",
       "package": "@jspsych/plugin-fullscreen",

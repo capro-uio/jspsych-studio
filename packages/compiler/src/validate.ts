@@ -121,6 +121,9 @@ function checkNodes(
 export function validateSpec(spec: Spec, schemas: PluginSchemas) {
   // jsPsych throws on an empty timeline, so an experiment with nothing in it is not runnable.
   const problems: string[] = spec.timeline.length === 0 ? ["the timeline has no steps"] : [];
+  if (spec.data?.save === "post" && !spec.data.experiment_id) {
+    problems.push("uploading data needs an experiment id from the service receiving it");
+  }
   checkNodes(spec.timeline, spec, schemas, new Set(), problems);
 
   if (problems.length > 0) {

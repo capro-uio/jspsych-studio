@@ -114,3 +114,34 @@ describe("authoring the flanker task through the UI", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("choosing where data goes", () => {
+  it("warns when nothing is saved, and records the upload settings once chosen", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response");
+    await setFixed(page, "stimulus", "<p>hello</p>");
+
+    await expect(page.getByTestId("data-warning")).toBeDefined();
+    expect(await page.getByTestId("data-warning").count()).toBe(1);
+
+    await page.getByTestId("data-mode").selectOption("post");
+    await expect
+      .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 5_000 })
+      .toContain("needs an experiment id");
+
+    await setText(page, "data-experiment-id", "abc123DEF456");
+    await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.data).toEqual({ save: "post", experiment_id: "abc123DEF456" });
+
+    await page.getByTestId("view-code").click();
+    await expect
+      .poll(() => page.getByTestId("generated-code").innerText(), { timeout: 5_000 })
+      .toContain("pipe.jspsych.org/api/data/");
+
+    await page.close();
+  }, 120_000);
+});

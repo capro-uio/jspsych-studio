@@ -1,5 +1,6 @@
 <script lang="ts">
   import ConditionsTable from "./lib/ConditionsTable.svelte";
+  import DataPanel from "./lib/DataPanel.svelte";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
@@ -87,6 +88,7 @@
     </div>
 
     <ConditionsTable />
+    <DataPanel />
   </aside>
 
   <section class="form"><NodeForm /></section>
