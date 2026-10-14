@@ -1,0 +1,92 @@
+<script lang="ts">
+  import type { ParameterSchema } from "@jspsych-studio/schemas";
+
+  interface Props {
+    parameter: ParameterSchema;
+    assets: string[];
+    value: unknown;
+    testId: string;
+    onchange: (value: unknown) => void;
+  }
+
+  const { parameter, assets, value, testId, onchange }: Props = $props();
+
+  const media = $derived(["IMAGE", "AUDIO", "VIDEO"].includes(parameter.jspsychType));
+  const numeric = $derived(parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT");
+
+  function parseKeys(raw: string) {
+    const trimmed = raw.trim();
+    if (trimmed === "ALL_KEYS" || trimmed === "NO_KEYS") return trimmed;
+    return trimmed
+      .split(",")
+      .map((key) => key.trim())
+      .filter(Boolean);
+  }
+</script>
+
+{#if parameter.jspsychType === "BOOL"}
+  <input
+    data-testid={testId}
+    type="checkbox"
+    checked={Boolean(value)}
+    onchange={(event) => onchange(event.currentTarget.checked)}
+  />
+{:else if numeric}
+  <input
+    data-testid={testId}
+    type="number"
+    value={value as number}
+    onchange={(event) =>
+      onchange(
+        Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
+      )}
+  />
+{:else if media && assets.length > 0}
+  <select
+    data-testid={testId}
+    value={value as string}
+    onchange={(event) => onchange(event.currentTarget.value)}
+  >
+    <option value="">choose a file</option>
+    {#each assets as file (file)}
+      <option value={file}>{file}</option>
+    {/each}
+  </select>
+{:else if parameter.enum}
+  <select
+    data-testid={testId}
+    value={value as string}
+    onchange={(event) => onchange(event.currentTarget.value)}
+  >
+    {#each parameter.enum as option (option)}
+      <option value={option as string}>{option as string}</option>
+    {/each}
+  </select>
+{:else if parameter.jspsychType === "KEYS"}
+  <input
+    data-testid={testId}
+    value={Array.isArray(value) ? value.join(",") : String(value ?? "")}
+    placeholder="f,j or ALL_KEYS"
+    onchange={(event) => onchange(parseKeys(event.currentTarget.value))}
+  />
+{:else if parameter.jspsychType === "HTML_STRING"}
+  <textarea
+    data-testid={testId}
+    rows="2"
+    value={value as string}
+    onchange={(event) => onchange(event.currentTarget.value)}></textarea>
+{:else}
+  <input
+    data-testid={testId}
+    value={value as string}
+    onchange={(event) => onchange(event.currentTarget.value)}
+  />
+{/if}
+
+<style>
+  input:not([type="checkbox"]),
+  select,
+  textarea {
+    width: 100%;
+  }
+</style>

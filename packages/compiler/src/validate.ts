@@ -74,6 +74,15 @@ function checkTrial(
             (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
         );
       }
+    } else if (parameter.items?.properties) {
+      const problem = literalTypeProblem(value, parameter);
+      if (problem) {
+        problems.push(
+          `${where}, parameter "${name}" ${problem} but the spec holds ${JSON.stringify(value)}`,
+        );
+      } else {
+        checkObjectEntries(value, parameter, `${where}, parameter "${name}"`, problems);
+      }
     } else {
       const problem = literalTypeProblem(value, parameter);
       if (problem) {
@@ -99,6 +108,32 @@ function checkTrial(
       checkColumn(value.var, columns, `${where}, recorded field "${field}"`, problems);
     }
   }
+}
+
+// Entries of a list of objects (a survey's questions, say) carry their own required fields, and a
+// misspelled key there would otherwise be handed to the plugin and ignored at run time.
+function checkObjectEntries(
+  value: ParameterValue,
+  parameter: ParameterSchema,
+  where: string,
+  problems: string[],
+) {
+  const item = parameter.items;
+  if (!item?.properties || !Array.isArray(value)) return;
+
+  value.forEach((entry, index) => {
+    const position = `${where}, entry ${index + 1}`;
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) {
+      problems.push(`${position} should be a set of fields`);
+      return;
+    }
+    for (const name of Object.keys(entry)) {
+      if (!(name in item.properties!)) problems.push(`${position} has no field "${name}"`);
+    }
+    for (const name of item.required ?? []) {
+      if (!(name in entry)) problems.push(`${position} is missing "${name}"`);
+    }
+  });
 }
 
 function checkColumn(column: string, columns: Set<string>, where: string, problems: string[]) {

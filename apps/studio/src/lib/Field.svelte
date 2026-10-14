@@ -2,6 +2,7 @@
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import { isVariableReference } from "@jspsych-studio/compiler";
   import ListField from "./ListField.svelte";
+  import ScalarInput from "./ScalarInput.svelte";
   import type { ParameterValue } from "@jspsych-studio/compiler";
 
   interface Props {
@@ -97,75 +98,19 @@
   {:else if mode === "fixed"}
     {#if list}
       <ListField
-        {name}
+        testId={`value-${name}`}
         {parameter}
         {assets}
         values={Array.isArray(value) ? value : []}
         onchange={(values) => onchange(values as ParameterValue)}
       />
-    {:else if parameter.jspsychType === "BOOL"}
-      <input
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        type="checkbox"
-        checked={Boolean(value)}
-        onchange={(event) => onchange(event.currentTarget.checked)}
-      />
-    {:else if parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT"}
-      <input
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        type="number"
-        value={value as number}
-        onchange={(event) =>
-          onchange(
-            Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
-          )}
-      />
-    {:else if media && assets.length > 0}
-      <select
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        value={value as string}
-        onchange={(event) => onchange(event.currentTarget.value)}
-      >
-        <option value="">choose a file</option>
-        {#each assets as file (file)}
-          <option value={file}>{file}</option>
-        {/each}
-      </select>
-    {:else if parameter.enum}
-      <select
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        value={value as string}
-        onchange={(event) => onchange(event.currentTarget.value)}
-      >
-        {#each parameter.enum as option (option)}
-          <option value={option as string}>{option as string}</option>
-        {/each}
-      </select>
-    {:else if parameter.jspsychType === "KEYS"}
-      <input
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        value={keysAsText}
-        placeholder="f,j or ALL_KEYS"
-        onchange={(event) => onchange(parseKeys(event.currentTarget.value))}
-      />
-    {:else if multiline}
-      <textarea
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        rows="2"
-        value={value as string}
-        onchange={(event) => onchange(event.currentTarget.value)}></textarea>
     {:else}
-      <input
-        id={`param-${name}`}
-        data-testid={`value-${name}`}
-        value={value as string}
-        onchange={(event) => onchange(event.currentTarget.value)}
+      <ScalarInput
+        {parameter}
+        {assets}
+        {value}
+        testId={`value-${name}`}
+        onchange={(next) => onchange(next as ParameterValue)}
       />
     {/if}
   {/if}
