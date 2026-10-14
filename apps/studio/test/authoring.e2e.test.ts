@@ -203,7 +203,7 @@ describe("a parameter that takes a list", () => {
 
     await page.getByTestId("mode-pages").selectOption("fixed");
     await setText(page, "value-pages-0", "<p>Welcome to the study.</p>");
-    await page.getByTestId("add-pages").click();
+    await page.getByTestId("add-value-pages").click();
     await setText(page, "value-pages-1", "<p>Press Enter to start.</p>");
 
     await showAllParameters(page);
@@ -228,6 +228,36 @@ describe("a parameter that takes a list", () => {
     await expect
       .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 10_000 })
       .toContain("Press Enter to start");
+
+    await page.close();
+  }, 180_000);
+});
+
+describe("a list whose entries are objects", () => {
+  it("builds a Likert question and renders its scale in the preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "survey-likert");
+
+    await page.getByTestId("mode-questions").selectOption("fixed");
+    await setText(page, "value-questions-0-prompt", "I enjoyed this task");
+    await page.getByTestId("add-value-questions-0-labels").click();
+    await setText(page, "value-questions-0-labels-0", "disagree");
+    await page.getByTestId("add-value-questions-0-labels").click();
+    await setText(page, "value-questions-0-labels-1", "agree");
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.timeline[0].params.questions).toEqual([
+      { prompt: "I enjoyed this task", labels: ["disagree", "agree"] },
+    ]);
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("I enjoyed this task");
+    expect(await preview.locator('input[type="radio"]').count()).toBe(2);
 
     await page.close();
   }, 180_000);

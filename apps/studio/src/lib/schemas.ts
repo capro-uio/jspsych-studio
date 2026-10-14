@@ -23,7 +23,10 @@ export function editableParameters(plugin: string) {
   const schema = schemas.plugins[plugin];
   if (!schema) return [];
   return Object.entries(schema.properties)
-    .filter(([, parameter]) => EDITABLE_TYPES.has(parameter.jspsychType))
+    .filter(
+      ([, parameter]) =>
+        EDITABLE_TYPES.has(parameter.jspsychType) || Boolean(parameter.items?.properties),
+    )
     .map(([name, parameter]) => ({
       name,
       parameter,
