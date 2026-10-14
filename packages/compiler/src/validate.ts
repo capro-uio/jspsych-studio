@@ -1,5 +1,6 @@
 import type { ParameterSchema, PluginSchemas } from "@jspsych-studio/schemas";
 import type { ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
+import { assetNames } from "./assets.ts";
 import { conditionColumns, isVariableReference } from "./variables.ts";
 
 export class SpecError extends Error {}
@@ -20,6 +21,12 @@ function literalTypeMatches(value: ParameterValue, parameter: ParameterSchema) {
   return true;
 }
 
+const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
+
+function looksLikePath(value: string) {
+  return value.includes("/") || value.includes(":");
+}
+
 function checkTrial(
   trial: TrialNode,
   spec: Spec,
@@ -27,6 +34,7 @@ function checkTrial(
   columns: Set<string>,
   problems: string[],
 ) {
+  const assets = assetNames(spec.assets);
   const schema = schemas[trial.plugin];
   if (!schema) {
     problems.push(`unknown plugin "${trial.plugin}"`);
@@ -45,6 +53,17 @@ function checkTrial(
     if (!parameter) continue;
     if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems);
+    } else if (
+      MEDIA_TYPES.has(parameter.jspsychType) &&
+      typeof value === "string" &&
+      value !== "" &&
+      !assets.has(value) &&
+      !looksLikePath(value)
+    ) {
+      problems.push(
+        `${where}, parameter "${name}" names "${value}", which is neither an added file nor a path` +
+          (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
+      );
     } else if (!literalTypeMatches(value, parameter)) {
       problems.push(
         `${where}, parameter "${name}" expects ${parameter.jspsychType.toLowerCase()} ` +

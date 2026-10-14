@@ -1,4 +1,5 @@
 <script lang="ts">
+  import AssetPanel from "./lib/AssetPanel.svelte";
   import ConditionsTable from "./lib/ConditionsTable.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
   import NodeForm from "./lib/NodeForm.svelte";
@@ -88,6 +89,7 @@
     </div>
 
     <ConditionsTable />
+    <AssetPanel />
     <DataPanel />
   </aside>
 

@@ -4,6 +4,7 @@
   import type { ParameterValue } from "@jspsych-studio/compiler";
 
   interface Props {
+    assets: string[];
     name: string;
     parameter: ParameterSchema;
     required: boolean;
@@ -12,7 +13,10 @@
     onchange: (value: ParameterValue | undefined) => void;
   }
 
-  const { name, parameter, required, columns, value, onchange }: Props = $props();
+  const { assets, name, parameter, required, columns, value, onchange }: Props = $props();
+
+  const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
+  const media = $derived(MEDIA_TYPES.has(parameter.jspsychType));
 
   const isBound = $derived(value !== undefined && isVariableReference(value));
   const boundValue = $derived(isBound ? (value as { var: string; wrap?: string }) : null);
@@ -106,6 +110,18 @@
             Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
           )}
       />
+    {:else if media && assets.length > 0}
+      <select
+        id={`param-${name}`}
+        data-testid={`value-${name}`}
+        value={value as string}
+        onchange={(event) => onchange(event.currentTarget.value)}
+      >
+        <option value="">choose a file</option>
+        {#each assets as file (file)}
+          <option value={file}>{file}</option>
+        {/each}
+      </select>
     {:else if parameter.enum}
       <select
         id={`param-${name}`}
