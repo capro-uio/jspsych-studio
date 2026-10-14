@@ -50,9 +50,17 @@ export interface DataSettings {
   filename_prefix?: string;
 }
 
+export interface Asset {
+  /** The name the spec refers to this file by, e.g. "face.png". */
+  name: string;
+  /** A data URL holding the file, so a project and its export stay self-contained. */
+  url: string;
+}
+
 export interface Spec {
   name: string;
   data?: DataSettings;
+  assets?: Asset[];
   conditions?: Record<string, Record<string, unknown>[]>;
   timeline: SpecNode[];
 }

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -144,4 +145,52 @@ describe("choosing where data goes", () => {
 
     await page.close();
   }, 120_000);
+});
+
+describe("using an image file", () => {
+  it("embeds an added file and shows it in the running preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await page
+      .getByTestId("add-assets")
+      .setInputFiles(fileURLToPath(new URL("./fixtures/square.png", import.meta.url)));
+    await expect
+      .poll(() => page.getByTestId("asset-message").innerText(), { timeout: 5_000 })
+      .toContain("square.png");
+
+    await addTrial(page, "image-keyboard-response");
+    await showAllParameters(page);
+    await page.getByTestId("mode-stimulus").selectOption("fixed");
+    await page.getByTestId("value-stimulus").selectOption("square.png");
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.assets).toHaveLength(1);
+    expect(spec.assets[0].name).toBe("square.png");
+    expect(spec.assets[0].url.startsWith("data:image/png;base64,")).toBe(true);
+    expect(spec.timeline[0].params.stimulus).toBe("square.png");
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    // The plugin draws onto a canvas by default rather than inserting an <img>, so the proof that
+    // the embedded file reached the participant is a canvas with the image's pixels on it.
+    await expect
+      .poll(() => preview.locator("#jspsych-content canvas").count(), { timeout: 20_000 })
+      .toBe(1);
+    await expect
+      .poll(
+        () =>
+          preview.locator("#jspsych-content canvas").evaluate((element) => {
+            const canvas = element as HTMLCanvasElement;
+            const context = canvas.getContext("2d")!;
+            const { data } = context.getImageData(0, 0, canvas.width, canvas.height);
+            return [data[0], data[1], data[2], data[3]].join(",");
+          }),
+        { timeout: 20_000 },
+      )
+      .toBe("220,50,47,255");
+
+    await page.close();
+  }, 180_000);
 });

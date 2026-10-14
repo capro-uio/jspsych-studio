@@ -3,6 +3,7 @@
   import Field from "./Field.svelte";
   import {
     allConditionColumns,
+    assetOptions,
     conditionTableNames,
     conditionColumns,
     project,
@@ -15,6 +16,7 @@
   const block = $derived(node?.kind === "block" ? (node as BlockNode) : null);
   const loop = $derived(node?.kind === "loop" ? (node as LoopNode) : null);
   const columns = $derived(allConditionColumns());
+  const assets = $derived(assetOptions());
 
   let showAllParameters = $state(false);
 
@@ -85,6 +87,7 @@
 
   {#each visibleParameters as { name, parameter, required } (name)}
     <Field
+      {assets}
       {name}
       {parameter}
       {required}

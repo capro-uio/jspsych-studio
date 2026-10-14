@@ -5,6 +5,7 @@ const report = await extractSchemas([
   "@jspsych/plugin-call-function",
   "@jspsych/plugin-html-keyboard-response",
   "@jspsych/plugin-image-keyboard-response",
+  "@jspsych/plugin-preload",
   "@jspsych/plugin-survey-likert",
 ]);
 

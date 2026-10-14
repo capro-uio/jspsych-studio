@@ -73,6 +73,10 @@ export function conditionColumns(table: string) {
   return columnsOfTable(project.spec, table);
 }
 
+export function assetOptions() {
+  return (project.spec.assets ?? []).map((asset) => asset.name);
+}
+
 export function allConditionColumns() {
   return [...new Set(conditionTableNames().flatMap(conditionColumns))];
 }
@@ -107,9 +111,10 @@ export function loadSpec(spec: Spec) {
 }
 
 export function exportedSpec(): Spec {
-  const { name, data, conditions, timeline } = project.spec;
+  const { name, data, assets, conditions, timeline } = project.spec;
   const spec: Spec = { name, timeline };
   if (data) spec.data = data;
+  if (assets?.length) spec.assets = assets;
   if (Object.keys(conditions ?? {}).length > 0) spec.conditions = conditions;
   return spec;
 }

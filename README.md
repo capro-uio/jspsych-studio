@@ -4,8 +4,8 @@ A no-code builder for [jsPsych](https://www.jspsych.org) experiments. Researcher
 in a UI; the tool compiles it to readable, correct jsPsych source they can host anywhere.
 
 **Status: early.** You can build a flanker task end to end in the browser — nested timeline,
-conditions table, generated parameter forms, live preview of the real experiment, a choice of where
-results go, and export to a self-contained HTML file. There is no hosting, survey editor, or
+conditions table, generated parameter forms, image and sound files, live preview of the real
+experiment, a choice of where results go, and export to a self-contained HTML file. There is no hosting, survey editor, or
 study-level flow yet.
 
 ## Why
@@ -52,6 +52,8 @@ while cumulative accuracy stays below 0.75.
 - **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
 - **No backend.** Static tool. Results go to DataPipe or any compatible service, and a failed
   upload falls back to a download so a participant's data is never lost silently.
+- **Self-contained exports.** Media is embedded in the project and in the exported file, so an
+  experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB each).
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a
   collaborator. The builder shows the generated code as you edit.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
