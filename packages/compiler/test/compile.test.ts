@@ -171,7 +171,7 @@ describe("validateSpec", () => {
         },
       ],
     } as Spec;
-    expect(() => compileSpec(spec, schemas)).toThrow(/expects int/);
+    expect(() => compileSpec(spec, schemas)).toThrow(/expects a number/);
   });
 
   it("rejects a block whose conditions table is undefined", () => {

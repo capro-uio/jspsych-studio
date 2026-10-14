@@ -1,5 +1,5 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
-import { compileAssetMap, compilePreloadStep } from "./assets.ts";
+import { compileAssetMap, compilePreloadStep, isMediaParameter } from "./assets.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
 import { literal } from "./emit.ts";
 import { isVariableReference } from "./variables.ts";
@@ -31,11 +31,13 @@ function variableInsideFunction(reference: VariableReference) {
 
 // Media parameters resolve through the asset map, so a spec can name a file rather than carry a
 // data URL in every parameter and every conditions cell.
-const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
-
 function parameterExpression(value: ParameterValue, media = false): string {
   if (!isVariableReference(value)) {
-    return media ? `asset(${literal(value)})` : literal(value);
+    if (!media) return literal(value);
+    if (Array.isArray(value)) {
+      return `[${value.map((entry) => `asset(${literal(entry)})`).join(", ")}]`;
+    }
+    return `asset(${literal(value)})`;
   }
   if (value.wrap) {
     return `() => ${literal(value.wrap)}.replace("{}", () => ${variableInsideFunction(value)})`;
@@ -67,7 +69,8 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
   const properties = context.bundle.plugins[trial.plugin]?.properties ?? {};
   const entries = [`type: ${pluginIdentifier(trial.plugin)}`];
   for (const [name, value] of Object.entries(trial.params ?? {})) {
-    const media = context.hasAssets && MEDIA_TYPES.has(properties[name]?.jspsychType);
+    const media =
+      context.hasAssets && isMediaParameter(trial.plugin, name, properties[name]?.jspsychType);
     entries.push(`${name}: ${parameterExpression(value, media)}`);
   }
   const data = dataExpression(trial);

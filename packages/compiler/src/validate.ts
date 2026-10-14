@@ -1,6 +1,6 @@
 import type { ParameterSchema, PluginSchemas } from "@jspsych-studio/schemas";
 import type { ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
-import { assetNames } from "./assets.ts";
+import { assetNames, isMediaParameter } from "./assets.ts";
 import { conditionColumns, isVariableReference } from "./variables.ts";
 
 export class SpecError extends Error {}
@@ -13,15 +13,24 @@ function collectTags(nodes: SpecNode[]): string[] {
   );
 }
 
-// Only the scalar types the extractor resolved unambiguously: a KEYS parameter, for instance, is
-// an array that legitimately also accepts the strings "ALL_KEYS" and "NO_KEYS".
-function literalTypeMatches(value: ParameterValue, parameter: ParameterSchema) {
-  if (parameter.type === "integer" || parameter.type === "number") return typeof value === "number";
-  if (parameter.type === "boolean") return typeof value === "boolean";
-  return true;
-}
+const KEY_LIST_KEYWORDS = new Set(["ALL_KEYS", "NO_KEYS"]);
 
-const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
+// Only the types the extractor resolved unambiguously. A KEYS parameter is a list that also
+// accepts the strings "ALL_KEYS" and "NO_KEYS", so it is checked on its own terms.
+function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
+  if (parameter.type === "array") {
+    if (Array.isArray(value)) return null;
+    if (parameter.jspsychType === "KEYS" && KEY_LIST_KEYWORDS.has(value as string)) return null;
+    return "expects a list of values";
+  }
+  if (parameter.type === "integer" || parameter.type === "number") {
+    return typeof value === "number" ? null : "expects a number";
+  }
+  if (parameter.type === "boolean") {
+    return typeof value === "boolean" ? null : "expects true or false";
+  }
+  return null;
+}
 
 function looksLikePath(value: string) {
   return value.includes("/") || value.includes(":");
@@ -53,22 +62,25 @@ function checkTrial(
     if (!parameter) continue;
     if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems);
-    } else if (
-      MEDIA_TYPES.has(parameter.jspsychType) &&
-      typeof value === "string" &&
-      value !== "" &&
-      !assets.has(value) &&
-      !looksLikePath(value)
-    ) {
-      problems.push(
-        `${where}, parameter "${name}" names "${value}", which is neither an added file nor a path` +
-          (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
+    } else if (isMediaParameter(trial.plugin, name, parameter.jspsychType)) {
+      const named = (Array.isArray(value) ? value : [value]).filter(
+        (entry): entry is string => typeof entry === "string" && entry !== "",
       );
-    } else if (!literalTypeMatches(value, parameter)) {
-      problems.push(
-        `${where}, parameter "${name}" expects ${parameter.jspsychType.toLowerCase()} ` +
-          `but the spec holds ${JSON.stringify(value)}`,
-      );
+      for (const entry of named) {
+        if (assets.has(entry) || looksLikePath(entry)) continue;
+        problems.push(
+          `${where}, parameter "${name}" names "${entry}", which is neither an added file nor a ` +
+            `path` +
+            (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
+        );
+      }
+    } else {
+      const problem = literalTypeProblem(value, parameter);
+      if (problem) {
+        problems.push(
+          `${where}, parameter "${name}" ${problem} but the spec holds ${JSON.stringify(value)}`,
+        );
+      }
     }
   }
 

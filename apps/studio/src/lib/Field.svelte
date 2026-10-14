@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import { isVariableReference } from "@jspsych-studio/compiler";
+  import ListField from "./ListField.svelte";
   import type { ParameterValue } from "@jspsych-studio/compiler";
 
   interface Props {
@@ -17,6 +18,8 @@
 
   const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
   const media = $derived(MEDIA_TYPES.has(parameter.jspsychType));
+  // KEYS keeps its comma-separated control: it accepts "ALL_KEYS" as well as a list.
+  const list = $derived(parameter.type === "array" && parameter.jspsychType !== "KEYS");
 
   const isBound = $derived(value !== undefined && isVariableReference(value));
   const boundValue = $derived(isBound ? (value as { var: string; wrap?: string }) : null);
@@ -25,6 +28,7 @@
   const numeric = $derived(parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT");
 
   function fixedSeed(): ParameterValue {
+    if (list) return Array.isArray(parameter.default) ? [...parameter.default] : [""];
     if (parameter.jspsychType === "BOOL") return Boolean(parameter.default);
     if (numeric) return typeof parameter.default === "number" ? parameter.default : 0;
     if (parameter.enum) return parameter.enum[0] as string;
@@ -91,7 +95,15 @@
       />
     {/if}
   {:else if mode === "fixed"}
-    {#if parameter.jspsychType === "BOOL"}
+    {#if list}
+      <ListField
+        {name}
+        {parameter}
+        {assets}
+        values={Array.isArray(value) ? value : []}
+        onchange={(values) => onchange(values as ParameterValue)}
+      />
+    {:else if parameter.jspsychType === "BOOL"}
       <input
         id={`param-${name}`}
         data-testid={`value-${name}`}

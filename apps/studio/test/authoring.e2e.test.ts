@@ -194,3 +194,41 @@ describe("using an image file", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("a parameter that takes a list", () => {
+  it("builds instruction pages and steps through them in the preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "instructions");
+
+    await page.getByTestId("mode-pages").selectOption("fixed");
+    await setText(page, "value-pages-0", "<p>Welcome to the study.</p>");
+    await page.getByTestId("add-pages").click();
+    await setText(page, "value-pages-1", "<p>Press Enter to start.</p>");
+
+    await showAllParameters(page);
+    await page.getByTestId("mode-show_clickable_nav").selectOption("fixed");
+    await page.getByTestId("value-show_clickable_nav").check();
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.timeline[0].params.pages).toEqual([
+      "<p>Welcome to the study.</p>",
+      "<p>Press Enter to start.</p>",
+    ]);
+    expect(spec.timeline[0].params.show_clickable_nav).toBe(true);
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("Welcome to the study");
+
+    await preview.locator("#jspsych-instructions-next").click();
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 10_000 })
+      .toContain("Press Enter to start");
+
+    await page.close();
+  }, 180_000);
+});
