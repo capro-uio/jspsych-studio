@@ -40,8 +40,19 @@ export interface LoopNode {
 
 export type SpecNode = TrialNode | BlockNode | LoopNode;
 
+export interface DataSettings {
+  /** `"download"` saves a CSV on the participant's machine, `"post"` uploads it. */
+  save: "download" | "post";
+  /** Upload target; defaults to DataPipe. */
+  endpoint?: string;
+  /** The experiment id the endpoint files the data under. */
+  experiment_id?: string;
+  filename_prefix?: string;
+}
+
 export interface Spec {
   name: string;
+  data?: DataSettings;
   conditions?: Record<string, Record<string, unknown>[]>;
   timeline: SpecNode[];
 }

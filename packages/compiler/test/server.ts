@@ -12,10 +12,31 @@ const CONTENT_TYPES: Record<string, string> = {
 export interface StaticServer {
   url: string;
   close: () => Promise<void>;
+  /** Bodies posted to /api/data/, so a test can see what an experiment uploaded. */
+  uploads: { experimentID: string; filename: string; data: string }[];
+  /** Set to make the upload route fail, exercising the fallback path. */
+  failUploads: boolean;
 }
 
 export async function serveDirectory(root: string): Promise<StaticServer> {
+  const uploads: StaticServer["uploads"] = [];
+  const state = { failUploads: false };
+
   const server: Server = createServer((request, response) => {
+    if (request.url?.startsWith("/api/data")) {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk: Buffer) => chunks.push(chunk));
+      request.on("end", () => {
+        response.setHeader("access-control-allow-origin", "*");
+        if (state.failUploads) {
+          response.writeHead(500).end("nope");
+          return;
+        }
+        uploads.push(JSON.parse(Buffer.concat(chunks).toString()));
+        response.writeHead(200, { "content-type": "application/json" }).end("{}");
+      });
+      return;
+    }
     const requestedPath = new URL(request.url ?? "/", "http://localhost").pathname;
     if (requestedPath === "/favicon.ico") {
       response.writeHead(204).end();
@@ -39,5 +60,12 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
   return {
     url: `http://127.0.0.1:${address.port}`,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    uploads,
+    get failUploads() {
+      return state.failUploads;
+    },
+    set failUploads(value: boolean) {
+      state.failUploads = value;
+    },
   };
 }

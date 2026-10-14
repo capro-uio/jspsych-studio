@@ -107,7 +107,9 @@ export function loadSpec(spec: Spec) {
 }
 
 export function exportedSpec(): Spec {
-  const { name, conditions, timeline } = project.spec;
-  const hasConditions = Object.keys(conditions ?? {}).length > 0;
-  return hasConditions ? { name, conditions, timeline } : { name, timeline };
+  const { name, data, conditions, timeline } = project.spec;
+  const spec: Spec = { name, timeline };
+  if (data) spec.data = data;
+  if (Object.keys(conditions ?? {}).length > 0) spec.conditions = conditions;
+  return spec;
 }
