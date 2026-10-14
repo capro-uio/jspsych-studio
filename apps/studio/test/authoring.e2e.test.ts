@@ -80,7 +80,7 @@ beforeAll(async () => {
   await build({ logLevel: "warn" });
   server = await preview({ preview: { port: 5181 }, logLevel: "warn" });
   appUrl = server.resolvedUrls?.local[0] ?? "http://localhost:5181/";
-  browser = await chromium.launch({ channel: "chrome" });
+  browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 180_000);
 
 afterAll(async () => {

@@ -69,7 +69,7 @@ beforeAll(async () => {
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
   server = await serveDirectory(workspaceRoot);
   serverUrl = server.url;
-  browser = await chromium.launch({ channel: "chrome" });
+  browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 120_000);
 
 afterAll(async () => {
