@@ -1,5 +1,5 @@
 import type { ParameterSchema, PluginSchemas } from "@jspsych-studio/schemas";
-import type { ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
+import type { AssignNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
 import { assetNames, isMediaParameter } from "./assets.ts";
 import { conditionColumns, isVariableReference } from "./variables.ts";
 
@@ -8,9 +8,12 @@ export class SpecError extends Error {}
 const RECIPE_SUPPLIED_PARAMETERS = new Set(["data", "on_finish"]);
 
 function collectTags(nodes: SpecNode[]): string[] {
-  return nodes.flatMap((node) =>
-    node.kind === "trial" ? (node.tag ? [node.tag] : []) : collectTags(node.children),
-  );
+  return nodes.flatMap((node) => {
+    if (node.kind === "trial") return node.tag ? [node.tag] : [];
+    if (node.kind === "checkpoint") return [];
+    if (node.kind === "assign") return node.groups.flatMap((group) => collectTags(group.children));
+    return collectTags(node.children);
+  });
 }
 
 const KEY_LIST_KEYWORDS = new Set(["ALL_KEYS", "NO_KEYS"]);
@@ -136,6 +139,23 @@ function checkObjectEntries(
   });
 }
 
+function checkAssign(node: AssignNode, spec: Spec, problems: string[]) {
+  if (node.groups.length < 2) {
+    problems.push("splitting participants needs at least two groups");
+  }
+  const names = node.groups.map((group) => group.name);
+  if (names.some((name) => !name)) problems.push("every group needs a name");
+  if (new Set(names).size !== names.length) problems.push("group names must be different");
+  for (const group of node.groups) {
+    if (group.children.length === 0) problems.push(`group "${group.name}" has no steps inside it`);
+  }
+  if (node.method === "balanced" && !(spec.data?.save === "post" && spec.data.experiment_id)) {
+    problems.push(
+      "balanced groups need data uploading to a service, which is what keeps the count",
+    );
+  }
+}
+
 function checkColumn(column: string, columns: Set<string>, where: string, problems: string[]) {
   if (columns.has(column)) return;
   const available = [...columns];
@@ -153,6 +173,17 @@ function checkNodes(
   problems: string[],
 ) {
   for (const node of nodes) {
+    if (node.kind === "checkpoint") {
+      if (!node.name) problems.push("a checkpoint needs a name");
+      continue;
+    }
+    if (node.kind === "assign") {
+      checkAssign(node, spec, problems);
+      for (const group of node.groups) {
+        checkNodes(group.children, spec, schemas, columns, problems);
+      }
+      continue;
+    }
     if (node.kind !== "trial" && node.children.length === 0) {
       problems.push(`${node.kind} has no steps inside it`);
     }

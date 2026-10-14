@@ -13,13 +13,21 @@
     parseSpec,
     newBlock,
     newLoop,
+    newAssign,
+    newCheckpoint,
     newTrial,
     project,
   } from "./lib/project.svelte.ts";
   import { pluginNames } from "./lib/schemas.ts";
 
+  // Adding goes inside the selected step when it can hold steps, and beside it otherwise, so a
+  // step selected inside a group adds to that group rather than jumping back to the top level.
   const insertionPath = $derived(
-    project.selection && canHoldChildren(project.selection) ? project.selection : [],
+    project.selection
+      ? canHoldChildren(project.selection)
+        ? project.selection
+        : project.selection.slice(0, -1)
+      : [],
   );
   const tables = $derived(conditionTableNames());
 
@@ -85,6 +93,12 @@
       </button>
       <button data-testid="add-loop" onclick={() => addNode(insertionPath, newLoop())}>
         + loop
+      </button>
+      <button data-testid="add-assign" onclick={() => addNode(insertionPath, newAssign())}>
+        + split
+      </button>
+      <button data-testid="add-checkpoint" onclick={() => addNode(insertionPath, newCheckpoint())}>
+        + checkpoint
       </button>
     </div>
 

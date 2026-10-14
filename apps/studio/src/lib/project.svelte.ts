@@ -1,5 +1,5 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
-import type { Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
+import type { AssignNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
 
 export type NodePath = number[];
 
@@ -10,12 +10,20 @@ export const project = $state({
   selection: null as NodePath | null,
 });
 
+// A path walks the tree one index per level. A split consumes two: the split itself, then which
+// group, because a group is not a step in its own right.
 export function childrenAt(path: NodePath): SpecNode[] {
   let nodes = project.spec.timeline;
-  for (const index of path) {
-    const node = nodes[index];
-    if (node.kind === "trial") throw new Error("a trial has no children");
-    nodes = node.children;
+  for (let position = 0; position < path.length; position += 1) {
+    const node = nodes[path[position]];
+    if (node.kind === "assign") {
+      position += 1;
+      nodes = node.groups[path[position]].children;
+    } else if (node.kind === "block" || node.kind === "loop") {
+      nodes = node.children;
+    } else {
+      throw new Error(`a ${node.kind} cannot hold other steps`);
+    }
   }
   return nodes;
 }
@@ -25,12 +33,23 @@ export function nodeAt(path: NodePath): SpecNode {
   return parent[path[path.length - 1]];
 }
 
+// A selection can point at a group, which is a place to add steps rather than a step itself.
 export function selectedNode(): SpecNode | null {
-  return project.selection ? nodeAt(project.selection) : null;
+  if (!project.selection) return null;
+  try {
+    return nodeAt(project.selection) ?? null;
+  } catch {
+    return null;
+  }
 }
 
 export function canHoldChildren(path: NodePath) {
-  return path.length === 0 || nodeAt(path).kind !== "trial";
+  try {
+    childrenAt(path);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export function addNode(parentPath: NodePath, node: SpecNode) {
@@ -59,6 +78,21 @@ export function newTrial(plugin: string): TrialNode {
 
 export function newBlock(conditions: string): SpecNode {
   return { kind: "block", conditions, children: [] };
+}
+
+export function newAssign(): AssignNode {
+  return {
+    kind: "assign",
+    method: "random",
+    groups: [
+      { name: "group 1", children: [] },
+      { name: "group 2", children: [] },
+    ],
+  };
+}
+
+export function newCheckpoint(): SpecNode {
+  return { kind: "checkpoint", name: "checkpoint" };
 }
 
 export function newLoop(): SpecNode {

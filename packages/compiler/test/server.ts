@@ -16,13 +16,22 @@ export interface StaticServer {
   uploads: { experimentID: string; filename: string; data: string }[];
   /** Set to make the upload route fail, exercising the fallback path. */
   failUploads: boolean;
+  /** The group number /api/condition/ hands out next. */
+  nextCondition: number;
 }
 
 export async function serveDirectory(root: string): Promise<StaticServer> {
   const uploads: StaticServer["uploads"] = [];
-  const state = { failUploads: false };
+  const state = { failUploads: false, nextCondition: 0 };
 
   const server: Server = createServer((request, response) => {
+    if (request.url?.startsWith("/api/condition")) {
+      response.setHeader("access-control-allow-origin", "*");
+      response
+        .writeHead(200, { "content-type": "application/json" })
+        .end(JSON.stringify({ condition: state.nextCondition }));
+      return;
+    }
     if (request.url?.startsWith("/api/data")) {
       const chunks: Buffer[] = [];
       request.on("data", (chunk: Buffer) => chunks.push(chunk));
@@ -66,6 +75,12 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
     },
     set failUploads(value: boolean) {
       state.failUploads = value;
+    },
+    get nextCondition() {
+      return state.nextCondition;
+    },
+    set nextCondition(value: number) {
+      state.nextCondition = value;
     },
   };
 }

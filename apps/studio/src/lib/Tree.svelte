@@ -6,13 +6,18 @@
   interface Props {
     nodes: SpecNode[];
     path?: NodePath;
+    inGroup?: boolean;
   }
 
-  const { nodes, path = [] }: Props = $props();
+  const { nodes, path = [], inGroup = false }: Props = $props();
 
   function label(node: SpecNode) {
     if (node.kind === "trial") return node.plugin + (node.tag ? ` · ${node.tag}` : "");
     if (node.kind === "block") return `block over ${node.conditions}`;
+    if (node.kind === "checkpoint") return node.name;
+    if (node.kind === "assign") {
+      return `${node.method} split · ${node.groups.map((group) => group.name).join(" / ")}`;
+    }
     return `loop${node.id ? ` · ${node.id}` : ""}`;
   }
 
@@ -42,7 +47,21 @@
           >
         </span>
       </div>
-      {#if node.kind !== "trial"}
+      {#if node.kind === "assign"}
+        {#each node.groups as group, groupIndex (group.name)}
+          <div class="group">
+            <button
+              class="group-name"
+              class:selected={isSelected([...childPath, groupIndex])}
+              data-testid={`group-${[...childPath, groupIndex].join("-")}`}
+              onclick={() => (project.selection = [...childPath, groupIndex])}
+            >
+              {group.name}
+            </button>
+            <Tree nodes={group.children} path={[...childPath, groupIndex]} inGroup />
+          </div>
+        {/each}
+      {:else if node.kind === "block" || node.kind === "loop"}
         <Tree nodes={node.children} path={childPath} />
       {/if}
     </li>
@@ -64,6 +83,24 @@
   }
   .row.selected {
     background: var(--selected);
+  }
+  .group {
+    border-left: 2px solid var(--rule);
+    margin-left: 0.5rem;
+    padding-left: 0.2rem;
+  }
+  .group-name {
+    font-size: 0.75rem;
+    color: var(--muted);
+    background: none;
+    border: 0;
+    cursor: pointer;
+    padding: 0.1rem 0.4rem;
+    border-radius: 3px;
+  }
+  .group-name.selected {
+    background: var(--selected);
+    color: inherit;
   }
   .label {
     flex: 1;

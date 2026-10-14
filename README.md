@@ -51,7 +51,8 @@ while cumulative accuracy stays below 0.75.
 - **One-way compile.** The spec compiles to JavaScript; JavaScript is never parsed back.
 - **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
 - **No backend.** Static tool. Results go to DataPipe or any compatible service, and a failed
-  upload falls back to a download so a participant's data is never lost silently.
+  upload falls back to a download so a participant's data is never lost silently. Balanced group
+  assignment asks that same service for the next group, since only it can count participants.
 - **Self-contained exports.** Media is embedded in the project and in the exported file, so an
   experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB each).
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a

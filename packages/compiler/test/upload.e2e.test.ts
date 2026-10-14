@@ -29,10 +29,10 @@ const spec = (endpoint: string): Spec => ({
 });
 
 async function runExperiment(): Promise<Page> {
-  const { html } = await emitHtml(compileSpec(spec(server.url), schemas), {
-    title: "uploading",
-    base: "/node_modules",
+  const compiled = compileSpec(spec(server.url), schemas, {
+    initOptions: "{ on_finish: () => { window.studioExperiment.finished = true; } }",
   });
+  const { html } = await emitHtml(compiled, { title: "uploading", base: "/node_modules" });
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
 
   const page = await browser.newPage();
@@ -64,9 +64,12 @@ describe("a compiled experiment that uploads its data", () => {
     expect(upload.data).toContain("participant_id");
     expect(upload.data).toContain("p42");
     expect(upload.data.split("\n").length).toBeGreaterThan(1);
+    // The saving step has to end its own trial, or anything placed after it never runs.
     await expect
-      .poll(() => page.locator("#jspsych-content").innerText(), { timeout: 15_000 })
-      .toContain("has been saved");
+      .poll(() => page.evaluate(() => window.studioExperiment?.finished === true), {
+        timeout: 15_000,
+      })
+      .toBe(true);
     await page.close();
   }, 120_000);
 
@@ -79,6 +82,11 @@ describe("a compiled experiment that uploads its data", () => {
       .poll(() => page.locator("#jspsych-content").innerText(), { timeout: 15_000 })
       .toContain("could not be uploaded");
     expect(server.uploads).toHaveLength(0);
+    await expect
+      .poll(() => page.evaluate(() => window.studioExperiment?.finished === true), {
+        timeout: 15_000,
+      })
+      .toBe(true);
     server.failUploads = false;
     await page.close();
   }, 120_000);

@@ -51,6 +51,7 @@ describe("data collection", () => {
     expect(source).toContain("catch");
     expect(source).toContain("could not be uploaded");
     expect(source).toContain('localSave("csv"');
+    expect(source).toContain("abortExperiment");
   });
 
   it("records a participant id and any URL parameters", () => {
