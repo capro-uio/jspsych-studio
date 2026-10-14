@@ -262,3 +262,43 @@ describe("a list whose entries are objects", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("splitting participants between groups", () => {
+  it("builds two groups and runs exactly one of them", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await page.getByTestId("add-assign").click();
+    await setText(page, "group-name-0", "wide");
+    await setText(page, "group-name-1", "narrow");
+    await setText(page, "assign-column", "spacing");
+
+    for (const [index, label] of ["wide", "narrow"].entries()) {
+      await page.getByTestId(`group-0-${index}`).click();
+      await addTrial(page, "html-keyboard-response");
+      await setFixed(page, "stimulus", `<p>${label} condition</p>`);
+    }
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.timeline[0].kind).toBe("assign");
+    expect(spec.timeline[0].record_as).toBe("spacing");
+    expect(spec.timeline[0].groups.map((group: { name: string }) => group.name)).toEqual([
+      "wide",
+      "narrow",
+    ]);
+    expect(spec.timeline[0].groups[0].children).toHaveLength(1);
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toMatch(/wide condition|narrow condition/);
+
+    const shown = await preview.locator("#jspsych-content").innerText();
+    const other = shown.includes("wide") ? "narrow condition" : "wide condition";
+    expect(shown).not.toContain(other);
+
+    await page.close();
+  }, 180_000);
+});

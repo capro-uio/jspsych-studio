@@ -13,7 +13,8 @@ function savingScreen(message: string) {
 // back to a download rather than ending the experiment as if the data had been stored.
 function uploadStep(settings: DataSettings, filename: string) {
   const endpoint = `${(settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "")}/api/data/`;
-  return `async () => {
+  // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
+  return `async (done) => {
     ${savingScreen("Saving your data, please do not close this window.")}
     const filename = ${filename};
     try {
@@ -29,12 +30,16 @@ function uploadStep(settings: DataSettings, filename: string) {
       if (!response.ok) throw new Error("the server responded with " + response.status);
       ${savingScreen("Your data has been saved. Thank you!")}
     } catch (error) {
-      ${savingScreen(
-        "Your data could not be uploaded, so it will be downloaded to this computer instead. " +
-          "Please send the file to the researcher.",
-      )}
       jsPsych.data.get().localSave("csv", filename);
+      // abortExperiment leaves the message on screen; ending the trial normally would clear it
+      // before the participant could read why they are holding a file.
+      jsPsych.abortExperiment(${literal(
+        "<p>Your data could not be uploaded, so it has been downloaded to this computer " +
+          "instead. Please send the file to the researcher.</p>",
+      )});
+      return;
     }
+    done();
   }`;
 }
 

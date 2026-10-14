@@ -31,6 +31,27 @@ export interface BlockNode {
   children: SpecNode[];
 }
 
+export interface Group {
+  name: string;
+  children: SpecNode[];
+}
+
+/** Splits participants between groups: a between-subjects manipulation. */
+export interface AssignNode {
+  kind: "assign";
+  /** `"random"` decides in the browser; `"balanced"` asks the data service for the next group. */
+  method: "random" | "balanced";
+  /** Column name the chosen group is recorded under. */
+  record_as?: string;
+  groups: Group[];
+}
+
+/** Records that a participant reached a point in the study, for drop-out analysis. */
+export interface CheckpointNode {
+  kind: "checkpoint";
+  name: string;
+}
+
 export interface LoopNode {
   kind: "loop";
   id?: string;
@@ -38,7 +59,7 @@ export interface LoopNode {
   children: SpecNode[];
 }
 
-export type SpecNode = TrialNode | BlockNode | LoopNode;
+export type SpecNode = TrialNode | BlockNode | LoopNode | AssignNode | CheckpointNode;
 
 export interface DataSettings {
   /** `"download"` saves a CSV on the participant's machine, `"post"` uploads it. */

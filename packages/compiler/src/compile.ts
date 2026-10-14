@@ -1,10 +1,17 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAssetMap, compilePreloadStep, isMediaParameter } from "./assets.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
+import {
+  GROUP_VARIABLE,
+  compileAssignmentStep,
+  compileCheckpointStep,
+  compileGroupGate,
+} from "./groups.ts";
 import { literal } from "./emit.ts";
 import { isVariableReference } from "./variables.ts";
 import { SpecError, validateSpec } from "./validate.ts";
 import type {
+  AssignNode,
   BlockNode,
   CompileResult,
   LoopNode,
@@ -106,12 +113,34 @@ interface CompileContext {
   bundle: SchemaBundle;
   plugins: Set<string>;
   hasAssets: boolean;
+  usesGroups: boolean;
+}
+
+function compileAssign(node: AssignNode, context: CompileContext) {
+  context.plugins.add("call-function");
+  context.usesGroups = true;
+
+  const step = compileAssignmentStep(node, context.spec.data);
+  const gates = node.groups.map((group) => {
+    const timeline = group.children.map((child) => compileNode(child, context)).join(", ");
+    return compileGroupGate(node, group.name, timeline);
+  });
+
+  return [
+    `{\n  type: jsPsychCallFunction,\n  async: ${step.async},\n  func: ${step.body},\n}`,
+    ...gates,
+  ].join(",\n");
 }
 
 function compileNode(node: SpecNode, context: CompileContext): string {
   if (node.kind === "trial") return compileTrial(node, context);
   if (node.kind === "block") return compileBlock(node, context);
-  return compileLoop(node, context);
+  if (node.kind === "loop") return compileLoop(node, context);
+  if (node.kind === "checkpoint") {
+    context.plugins.add("call-function");
+    return compileCheckpointStep(node);
+  }
+  return compileAssign(node, context);
 }
 
 export interface CompileOptions {
@@ -127,7 +156,13 @@ export function compileSpec(
   validateSpec(spec, bundle.plugins);
   const plugins = new Set<string>();
   const assets = spec.assets ?? [];
-  const context: CompileContext = { spec, bundle, plugins, hasAssets: assets.length > 0 };
+  const context: CompileContext = {
+    spec,
+    bundle,
+    plugins,
+    hasAssets: assets.length > 0,
+    usesGroups: false,
+  };
   const steps = spec.timeline.map((node) => compileNode(node, context));
 
   if (assets.length > 0) {
@@ -150,6 +185,7 @@ export function compileSpec(
   );
   const source =
     `const jsPsych = initJsPsych(${options.initOptions ?? ""});\n\n` +
+    (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (assets.length > 0 ? `${compileAssetMap(assets)}\n` : "") +
     (spec.data ? `${compileParticipantProperties()}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;

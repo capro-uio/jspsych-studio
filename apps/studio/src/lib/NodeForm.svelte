@@ -1,5 +1,12 @@
 <script lang="ts">
-  import type { BlockNode, LoopNode, ParameterValue, TrialNode } from "@jspsych-studio/compiler";
+  import type {
+    AssignNode,
+    BlockNode,
+    CheckpointNode,
+    LoopNode,
+    ParameterValue,
+    TrialNode,
+  } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
   import {
     allConditionColumns,
@@ -15,6 +22,8 @@
   const trial = $derived(node?.kind === "trial" ? (node as TrialNode) : null);
   const block = $derived(node?.kind === "block" ? (node as BlockNode) : null);
   const loop = $derived(node?.kind === "loop" ? (node as LoopNode) : null);
+  const assign = $derived(node?.kind === "assign" ? (node as AssignNode) : null);
+  const checkpoint = $derived(node?.kind === "checkpoint" ? (node as CheckpointNode) : null);
   const columns = $derived(allConditionColumns());
   const assets = $derived(assetOptions());
 
@@ -51,6 +60,9 @@
 
 {#if !node}
   <p class="empty">Select a step in the timeline, or add one.</p>
+  {#if project.selection}
+    <p class="help">Steps you add now go into the selected group.</p>
+  {/if}
 {:else if trial}
   <h2>Trial</h2>
   <div class="field">
@@ -183,6 +195,74 @@
       }}
     />
   </div>
+{:else if assign}
+  <h2>Split participants</h2>
+  <p class="help">
+    Each participant runs one group. Everything else in the timeline runs for everybody.
+  </p>
+  <div class="field">
+    <label for="assign-method"><span class="name">how to choose</span></label>
+    <select
+      id="assign-method"
+      data-testid="assign-method"
+      value={assign.method}
+      onchange={(event) => (assign.method = event.currentTarget.value as AssignNode["method"])}
+    >
+      <option value="random">at random, in the browser</option>
+      <option value="balanced">balanced, counted by the data service</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="assign-column"><span class="name">record group as</span></label>
+    <input
+      id="assign-column"
+      data-testid="assign-column"
+      placeholder="group"
+      value={assign.record_as ?? ""}
+      onchange={(event) => {
+        const value = event.currentTarget.value;
+        if (value) assign.record_as = value;
+        else delete assign.record_as;
+      }}
+    />
+  </div>
+  {#each assign.groups as group, index (index)}
+    <div class="field">
+      <label for={`group-${index}`}><span class="name">group {index + 1}</span></label>
+      <span class="group-row">
+        <input
+          id={`group-${index}`}
+          data-testid={`group-name-${index}`}
+          value={group.name}
+          onchange={(event) => (group.name = event.currentTarget.value)}
+        />
+        <button
+          data-testid={`remove-group-${index}`}
+          disabled={assign.groups.length <= 2}
+          onclick={() => assign.groups.splice(index, 1)}>✕</button
+        >
+      </span>
+    </div>
+  {/each}
+  <button
+    class="toggle"
+    data-testid="add-group"
+    onclick={() => assign.groups.push({ name: `group ${assign.groups.length + 1}`, children: [] })}
+  >
+    add a group
+  </button>
+{:else if checkpoint}
+  <h2>Checkpoint</h2>
+  <p class="help">Records that the participant got this far, for drop-out analysis.</p>
+  <div class="field">
+    <label for="checkpoint-name"><span class="name">name</span></label>
+    <input
+      id="checkpoint-name"
+      data-testid="checkpoint-name"
+      value={checkpoint.name}
+      onchange={(event) => (checkpoint.name = event.currentTarget.value)}
+    />
+  </div>
 {:else if loop}
   <h2>Loop</h2>
   <p class="help">Repeats its contents while accuracy on the tagged trials stays below a cutoff.</p>
@@ -243,6 +323,19 @@
   }
   .name {
     font-weight: 600;
+  }
+  .group-row {
+    display: flex;
+    gap: 0.3rem;
+  }
+  .group-row input {
+    flex: 1;
+  }
+  .group-row button {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
   }
   .checks {
     display: flex;
