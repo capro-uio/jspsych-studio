@@ -3,6 +3,19 @@ import type { Asset } from "./types.ts";
 
 const PRELOAD_PLUGIN = "preload";
 
+const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
+
+// jsPsych types preload's file lists as plain strings rather than media, so they are named here.
+// Both the compiler and the validator read this, so the two cannot disagree about what is a file.
+const MEDIA_PARAMETERS: Record<string, Set<string>> = {
+  [PRELOAD_PLUGIN]: new Set(["images", "audio", "video"]),
+};
+
+export function isMediaParameter(plugin: string, parameter: string, jspsychType?: string) {
+  if (jspsychType && MEDIA_TYPES.has(jspsychType)) return true;
+  return MEDIA_PARAMETERS[plugin]?.has(parameter) ?? false;
+}
+
 // Media is addressed by name everywhere in a spec — in a parameter, or in a conditions column —
 // and resolved through this map at run time, so a conditions table can hold plain file names.
 export function compileAssetMap(assets: Asset[]) {
