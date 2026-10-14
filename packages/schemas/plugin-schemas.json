@@ -1,0 +1,875 @@
+{
+  "jspsych": "8.3.0",
+  "plugins": {
+    "audio-keyboard-response": {
+      "plugin": "audio-keyboard-response",
+      "package": "@jspsych/plugin-audio-keyboard-response",
+      "version": "2.2.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-audio",
+          "title": "stimulus",
+          "jspsychType": "AUDIO",
+          "description": "The audio file to be played."
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "title": "choices",
+          "jspsychType": "KEYS",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "title": "Prompt",
+          "jspsychType": "HTML_STRING",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "title": "trial duration",
+          "jspsychType": "INT",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "title": "response ends trial",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use set this parameter to `false` to force the participant to listen to the stimulus for a fixed amount of time, even if they respond before the time is complete",
+          "default": true
+        },
+        "trial_ends_after_audio": {
+          "type": "boolean",
+          "title": "Trial ends after audio",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+          "default": false
+        },
+        "response_allowed_while_playing": {
+          "type": "boolean",
+          "title": "response allowed while playing",
+          "jspsychType": "BOOL",
+          "description": "If true, then responses are allowed while the audio is playing. If false, then the audio must finish playing before a keyboard response is accepted. Once the audio has played all the way through, a valid keyboard response is allowed (including while the audio is being re-played via on-screen playback controls).",
+          "default": true
+        },
+        "wait_for_key_release": {
+          "type": "boolean",
+          "title": "wait for key release",
+          "jspsychType": "BOOL",
+          "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+          "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
+    "fullscreen": {
+      "plugin": "fullscreen",
+      "package": "@jspsych/plugin-fullscreen",
+      "version": "2.1.0",
+      "properties": {
+        "fullscreen_mode": {
+          "type": "boolean",
+          "title": "fullscreen mode",
+          "jspsychType": "BOOL",
+          "description": "A value of `true` causes the experiment to enter fullscreen mode. A value of `false` causes the browser to exit fullscreen mode.",
+          "default": true
+        },
+        "message": {
+          "type": "string",
+          "format": "html",
+          "title": "message",
+          "jspsychType": "HTML_STRING",
+          "description": "`<p>The experiment will switch to full screen mode when you press the button below</p>` | The HTML content to display above the button to enter fullscreen mode.",
+          "default": "<p>The experiment will switch to full screen mode when you press the button below</p>"
+        },
+        "button_label": {
+          "type": "string",
+          "title": "button label",
+          "jspsychType": "STRING",
+          "description": "The text that appears on the button to enter fullscreen mode.",
+          "default": "Continue"
+        },
+        "delay_after": {
+          "type": "integer",
+          "title": "delay after",
+          "jspsychType": "INT",
+          "description": "The length of time to delay after entering fullscreen mode before ending the trial. This can be useful because entering fullscreen is jarring and most browsers display some kind of message that the browser has entered fullscreen mode.",
+          "default": 1000
+        }
+      },
+      "required": []
+    },
+    "html-button-response": {
+      "plugin": "html-button-response",
+      "package": "@jspsych/plugin-html-button-response",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "title": "stimulus",
+          "jspsychType": "HTML_STRING",
+          "description": "The HTML content to be displayed."
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "choices",
+          "jspsychType": "STRING",
+          "description": "Labels for the buttons. Each different string in the array will generate a different button."
+        },
+        "button_html": {
+          "type": "string",
+          "format": "expression",
+          "title": "button html",
+          "jspsychType": "FUNCTION",
+          "description": "A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice."
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "title": "prompt",
+          "jspsychType": "HTML_STRING",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "title": "stimulus duration",
+          "jspsychType": "INT",
+          "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "title": "trial duration",
+          "jspsychType": "INT",
+          "description": "ow long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "button_layout": {
+          "type": "string",
+          "title": "button layout",
+          "jspsychType": "STRING",
+          "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+          "default": "grid"
+        },
+        "grid_rows": {
+          "type": "integer",
+          "title": "grid rows",
+          "jspsychType": "INT",
+          "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+          "default": 1
+        },
+        "grid_columns": {
+          "type": "integer",
+          "title": "grid columns",
+          "jspsychType": "INT",
+          "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "title": "response ends trial",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "enable_button_after": {
+          "type": "integer",
+          "title": "enable button after",
+          "jspsychType": "INT",
+          "description": "How long the button will delay enabling in milliseconds.",
+          "default": 0
+        }
+      },
+      "required": [
+        "stimulus",
+        "choices"
+      ]
+    },
+    "html-keyboard-response": {
+      "plugin": "html-keyboard-response",
+      "package": "@jspsych/plugin-html-keyboard-response",
+      "version": "2.2.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "title": "stimulus",
+          "jspsychType": "HTML_STRING",
+          "description": "The string to be displayed."
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "title": "choices",
+          "jspsychType": "KEYS",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see {@link https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values this page} and {@link https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/ this page (event.key column)} for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "title": "prompt",
+          "jspsychType": "HTML_STRING",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "title": "stimulus duration",
+          "jspsychType": "INT",
+          "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "title": "trial duration",
+          "jspsychType": "INT",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "title": "response ends trial",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the trial_duration parameter). If false, then the trial will continue until the value for trial_duration is reached. You can set this parameter to false to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "wait_for_key_release": {
+          "type": "boolean",
+          "title": "wait for key release",
+          "jspsychType": "BOOL",
+          "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+          "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
+    "image-button-response": {
+      "plugin": "image-button-response",
+      "package": "@jspsych/plugin-image-button-response",
+      "version": "2.2.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-image",
+          "title": "stimulus",
+          "jspsychType": "IMAGE",
+          "description": "The path of the image file to be displayed."
+        },
+        "stimulus_height": {
+          "type": "integer",
+          "title": "stimulus height",
+          "jspsychType": "INT",
+          "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+          "default": null
+        },
+        "stimulus_width": {
+          "type": "integer",
+          "title": "stimulus width",
+          "jspsychType": "INT",
+          "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+          "default": null
+        },
+        "maintain_aspect_ratio": {
+          "type": "boolean",
+          "title": "maintain aspect ratio",
+          "jspsychType": "BOOL",
+          "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+          "default": true
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "choices",
+          "jspsychType": "STRING",
+          "description": "Labels for the buttons. Each different string in the array will generate a different button."
+        },
+        "button_html": {
+          "type": "string",
+          "format": "expression",
+          "title": "button html",
+          "jspsychType": "FUNCTION",
+          "description": "``(choice: string, choice_index: number)=>`<button class=\"jspsych-btn\">${choice}</button>``; | A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice."
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "title": "prompt",
+          "jspsychType": "HTML_STRING",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "title": "stimulus duration",
+          "jspsychType": "INT",
+          "description": "How long to show the stimulus for in milliseconds. If the value is null, then the stimulus will be shown until the participant makes a response.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "title": "trial duration",
+          "jspsychType": "INT",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "button_layout": {
+          "type": "string",
+          "title": "button layout",
+          "jspsychType": "STRING",
+          "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+          "default": "grid"
+        },
+        "grid_rows": {
+          "type": "integer",
+          "title": "grid rows",
+          "jspsychType": "INT",
+          "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+          "default": 1
+        },
+        "grid_columns": {
+          "type": "integer",
+          "title": "grid columns",
+          "jspsychType": "INT",
+          "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "title": "response ends trial",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "render_on_canvas": {
+          "type": "boolean",
+          "title": "render on canvas",
+          "jspsychType": "BOOL",
+          "description": "If true, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+          "default": true
+        },
+        "enable_button_after": {
+          "type": "integer",
+          "title": "enable button after",
+          "jspsychType": "INT",
+          "description": "How long the button will delay enabling in milliseconds.",
+          "default": 0
+        }
+      },
+      "required": [
+        "stimulus",
+        "choices"
+      ]
+    },
+    "image-keyboard-response": {
+      "plugin": "image-keyboard-response",
+      "package": "@jspsych/plugin-image-keyboard-response",
+      "version": "2.2.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-image",
+          "title": "stimulus",
+          "jspsychType": "IMAGE",
+          "description": "The path of the image file to be displayed."
+        },
+        "stimulus_height": {
+          "type": "integer",
+          "title": "stimulus height",
+          "jspsychType": "INT",
+          "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+          "default": null
+        },
+        "stimulus_width": {
+          "type": "integer",
+          "title": "stimulus width",
+          "jspsychType": "INT",
+          "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+          "default": null
+        },
+        "maintain_aspect_ratio": {
+          "type": "boolean",
+          "title": "maintain aspect ratio",
+          "jspsychType": "BOOL",
+          "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+          "default": true
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "title": "choices",
+          "jspsychType": "KEYS",
+          "description": "his array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "title": "prompt",
+          "jspsychType": "HTML_STRING",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "title": "stimulus duration",
+          "jspsychType": "INT",
+          "description": "How long to show the stimulus for in milliseconds. If the value is `null`, then the stimulus will be shown until the participant makes a response.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "title": "trial duration",
+          "jspsychType": "INT",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "title": "response ends trial",
+          "jspsychType": "BOOL",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "render_on_canvas": {
+          "type": "boolean",
+          "title": "render on canvas",
+          "jspsychType": "BOOL",
+          "description": "If `true`, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If `false`, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+          "default": true
+        },
+        "wait_for_key_release": {
+          "type": "boolean",
+          "title": "wait for key release",
+          "jspsychType": "BOOL",
+          "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+          "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
+    "instructions": {
+      "plugin": "instructions",
+      "package": "@jspsych/plugin-instructions",
+      "version": "2.1.0",
+      "properties": {
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "html"
+          },
+          "title": "pages",
+          "jspsychType": "HTML_STRING",
+          "description": "Each element of the array is the content for a single page. Each page should be an HTML-formatted string."
+        },
+        "key_forward": {
+          "type": "string",
+          "format": "keyboard-key",
+          "title": "key forward",
+          "jspsychType": "KEY",
+          "description": "This is the key that the participant can press in order to advance to the next page. This key should be specified as a string (e.g., `'a'`, `'ArrowLeft'`, `' '`, `'Enter'`).",
+          "default": "ArrowRight"
+        },
+        "key_backward": {
+          "type": "string",
+          "format": "keyboard-key",
+          "title": "key backward",
+          "jspsychType": "KEY",
+          "description": "This is the key that the participant can press to return to the previous page. This key should be specified as a string (e.g., `'a'`, `'ArrowLeft'`, `' '`, `'Enter'`).",
+          "default": "ArrowLeft"
+        },
+        "allow_backward": {
+          "type": "boolean",
+          "title": "allow backward",
+          "jspsychType": "BOOL",
+          "description": "If true, the participant can return to previous pages of the instructions. If false, they may only advace to the next page.",
+          "default": true
+        },
+        "allow_keys": {
+          "type": "boolean",
+          "title": "allow keys",
+          "jspsychType": "BOOL",
+          "description": "If `true`, the participant can use keyboard keys to navigate the pages. If `false`, they may not.",
+          "default": true
+        },
+        "show_clickable_nav": {
+          "type": "boolean",
+          "title": "show clickable nav",
+          "jspsychType": "BOOL",
+          "description": "If true, then a `Previous` and `Next` button will be displayed beneath the instructions. Participants can click the buttons to navigate.",
+          "default": false
+        },
+        "show_page_number": {
+          "type": "boolean",
+          "title": "show page number",
+          "jspsychType": "BOOL",
+          "description": "If true, and clickable navigation is enabled, then Page x/y will be shown between the nav buttons.",
+          "default": false
+        },
+        "page_label": {
+          "type": "string",
+          "title": "page label",
+          "jspsychType": "STRING",
+          "description": "The text that appears before x/y pages displayed when show_page_number is true.",
+          "default": "Page"
+        },
+        "button_label_previous": {
+          "type": "string",
+          "title": "button label previous",
+          "jspsychType": "STRING",
+          "description": "The text that appears on the button to go backwards.",
+          "default": "Previous"
+        },
+        "button_label_next": {
+          "type": "string",
+          "title": "button label next",
+          "jspsychType": "STRING",
+          "description": "The text that appears on the button to go forwards.",
+          "default": "Next"
+        },
+        "on_page_change": {
+          "type": "string",
+          "format": "expression",
+          "title": "Page change callback",
+          "jspsychType": "FUNCTION",
+          "description": "The callback function when page changes"
+        }
+      },
+      "required": [
+        "pages"
+      ]
+    },
+    "preload": {
+      "plugin": "preload",
+      "package": "@jspsych/plugin-preload",
+      "version": "2.1.0",
+      "properties": {
+        "auto_preload": {
+          "type": "boolean",
+          "title": "auto preload",
+          "jspsychType": "BOOL",
+          "description": "If `true`, the plugin will preload any files that can be automatically preloaded based on the main experiment timeline that is passed to `jsPsych.run`. If `false`, any file(s) to be preloaded should be specified by passing a timeline array to the `trials` parameter and/or an array of file paths to the `images`, `audio`, and/or `video` parameters. Setting this parameter to `false` is useful when you plan to preload your files in smaller batches throughout the experiment.",
+          "default": false
+        },
+        "trials": {
+          "type": "array",
+          "format": "timeline",
+          "title": "trials",
+          "jspsychType": "TIMELINE",
+          "description": "An array containing one or more jsPsych trial or timeline objects. This parameter is useful when you want to automatically preload stimuli files from a specific subset of the experiment. See [Creating an Experiment: The Timeline](../overview/timeline.md) for information on constructing timelines.",
+          "default": []
+        },
+        "images": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "images",
+          "jspsychType": "STRING",
+          "description": "Array with one or more image files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into an image plugin/parameter with timeline variables or dynamic parameters, or because the image is embedded in an HTML string.",
+          "default": []
+        },
+        "audio": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "audio",
+          "jspsychType": "STRING",
+          "description": "Array with one or more audio files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into an audio plugin/parameter with timeline variables or dynamic parameters, or because the audio is embedded in an HTML string.",
+          "default": []
+        },
+        "video": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "title": "video",
+          "jspsychType": "STRING",
+          "description": "Array with one or more video files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into a video plugin/parameter with timeline variables or dynamic parameters, or because the video is embedded in an HTML string.",
+          "default": []
+        },
+        "message": {
+          "type": "string",
+          "format": "html",
+          "title": "message",
+          "jspsychType": "HTML_STRING",
+          "description": "HTML-formatted message to show above the progress bar while the files are loading. If `null`, then no message is shown.",
+          "default": null
+        },
+        "show_progress_bar": {
+          "type": "boolean",
+          "title": "show progress bar",
+          "jspsychType": "BOOL",
+          "description": "If `true`, a progress bar will be shown while the files are loading. If `false`, no progress bar is shown.",
+          "default": true
+        },
+        "continue_after_error": {
+          "type": "boolean",
+          "title": "continue after error",
+          "jspsychType": "BOOL",
+          "description": "Whether or not to continue with the experiment if a loading error occurs. If false, then if a loading error occurs, the error_message will be shown on the page and the trial will not end. If true, then if if a loading error occurs, the trial will end and preloading failure will be logged in the trial data.",
+          "default": false
+        },
+        "error_message": {
+          "type": "string",
+          "format": "html",
+          "title": "error message",
+          "jspsychType": "HTML_STRING",
+          "description": "HTML-formatted message to be shown on the page after loading fails or times out. Only applies when `continue_after_error` is `false`.",
+          "default": "The experiment failed to load."
+        },
+        "show_detailed_errors": {
+          "type": "boolean",
+          "title": "show detailed errors",
+          "jspsychType": "BOOL",
+          "description": "Whether or not to show a detailed error message on the page. If true, then detailed error messages will be shown on the page for all files that failed to load, along with the general error_message. This parameter is only relevant when continue_after_error is false.",
+          "default": false
+        },
+        "max_load_time": {
+          "type": "integer",
+          "title": "max load time",
+          "jspsychType": "INT",
+          "description": "The maximum amount of time that the plugin should wait before stopping the preload and either ending the trial (if continue_after_error is true) or stopping the experiment with an error message (if continue_after_error is false). If null, the plugin will wait indefintely for the files to load.",
+          "default": null
+        },
+        "on_error": {
+          "type": "string",
+          "format": "expression",
+          "title": "on error",
+          "jspsychType": "FUNCTION",
+          "description": "Function to be called after a file fails to load. The function takes the file name as its only argument.",
+          "default": null
+        },
+        "on_success": {
+          "type": "string",
+          "format": "expression",
+          "title": "on success",
+          "jspsychType": "FUNCTION",
+          "description": "Function to be called after a file loads successfully. The function takes the file name as its only argument.",
+          "default": null
+        }
+      },
+      "required": []
+    },
+    "survey-likert": {
+      "plugin": "survey-likert",
+      "package": "@jspsych/plugin-survey-likert",
+      "version": "2.2.0",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "prompt": {
+                "type": "string",
+                "format": "html",
+                "title": "prompt",
+                "jspsychType": "HTML_STRING",
+                "description": "Question prompt."
+              },
+              "labels": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "title": "labels",
+                "jspsychType": "STRING",
+                "description": "Array of likert labels to display for this question."
+              },
+              "required": {
+                "type": "boolean",
+                "title": "required",
+                "jspsychType": "BOOL",
+                "description": "Whether or not a response to this question must be given in order to continue.",
+                "default": false
+              },
+              "name": {
+                "type": "string",
+                "title": "name",
+                "jspsychType": "STRING",
+                "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                "default": ""
+              },
+              "default_response": {
+                "type": "integer",
+                "title": "default response",
+                "jspsychType": "INT",
+                "description": "Default response value for this question (0-based index of labels array).",
+                "default": null
+              }
+            },
+            "required": [
+              "prompt",
+              "labels"
+            ]
+          },
+          "title": "questions",
+          "jspsychType": "COMPLEX",
+          "description": "Array containing one or more objects with parameters for the question(s) that should be shown on the page."
+        },
+        "randomize_question_order": {
+          "type": "boolean",
+          "title": "randomize question order",
+          "jspsychType": "BOOL",
+          "description": "If true, the order of the questions in the 'questions' array will be randomized.",
+          "default": false
+        },
+        "preamble": {
+          "type": "string",
+          "format": "html",
+          "title": "preamble",
+          "jspsychType": "HTML_STRING",
+          "description": "HTML-formatted string to display at top of the page above all of the questions.",
+          "default": null
+        },
+        "scale_width": {
+          "type": "integer",
+          "title": "scale width",
+          "jspsychType": "INT",
+          "description": "Width of the likert scales in pixels.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "title": "button label",
+          "jspsychType": "STRING",
+          "description": "Label of the button to submit responses.",
+          "default": "Continue"
+        },
+        "autocomplete": {
+          "type": "boolean",
+          "title": "autocomplete",
+          "jspsychType": "BOOL",
+          "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+          "default": false
+        }
+      },
+      "required": [
+        "questions"
+      ]
+    },
+    "survey-text": {
+      "plugin": "survey-text",
+      "package": "@jspsych/plugin-survey-text",
+      "version": "2.1.1",
+      "properties": {
+        "questions": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "prompt": {
+                "type": "string",
+                "format": "html",
+                "title": "prompt",
+                "jspsychType": "HTML_STRING",
+                "description": "Question prompt."
+              },
+              "placeholder": {
+                "type": "string",
+                "title": "placeholder",
+                "jspsychType": "STRING",
+                "description": "Placeholder text in the response text box.",
+                "default": ""
+              },
+              "rows": {
+                "type": "integer",
+                "title": "rows",
+                "jspsychType": "INT",
+                "description": "The number of rows for the response text box.",
+                "default": 1
+              },
+              "columns": {
+                "type": "integer",
+                "title": "columns",
+                "jspsychType": "INT",
+                "description": "The number of columns for the response text box.",
+                "default": 40
+              },
+              "required": {
+                "type": "boolean",
+                "title": "required",
+                "jspsychType": "BOOL",
+                "description": "Whether or not a response to this question must be given in order to continue.",
+                "default": false
+              },
+              "name": {
+                "type": "string",
+                "title": "name",
+                "jspsychType": "STRING",
+                "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                "default": ""
+              }
+            },
+            "required": [
+              "prompt"
+            ]
+          },
+          "title": "questions",
+          "jspsychType": "COMPLEX",
+          "description": "An array of objects, each object represents a question that appears on the screen. Each object contains a prompt, options, required, and horizontal parameter that will be applied to the question. See examples below for further clarification.`prompt`: Type string, default value is *undefined*. The string is prompt/question that will be associated with a group of options (radio buttons). All questions will get presented on the same page (trial). `options`: Type array, defualt value is *undefined*. An array of strings. The array contains a set of options to display for an individual question.`required`: Type boolean, default value is null. The boolean value indicates if a question is required('true') or not ('false'), using the HTML5 `required` attribute. If this parameter is undefined, the question will be optional. `horizontal`:Type boolean, default value is false. If true, then the question is centered and the options are displayed horizontally. `name`: Name of the question. Used for storing data. If left undefined then default names (`Q0`, `Q1`, `...`) will be used for the questions."
+        },
+        "randomize_question_order": {
+          "type": "boolean",
+          "title": "randomize question order",
+          "jspsychType": "BOOL",
+          "description": "If true, the display order of `questions` is randomly determined at the start of the trial. In the data object, `Q0` will still refer to the first question in the array, regardless of where it was presented visually.",
+          "default": false
+        },
+        "preamble": {
+          "type": "string",
+          "format": "html",
+          "title": "preamble",
+          "jspsychType": "HTML_STRING",
+          "description": "HTML formatted string to display at the top of the page above all the questions.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "title": "button label",
+          "jspsychType": "STRING",
+          "description": "Label of the button to submit responses.",
+          "default": "Continue"
+        },
+        "autocomplete": {
+          "type": "boolean",
+          "title": "autocomplete",
+          "jspsychType": "BOOL",
+          "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+          "default": false
+        }
+      },
+      "required": [
+        "questions"
+      ]
+    }
+  }
+}

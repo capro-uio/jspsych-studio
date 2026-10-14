@@ -1,0 +1,54 @@
+# jspsych-studio
+
+A no-code builder for [jsPsych](https://www.jspsych.org) experiments. Researchers assemble a study
+in a UI; the tool compiles it to readable, correct jsPsych source they can host anywhere.
+
+**Status: early.** You can build a flanker task end to end in the browser — nested timeline,
+conditions table, generated parameter forms, live preview of the real experiment, and export to a
+self-contained HTML file. There is no hosting, survey editor, or study-level flow yet.
+
+## Why
+
+jsPsych requires JavaScript, which most psychologists do not write. The alternatives are
+pay-per-participant platforms or a Python toolchain with a lossy JavaScript export. More
+importantly, hand-written jsPsych fails _silently_: the published community flanker timeline
+renders one stimulus for every condition because it reads timeline variables the wrong way, with no
+console error. A compiler encodes those rules once.
+
+See `../random/jspsych-ui-feasibility/` for the feasibility study, the builder-UI landscape survey,
+and the PRD this slice implements.
+
+## Packages
+
+| Package                    | What it does                                                                                                                                                 |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@jspsych-studio/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the eventual form UI is generated rather than hand-written |
+| `@jspsych-studio/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
+
+## Use
+
+```sh
+npm install
+npm run dev              # the builder at http://localhost:5180
+npm test                 # unit tests plus two real-browser end-to-end runs
+npm run typecheck
+npm run schemas          # regenerate packages/schemas/plugin-schemas.json, print coverage
+node --experimental-strip-types packages/compiler/src/cli.ts compile examples/flanker.json
+```
+
+The acceptance test for the UI builds `examples/flanker.json` by clicking through the app and
+asserts the authored spec matches the reference file, then checks the preview actually runs.
+
+`examples/flanker.json` is the reference spec: instructions, then a practice block over a
+four-row conditions table, randomised, twice through, scored against a correct-key column, repeating
+while cumulative accuracy stays below 0.75.
+
+## Design rules
+
+- **One-way compile.** The spec compiles to JavaScript; JavaScript is never parsed back.
+- **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
+- **No backend.** Static tool; data collection via DataPipe or JATOS export.
+- **Readable output.** The generated file is something a researcher can read, host, and hand to a
+  collaborator. The builder shows the generated code as you edit.
+- **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
+  browser, because the preview compiles there. A test enforces it.

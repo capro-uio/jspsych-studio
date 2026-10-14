@@ -1,0 +1,55 @@
+{
+  "name": "flanker-practice",
+  "conditions": {
+    "flanker_trials": [
+      { "stim": "<<<<<", "correct_key": "f", "congruency": "congruent" },
+      { "stim": ">>>>>", "correct_key": "j", "congruency": "congruent" },
+      { "stim": "<<><<", "correct_key": "j", "congruency": "incongruent" },
+      { "stim": ">><>>", "correct_key": "f", "congruency": "incongruent" }
+    ]
+  },
+  "timeline": [
+    {
+      "kind": "trial",
+      "plugin": "html-keyboard-response",
+      "params": {
+        "stimulus": "<p>Press <b>f</b> for a left-pointing centre arrow, <b>j</b> for right.</p><p>Press any key to begin.</p>"
+      }
+    },
+    {
+      "kind": "loop",
+      "id": "practice",
+      "repeat_while": { "accuracy_below": 0.75, "scope": "practice" },
+      "children": [
+        {
+          "kind": "block",
+          "conditions": "flanker_trials",
+          "randomize_order": true,
+          "repetitions": 2,
+          "children": [
+            {
+              "kind": "trial",
+              "plugin": "html-keyboard-response",
+              "params": {
+                "stimulus": "<p style='font-size:48px'>+</p>",
+                "choices": "NO_KEYS",
+                "trial_duration": 50
+              }
+            },
+            {
+              "kind": "trial",
+              "plugin": "html-keyboard-response",
+              "tag": "practice",
+              "params": {
+                "stimulus": { "var": "stim", "wrap": "<p style='font-size:48px'>{}</p>" },
+                "choices": ["f", "j"]
+              },
+              "record": { "congruency": { "var": "congruency" } },
+              "score": { "correct_if_response_equals": { "var": "correct_key" } }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
