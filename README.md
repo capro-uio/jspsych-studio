@@ -15,8 +15,10 @@ importantly, hand-written jsPsych fails _silently_: the published community flan
 renders one stimulus for every condition because it reads timeline variables the wrong way, with no
 console error. A compiler encodes those rules once.
 
-See `../random/jspsych-ui-feasibility/` for the feasibility study, the builder-UI landscape survey,
-and the PRD this slice implements.
+The design rests on one observation: jsPsych plugins describe their own parameters at runtime, and
+the JSDoc for each parameter survives in the published type declarations — so the form UI for the
+whole plugin ecosystem can be generated instead of hand-written, which is what makes this
+maintainable by a small team.
 
 ## Packages
 
