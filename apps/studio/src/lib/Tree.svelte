@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { slotsOf } from "@jspsych-studio/compiler";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
   import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
@@ -18,6 +19,7 @@
     if (node.kind === "assign") {
       return `${node.method} split · ${node.groups.map((group) => group.name).join(" / ")}`;
     }
+    if (node.kind === "branch") return `branch on ${node.when.scope || "…"}`;
     return `loop${node.id ? ` · ${node.id}` : ""}`;
   }
 
@@ -47,18 +49,18 @@
           >
         </span>
       </div>
-      {#if node.kind === "assign"}
-        {#each node.groups as group, groupIndex (group.name)}
+      {#if slotsOf(node)}
+        {#each slotsOf(node) ?? [] as slot, slotIndex (slotIndex)}
           <div class="group">
             <button
               class="group-name"
-              class:selected={isSelected([...childPath, groupIndex])}
-              data-testid={`group-${[...childPath, groupIndex].join("-")}`}
-              onclick={() => (project.selection = [...childPath, groupIndex])}
+              class:selected={isSelected([...childPath, slotIndex])}
+              data-testid={`group-${[...childPath, slotIndex].join("-")}`}
+              onclick={() => (project.selection = [...childPath, slotIndex])}
             >
-              {group.name}
+              {slot.name}
             </button>
-            <Tree nodes={group.children} path={[...childPath, groupIndex]} inGroup />
+            <Tree nodes={slot.children} path={[...childPath, slotIndex]} inGroup />
           </div>
         {/each}
       {:else if node.kind === "block" || node.kind === "loop"}

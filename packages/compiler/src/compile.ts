@@ -1,5 +1,6 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAssetMap, compilePreloadStep, isMediaParameter } from "./assets.ts";
+import { compileAccuracyPredicate } from "./conditions.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
 import {
   GROUP_VARIABLE,
@@ -13,6 +14,7 @@ import { SpecError, validateSpec } from "./validate.ts";
 import type {
   AssignNode,
   BlockNode,
+  BranchNode,
   CompileResult,
   LoopNode,
   ParameterValue,
@@ -98,14 +100,12 @@ function compileBlock(block: BlockNode, context: CompileContext) {
 }
 
 function compileLoop(loop: LoopNode, context: CompileContext) {
-  const { accuracy_below, scope } = loop.repeat_while;
-  const condition =
-    `() => {\n` +
-    `    const scored = jsPsych.data.get().filter({ tag: ${literal(scope)} });\n` +
-    `    return scored.count() > 0 && scored.select("correct").mean() < ${accuracy_below};\n` +
-    `  }`;
   const timeline = loop.children.map((child) => compileNode(child, context)).join(", ");
-  return `{\n  timeline: [${timeline}],\n  loop_function: ${condition},\n}`;
+  const condition = compileAccuracyPredicate(loop.repeat_while);
+  return `{
+  timeline: [${timeline}],
+  loop_function: ${condition},
+}`;
 }
 
 interface CompileContext {
@@ -132,10 +132,25 @@ function compileAssign(node: AssignNode, context: CompileContext) {
   ].join(",\n");
 }
 
+function compileBranch(node: BranchNode, context: CompileContext) {
+  const predicate = compileAccuracyPredicate(node.when);
+  const paths: string[] = [];
+  const gate = (children: SpecNode[], taken: boolean) => {
+    if (children.length === 0) return;
+    const timeline = children.map((child) => compileNode(child, context)).join(", ");
+    const test = taken ? `(${predicate})()` : `!(${predicate})()`;
+    paths.push(`{\n  timeline: [${timeline}],\n  conditional_function: () => ${test},\n}`);
+  };
+  gate(node.then, true);
+  gate(node.otherwise ?? [], false);
+  return paths.join(",\n");
+}
+
 function compileNode(node: SpecNode, context: CompileContext): string {
   if (node.kind === "trial") return compileTrial(node, context);
   if (node.kind === "block") return compileBlock(node, context);
   if (node.kind === "loop") return compileLoop(node, context);
+  if (node.kind === "branch") return compileBranch(node, context);
   if (node.kind === "checkpoint") {
     context.plugins.add("call-function");
     return compileCheckpointStep(node);

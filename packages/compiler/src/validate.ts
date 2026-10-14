@@ -1,7 +1,8 @@
 import type { ParameterSchema, PluginSchemas } from "@jspsych-studio/schemas";
-import type { AssignNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
+import type { AssignNode, BranchNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
 import { assetNames, isMediaParameter } from "./assets.ts";
-import { conditionColumns, isVariableReference } from "./variables.ts";
+import { accuracyComparison } from "./conditions.ts";
+import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 
 export class SpecError extends Error {}
 
@@ -10,9 +11,9 @@ const RECIPE_SUPPLIED_PARAMETERS = new Set(["data", "on_finish"]);
 function collectTags(nodes: SpecNode[]): string[] {
   return nodes.flatMap((node) => {
     if (node.kind === "trial") return node.tag ? [node.tag] : [];
-    if (node.kind === "checkpoint") return [];
-    if (node.kind === "assign") return node.groups.flatMap((group) => collectTags(group.children));
-    return collectTags(node.children);
+    if (node.kind === "block" || node.kind === "loop") return collectTags(node.children);
+    const slots = slotsOf(node);
+    return slots ? slots.flatMap((slot) => collectTags(slot.children)) : [];
   });
 }
 
@@ -156,6 +157,25 @@ function checkAssign(node: AssignNode, spec: Spec, problems: string[]) {
   }
 }
 
+function checkBranch(node: BranchNode, spec: Spec, problems: string[]) {
+  if (node.then.length === 0 && (node.otherwise ?? []).length === 0) {
+    problems.push("a branch needs steps on at least one of its paths");
+  }
+  if (node.when.accuracy_below !== undefined && node.when.accuracy_at_least !== undefined) {
+    problems.push("a branch compares accuracy one way, not both at once");
+  }
+  // The trials being judged have to have happened already, so they cannot live inside the branch.
+  const earlier = new Set(collectTags(spec.timeline).filter(Boolean));
+  const inside = new Set(collectTags(slotsOf(node)?.flatMap((slot) => slot.children) ?? []));
+  const available = [...earlier].filter((tag) => !inside.has(tag));
+  if (!available.includes(node.when.scope)) {
+    problems.push(
+      `a branch judges "${node.when.scope}", but no trial before it carries that tag` +
+        (available.length > 0 ? ` (tags available: ${available.join(", ")})` : ""),
+    );
+  }
+}
+
 function checkColumn(column: string, columns: Set<string>, where: string, problems: string[]) {
   if (columns.has(column)) return;
   const available = [...columns];
@@ -177,10 +197,11 @@ function checkNodes(
       if (!node.name) problems.push("a checkpoint needs a name");
       continue;
     }
-    if (node.kind === "assign") {
-      checkAssign(node, spec, problems);
-      for (const group of node.groups) {
-        checkNodes(group.children, spec, schemas, columns, problems);
+    if (node.kind === "assign" || node.kind === "branch") {
+      if (node.kind === "assign") checkAssign(node, spec, problems);
+      else checkBranch(node, spec, problems);
+      for (const slot of slotsOf(node) ?? []) {
+        checkNodes(slot.children, spec, schemas, columns, problems);
       }
       continue;
     }
@@ -202,6 +223,7 @@ function checkNodes(
       }
     }
     if (node.kind === "loop") {
+      accuracyComparison(node.repeat_while);
       const tags = collectTags(node.children);
       if (!tags.includes(node.repeat_while.scope)) {
         problems.push(

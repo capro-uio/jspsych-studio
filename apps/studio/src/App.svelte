@@ -14,6 +14,7 @@
     newBlock,
     newLoop,
     newAssign,
+    newBranch,
     newCheckpoint,
     newTrial,
     project,
@@ -96,6 +97,9 @@
       </button>
       <button data-testid="add-assign" onclick={() => addNode(insertionPath, newAssign())}>
         + split
+      </button>
+      <button data-testid="add-branch" onclick={() => addNode(insertionPath, newBranch())}>
+        + branch
       </button>
       <button data-testid="add-checkpoint" onclick={() => addNode(insertionPath, newCheckpoint())}>
         + checkpoint

@@ -1,5 +1,6 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
-import type { AssignNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
+import { slotsOf } from "@jspsych-studio/compiler";
+import type { AssignNode, BranchNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
 
 export type NodePath = number[];
 
@@ -10,15 +11,16 @@ export const project = $state({
   selection: null as NodePath | null,
 });
 
-// A path walks the tree one index per level. A split consumes two: the split itself, then which
-// group, because a group is not a step in its own right.
+// A path walks the tree one index per level. A node with several child lists — a split's groups,
+// a branch's paths — consumes two: the node, then which list, since a list is not a step itself.
 export function childrenAt(path: NodePath): SpecNode[] {
   let nodes = project.spec.timeline;
   for (let position = 0; position < path.length; position += 1) {
     const node = nodes[path[position]];
-    if (node.kind === "assign") {
+    const slots = slotsOf(node);
+    if (slots) {
       position += 1;
-      nodes = node.groups[path[position]].children;
+      nodes = slots[path[position]].children;
     } else if (node.kind === "block" || node.kind === "loop") {
       nodes = node.children;
     } else {
@@ -89,6 +91,10 @@ export function newAssign(): AssignNode {
       { name: "group 2", children: [] },
     ],
   };
+}
+
+export function newBranch(): BranchNode {
+  return { kind: "branch", when: { scope: "", accuracy_at_least: 0.8 }, then: [], otherwise: [] };
 }
 
 export function newCheckpoint(): SpecNode {

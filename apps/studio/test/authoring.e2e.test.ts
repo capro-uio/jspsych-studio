@@ -302,3 +302,38 @@ describe("splitting participants between groups", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("routing on performance", () => {
+  it("builds a branch with a step on each path", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addTrial(page, "html-keyboard-response");
+    await setText(page, "trial-tag", "screening");
+    await setFixed(page, "stimulus", "<p>screening</p>");
+
+    await page.getByTestId("node-0").click();
+    await page.getByTestId("add-branch").click();
+    await setText(page, "branch-scope", "screening");
+    await page.getByTestId("branch-comparison").selectOption("at_least");
+    await setText(page, "branch-threshold", "0.75");
+
+    for (const [index, label] of ["continue", "stop"].entries()) {
+      await page.getByTestId(`group-1-${index}`).click();
+      await addTrial(page, "html-keyboard-response");
+      await setFixed(page, "stimulus", `<p>${label}</p>`);
+    }
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.timeline[1]).toMatchObject({
+      kind: "branch",
+      when: { scope: "screening", accuracy_at_least: 0.75 },
+    });
+    expect(spec.timeline[1].then).toHaveLength(1);
+    expect(spec.timeline[1].otherwise).toHaveLength(1);
+
+    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    await page.close();
+  }, 180_000);
+});
