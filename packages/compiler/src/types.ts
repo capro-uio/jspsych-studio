@@ -10,8 +10,10 @@ export interface CorrectIfRule {
 }
 
 export interface AccuracyRule {
-  accuracy_below: number;
+  /** The tag whose trials are measured. */
   scope: string;
+  accuracy_below?: number;
+  accuracy_at_least?: number;
 }
 
 export interface TrialNode {
@@ -46,6 +48,14 @@ export interface AssignNode {
   groups: Group[];
 }
 
+/** Sends a participant down one of two paths depending on how they did. */
+export interface BranchNode {
+  kind: "branch";
+  when: AccuracyRule;
+  then: SpecNode[];
+  otherwise?: SpecNode[];
+}
+
 /** Records that a participant reached a point in the study, for drop-out analysis. */
 export interface CheckpointNode {
   kind: "checkpoint";
@@ -59,7 +69,13 @@ export interface LoopNode {
   children: SpecNode[];
 }
 
-export type SpecNode = TrialNode | BlockNode | LoopNode | AssignNode | CheckpointNode;
+export type SpecNode = TrialNode | BlockNode | LoopNode | AssignNode | BranchNode | CheckpointNode;
+
+/** A named list of steps inside a node, such as a group or a branch's path. */
+export interface Slot {
+  name: string;
+  children: SpecNode[];
+}
 
 export interface DataSettings {
   /** `"download"` saves a CSV on the participant's machine, `"post"` uploads it. */

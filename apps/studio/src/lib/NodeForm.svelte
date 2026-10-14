@@ -1,6 +1,7 @@
 <script lang="ts">
   import type {
     AssignNode,
+    BranchNode,
     BlockNode,
     CheckpointNode,
     LoopNode,
@@ -24,6 +25,29 @@
   const loop = $derived(node?.kind === "loop" ? (node as LoopNode) : null);
   const assign = $derived(node?.kind === "assign" ? (node as AssignNode) : null);
   const checkpoint = $derived(node?.kind === "checkpoint" ? (node as CheckpointNode) : null);
+  const branch = $derived(node?.kind === "branch" ? (node as BranchNode) : null);
+
+  const branchComparison = $derived(
+    branch?.when.accuracy_at_least === undefined ? "below" : "at_least",
+  );
+
+  function setBranchComparison(comparison: string) {
+    if (!branch) return;
+    const threshold = branch.when.accuracy_at_least ?? branch.when.accuracy_below ?? 0.8;
+    if (comparison === "at_least") {
+      delete branch.when.accuracy_below;
+      branch.when.accuracy_at_least = threshold;
+    } else {
+      delete branch.when.accuracy_at_least;
+      branch.when.accuracy_below = threshold;
+    }
+  }
+
+  function setBranchThreshold(value: number) {
+    if (!branch) return;
+    if (branchComparison === "at_least") branch.when.accuracy_at_least = value;
+    else branch.when.accuracy_below = value;
+  }
   const columns = $derived(allConditionColumns());
   const assets = $derived(assetOptions());
 
@@ -251,6 +275,46 @@
   >
     add a group
   </button>
+{:else if branch}
+  <h2>Branch</h2>
+  <p class="help">
+    Sends participants down one of two paths depending on how they did earlier. The trials being
+    judged must come before this step.
+  </p>
+  <div class="field">
+    <label for="branch-scope"><span class="name">judge trials tagged</span></label>
+    <input
+      id="branch-scope"
+      data-testid="branch-scope"
+      value={branch.when.scope}
+      onchange={(event) => (branch.when.scope = event.currentTarget.value)}
+    />
+  </div>
+  <div class="field">
+    <label for="branch-comparison"><span class="name">take the first path when</span></label>
+    <select
+      id="branch-comparison"
+      data-testid="branch-comparison"
+      value={branchComparison}
+      onchange={(event) => setBranchComparison(event.currentTarget.value)}
+    >
+      <option value="at_least">accuracy is at least</option>
+      <option value="below">accuracy is below</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="branch-threshold"><span class="name">threshold</span></label>
+    <input
+      id="branch-threshold"
+      data-testid="branch-threshold"
+      type="number"
+      min="0"
+      max="1"
+      step="0.05"
+      value={branch.when.accuracy_at_least ?? branch.when.accuracy_below ?? 0.8}
+      onchange={(event) => setBranchThreshold(event.currentTarget.valueAsNumber)}
+    />
+  </div>
 {:else if checkpoint}
   <h2>Checkpoint</h2>
   <p class="help">Records that the participant got this far, for drop-out analysis.</p>
