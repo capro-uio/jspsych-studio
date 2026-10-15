@@ -210,7 +210,11 @@ export function compileSpec(
   const packages = Object.fromEntries(
     [...plugins].map((plugin) => {
       const schema = bundle.plugins[plugin];
-      if (!schema) throw new SpecError(`the schema bundle has no entry for plugin "${plugin}"`);
+      if (!schema) {
+        throw new SpecError(spec.name, [
+          { message: `the schema bundle has no entry for plugin "${plugin}"` },
+        ]);
+      }
       return [plugin, { name: schema.package, version: schema.version }];
     }),
   );

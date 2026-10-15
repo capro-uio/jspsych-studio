@@ -1,5 +1,7 @@
 <script lang="ts">
   import { slotsOf } from "@jspsych-studio/compiler";
+  import AddStep from "./AddStep.svelte";
+  import { currentProblems, problemsAt } from "./problems.svelte.ts";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
   import {
@@ -45,22 +47,14 @@
     return `repeat while accuracy ${describeAccuracy(node.repeat_while)}`;
   }
 
-  const slotId = (index: number) => `slot-${[...path, index].join("-")}`;
+  const problems = $derived(currentProblems());
 
   const isSelected = (childPath: NodePath) => project.selection?.join(".") === childPath.join(".");
 </script>
 
 <ul>
   {#each nodes as node, index (node)}
-    <li class="slot-row">
-      <button
-        class="slot"
-        class:active={isInsertionAt(path, index)}
-        data-testid={slotId(index)}
-        title="Add here"
-        onclick={() => setInsertion(path, index)}
-      ></button>
-    </li>
+    <AddStep {path} {index} />
     {@const childPath = [...path, index]}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
@@ -71,6 +65,13 @@
         >
           <span class="kind">{node.kind}</span>
           {label(node)}
+          {#if problemsAt(problems, childPath).length > 0}
+            <span
+              class="issue"
+              data-testid={`issue-${childPath.join("-")}`}
+              title={problemsAt(problems, childPath)[0].message}>needs attention</span
+            >
+          {/if}
         </button>
         <span class="controls">
           <button title="move up" onclick={() => moveNode(childPath, -1)}>↑</button>
@@ -101,15 +102,7 @@
       {/if}
     </li>
   {/each}
-  <li class="slot-row">
-    <button
-      class="slot"
-      class:active={isInsertionAt(path, nodes.length)}
-      data-testid={slotId(nodes.length)}
-      title="Add here"
-      onclick={() => setInsertion(path, nodes.length)}
-    ></button>
-  </li>
+  <AddStep {path} index={nodes.length} />
 </ul>
 
 <style>
@@ -128,32 +121,10 @@
   .row.selected {
     background: var(--selected);
   }
-  .slot-row {
-    height: 0.55rem;
-    display: flex;
-    align-items: center;
-  }
-  .slot {
-    flex: 1;
-    height: 100%;
-    border: 0;
-    background: none;
-    cursor: copy;
-    border-radius: 2px;
-    padding: 0;
-  }
-  .slot::after {
-    content: "";
+  .issue {
     display: block;
-    height: 2px;
-    border-radius: 2px;
-    background: transparent;
-  }
-  .slot:hover::after {
-    background: color-mix(in srgb, var(--accent) 40%, transparent);
-  }
-  .slot.active::after {
-    background: var(--accent);
+    font-size: 0.7rem;
+    color: var(--accent);
   }
   .group {
     border-left: 2px solid var(--rule);

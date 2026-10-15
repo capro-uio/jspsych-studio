@@ -3,6 +3,7 @@
   import ConditionsTable from "./lib/ConditionsTable.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
   import SettingsPanel from "./lib/SettingsPanel.svelte";
+  import AddStep from "./lib/AddStep.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
   import { panels } from "./lib/panels.svelte.ts";
   import { backgroundColor, textColor } from "@jspsych-studio/compiler";
@@ -124,7 +125,8 @@
       {#if tab === "timeline"}
         {#if project.spec.timeline.length === 0}
           <p class="muted">
-            Nothing here yet. Add a step below, or open an example to see how one fits together.
+            Nothing here yet. Open an example to see how one fits together, or use the + above to
+            add your first step.
           </p>
           <div class="examples">
             {#each examples as example (example.id)}
@@ -138,38 +140,10 @@
               </button>
             {/each}
           </div>
+          <AddStep path={[]} index={0} />
         {:else}
           <Tree nodes={project.spec.timeline} />
         {/if}
-
-        <div class="palette">
-          <button data-testid="add-trial" onclick={() => addAtInsertion(firstTrial())}>
-            + trial
-          </button>
-          <button
-            data-testid="add-block"
-            disabled={tables.length === 0}
-            title={tables.length === 0 ? "add a conditions table first" : ""}
-            onclick={() => addAtInsertion(newBlock(tables[0], firstTrial()))}
-          >
-            + block
-          </button>
-          <button data-testid="add-loop" onclick={() => addAtInsertion(newLoop(firstTrial()))}>
-            + loop
-          </button>
-          <button
-            data-testid="add-assign"
-            onclick={() => addAtInsertion(newAssign(firstTrial(), firstTrial()))}
-          >
-            + split
-          </button>
-          <button data-testid="add-branch" onclick={() => addAtInsertion(newBranch(firstTrial()))}>
-            + branch
-          </button>
-          <button data-testid="add-checkpoint" onclick={() => addAtInsertion(newCheckpoint())}>
-            + checkpoint
-          </button>
-        </div>
       {:else if tab === "conditions"}
         <ConditionsTable />
       {:else if tab === "files"}
@@ -265,11 +239,6 @@
     gap: 0.6rem;
     min-height: 0;
     overflow: auto;
-  }
-  .palette {
-    display: flex;
-    gap: 0.4rem;
-    flex-wrap: wrap;
   }
   .examples {
     display: flex;
