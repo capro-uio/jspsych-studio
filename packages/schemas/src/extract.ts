@@ -86,12 +86,13 @@ function toParameterSchema(
   descriptions: Record<string, string>,
 ): ParameterSchema {
   const jspsychType = typeNames.get(raw.type) ?? "OBJECT";
-  let schema = { ...JSON_TYPE[jspsychType] } as ParameterSchema;
+  let schema = { ...JSON_TYPE[jspsychType], jspsychType } as ParameterSchema;
   if (raw.array && schema.type !== "array") {
-    schema = { type: "array", items: schema } as ParameterSchema;
+    // The entries of a list are of the parameter's type too, and whatever edits one of them needs
+    // to know that: a list of HTML strings is a list of HTML strings, not of anonymous values.
+    schema = { type: "array", items: schema, jspsychType } as ParameterSchema;
   }
   schema.title = raw.pretty_name ?? name.replace(/_/g, " ");
-  schema.jspsychType = jspsychType;
   const description = descriptions[name];
   if (description) schema.description = description;
   if ("default" in raw) schema.default = raw.default;
