@@ -1,0 +1,93 @@
+{
+  "name": "stroop-demo",
+  "data": {
+    "save": "download"
+  },
+  "conditions": {
+    "stroop_trials": [
+      {
+        "word": "RED",
+        "ink": "red",
+        "answer": "r",
+        "congruency": "congruent"
+      },
+      {
+        "word": "BLUE",
+        "ink": "blue",
+        "answer": "b",
+        "congruency": "congruent"
+      },
+      {
+        "word": "RED",
+        "ink": "blue",
+        "answer": "b",
+        "congruency": "incongruent"
+      },
+      {
+        "word": "BLUE",
+        "ink": "red",
+        "answer": "r",
+        "congruency": "incongruent"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "kind": "trial",
+      "plugin": "instructions",
+      "params": {
+        "pages": [
+          "<p>You will see colour words printed in colour.</p><p>Press <b>r</b> if the ink is red, <b>b</b> if the ink is blue.</p>",
+          "<p>Answer as quickly as you can without making mistakes.</p>"
+        ],
+        "show_clickable_nav": true
+      }
+    },
+    {
+      "kind": "checkpoint",
+      "name": "instructions-read"
+    },
+    {
+      "kind": "block",
+      "conditions": "stroop_trials",
+      "randomize_order": true,
+      "repetitions": 2,
+      "children": [
+        {
+          "kind": "trial",
+          "plugin": "html-keyboard-response",
+          "params": {
+            "stimulus": "<p style='font-size:48px'>+</p>",
+            "choices": "NO_KEYS",
+            "trial_duration": 300
+          }
+        },
+        {
+          "kind": "trial",
+          "plugin": "html-keyboard-response",
+          "tag": "stroop",
+          "params": {
+            "stimulus": {
+              "var": "word",
+              "wrap": "<p style='font-size:48px'>{}</p>"
+            },
+            "choices": ["r", "b"]
+          },
+          "record": {
+            "congruency": {
+              "var": "congruency"
+            },
+            "ink": {
+              "var": "ink"
+            }
+          },
+          "score": {
+            "correct_if_response_equals": {
+              "var": "answer"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

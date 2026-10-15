@@ -20,6 +20,7 @@
     project,
   } from "./lib/project.svelte.ts";
   import { pluginNames } from "./lib/schemas.ts";
+  import { examples } from "./lib/examples.ts";
 
   // Adding goes inside the selected step when it can hold steps, and beside it otherwise, so a
   // step selected inside a group adds to that group rather than jumping back to the top level.
@@ -69,7 +70,21 @@
   <aside>
     <h2>Timeline</h2>
     {#if project.spec.timeline.length === 0}
-      <p class="muted">Empty. Add a trial to begin.</p>
+      <p class="muted">
+        Nothing here yet. Add a step below, or open an example to see how one fits together.
+      </p>
+      <div class="examples">
+        {#each examples as example (example.id)}
+          <button
+            class="example"
+            data-testid={`example-${example.id}`}
+            onclick={() => loadSpec(structuredClone(example.spec))}
+          >
+            <strong>{example.title}</strong>
+            <span class="muted">{example.description}</span>
+          </button>
+        {/each}
+      </div>
     {:else}
       <Tree nodes={project.spec.timeline} />
     {/if}
@@ -165,6 +180,23 @@
   .palette {
     display: flex;
     gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .examples {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+  .example {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    text-align: left;
+    padding: 0.5rem;
+    border: 1px dashed var(--rule);
+  }
+  .example .muted {
+    font-size: 0.78rem;
   }
   .form,
   .preview {
