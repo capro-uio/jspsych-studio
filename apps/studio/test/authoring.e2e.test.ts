@@ -206,19 +206,35 @@ describe("using an image file", () => {
 });
 
 describe("a parameter that takes a list", () => {
-  it("builds instruction pages and steps through them in the preview", async () => {
+  it("builds instruction pages in the formatted editor and steps through them", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
     await addTrial(page, "instructions");
 
     await page.getByTestId("mode-pages").selectOption("fixed");
-    await setText(page, "value-pages-0", "<p>Welcome to the study.</p>");
+
+    // Each page is written in the same formatted editor as any other text, so markup goes in
+    // through its HTML view.
+    const writePage = async (index: number, markup: string) => {
+      await page.getByTestId(`value-pages-${index}-markup`).click();
+      await setText(page, `value-pages-${index}-html`, markup);
+      await page.getByTestId(`value-pages-${index}-markup`).click();
+    };
+    await writePage(0, "<p>Welcome to the study.</p>");
     await page.getByTestId("add-value-pages").click();
-    await setText(page, "value-pages-1", "<p>Press Enter to start.</p>");
+    await writePage(1, "<p>Press Enter to start.</p>");
 
     await showAllParameters(page);
     await page.getByTestId("mode-show_clickable_nav").selectOption("fixed");
     await page.getByTestId("value-show_clickable_nav").check();
+
+    // Every page gets the formatted editor, not a bare one-line box.
+    expect(await page.getByTestId("value-pages-0-bold").count()).toBe(1);
+    expect(
+      await page
+        .getByTestId("value-pages-0")
+        .evaluate((node) => node.getBoundingClientRect().height),
+    ).toBeGreaterThan(80);
 
     await page.getByTestId("view-spec").click();
     const spec = JSON.parse(await page.getByTestId("spec-json").innerText());

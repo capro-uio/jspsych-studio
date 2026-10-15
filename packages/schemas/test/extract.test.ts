@@ -36,6 +36,12 @@ describe("extractSchemas", () => {
     expect(stimulus.description).toMatch(/path of the image file/i);
   });
 
+  it("gives the entries of a list the parameter's own type", () => {
+    const pages = report.schemas["instructions"].properties.pages;
+    expect(pages.jspsychType).toBe("HTML_STRING");
+    expect(pages.items?.jspsychType).toBe("HTML_STRING");
+  });
+
   it("expands nested COMPLEX parameters", () => {
     const questions = report.schemas["survey-likert"].properties.questions;
     expect(questions.type).toBe("array");
