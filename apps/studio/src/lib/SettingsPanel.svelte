@@ -1,7 +1,14 @@
 <script lang="ts">
+  import { backgroundColor, textColor } from "@jspsych-studio/compiler";
   import { project } from "./project.svelte.ts";
 
-  type Setting = "default_iti" | "minimum_valid_rt" | "show_progress_bar" | "progress_bar_message";
+  type Setting =
+    | "default_iti"
+    | "minimum_valid_rt"
+    | "show_progress_bar"
+    | "progress_bar_message"
+    | "background_color"
+    | "text_color";
 
   function set(field: Setting, value: number | string | boolean | undefined) {
     project.spec.settings ??= {};
@@ -40,6 +47,32 @@
     onchange={(event) => set("minimum_valid_rt", event.currentTarget.valueAsNumber)}
   />
 
+  <label for="setting-background">Experiment background</label>
+  <span class="colours">
+    <input
+      id="setting-background"
+      data-testid="setting-background"
+      type="color"
+      value={backgroundColor(project.spec.settings)}
+      onchange={(event) => set("background_color", event.currentTarget.value)}
+    />
+    <input
+      aria-label="Text colour"
+      data-testid="setting-text-colour"
+      type="color"
+      value={textColor(project.spec.settings)}
+      onchange={(event) => set("text_color", event.currentTarget.value)}
+    />
+    <button
+      class="reset"
+      data-testid="setting-colours-reset"
+      onclick={() => {
+        set("background_color", undefined);
+        set("text_color", undefined);
+      }}>reset</button
+    >
+  </span>
+
   <label class="check">
     <input
       type="checkbox"
@@ -65,10 +98,23 @@
     font-size: 0.85rem;
     color: var(--muted);
   }
-  .check {
+  .check,
+  .colours {
     display: flex;
     gap: 0.35rem;
     align-items: center;
+  }
+  .colours input {
+    width: 2.2rem;
+    height: 1.6rem;
+    padding: 0;
+  }
+  .reset {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 0.8rem;
+    cursor: pointer;
   }
   .muted {
     margin: 0;

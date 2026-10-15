@@ -102,6 +102,9 @@ export interface ExperimentSettings {
   minimum_valid_rt?: number;
   show_progress_bar?: boolean;
   progress_bar_message?: string;
+  /** What the participant's screen looks like; the editor shows text against the same backdrop. */
+  background_color?: string;
+  text_color?: string;
 }
 
 export interface Spec {
@@ -115,6 +118,8 @@ export interface Spec {
 
 export interface CompileResult {
   source: string;
+  /** CSS for the participant's page, from the experiment's appearance settings. */
+  styles: string;
   plugins: string[];
   /** jsPsych release and npm package name + version per plugin, so exports can pin exactly. */
   jspsych: string;

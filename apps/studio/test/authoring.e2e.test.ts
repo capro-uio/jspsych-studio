@@ -501,6 +501,38 @@ describe("writing stimulus text", () => {
     await page.close();
   }, 120_000);
 
+  it("writes text against the backdrop the participant will see", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response");
+    await page.getByTestId("mode-stimulus").selectOption("fixed");
+
+    const surfaceBackground = () =>
+      page.getByTestId("value-stimulus").evaluate((node) => getComputedStyle(node).backgroundColor);
+
+    // Default: jsPsych runs on white, so the editor is white whatever the builder's own theme is.
+    expect(await surfaceBackground()).toBe("rgb(255, 255, 255)");
+
+    await page.getByTestId("setting-background").evaluate((node) => {
+      (node as HTMLInputElement).value = "#101014";
+      node.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    // The editor follows the experiment, so light text on a dark stimulus screen stays readable.
+    await expect.poll(surfaceBackground, { timeout: 5_000 }).toBe("rgb(16, 16, 20)");
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(
+        () => preview.locator("body").evaluate((node) => getComputedStyle(node).backgroundColor),
+        { timeout: 20_000 },
+      )
+      .toBe("rgb(16, 16, 20)");
+
+    await page.close();
+  }, 120_000);
+
   it("gives the field room to show more than a line or two", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);

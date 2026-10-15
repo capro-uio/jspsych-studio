@@ -223,6 +223,12 @@
     font-size: 0.75rem;
     color: var(--muted);
   }
+  /* Text is written against the backdrop the participant will see it on, so a colour that would
+     vanish in the experiment looks wrong here too rather than the other way round. */
+  .surface {
+    background: var(--stimulus-background, #fff);
+    color: var(--stimulus-text, #000);
+  }
   .surface,
   .markup-area {
     display: block;
