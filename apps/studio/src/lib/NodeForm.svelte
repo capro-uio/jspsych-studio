@@ -178,6 +178,10 @@
   {/if}
 {:else if block}
   <h2>Block</h2>
+  <p class="help">
+    The steps inside run once for every row of the table. To make a step differ between rows, set
+    one of its settings to <em>from column</em>.
+  </p>
   <div class="field">
     <label for="block-conditions"><span class="name">conditions table</span></label>
     <select

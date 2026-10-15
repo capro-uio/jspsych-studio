@@ -6,9 +6,17 @@ export type NodePath = number[];
 
 const emptySpec = (): Spec => ({ name: "untitled-experiment", conditions: {}, timeline: [] });
 
+/** Where the next step goes: which list, and the position in it. Kept apart from the selection,
+ *  so clicking a step to edit it does not quietly move where new steps land. */
+export interface Insertion {
+  path: NodePath;
+  index: number;
+}
+
 export const project = $state({
   spec: emptySpec(),
   selection: null as NodePath | null,
+  insertion: { path: [], index: 0 } as Insertion,
 });
 
 // A path walks the tree one index per level. A node with several child lists — a split's groups,
@@ -60,9 +68,30 @@ export function addNode(parentPath: NodePath, node: SpecNode) {
   project.selection = [...parentPath, siblings.length - 1];
 }
 
+/** Puts a step where the insertion point says, then moves the point past it and selects it. */
+export function addAtInsertion(node: SpecNode) {
+  const { path, index } = project.insertion;
+  const siblings = childrenAt(path);
+  const position = Math.min(index, siblings.length);
+  siblings.splice(position, 0, node);
+  project.insertion = { path, index: position + 1 };
+  project.selection = [...path, position];
+}
+
+export function setInsertion(path: NodePath, index: number) {
+  project.insertion = { path, index };
+}
+
+export function isInsertionAt(path: NodePath, index: number) {
+  return project.insertion.index === index && project.insertion.path.join(".") === path.join(".");
+}
+
 export function removeNode(path: NodePath) {
-  childrenAt(path.slice(0, -1)).splice(path[path.length - 1], 1);
+  const parent = path.slice(0, -1);
+  childrenAt(parent).splice(path[path.length - 1], 1);
   project.selection = null;
+  // Keep the insertion point somewhere that still exists.
+  project.insertion = { path: parent, index: childrenAt(parent).length };
 }
 
 export function moveNode(path: NodePath, offset: number) {
@@ -74,35 +103,68 @@ export function moveNode(path: NodePath, offset: number) {
   project.selection = [...path.slice(0, -1), target];
 }
 
-export function newTrial(plugin: string): TrialNode {
-  return { kind: "trial", plugin, params: {} };
+export function newTrial(plugin: string, params: Record<string, unknown> = {}): TrialNode {
+  return { kind: "trial", plugin, params: params as TrialNode["params"] };
 }
 
-export function newBlock(conditions: string): SpecNode {
-  return { kind: "block", conditions, children: [] };
+// Containers arrive holding a step: an empty one is invalid the moment it is created, which reads
+// as having done something wrong rather than as having started something.
+export function newBlock(conditions: string, first: SpecNode): SpecNode {
+  return { kind: "block", conditions, children: [first] };
 }
 
-export function newAssign(): AssignNode {
+export function newAssign(first: SpecNode, second: SpecNode): AssignNode {
   return {
     kind: "assign",
     method: "random",
     groups: [
-      { name: "group 1", children: [] },
-      { name: "group 2", children: [] },
+      { name: "group 1", children: [first] },
+      { name: "group 2", children: [second] },
     ],
   };
 }
 
-export function newBranch(): BranchNode {
-  return { kind: "branch", when: { scope: "", accuracy_at_least: 0.8 }, then: [], otherwise: [] };
+export function newBranch(first: SpecNode): BranchNode {
+  // A branch judges trials that already happened, so it starts on one the experiment has.
+  const [existing] = tagsInUse();
+  return {
+    kind: "branch",
+    when: { scope: existing ?? "", accuracy_at_least: 0.8 },
+    then: [first],
+    otherwise: [],
+  };
 }
 
 export function newCheckpoint(): SpecNode {
   return { kind: "checkpoint", name: "checkpoint" };
 }
 
-export function newLoop(): SpecNode {
-  return { kind: "loop", repeat_while: { accuracy_below: 0.75, scope: "practice" }, children: [] };
+const PRACTICE_TAG = "practice";
+
+export function newLoop(first: SpecNode): SpecNode {
+  // The loop measures trials carrying a tag, so its own first step carries one: the relationship
+  // is visible from the start instead of being discovered through an error.
+  if (first.kind === "trial") first.tag = PRACTICE_TAG;
+  return {
+    kind: "loop",
+    repeat_while: { accuracy_below: 0.75, scope: PRACTICE_TAG },
+    children: [first],
+  };
+}
+
+/** Tags already used earlier in the experiment, which is what a branch can judge. */
+export function tagsInUse(): string[] {
+  const found: string[] = [];
+  const walk = (nodes: SpecNode[]) => {
+    for (const node of nodes) {
+      if (node.kind === "trial") {
+        if (node.tag) found.push(node.tag);
+      } else if (node.kind === "block" || node.kind === "loop") walk(node.children);
+      else for (const slot of slotsOf(node) ?? []) walk(slot.children);
+    }
+  };
+  walk(project.spec.timeline);
+  return [...new Set(found)];
 }
 
 export function conditionTableNames() {
@@ -148,11 +210,13 @@ export function parseSpec(text: string): Spec {
 export function startNewProject() {
   project.spec = emptySpec();
   project.selection = null;
+  project.insertion = { path: [], index: 0 };
 }
 
 export function loadSpec(spec: Spec) {
   project.spec = { conditions: {}, ...spec };
   project.selection = null;
+  project.insertion = { path: [], index: spec.timeline.length };
 }
 
 export function exportedSpec(): Spec {

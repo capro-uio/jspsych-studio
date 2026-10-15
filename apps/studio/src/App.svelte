@@ -10,7 +10,7 @@
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
   import {
-    addNode,
+    addAtInsertion,
     canHoldChildren,
     conditionTableNames,
     loadSpec,
@@ -24,21 +24,16 @@
     newTrial,
     project,
   } from "./lib/project.svelte.ts";
-  import { pluginNames } from "./lib/schemas.ts";
+  import { pluginNames, startingParams } from "./lib/schemas.ts";
   import { examples } from "./lib/examples.ts";
 
-  // Adding goes inside the selected step when it can hold steps, and beside it otherwise, so a
-  // step selected inside a group adds to that group rather than jumping back to the top level.
-  const insertionPath = $derived(
-    project.selection
-      ? canHoldChildren(project.selection)
-        ? project.selection
-        : project.selection.slice(0, -1)
-      : [],
-  );
   const tables = $derived(conditionTableNames());
 
+  const firstTrial = () => newTrial(DEFAULT_PLUGIN, startingParams(DEFAULT_PLUGIN));
+
   let importError = $state("");
+
+  const DEFAULT_PLUGIN = "html-keyboard-response";
 
   const TABS = [
     { id: "timeline", label: "Timeline" },
@@ -147,37 +142,31 @@
           <Tree nodes={project.spec.timeline} />
         {/if}
 
-        <p class="muted">
-          Adding into: {insertionPath.length === 0 ? "top level" : insertionPath.join(" › ")}
-        </p>
         <div class="palette">
-          <button
-            data-testid="add-trial"
-            onclick={() => addNode(insertionPath, newTrial(pluginNames[0]))}
-          >
+          <button data-testid="add-trial" onclick={() => addAtInsertion(firstTrial())}>
             + trial
           </button>
           <button
             data-testid="add-block"
             disabled={tables.length === 0}
             title={tables.length === 0 ? "add a conditions table first" : ""}
-            onclick={() => addNode(insertionPath, newBlock(tables[0]))}
+            onclick={() => addAtInsertion(newBlock(tables[0], firstTrial()))}
           >
             + block
           </button>
-          <button data-testid="add-loop" onclick={() => addNode(insertionPath, newLoop())}>
+          <button data-testid="add-loop" onclick={() => addAtInsertion(newLoop(firstTrial()))}>
             + loop
           </button>
-          <button data-testid="add-assign" onclick={() => addNode(insertionPath, newAssign())}>
+          <button
+            data-testid="add-assign"
+            onclick={() => addAtInsertion(newAssign(firstTrial(), firstTrial()))}
+          >
             + split
           </button>
-          <button data-testid="add-branch" onclick={() => addNode(insertionPath, newBranch())}>
+          <button data-testid="add-branch" onclick={() => addAtInsertion(newBranch(firstTrial()))}>
             + branch
           </button>
-          <button
-            data-testid="add-checkpoint"
-            onclick={() => addNode(insertionPath, newCheckpoint())}
-          >
+          <button data-testid="add-checkpoint" onclick={() => addAtInsertion(newCheckpoint())}>
             + checkpoint
           </button>
         </div>

@@ -168,7 +168,12 @@ function checkBranch(node: BranchNode, spec: Spec, problems: string[]) {
   const earlier = new Set(collectTags(spec.timeline).filter(Boolean));
   const inside = new Set(collectTags(slotsOf(node)?.flatMap((slot) => slot.children) ?? []));
   const available = [...earlier].filter((tag) => !inside.has(tag));
-  if (!available.includes(node.when.scope)) {
+  if (!node.when.scope) {
+    problems.push(
+      "a branch needs to know which trials it judges: tag them, then name that tag here" +
+        (available.length > 0 ? ` (tags available: ${available.join(", ")})` : ""),
+    );
+  } else if (!available.includes(node.when.scope)) {
     problems.push(
       `a branch judges "${node.when.scope}", but no trial before it carries that tag` +
         (available.length > 0 ? ` (tags available: ${available.join(", ")})` : ""),
