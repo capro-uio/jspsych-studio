@@ -39,6 +39,16 @@ async function addTrial(page: Page, plugin: string) {
 async function setFixed(page: Page, parameter: string, value: string) {
   await showAllParameters(page);
   await page.getByTestId(`mode-${parameter}`).selectOption("fixed");
+
+  // A rich text field takes markup through its HTML view, the way a person pasting a snippet
+  // would; typing into the formatted surface would insert the tags as literal text.
+  const markupToggle = page.getByTestId(`value-${parameter}-markup`);
+  if ((await markupToggle.count()) > 0) {
+    await markupToggle.click();
+    await setText(page, `value-${parameter}-html`, value);
+    await markupToggle.click();
+    return;
+  }
   await setText(page, `value-${parameter}`, value);
 }
 
@@ -79,8 +89,8 @@ async function buildFlanker(page: Page) {
 
 beforeAll(async () => {
   await build({ logLevel: "warn" });
-  server = await preview({ preview: { port: 5181 }, logLevel: "warn" });
-  appUrl = server.resolvedUrls?.local[0] ?? "http://localhost:5181/";
+  server = await preview({ preview: { port: 0 }, logLevel: "warn" });
+  appUrl = server.resolvedUrls!.local[0];
   browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 180_000);
 
@@ -403,6 +413,62 @@ describe("working with what is already there", () => {
     expect(await page.getByTestId("generated-code").innerText()).toContain(
       "show_progress_bar: true",
     );
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("writing stimulus text", () => {
+  it("formats without typing HTML, and still lets you edit the markup", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response");
+    await page.getByTestId("mode-stimulus").selectOption("fixed");
+
+    const surface = page.getByTestId("value-stimulus");
+    await surface.click();
+    await page.keyboard.type("Welcome");
+    await page.keyboard.press("ControlOrMeta+a");
+    await page.getByTestId("value-stimulus-bold").click();
+    await page.getByTestId("value-stimulus-size").selectOption("48px");
+
+    await page.getByTestId("view-spec").click();
+    const authored = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const stimulus = authored.timeline[0].params.stimulus as string;
+    expect(stimulus).toContain("Welcome");
+    expect(stimulus).toMatch(/<b>|font-weight|<strong>/);
+    expect(stimulus).toContain("48px");
+
+    // The preview shows it the way the participant will see it.
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("Welcome");
+
+    // The markup is still reachable for anyone who wants it.
+    await page.getByTestId("value-stimulus-markup").click();
+    const html = page.getByTestId("value-stimulus-html");
+    expect(await html.inputValue()).toContain("Welcome");
+    await html.fill("<p>typed as markup</p>");
+    await html.blur();
+    await page.getByTestId("view-spec").click();
+    const edited = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(edited.timeline[0].params.stimulus).toBe("<p>typed as markup</p>");
+
+    await page.close();
+  }, 180_000);
+
+  it("gives the field room to show more than a line or two", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response");
+    await page.getByTestId("mode-stimulus").selectOption("fixed");
+
+    const height = await page
+      .getByTestId("value-stimulus")
+      .evaluate((node) => node.getBoundingClientRect().height);
+    expect(height).toBeGreaterThan(80);
 
     await page.close();
   }, 120_000);

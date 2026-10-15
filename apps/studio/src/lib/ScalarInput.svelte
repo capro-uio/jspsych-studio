@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { ParameterSchema } from "@jspsych-studio/schemas";
+  import RichText from "./RichText.svelte";
 
   interface Props {
     parameter: ParameterSchema;
@@ -70,11 +71,7 @@
     onchange={(event) => onchange(parseKeys(event.currentTarget.value))}
   />
 {:else if parameter.jspsychType === "HTML_STRING"}
-  <textarea
-    data-testid={testId}
-    rows="2"
-    value={value as string}
-    onchange={(event) => onchange(event.currentTarget.value)}></textarea>
+  <RichText {testId} value={(value as string) ?? ""} {onchange} />
 {:else}
   <input
     data-testid={testId}
@@ -85,8 +82,7 @@
 
 <style>
   input:not([type="checkbox"]),
-  select,
-  textarea {
+  select {
     width: 100%;
   }
 </style>
