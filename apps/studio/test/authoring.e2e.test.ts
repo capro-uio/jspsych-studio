@@ -36,8 +36,14 @@ async function showAllParameters(page: Page) {
   if ((await toggle.innerText()).startsWith("show all")) await toggle.click();
 }
 
-async function addTrial(page: Page, plugin: string) {
-  await page.getByTestId("add-trial").click();
+/** Steps are added from the menu on a gap, so placement and kind are one choice. */
+async function addStep(page: Page, slot: string, kind: string) {
+  await page.getByTestId(slot).click();
+  await page.getByTestId(`${slot}-${kind}`).click();
+}
+
+async function addTrial(page: Page, plugin: string, slot: string) {
+  await addStep(page, slot, "trial");
   await page.getByTestId("trial-plugin").selectOption(plugin);
 }
 
@@ -67,14 +73,13 @@ async function buildFlanker(page: Page) {
   await page.getByTestId("add-table").click();
   await openTab(page, "timeline");
 
-  await addTrial(page, "html-keyboard-response");
+  await addTrial(page, "html-keyboard-response", "slot-0");
   await setFixed(page, "stimulus", INSTRUCTIONS);
 
   // A loop arrives holding a step; the block goes inside it and that first step is removed.
-  await page.getByTestId("add-loop").click();
+  await addStep(page, "slot-1", "loop");
   await setText(page, "loop-id", "practice");
-  await page.getByTestId("slot-1-1").click();
-  await page.getByTestId("add-block").click();
+  await addStep(page, "slot-1-1", "block");
   await page.getByTestId("delete-1-0").click();
 
   await page.getByTestId("node-1-0").click();
@@ -87,8 +92,7 @@ async function buildFlanker(page: Page) {
   await setFixed(page, "choices", "NO_KEYS");
   await setFixed(page, "trial_duration", "50");
 
-  await page.getByTestId("slot-1-0-1").click();
-  await addTrial(page, "html-keyboard-response");
+  await addTrial(page, "html-keyboard-response", "slot-1-0-1");
   await setText(page, "trial-tag", "practice");
   await showAllParameters(page);
   await page.getByTestId("mode-stimulus").selectOption("column");
@@ -142,7 +146,7 @@ describe("choosing where data goes", () => {
   it("warns when nothing is saved, and records the upload settings once chosen", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await setFixed(page, "stimulus", "<p>hello</p>");
 
     // The tab carries a mark while nothing is being kept, so the warning is not hidden behind it.
@@ -185,7 +189,7 @@ describe("using an image file", () => {
       .toContain("square.png");
 
     await openTab(page, "timeline");
-    await addTrial(page, "image-keyboard-response");
+    await addTrial(page, "image-keyboard-response", "slot-0");
     await showAllParameters(page);
     await page.getByTestId("mode-stimulus").selectOption("fixed");
     await page.getByTestId("value-stimulus").selectOption("square.png");
@@ -225,7 +229,7 @@ describe("a parameter that takes a list", () => {
   it("builds instruction pages in the formatted editor and steps through them", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "instructions");
+    await addTrial(page, "instructions", "slot-0");
 
     await page.getByTestId("mode-pages").selectOption("fixed");
 
@@ -279,7 +283,7 @@ describe("a list whose entries are objects", () => {
   it("builds a Likert question and renders its scale in the preview", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "survey-likert");
+    await addTrial(page, "survey-likert", "slot-0");
 
     await page.getByTestId("mode-questions").selectOption("fixed");
     await setText(page, "value-questions-0-prompt", "I enjoyed this task");
@@ -310,7 +314,7 @@ describe("splitting participants between groups", () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
 
-    await page.getByTestId("add-assign").click();
+    await addStep(page, "slot-0", "assign");
     await setText(page, "group-name-0", "wide");
     await setText(page, "group-name-1", "narrow");
     await setText(page, "assign-column", "spacing");
@@ -350,11 +354,11 @@ describe("routing on performance", () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
 
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await setText(page, "trial-tag", "screening");
     await setFixed(page, "stimulus", "<p>screening</p>");
 
-    await page.getByTestId("add-branch").click();
+    await addStep(page, "slot-1", "branch");
     await setText(page, "branch-scope", "screening");
     await page.getByTestId("branch-comparison").selectOption("at_least");
     await setText(page, "branch-threshold", "0.75");
@@ -363,9 +367,7 @@ describe("routing on performance", () => {
     await page.getByTestId("node-1-0-0").click();
     await setFixed(page, "stimulus", "<p>continue</p>");
 
-    await page.getByTestId("group-1-1").click();
-    await page.getByTestId("slot-1-1-0").click();
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-1-1-0");
     await setFixed(page, "stimulus", "<p>stop</p>");
 
     await page.getByTestId("view-spec").click();
@@ -458,7 +460,7 @@ describe("writing stimulus text", () => {
   it("formats without typing HTML, and still lets you edit the markup", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await page.getByTestId("mode-stimulus").selectOption("fixed");
 
     const surface = page.getByTestId("value-stimulus");
@@ -498,7 +500,7 @@ describe("writing stimulus text", () => {
   it("colours text even though the picker takes the focus away", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await page.getByTestId("mode-stimulus").selectOption("fixed");
 
     await page.getByTestId("value-stimulus").click();
@@ -524,7 +526,7 @@ describe("writing stimulus text", () => {
   it("writes text against the backdrop the participant will see", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await page.getByTestId("mode-stimulus").selectOption("fixed");
 
     const surfaceBackground = () =>
@@ -557,7 +559,7 @@ describe("writing stimulus text", () => {
   it("gives the field room to show more than a line or two", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await page.getByTestId("mode-stimulus").selectOption("fixed");
 
     const height = await page
@@ -642,7 +644,7 @@ describe("building a conditions table from a design", () => {
     expect(await page.getByTestId("cell-stroop_trials-3-ink").inputValue()).toBe("blue");
 
     await openTab(page, "timeline");
-    await page.getByTestId("add-block").click();
+    await addStep(page, "slot-0", "block");
     await page.getByTestId("view-spec").click();
     const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
     expect(spec.conditions.stroop_trials).toHaveLength(4);
@@ -674,14 +676,13 @@ describe("deciding where a step goes", () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
 
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-0");
     await setFixed(page, "stimulus", "<p>first</p>");
-    await addTrial(page, "html-keyboard-response");
+    await addTrial(page, "html-keyboard-response", "slot-1");
     await setFixed(page, "stimulus", "<p>third</p>");
 
-    // Choose the gap between them, while the second step stays the one being edited.
-    await page.getByTestId("slot-1").click();
-    await addTrial(page, "html-keyboard-response");
+    // The gap between them, chosen while the last step added is the one being edited.
+    await addTrial(page, "html-keyboard-response", "slot-1");
     await setFixed(page, "stimulus", "<p>second</p>");
 
     await page.getByTestId("view-spec").click();
@@ -697,11 +698,11 @@ describe("deciding where a step goes", () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
 
-    await page.getByTestId("add-trial").click();
+    await addStep(page, "slot-0", "trial");
     // Nothing is half-built: a new step has text in it and the preview runs.
     expect(await page.getByTestId("compile-error").count()).toBe(0);
 
-    await page.getByTestId("add-loop").click();
+    await addStep(page, "slot-1", "loop");
     expect(await page.getByTestId("compile-error").count()).toBe(0);
     expect(await page.getByTestId("node-1-0").count()).toBe(1);
 
@@ -721,6 +722,47 @@ describe("deciding where a step goes", () => {
     expect(await page.getByTestId("node-1").innerText()).toContain("repeat while accuracy under");
     expect(await page.getByTestId("node-1-0").innerText()).toContain("once for each of 4 rows");
     expect(await page.getByTestId("node-1-0").innerText()).toContain("× 2");
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("a step that is not ready says so itself", () => {
+  it("marks the step rather than only shouting in the preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addTrial(page, "html-keyboard-response", "slot-0");
+    expect(await page.getByTestId("issue-0").count()).toBe(0);
+
+    // An image step cannot know which picture to show until a file is chosen.
+    await page.getByTestId("trial-plugin").selectOption("image-keyboard-response");
+    await expect.poll(() => page.getByTestId("issue-0").count(), { timeout: 5_000 }).toBe(1);
+    expect(await page.getByTestId("issue-0").getAttribute("title")).toContain("requires parameter");
+
+    // The one that is fine is not marked.
+    await addTrial(page, "html-keyboard-response", "slot-1");
+    expect(await page.getByTestId("issue-1").count()).toBe(0);
+
+    await page.close();
+  }, 120_000);
+
+  it("offers the kinds of step at the gap, and says why one is unavailable", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await page.getByTestId("slot-0").click();
+    const menu = page.getByTestId("slot-0-menu");
+    await expect(menu).toBeDefined();
+    expect(await menu.innerText()).toContain("Trial");
+    expect(await menu.innerText()).toContain("repeat steps until performance is good enough");
+
+    // A block needs a table to repeat over, so it is offered but not usable yet.
+    expect(await page.getByTestId("slot-0-block").isDisabled()).toBe(true);
+    expect(await menu.innerText()).toContain("needs a conditions table");
+
+    await page.getByTestId("slot-0-cancel").click();
+    expect(await page.getByTestId("slot-0-menu").count()).toBe(0);
 
     await page.close();
   }, 120_000);

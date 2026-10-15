@@ -17,9 +17,13 @@
     project,
     selectedNode,
   } from "./project.svelte.ts";
-  import { editableParameters, pluginNames } from "./schemas.ts";
+  import { editableParameters, pluginNames, startingParams } from "./schemas.ts";
+  import { currentProblems, problemsAt } from "./problems.svelte.ts";
 
   const node = $derived(selectedNode());
+  const stepProblems = $derived(
+    project.selection ? problemsAt(currentProblems(), project.selection) : [],
+  );
   const trial = $derived(node?.kind === "trial" ? (node as TrialNode) : null);
   const block = $derived(node?.kind === "block" ? (node as BlockNode) : null);
   const loop = $derived(node?.kind === "loop" ? (node as LoopNode) : null);
@@ -82,6 +86,14 @@
   }
 </script>
 
+{#if stepProblems.length > 0}
+  <ul class="problems" data-testid="step-problems">
+    {#each stepProblems as problem (problem.message)}
+      <li>{problem.message}</li>
+    {/each}
+  </ul>
+{/if}
+
 {#if !node}
   <p class="empty">Select a step in the timeline, or add one.</p>
   {#if project.selection}
@@ -96,8 +108,12 @@
       data-testid="trial-plugin"
       value={trial.plugin}
       onchange={(event) => {
-        trial.plugin = event.currentTarget.value;
-        trial.params = {};
+        const chosen = event.currentTarget.value;
+        if (chosen === trial.plugin) return;
+        // Settings do not carry across step types, but the new type should still arrive ready to
+        // run where it can.
+        trial.plugin = chosen;
+        trial.params = startingParams(chosen) as typeof trial.params;
       }}
     >
       {#each pluginNames as plugin (plugin)}
@@ -421,6 +437,12 @@
     padding: 0.2rem 0;
     color: var(--muted);
     text-decoration: underline;
+  }
+  .problems {
+    margin: 0 0 0.5rem;
+    padding-left: 1rem;
+    color: var(--accent);
+    font-size: 0.85rem;
   }
   .empty,
   .help {

@@ -2,6 +2,7 @@
   import { compileSpec, emitHtml, SpecError } from "@jspsych-studio/compiler";
   import type { Spec } from "@jspsych-studio/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
+  import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
 
   type View = "experiment" | "code" | "spec";
@@ -81,7 +82,19 @@
   </nav>
 
   {#if error}
-    <pre class="error" data-testid="compile-error">{error}</pre>
+    {@const problems = currentProblems()}
+    {@const overall = overallProblems(problems)}
+    <div class="error" data-testid="compile-error">
+      {#each overall as problem (problem.message)}
+        <p>{problem.message}</p>
+      {/each}
+      {#if problems.length > overall.length}
+        <p data-testid="steps-need-attention">
+          {problems.length - overall.length} step{problems.length - overall.length === 1 ? "" : "s"}
+          need attention; each one says what it needs.
+        </p>
+      {/if}
+    </div>
   {/if}
 
   {#if view === "experiment"}
@@ -144,9 +157,15 @@
   .error {
     flex: 0 0 auto;
     max-height: 9rem;
+    overflow: auto;
     margin-bottom: 0.4rem;
+    padding: 0.5rem;
+    border: 1px solid var(--accent);
+    border-radius: 6px;
     color: var(--accent);
-    border-color: var(--accent);
+  }
+  .error p {
+    margin: 0 0 0.25rem;
   }
   .placeholder {
     color: var(--muted);
