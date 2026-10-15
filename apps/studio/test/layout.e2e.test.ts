@@ -52,8 +52,8 @@ function reach(page: Page, testId: string) {
 
 beforeAll(async () => {
   await build({ logLevel: "warn" });
-  server = await preview({ preview: { port: 5182 }, logLevel: "warn" });
-  appUrl = server.resolvedUrls?.local[0] ?? "http://localhost:5182/";
+  server = await preview({ preview: { port: 0 }, logLevel: "warn" });
+  appUrl = server.resolvedUrls!.local[0];
   browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 180_000);
 

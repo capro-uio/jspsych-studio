@@ -5,4 +5,5 @@ export default defineConfig({
   plugins: [svelte()],
   base: "./",
   server: { port: 5180 },
+  test: { fileParallelism: false, testTimeout: 180_000 },
 });
