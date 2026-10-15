@@ -70,20 +70,24 @@ async function buildFlanker(page: Page) {
   await addTrial(page, "html-keyboard-response");
   await setFixed(page, "stimulus", INSTRUCTIONS);
 
+  // A loop arrives holding a step; the block goes inside it and that first step is removed.
   await page.getByTestId("add-loop").click();
   await setText(page, "loop-id", "practice");
-
+  await page.getByTestId("slot-1-1").click();
   await page.getByTestId("add-block").click();
+  await page.getByTestId("delete-1-0").click();
+
+  await page.getByTestId("node-1-0").click();
   await setText(page, "block-repetitions", "2");
   await page.getByTestId("block-randomize").check();
 
-  const blockPath = "node-1-0";
-  await addTrial(page, "html-keyboard-response");
+  // The block's own first step becomes the fixation.
+  await page.getByTestId("node-1-0-0").click();
   await setFixed(page, "stimulus", "<p style='font-size:48px'>+</p>");
   await setFixed(page, "choices", "NO_KEYS");
   await setFixed(page, "trial_duration", "50");
 
-  await page.getByTestId(blockPath).click();
+  await page.getByTestId("slot-1-0-1").click();
   await addTrial(page, "html-keyboard-response");
   await setText(page, "trial-tag", "practice");
   await showAllParameters(page);
@@ -311,9 +315,9 @@ describe("splitting participants between groups", () => {
     await setText(page, "group-name-1", "narrow");
     await setText(page, "assign-column", "spacing");
 
+    // Each group arrives with a step in it, so they only need their text.
     for (const [index, label] of ["wide", "narrow"].entries()) {
-      await page.getByTestId(`group-0-${index}`).click();
-      await addTrial(page, "html-keyboard-response");
+      await page.getByTestId(`node-0-${index}-0`).click();
       await setFixed(page, "stimulus", `<p>${label} condition</p>`);
     }
 
@@ -350,17 +354,19 @@ describe("routing on performance", () => {
     await setText(page, "trial-tag", "screening");
     await setFixed(page, "stimulus", "<p>screening</p>");
 
-    await page.getByTestId("node-0").click();
     await page.getByTestId("add-branch").click();
     await setText(page, "branch-scope", "screening");
     await page.getByTestId("branch-comparison").selectOption("at_least");
     await setText(page, "branch-threshold", "0.75");
 
-    for (const [index, label] of ["continue", "stop"].entries()) {
-      await page.getByTestId(`group-1-${index}`).click();
-      await addTrial(page, "html-keyboard-response");
-      await setFixed(page, "stimulus", `<p>${label}</p>`);
-    }
+    // The first path arrives with a step; the other is empty until something is put in it.
+    await page.getByTestId("node-1-0-0").click();
+    await setFixed(page, "stimulus", "<p>continue</p>");
+
+    await page.getByTestId("group-1-1").click();
+    await page.getByTestId("slot-1-1-0").click();
+    await addTrial(page, "html-keyboard-response");
+    await setFixed(page, "stimulus", "<p>stop</p>");
 
     await page.getByTestId("view-spec").click();
     const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
@@ -658,6 +664,63 @@ describe("building a conditions table from a design", () => {
       .poll(() => page.getByTestId("factor-problem").first().innerText(), { timeout: 5_000 })
       .toContain("needs a name");
     expect(await page.getByTestId("grid-stroop_trials").count()).toBe(0);
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("deciding where a step goes", () => {
+  it("puts the next step at the chosen gap, not beside whatever is selected", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addTrial(page, "html-keyboard-response");
+    await setFixed(page, "stimulus", "<p>first</p>");
+    await addTrial(page, "html-keyboard-response");
+    await setFixed(page, "stimulus", "<p>third</p>");
+
+    // Choose the gap between them, while the second step stays the one being edited.
+    await page.getByTestId("slot-1").click();
+    await addTrial(page, "html-keyboard-response");
+    await setFixed(page, "stimulus", "<p>second</p>");
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(
+      spec.timeline.map((step: { params: { stimulus: string } }) => step.params.stimulus),
+    ).toEqual(["<p>first</p>", "<p>second</p>", "<p>third</p>"]);
+
+    await page.close();
+  }, 120_000);
+
+  it("adds steps that are ready to run, and containers that already hold one", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await page.getByTestId("add-trial").click();
+    // Nothing is half-built: a new step has text in it and the preview runs.
+    expect(await page.getByTestId("compile-error").count()).toBe(0);
+
+    await page.getByTestId("add-loop").click();
+    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    expect(await page.getByTestId("node-1-0").count()).toBe(1);
+
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("Your text here");
+
+    await page.close();
+  }, 120_000);
+
+  it("says what each step does rather than what it is", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    expect(await page.getByTestId("node-1").innerText()).toContain("repeat while accuracy under");
+    expect(await page.getByTestId("node-1-0").innerText()).toContain("once for each of 4 rows");
+    expect(await page.getByTestId("node-1-0").innerText()).toContain("× 2");
 
     await page.close();
   }, 120_000);

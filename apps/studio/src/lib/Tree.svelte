@@ -2,7 +2,15 @@
   import { slotsOf } from "@jspsych-studio/compiler";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
-  import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
+  import {
+    conditionColumns,
+    isInsertionAt,
+    moveNode,
+    project,
+    removeNode,
+    setInsertion,
+    type NodePath,
+  } from "./project.svelte.ts";
 
   interface Props {
     nodes: SpecNode[];
@@ -12,22 +20,47 @@
 
   const { nodes, path = [], inGroup = false }: Props = $props();
 
+  function describeAccuracy(rule: {
+    scope: string;
+    accuracy_below?: number;
+    accuracy_at_least?: number;
+  }) {
+    const below = rule.accuracy_at_least === undefined;
+    const threshold = below ? (rule.accuracy_below ?? 0) : rule.accuracy_at_least!;
+    return `${below ? "under" : "at least"} ${Math.round(threshold * 100)}% on ${rule.scope || "…"}`;
+  }
+
   function label(node: SpecNode) {
     if (node.kind === "trial") return node.plugin + (node.tag ? ` · ${node.tag}` : "");
-    if (node.kind === "block") return `block over ${node.conditions}`;
-    if (node.kind === "checkpoint") return node.name;
-    if (node.kind === "assign") {
-      return `${node.method} split · ${node.groups.map((group) => group.name).join(" / ")}`;
+    if (node.kind === "block") {
+      const rows = (project.spec.conditions?.[node.conditions] ?? []).length;
+      const repeats = node.repetitions && node.repetitions > 1 ? ` × ${node.repetitions}` : "";
+      return `once for each of ${rows} rows${repeats} · ${node.conditions}`;
     }
-    if (node.kind === "branch") return `branch on ${node.when.scope || "…"}`;
-    return `loop${node.id ? ` · ${node.id}` : ""}`;
+    if (node.kind === "checkpoint") return `reached “${node.name}”`;
+    if (node.kind === "assign") {
+      return `${node.groups.map((group) => group.name).join(" or ")} · ${node.method}`;
+    }
+    if (node.kind === "branch") return `if accuracy ${describeAccuracy(node.when)}`;
+    return `repeat while accuracy ${describeAccuracy(node.repeat_while)}`;
   }
+
+  const slotId = (index: number) => `slot-${[...path, index].join("-")}`;
 
   const isSelected = (childPath: NodePath) => project.selection?.join(".") === childPath.join(".");
 </script>
 
 <ul>
   {#each nodes as node, index (node)}
+    <li class="slot-row">
+      <button
+        class="slot"
+        class:active={isInsertionAt(path, index)}
+        data-testid={slotId(index)}
+        title="Add here"
+        onclick={() => setInsertion(path, index)}
+      ></button>
+    </li>
     {@const childPath = [...path, index]}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
@@ -68,6 +101,15 @@
       {/if}
     </li>
   {/each}
+  <li class="slot-row">
+    <button
+      class="slot"
+      class:active={isInsertionAt(path, nodes.length)}
+      data-testid={slotId(nodes.length)}
+      title="Add here"
+      onclick={() => setInsertion(path, nodes.length)}
+    ></button>
+  </li>
 </ul>
 
 <style>
@@ -85,6 +127,33 @@
   }
   .row.selected {
     background: var(--selected);
+  }
+  .slot-row {
+    height: 0.55rem;
+    display: flex;
+    align-items: center;
+  }
+  .slot {
+    flex: 1;
+    height: 100%;
+    border: 0;
+    background: none;
+    cursor: copy;
+    border-radius: 2px;
+    padding: 0;
+  }
+  .slot::after {
+    content: "";
+    display: block;
+    height: 2px;
+    border-radius: 2px;
+    background: transparent;
+  }
+  .slot:hover::after {
+    background: color-mix(in srgb, var(--accent) 40%, transparent);
+  }
+  .slot.active::after {
+    background: var(--accent);
   }
   .group {
     border-left: 2px solid var(--rule);

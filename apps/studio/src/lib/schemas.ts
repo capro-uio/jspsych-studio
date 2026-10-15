@@ -33,3 +33,18 @@ export function editableParameters(plugin: string) {
       required: schema.required.includes(name),
     }));
 }
+
+const PLACEHOLDER_TEXT = "<p>Your text here</p>";
+
+/** Required text parameters get placeholder content so a new step is not born invalid. */
+export function startingParams(plugin: string): Record<string, unknown> {
+  const schema = schemas.plugins[plugin];
+  if (!schema) return {};
+  const params: Record<string, unknown> = {};
+  for (const name of schema.required) {
+    const parameter = schema.properties[name];
+    if (parameter?.jspsychType !== "HTML_STRING") continue;
+    params[name] = parameter.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+  }
+  return params;
+}
