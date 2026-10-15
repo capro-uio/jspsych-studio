@@ -57,6 +57,7 @@ window.studioExperiment = { jsPsych };
     <meta charset="utf-8" />
     <title>${escapeHtmlText(options.title)}</title>
     <link rel="stylesheet" href="${stylesheet}" />
+${result.styles ? `    <style>\n${result.styles.replace(/^/gm, "      ").trimEnd()}\n    </style>` : ""}
 ${scripts}
   </head>
   <body>

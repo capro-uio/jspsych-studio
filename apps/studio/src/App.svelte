@@ -5,6 +5,7 @@
   import SettingsPanel from "./lib/SettingsPanel.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
   import { panels } from "./lib/panels.svelte.ts";
+  import { backgroundColor, textColor } from "@jspsych-studio/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
@@ -83,7 +84,11 @@
   </label>
 </header>
 
-<main style={`--panel-widths: ${panels.widths.map((width) => `${width}fr`).join(" auto ")}`}>
+<main
+  style={`--panel-widths: ${panels.widths.map((width) => `${width}fr`).join(" auto ")};` +
+    `--stimulus-background: ${backgroundColor(project.spec.settings)};` +
+    `--stimulus-text: ${textColor(project.spec.settings)}`}
+>
   <aside>
     <h2>Timeline</h2>
     {#if project.spec.timeline.length === 0}

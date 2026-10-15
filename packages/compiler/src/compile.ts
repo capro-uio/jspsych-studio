@@ -1,4 +1,5 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
+import { compileAppearance } from "./appearance.ts";
 import { compileAssetMap, compilePreloadStep, isMediaParameter } from "./assets.ts";
 import { compileAccuracyPredicate } from "./conditions.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
@@ -219,5 +220,11 @@ export function compileSpec(
     (assets.length > 0 ? `${compileAssetMap(assets)}\n` : "") +
     (spec.data ? `${compileParticipantProperties()}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
-  return { source, plugins: [...plugins], jspsych: bundle.jspsych, packages };
+  return {
+    source,
+    styles: compileAppearance(spec.settings),
+    plugins: [...plugins],
+    jspsych: bundle.jspsych,
+    packages,
+  };
 }
