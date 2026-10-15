@@ -11,6 +11,35 @@
   let editingMarkup = $state(false);
   let markup = $state("");
 
+  // Opening the colour picker or a menu takes focus away and drops the selection with it, so the
+  // last selection made inside this editor is remembered and put back before a command runs.
+  let savedRange: Range | null = null;
+
+  function rememberSelection() {
+    const selection = document.getSelection();
+    if (!selection?.rangeCount || !editor) return;
+    const range = selection.getRangeAt(0);
+    if (editor.contains(range.commonAncestorContainer)) savedRange = range.cloneRange();
+  }
+
+  function restoreSelection() {
+    if (!editor) return;
+    editor.focus();
+    const selection = document.getSelection();
+    if (!selection) return;
+    // With nothing selected, a formatting choice is meant for the whole field rather than for
+    // nothing at all.
+    if (!savedRange || savedRange.collapsed) {
+      const whole = document.createRange();
+      whole.selectNodeContents(editor);
+      selection.removeAllRanges();
+      selection.addRange(whole);
+      return;
+    }
+    selection.removeAllRanges();
+    selection.addRange(savedRange);
+  }
+
   // The editable surface holds the document; rewriting it from `value` on every keystroke would
   // move the caret, so it is only seeded when the step being edited changes underneath it.
   $effect(() => {
@@ -23,8 +52,11 @@
   }
 
   function format(command: string, argument?: string) {
-    editor?.focus();
+    restoreSelection();
+    // Emit inline styles rather than <font> tags, which are easier to read in the HTML view.
+    document.execCommand("styleWithCSS", false, "true");
     document.execCommand(command, false, argument);
+    rememberSelection();
     publish();
   }
 
@@ -59,6 +91,7 @@
       type="button"
       title="Italic"
       data-testid={`${testId}-italic`}
+      onpointerdown={(event) => event.preventDefault()}
       onclick={() => format("italic")}><i>I</i></button
     >
     <select
@@ -66,15 +99,26 @@
       data-testid={`${testId}-size`}
       onchange={(event) => {
         const size = event.currentTarget.value;
-        format("fontSize", "7");
-        // execCommand only offers seven sizes, so the chosen pixel size replaces the font tag it
-        // leaves behind.
-        editor?.querySelectorAll('font[size="7"]').forEach((node) => {
-          const span = document.createElement("span");
-          if (size) span.style.fontSize = size;
-          span.innerHTML = node.innerHTML;
-          node.replaceWith(span);
-        });
+        restoreSelection();
+        document.execCommand("styleWithCSS", false, "true");
+        document.execCommand("fontSize", false, "7");
+        // execCommand only offers seven sizes, so the chosen pixel size replaces whatever marker
+        // it left behind.
+        editor
+          ?.querySelectorAll('font[size="7"], span[style*="xxx-large"], span[style*="x-large"]')
+          .forEach((node) => {
+            const span = document.createElement("span");
+            // Keep whatever else was applied to this run of text; only the size is being changed.
+            span.setAttribute("style", node.getAttribute("style") ?? "");
+            span.style.fontSize = size;
+            span.innerHTML = node.innerHTML;
+            node.replaceWith(
+              span.style.cssText
+                ? span
+                : document.createRange().createContextualFragment(node.innerHTML),
+            );
+          });
+        rememberSelection();
         publish();
       }}
     >
@@ -92,12 +136,14 @@
       type="button"
       title="Centre"
       data-testid={`${testId}-center`}
+      onpointerdown={(event) => event.preventDefault()}
       onclick={() => format("justifyCenter")}>≡</button
     >
     <button
       type="button"
       title="Remove formatting"
       data-testid={`${testId}-clear`}
+      onpointerdown={(event) => event.preventDefault()}
       onclick={() => format("removeFormat")}>⌫</button
     >
     <span class="spacer"></span>
@@ -126,7 +172,12 @@
       data-testid={testId}
       bind:this={editor}
       oninput={publish}
-      onblur={publish}
+      onkeyup={rememberSelection}
+      onmouseup={rememberSelection}
+      onblur={() => {
+        rememberSelection();
+        publish();
+      }}
     ></div>
   {/if}
 </div>

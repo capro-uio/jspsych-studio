@@ -132,6 +132,25 @@ describe("resizing the panels", () => {
     await page.close();
   }, 120_000);
 
+  it("moves the boundary between the form and the preview too", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    const widthOf = (selector: string) =>
+      page.evaluate((css) => document.querySelector(css)!.getBoundingClientRect().width, selector);
+
+    const before = await widthOf(".form");
+    const divider = page.getByTestId("divider-1");
+    const box = (await divider.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 220, box.y + box.height / 2, { steps: 10 });
+    await page.mouse.up();
+
+    expect(await widthOf(".form")).toBeGreaterThan(before + 100);
+    await page.getByTestId("divider-1").dblclick();
+    await page.close();
+  }, 120_000);
+
   it("takes the keyboard as well as the pointer", async () => {
     const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
     await page.goto(appUrl);
