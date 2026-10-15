@@ -1,10 +1,12 @@
 <script lang="ts">
+  import FactorBuilder from "./FactorBuilder.svelte";
   import { conditionColumns, project } from "./project.svelte.ts";
 
   let tableName = $state("");
   let pasted = $state("");
   let message = $state("");
   let open = $state<string | null>(null);
+  let adding = $state<"factors" | "paste">("factors");
 
   const tables = $derived(Object.entries(project.spec.conditions ?? {}));
 
@@ -153,16 +155,33 @@
     {/if}
   {/each}
 
-  <input data-testid="table-name" placeholder="new table name" bind:value={tableName} />
-  <textarea
-    data-testid="table-rows"
-    rows="3"
-    placeholder="Paste CSV or TSV with a header row"
-    bind:value={pasted}></textarea>
-  <button data-testid="add-table" disabled={!tableName || !pasted} onclick={addTable}>
-    Add table
-  </button>
-  {#if message}<p class="muted" data-testid="table-message">{message}</p>{/if}
+  <div class="adding">
+    <button
+      class:active={adding === "factors"}
+      data-testid="add-by-factors"
+      onclick={() => (adding = "factors")}>Build one</button
+    >
+    <button
+      class:active={adding === "paste"}
+      data-testid="add-by-paste"
+      onclick={() => (adding = "paste")}>Paste one</button
+    >
+  </div>
+
+  {#if adding === "factors"}
+    <FactorBuilder onbuilt={(name) => (open = name)} />
+  {:else}
+    <input data-testid="table-name" placeholder="new table name" bind:value={tableName} />
+    <textarea
+      data-testid="table-rows"
+      rows="3"
+      placeholder="Paste CSV or TSV with a header row"
+      bind:value={pasted}></textarea>
+    <button data-testid="add-table" disabled={!tableName || !pasted} onclick={addTable}>
+      Add table
+    </button>
+    {#if message}<p class="muted" data-testid="table-message">{message}</p>{/if}
+  {/if}
 </section>
 
 <style>
@@ -243,5 +262,23 @@
     color: var(--muted);
     font-size: 0.8rem;
     margin: 0;
+  }
+  .adding {
+    display: flex;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+  }
+  .adding button {
+    flex: 1;
+    border: 1px solid var(--rule);
+    background: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    font-size: 0.85rem;
+    color: var(--muted);
+  }
+  .adding button.active {
+    border-color: var(--accent);
+    color: inherit;
   }
 </style>
