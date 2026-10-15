@@ -67,7 +67,9 @@ describe.each(VIEWPORTS)("at $name ($width×$height)", ({ width, height, columns
     const page = await browser.newPage({ viewport: { width, height } });
     await fillWithContent(page);
 
-    expect(await reach(page, "data-mode")).not.toBe("unreachable");
+    await page.getByTestId("tab-study").click();
+    expect(await reach(page, "setting-default-iti")).not.toBe("unreachable");
+    await page.getByTestId("tab-timeline").click();
     expect(await reach(page, "toggle-parameters")).not.toBe("unreachable");
 
     await page.close();

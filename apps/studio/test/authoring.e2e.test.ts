@@ -26,6 +26,11 @@ async function setText(page: Page, testId: string, value: string) {
   await field.blur();
 }
 
+/** The sidebar is tabbed, so reaching conditions, files or study settings means opening that tab. */
+async function openTab(page: Page, id: "timeline" | "conditions" | "files" | "study") {
+  await page.getByTestId(`tab-${id}`).click();
+}
+
 async function showAllParameters(page: Page) {
   const toggle = page.getByTestId("toggle-parameters");
   if ((await toggle.innerText()).startsWith("show all")) await toggle.click();
@@ -55,9 +60,11 @@ async function setFixed(page: Page, parameter: string, value: string) {
 async function buildFlanker(page: Page) {
   await setText(page, "experiment-name", "flanker-practice");
 
+  await openTab(page, "conditions");
   await setText(page, "table-name", "flanker_trials");
   await setText(page, "table-rows", CONDITIONS_CSV);
   await page.getByTestId("add-table").click();
+  await openTab(page, "timeline");
 
   await addTrial(page, "html-keyboard-response");
   await setFixed(page, "stimulus", INSTRUCTIONS);
@@ -133,9 +140,11 @@ describe("choosing where data goes", () => {
     await addTrial(page, "html-keyboard-response");
     await setFixed(page, "stimulus", "<p>hello</p>");
 
-    await expect(page.getByTestId("data-warning")).toBeDefined();
-    expect(await page.getByTestId("data-warning").count()).toBe(1);
+    // The tab carries a mark while nothing is being kept, so the warning is not hidden behind it.
+    expect(await page.getByTestId("tab-study").innerText()).toContain("•");
 
+    await openTab(page, "study");
+    expect(await page.getByTestId("data-warning").count()).toBe(1);
     await page.getByTestId("data-mode").selectOption("post");
     await expect
       .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 5_000 })
@@ -162,6 +171,7 @@ describe("using an image file", () => {
     const page = await browser.newPage();
     await page.goto(appUrl);
 
+    await openTab(page, "files");
     await page
       .getByTestId("add-assets")
       .setInputFiles(fileURLToPath(new URL("./fixtures/square.png", import.meta.url)));
@@ -169,6 +179,7 @@ describe("using an image file", () => {
       .poll(() => page.getByTestId("asset-message").innerText(), { timeout: 5_000 })
       .toContain("square.png");
 
+    await openTab(page, "timeline");
     await addTrial(page, "image-keyboard-response");
     await showAllParameters(page);
     await page.getByTestId("mode-stimulus").selectOption("fixed");
@@ -391,6 +402,7 @@ describe("working with what is already there", () => {
     await page.goto(appUrl);
     await page.getByTestId("example-flanker").click();
 
+    await openTab(page, "conditions");
     await page.getByTestId("open-table-flanker_trials").click();
     await expect(page.getByTestId("grid-flanker_trials")).toBeDefined();
     expect(await page.getByTestId("cell-flanker_trials-0-congruency").inputValue()).toBe(
@@ -419,6 +431,7 @@ describe("working with what is already there", () => {
     await page.goto(appUrl);
     await page.getByTestId("example-flanker").click();
 
+    await openTab(page, "study");
     await setText(page, "setting-default-iti", "250");
     await page.getByTestId("setting-progress-bar").check();
 
@@ -513,6 +526,7 @@ describe("writing stimulus text", () => {
     // Default: jsPsych runs on white, so the editor is white whatever the builder's own theme is.
     expect(await surfaceBackground()).toBe("rgb(255, 255, 255)");
 
+    await openTab(page, "study");
     await page.getByTestId("setting-background").evaluate((node) => {
       (node as HTMLInputElement).value = "#101014";
       node.dispatchEvent(new Event("change", { bubbles: true }));
@@ -543,6 +557,54 @@ describe("writing stimulus text", () => {
       .getByTestId("value-stimulus")
       .evaluate((node) => node.getBoundingClientRect().height);
     expect(height).toBeGreaterThan(80);
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("finding things in the sidebar", () => {
+  it("keeps each group of settings on its own tab", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    // A long timeline no longer pushes everything else out of sight.
+    expect(await page.getByTestId("data-mode").count()).toBe(0);
+    expect(await page.getByTestId("node-0").count()).toBe(1);
+
+    await openTab(page, "study");
+    expect(await page.getByTestId("data-mode").count()).toBe(1);
+    expect(await page.getByTestId("node-0").count()).toBe(0);
+
+    await openTab(page, "conditions");
+    expect(await page.getByTestId("open-table-flanker_trials").count()).toBe(1);
+
+    await openTab(page, "files");
+    expect(await page.getByTestId("add-assets").count()).toBe(1);
+
+    await page.close();
+  }, 120_000);
+
+  it("marks the study tab while results are going nowhere", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    // An empty project has nothing to lose, so there is nothing to warn about.
+    expect(await page.getByTestId("tab-study").innerText()).not.toContain("•");
+
+    // The flanker example does not say where its data goes, and the mark says so.
+    await page.getByTestId("example-flanker").click();
+    await expect
+      .poll(() => page.getByTestId("tab-study").innerText(), { timeout: 5_000 })
+      .toContain("•");
+
+    // The Stroop example downloads its results, so it is not flagged.
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.getByTestId("new-project").click();
+    await page.getByTestId("example-stroop").click();
+    await expect
+      .poll(() => page.getByTestId("tab-study").innerText(), { timeout: 5_000 })
+      .not.toContain("•");
 
     await page.close();
   }, 120_000);

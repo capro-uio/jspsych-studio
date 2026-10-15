@@ -47,7 +47,6 @@
 </script>
 
 <section>
-  <h2>Files</h2>
   {#each assets as asset (asset.name)}
     <div class="asset">
       <img src={asset.url} alt="" />
@@ -70,10 +69,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-  }
-  h2 {
-    margin: 0;
-    font-size: 1rem;
   }
   .asset {
     display: flex;
