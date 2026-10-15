@@ -94,8 +94,19 @@ export interface Asset {
   url: string;
 }
 
+/** Settings that apply to the whole experiment rather than to one step. */
+export interface ExperimentSettings {
+  /** Gap in milliseconds after every trial, unless a step sets its own. */
+  default_iti?: number;
+  /** Responses faster than this are ignored, in milliseconds. */
+  minimum_valid_rt?: number;
+  show_progress_bar?: boolean;
+  progress_bar_message?: string;
+}
+
 export interface Spec {
   name: string;
+  settings?: ExperimentSettings;
   data?: DataSettings;
   assets?: Asset[];
   conditions?: Record<string, Record<string, unknown>[]>;

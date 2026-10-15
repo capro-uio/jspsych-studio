@@ -9,25 +9,29 @@
         "word": "RED",
         "ink": "red",
         "answer": "r",
-        "congruency": "congruent"
+        "congruency": "congruent",
+        "stimulus": "<p style='font-size:48px;color:red'>RED</p>"
       },
       {
         "word": "BLUE",
         "ink": "blue",
         "answer": "b",
-        "congruency": "congruent"
+        "congruency": "congruent",
+        "stimulus": "<p style='font-size:48px;color:blue'>BLUE</p>"
       },
       {
         "word": "RED",
         "ink": "blue",
         "answer": "b",
-        "congruency": "incongruent"
+        "congruency": "incongruent",
+        "stimulus": "<p style='font-size:48px;color:blue'>RED</p>"
       },
       {
         "word": "BLUE",
         "ink": "red",
         "answer": "r",
-        "congruency": "incongruent"
+        "congruency": "incongruent",
+        "stimulus": "<p style='font-size:48px;color:red'>BLUE</p>"
       }
     ]
   },
@@ -68,8 +72,7 @@
           "tag": "stroop",
           "params": {
             "stimulus": {
-              "var": "word",
-              "wrap": "<p style='font-size:48px'>{}</p>"
+              "var": "stimulus"
             },
             "choices": ["r", "b"]
           },

@@ -145,14 +145,20 @@ export function parseSpec(text: string): Spec {
   return parsed;
 }
 
+export function startNewProject() {
+  project.spec = emptySpec();
+  project.selection = null;
+}
+
 export function loadSpec(spec: Spec) {
   project.spec = { conditions: {}, ...spec };
   project.selection = null;
 }
 
 export function exportedSpec(): Spec {
-  const { name, data, assets, conditions, timeline } = project.spec;
+  const { name, settings, data, assets, conditions, timeline } = project.spec;
   const spec: Spec = { name, timeline };
+  if (settings && Object.keys(settings).length > 0) spec.settings = settings;
   if (data) spec.data = data;
   if (assets?.length) spec.assets = assets;
   if (Object.keys(conditions ?? {}).length > 0) spec.conditions = conditions;

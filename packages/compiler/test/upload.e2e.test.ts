@@ -30,7 +30,7 @@ const spec = (endpoint: string): Spec => ({
 
 async function runExperiment(): Promise<Page> {
   const compiled = compileSpec(spec(server.url), schemas, {
-    initOptions: "{ on_finish: () => { window.studioExperiment.finished = true; } }",
+    initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
   });
   const { html } = await emitHtml(compiled, { title: "uploading", base: "/node_modules" });
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
