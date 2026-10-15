@@ -40,6 +40,19 @@
 
   let importError = $state("");
 
+  const TABS = [
+    { id: "timeline", label: "Timeline" },
+    { id: "conditions", label: "Conditions" },
+    { id: "files", label: "Files" },
+    { id: "study", label: "Study" },
+  ] as const;
+
+  let tab = $state<(typeof TABS)[number]["id"]>("timeline");
+
+  // A warning that lives behind a tab is a warning nobody reads, so the tab says it is there.
+  const unsavedData = $derived(!project.spec.data && project.spec.timeline.length > 0);
+  const marked = (id: string) => id === "study" && unsavedData;
+
   // Starting over throws away whatever is open, so only ask when there is something to lose.
   function confirmDiscard() {
     const empty = project.spec.timeline.length === 0;
@@ -53,6 +66,7 @@
     if (!file) return;
     try {
       loadSpec(parseSpec(await file.text()));
+      tab = "timeline";
       importError = "";
     } catch (error) {
       importError = `Could not import ${file.name}: ${(error as Error).message}`;
@@ -72,7 +86,10 @@
     class="plain"
     data-testid="new-project"
     onclick={() => {
-      if (confirmDiscard()) startNewProject();
+      if (!confirmDiscard()) return;
+      startNewProject();
+      // Starting over should land where an experiment begins, not wherever you happened to be.
+      tab = "timeline";
     }}>new</button
   >
   {#if importError}
@@ -90,63 +107,89 @@
     `--stimulus-text: ${textColor(project.spec.settings)}`}
 >
   <aside>
-    <h2>Timeline</h2>
-    {#if project.spec.timeline.length === 0}
-      <p class="muted">
-        Nothing here yet. Add a step below, or open an example to see how one fits together.
-      </p>
-      <div class="examples">
-        {#each examples as example (example.id)}
-          <button
-            class="example"
-            data-testid={`example-${example.id}`}
-            onclick={() => loadSpec(structuredClone(example.spec))}
-          >
-            <strong>{example.title}</strong>
-            <span class="muted">{example.description}</span>
-          </button>
-        {/each}
-      </div>
-    {:else}
-      <Tree nodes={project.spec.timeline} />
-    {/if}
-
-    <p class="muted">
-      Adding into: {insertionPath.length === 0 ? "top level" : insertionPath.join(" › ")}
-    </p>
-    <div class="palette">
-      <button
-        data-testid="add-trial"
-        onclick={() => addNode(insertionPath, newTrial(pluginNames[0]))}
-      >
-        + trial
-      </button>
-      <button
-        data-testid="add-block"
-        disabled={tables.length === 0}
-        title={tables.length === 0 ? "add a conditions table first" : ""}
-        onclick={() => addNode(insertionPath, newBlock(tables[0]))}
-      >
-        + block
-      </button>
-      <button data-testid="add-loop" onclick={() => addNode(insertionPath, newLoop())}>
-        + loop
-      </button>
-      <button data-testid="add-assign" onclick={() => addNode(insertionPath, newAssign())}>
-        + split
-      </button>
-      <button data-testid="add-branch" onclick={() => addNode(insertionPath, newBranch())}>
-        + branch
-      </button>
-      <button data-testid="add-checkpoint" onclick={() => addNode(insertionPath, newCheckpoint())}>
-        + checkpoint
-      </button>
+    <div class="tabs" role="tablist">
+      {#each TABS as option (option.id)}
+        <button
+          role="tab"
+          id={`tab-${option.id}`}
+          aria-selected={tab === option.id}
+          aria-controls={`panel-${option.id}`}
+          class:active={tab === option.id}
+          data-testid={`tab-${option.id}`}
+          onclick={() => (tab = option.id)}
+        >
+          {option.label}
+          {#if marked(option.id)}<span class="mark" title="This experiment keeps no results">•</span
+            >{/if}
+        </button>
+      {/each}
     </div>
 
-    <ConditionsTable />
-    <AssetPanel />
-    <DataPanel />
-    <SettingsPanel />
+    <div class="panel" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+      {#if tab === "timeline"}
+        {#if project.spec.timeline.length === 0}
+          <p class="muted">
+            Nothing here yet. Add a step below, or open an example to see how one fits together.
+          </p>
+          <div class="examples">
+            {#each examples as example (example.id)}
+              <button
+                class="example"
+                data-testid={`example-${example.id}`}
+                onclick={() => loadSpec(structuredClone(example.spec))}
+              >
+                <strong>{example.title}</strong>
+                <span class="muted">{example.description}</span>
+              </button>
+            {/each}
+          </div>
+        {:else}
+          <Tree nodes={project.spec.timeline} />
+        {/if}
+
+        <p class="muted">
+          Adding into: {insertionPath.length === 0 ? "top level" : insertionPath.join(" › ")}
+        </p>
+        <div class="palette">
+          <button
+            data-testid="add-trial"
+            onclick={() => addNode(insertionPath, newTrial(pluginNames[0]))}
+          >
+            + trial
+          </button>
+          <button
+            data-testid="add-block"
+            disabled={tables.length === 0}
+            title={tables.length === 0 ? "add a conditions table first" : ""}
+            onclick={() => addNode(insertionPath, newBlock(tables[0]))}
+          >
+            + block
+          </button>
+          <button data-testid="add-loop" onclick={() => addNode(insertionPath, newLoop())}>
+            + loop
+          </button>
+          <button data-testid="add-assign" onclick={() => addNode(insertionPath, newAssign())}>
+            + split
+          </button>
+          <button data-testid="add-branch" onclick={() => addNode(insertionPath, newBranch())}>
+            + branch
+          </button>
+          <button
+            data-testid="add-checkpoint"
+            onclick={() => addNode(insertionPath, newCheckpoint())}
+          >
+            + checkpoint
+          </button>
+        </div>
+      {:else if tab === "conditions"}
+        <ConditionsTable />
+      {:else if tab === "files"}
+        <AssetPanel />
+      {:else}
+        <DataPanel />
+        <SettingsPanel />
+      {/if}
+    </div>
   </aside>
 
   <PanelDivider index={0} label="Resize the timeline panel" />
@@ -204,10 +247,35 @@
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
+    min-width: 0;
   }
-  h2 {
-    margin: 0;
-    font-size: 1rem;
+  .tabs {
+    display: flex;
+    gap: 0.15rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .tabs button {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    padding: 0.3rem 0.45rem;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .tabs button.active {
+    color: inherit;
+    border-bottom-color: var(--accent);
+  }
+  .mark {
+    color: var(--accent);
+  }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    min-height: 0;
+    overflow: auto;
   }
   .palette {
     display: flex;

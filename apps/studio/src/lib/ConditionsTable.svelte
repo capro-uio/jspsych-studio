@@ -78,7 +78,6 @@
 </script>
 
 <section>
-  <h2>Conditions</h2>
   {#each tables as [name, rows] (name)}
     <div class="table">
       <button
@@ -171,10 +170,6 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-  }
-  h2 {
-    margin: 0;
-    font-size: 1rem;
   }
   .table {
     display: flex;
