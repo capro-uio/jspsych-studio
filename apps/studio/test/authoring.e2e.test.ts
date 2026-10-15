@@ -61,6 +61,7 @@ async function buildFlanker(page: Page) {
   await setText(page, "experiment-name", "flanker-practice");
 
   await openTab(page, "conditions");
+  await page.getByTestId("add-by-paste").click();
   await setText(page, "table-name", "flanker_trials");
   await setText(page, "table-rows", CONDITIONS_CSV);
   await page.getByTestId("add-table").click();
@@ -605,6 +606,58 @@ describe("finding things in the sidebar", () => {
     await expect
       .poll(() => page.getByTestId("tab-study").innerText(), { timeout: 5_000 })
       .not.toContain("•");
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("building a conditions table from a design", () => {
+  it("crosses factors into rows without anyone writing a table", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await openTab(page, "conditions");
+
+    await setText(page, "factor-table-name", "stroop_trials");
+    await setText(page, "factor-name-0", "word");
+    await setText(page, "factor-levels-0", "RED, BLUE");
+    await setText(page, "factor-name-1", "ink");
+    await setText(page, "factor-levels-1", "red, blue");
+
+    // It says what it is about to make before making it.
+    await expect
+      .poll(() => page.getByTestId("factor-preview").innerText(), { timeout: 5_000 })
+      .toContain("4 rows: word, ink");
+
+    await page.getByTestId("build-table").click();
+
+    // The new table opens so you can see what you got.
+    await expect(page.getByTestId("grid-stroop_trials")).toBeDefined();
+    expect(await page.getByTestId("cell-stroop_trials-0-word").inputValue()).toBe("RED");
+    expect(await page.getByTestId("cell-stroop_trials-3-ink").inputValue()).toBe("blue");
+
+    await openTab(page, "timeline");
+    await page.getByTestId("add-block").click();
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.conditions.stroop_trials).toHaveLength(4);
+    expect(spec.conditions.stroop_trials[0]).toEqual({ word: "RED", ink: "red" });
+
+    await page.close();
+  }, 120_000);
+
+  it("explains what is missing rather than building an empty table", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await openTab(page, "conditions");
+
+    await setText(page, "factor-name-0", "word");
+    await setText(page, "factor-levels-0", "RED, BLUE");
+    await page.getByTestId("build-table").click();
+
+    await expect
+      .poll(() => page.getByTestId("factor-problem").first().innerText(), { timeout: 5_000 })
+      .toContain("needs a name");
+    expect(await page.getByTestId("grid-stroop_trials").count()).toBe(0);
 
     await page.close();
   }, 120_000);
