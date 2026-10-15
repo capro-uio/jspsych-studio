@@ -159,8 +159,23 @@ function compileNode(node: SpecNode, context: CompileContext): string {
 }
 
 export interface CompileOptions {
-  /** JavaScript passed verbatim to `initJsPsych`, e.g. a finish hook for the preview iframe. */
-  initOptions?: string;
+  /** Extra entries for the `initJsPsych` object, e.g. a finish hook for the preview iframe. */
+  initEntries?: string;
+}
+
+const SETTING_KEYS = [
+  "default_iti",
+  "minimum_valid_rt",
+  "show_progress_bar",
+  "progress_bar_message",
+] as const;
+
+function initOptions(spec: Spec, extra: string | undefined) {
+  const entries = SETTING_KEYS.filter((key) => spec.settings?.[key] !== undefined).map(
+    (key) => `${key}: ${literal(spec.settings![key])}`,
+  );
+  if (extra) entries.push(extra);
+  return entries.length > 0 ? `{ ${entries.join(", ")} }` : "";
 }
 
 export function compileSpec(
@@ -199,7 +214,7 @@ export function compileSpec(
     }),
   );
   const source =
-    `const jsPsych = initJsPsych(${options.initOptions ?? ""});\n\n` +
+    `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (assets.length > 0 ? `${compileAssetMap(assets)}\n` : "") +
     (spec.data ? `${compileParticipantProperties()}\n` : "") +

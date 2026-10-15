@@ -25,10 +25,6 @@
 
 body {
   margin: 0;
-  height: 100vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
   background: var(--bg);
   color: var(--fg);
   font:
@@ -59,4 +55,20 @@ button:disabled {
 
 textarea {
   resize: vertical;
+}
+
+/* Svelte mounts into #app, so that element — not body — is the shell the layout sizes against.
+   The page scrolls normally by default; paired with the breakpoint in App.svelte, a viewport with
+   room for three columns pins the shell so each column scrolls on its own instead. */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+@media (min-width: 60rem) and (min-height: 34rem) {
+  #app {
+    height: 100dvh;
+    overflow: hidden;
+  }
 }

@@ -2,6 +2,7 @@
   import AssetPanel from "./lib/AssetPanel.svelte";
   import ConditionsTable from "./lib/ConditionsTable.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
+  import SettingsPanel from "./lib/SettingsPanel.svelte";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
@@ -11,6 +12,7 @@
     conditionTableNames,
     loadSpec,
     parseSpec,
+    startNewProject,
     newBlock,
     newLoop,
     newAssign,
@@ -35,6 +37,12 @@
 
   let importError = $state("");
 
+  // Starting over throws away whatever is open, so only ask when there is something to lose.
+  function confirmDiscard() {
+    const empty = project.spec.timeline.length === 0;
+    return empty || window.confirm("Start a new experiment? The one open here will be discarded.");
+  }
+
   async function importSpec(event: Event) {
     const input = event.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
@@ -57,6 +65,13 @@
     bind:value={project.spec.name}
   />
   <span class="spacer"></span>
+  <button
+    class="plain"
+    data-testid="new-project"
+    onclick={() => {
+      if (confirmDiscard()) startNewProject();
+    }}>new</button
+  >
   {#if importError}
     <p class="import-error" data-testid="import-error">{importError}</p>
   {/if}
@@ -124,6 +139,7 @@
     <ConditionsTable />
     <AssetPanel />
     <DataPanel />
+    <SettingsPanel />
   </aside>
 
   <section class="form"><NodeForm /></section>
@@ -154,24 +170,27 @@
     color: var(--accent);
     font-size: 0.85rem;
   }
-  .import {
+  .import,
+  .plain {
     cursor: pointer;
     color: var(--muted);
     font-size: 0.85rem;
   }
+  .plain {
+    border: 0;
+    background: none;
+  }
   main {
     display: grid;
-    grid-template-columns: 18rem minmax(22rem, 1fr) minmax(24rem, 1.2fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
     padding: 1rem;
-    min-height: 0;
     flex: 1;
   }
   aside {
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
-    overflow: auto;
   }
   h2 {
     margin: 0;
@@ -198,19 +217,32 @@
   .example .muted {
     font-size: 0.78rem;
   }
-  .form,
   .preview {
-    min-height: 0;
-    overflow: auto;
+    /* Stacked, the preview has no column height to fill, so give it one worth looking at. */
+    min-height: 26rem;
   }
   .muted {
     color: var(--muted);
     font-size: 0.85rem;
     margin: 0;
   }
-  @media (max-width: 60rem) {
+  /* Wide enough for columns side by side: the shell stops scrolling and each column scrolls
+     itself, so the timeline stays put while a long form moves. Grid children need min-height: 0
+     or their content forces the row taller than the viewport and the overflow is unreachable. */
+  @media (min-width: 60rem) and (min-height: 34rem) {
     main {
-      grid-template-columns: 1fr;
+      grid-template-columns: 18rem minmax(22rem, 1fr) minmax(24rem, 1.2fr);
+      min-height: 0;
+      overflow: hidden;
+    }
+    aside,
+    .form,
+    .preview {
+      min-height: 0;
+      overflow: auto;
+    }
+    .preview {
+      min-height: 0;
     }
   }
 </style>

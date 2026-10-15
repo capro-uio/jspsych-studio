@@ -358,3 +358,52 @@ describe("opening an example", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("working with what is already there", () => {
+  it("opens a conditions table, edits a cell, and starts over", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    await page.getByTestId("open-table-flanker_trials").click();
+    await expect(page.getByTestId("grid-flanker_trials")).toBeDefined();
+    expect(await page.getByTestId("cell-flanker_trials-0-congruency").inputValue()).toBe(
+      "congruent",
+    );
+
+    await setText(page, "cell-flanker_trials-0-stim", "^^^^^");
+    await page.getByTestId("add-row-flanker_trials").click();
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.conditions.flanker_trials[0].stim).toBe("^^^^^");
+    expect(spec.conditions.flanker_trials).toHaveLength(5);
+
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.getByTestId("new-project").click();
+    await expect
+      .poll(() => page.getByTestId("example-flanker").count(), { timeout: 5_000 })
+      .toBe(1);
+
+    await page.close();
+  }, 120_000);
+
+  it("carries experiment-wide settings into the generated code", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    await setText(page, "setting-default-iti", "250");
+    await page.getByTestId("setting-progress-bar").check();
+
+    await page.getByTestId("view-code").click();
+    await expect
+      .poll(() => page.getByTestId("generated-code").innerText(), { timeout: 5_000 })
+      .toContain("default_iti: 250");
+    expect(await page.getByTestId("generated-code").innerText()).toContain(
+      "show_progress_bar: true",
+    );
+
+    await page.close();
+  }, 120_000);
+});

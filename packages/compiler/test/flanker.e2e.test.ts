@@ -61,7 +61,7 @@ beforeAll(async () => {
     readFileSync(join(workspaceRoot, "examples/flanker.json"), "utf8"),
   ) as Spec;
   const compiled = compileSpec(spec, schemas, {
-    initOptions: "{ on_finish: () => { window.studioExperiment.finished = true; } }",
+    initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
   });
   const { html } = await emitHtml(compiled, { title: spec.name, base: "/node_modules" });
 

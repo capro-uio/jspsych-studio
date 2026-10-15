@@ -21,7 +21,7 @@
     const compileId = ++latestCompile;
     try {
       const compiled = compileSpec(spec, schemas, {
-        initOptions: "{ on_finish: () => { window.studioExperiment.finished = true; } }",
+        initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
       });
       error = "";
       emitHtml(compiled, { title: spec.name }).then((output) => {
