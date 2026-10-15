@@ -8,6 +8,9 @@ conditions table, generated parameter forms, image and sound files, live preview
 experiment, a choice of where results go, and export to a self-contained HTML file. There is no hosting, survey editor, or
 study-level flow yet.
 
+**Try it:** <https://capro-uio.github.io/jspsych-studio/> — nothing to install, and the examples
+open a working experiment in one click.
+
 ## Why
 
 jsPsych requires JavaScript, which most psychologists do not write. The alternatives are

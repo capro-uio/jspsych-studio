@@ -337,3 +337,24 @@ describe("routing on performance", () => {
     await page.close();
   }, 180_000);
 });
+
+describe("opening an example", () => {
+  it("fills the timeline and runs it straight away", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await page.getByTestId("example-stroop").click();
+
+    await expect
+      .poll(() => page.getByTestId("node-0").innerText(), { timeout: 5_000 })
+      .toContain("instructions");
+    expect(await page.getByTestId("compile-error").count()).toBe(0);
+
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("colour words");
+
+    await page.close();
+  }, 180_000);
+});
