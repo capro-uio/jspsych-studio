@@ -1,5 +1,6 @@
 import { svelte } from "@sveltejs/vite-plugin-svelte";
-import { defineConfig } from "vite";
+// vitest's defineConfig, because the `test` block is not part of vite's own config type.
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   plugins: [svelte()],
