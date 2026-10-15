@@ -3,6 +3,8 @@
   import ConditionsTable from "./lib/ConditionsTable.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
   import SettingsPanel from "./lib/SettingsPanel.svelte";
+  import PanelDivider from "./lib/PanelDivider.svelte";
+  import { panels } from "./lib/panels.svelte.ts";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
@@ -81,7 +83,7 @@
   </label>
 </header>
 
-<main>
+<main style={`--panel-widths: ${panels.widths.map((width) => `${width}fr`).join(" auto ")}`}>
   <aside>
     <h2>Timeline</h2>
     {#if project.spec.timeline.length === 0}
@@ -142,7 +144,9 @@
     <SettingsPanel />
   </aside>
 
+  <PanelDivider index={0} label="Resize the timeline panel" />
   <section class="form"><NodeForm /></section>
+  <PanelDivider index={1} label="Resize the settings panel" />
   <section class="preview"><Preview /></section>
 </main>
 
@@ -183,6 +187,10 @@
   main {
     display: grid;
     grid-template-columns: 1fr;
+    /* Stacked, there is nothing to drag a boundary between. */
+    :global(.divider) {
+      display: none;
+    }
     gap: 1rem;
     padding: 1rem;
     flex: 1;
@@ -230,8 +238,13 @@
      itself, so the timeline stays put while a long form moves. Grid children need min-height: 0
      or their content forces the row taller than the viewport and the overflow is unreachable. */
   @media (min-width: 60rem) and (min-height: 34rem) {
+    main :global(.divider) {
+      display: block;
+    }
     main {
-      grid-template-columns: 18rem minmax(22rem, 1fr) minmax(24rem, 1.2fr);
+      /* Three panels with a draggable boundary between each pair. */
+      grid-template-columns: var(--panel-widths, 18fr 32fr 50fr);
+      grid-auto-flow: column;
       min-height: 0;
       overflow: hidden;
     }

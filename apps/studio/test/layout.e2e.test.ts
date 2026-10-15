@@ -102,3 +102,48 @@ describe.each(VIEWPORTS)("at $name ($width×$height)", ({ width, height, columns
     120_000,
   );
 });
+
+describe("resizing the panels", () => {
+  it("drags a boundary, remembers it, and resets on double click", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+
+    const widthOf = (selector: string) =>
+      page.evaluate((css) => document.querySelector(css)!.getBoundingClientRect().width, selector);
+
+    const before = await widthOf("aside");
+    const divider = page.getByTestId("divider-0");
+    const box = (await divider.boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 200, box.y + box.height / 2, { steps: 10 });
+    await page.mouse.up();
+
+    const after = await widthOf("aside");
+    expect(after).toBeGreaterThan(before + 100);
+
+    // The choice survives a reload.
+    await page.reload();
+    expect(await widthOf("aside")).toBeGreaterThan(before + 100);
+
+    await page.getByTestId("divider-0").dblclick();
+    await expect.poll(() => widthOf("aside"), { timeout: 5_000 }).toBeLessThan(before + 50);
+
+    await page.close();
+  }, 120_000);
+
+  it("takes the keyboard as well as the pointer", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    const widthOf = () =>
+      page.evaluate(() => document.querySelector("aside")!.getBoundingClientRect().width);
+
+    const before = await widthOf();
+    await page.getByTestId("divider-0").focus();
+    for (let press = 0; press < 3; press += 1) await page.keyboard.press("ArrowRight");
+    expect(await widthOf()).toBeGreaterThan(before);
+
+    await page.getByTestId("divider-0").dblclick();
+    await page.close();
+  }, 120_000);
+});
