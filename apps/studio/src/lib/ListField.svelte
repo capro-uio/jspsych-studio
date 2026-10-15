@@ -83,6 +83,9 @@
     gap: 0.3rem;
     align-items: start;
   }
+  .entry > :global(.rich) {
+    flex: 1;
+  }
   .entry :global(textarea),
   .entry :global(input),
   .entry :global(select) {

@@ -475,6 +475,32 @@ describe("writing stimulus text", () => {
     await page.close();
   }, 180_000);
 
+  it("colours text even though the picker takes the focus away", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response");
+    await page.getByTestId("mode-stimulus").selectOption("fixed");
+
+    await page.getByTestId("value-stimulus").click();
+    await page.keyboard.type("colour me");
+
+    // The native colour picker moves focus out of the editor before the change is reported,
+    // which is what used to lose the selection and silently apply nothing.
+    await page.getByTestId("trial-tag").click();
+    await page.getByTestId("value-stimulus-colour").evaluate((node) => {
+      (node as HTMLInputElement).value = "#cc0000";
+      node.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const stimulus = spec.timeline[0].params.stimulus as string;
+    expect(stimulus).toContain("colour me");
+    expect(stimulus).toMatch(/color: rgb\(204, 0, 0\)|#cc0000/i);
+
+    await page.close();
+  }, 120_000);
+
   it("gives the field room to show more than a line or two", async () => {
     const page = await browser.newPage();
     await page.goto(appUrl);

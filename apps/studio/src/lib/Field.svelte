@@ -97,13 +97,25 @@
     {/if}
   {:else if mode === "fixed"}
     {#if list}
-      <ListField
-        testId={`value-${name}`}
-        {parameter}
-        {assets}
-        values={Array.isArray(value) ? value : []}
-        onchange={(values) => onchange(values as ParameterValue)}
-      />
+      <div class="wide">
+        <ListField
+          testId={`value-${name}`}
+          {parameter}
+          {assets}
+          values={Array.isArray(value) ? value : []}
+          onchange={(values) => onchange(values as ParameterValue)}
+        />
+      </div>
+    {:else if multiline}
+      <div class="wide">
+        <ScalarInput
+          {parameter}
+          {assets}
+          {value}
+          testId={`value-${name}`}
+          onchange={(next) => onchange(next as ParameterValue)}
+        />
+      </div>
     {:else}
       <ScalarInput
         {parameter}
@@ -134,6 +146,13 @@
   }
   .required {
     color: var(--accent);
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+  /* A full-width control leaves no third column for its explanation to sit in. */
+  .wide ~ .help {
+    grid-column: 1 / -1;
   }
   .help {
     grid-column: 3;
