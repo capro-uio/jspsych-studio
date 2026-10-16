@@ -1,11 +1,16 @@
 import { escapeHtmlText } from "../emit.ts";
+import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
 
 export interface HtmlTargetOptions {
   title: string;
+  /** Load the experiment from this file instead of writing it into the page. */
+  sourceFile?: string;
   /** `"cdn"` emits unpkg URLs; any other value is a base path serving the npm packages. */
   base?: string;
+  /** Which Studio built the page; defaults to this build's own version. */
+  studio?: string;
 }
 
 const CDN = "https://unpkg.com";
@@ -55,19 +60,25 @@ window.studioExperiment = { jsPsych };
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta name="generator" content="${generatorLabel(options.studio)}" />
+    <meta name="description" content="${escapeHtmlText(options.title)}, a behavioural experiment." />
     <title>${escapeHtmlText(options.title)}</title>
     <link rel="stylesheet" href="${stylesheet}" />
 ${result.styles ? `    <style>\n${result.styles.replace(/^/gm, "      ").trimEnd()}\n    </style>` : ""}
 ${scripts}
   </head>
   <body>
-    <script>
+${
+  options.sourceFile
+    ? `    <script src="${options.sourceFile}"></script>`
+    : `    <script>
 ${body
   .trimEnd()
   .split("\n")
   .map((line) => (line ? `      ${line}` : ""))
   .join("\n")}
-    </script>
+    </script>`
+}
   </body>
 </html>
 `;

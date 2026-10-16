@@ -1,6 +1,6 @@
-import type { SchemaBundle } from "@jspsych-studio/schemas";
+import type { ParameterSchema, SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAppearance } from "./appearance.ts";
-import { compileAssetMap, compilePreloadStep, isMediaParameter } from "./assets.ts";
+import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } from "./assets.ts";
 import { compileAccuracyPredicate } from "./conditions.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
 import {
@@ -49,11 +49,41 @@ function parameterExpression(value: ParameterValue, media = false): string {
     }
     return `asset(${literal(value)})`;
   }
-  if (value.wrap) {
-    return `() => ${literal(value.wrap)}.replace("{}", () => ${variableInsideFunction(value)})`;
-  }
-  if (media) return `() => asset(${variableInsideFunction(value)})`;
+  if (value.wrap || media) return `() => ${valueInsideFunction(value, media)}`;
   return `jsPsych.timelineVariable(${literal(value.var)})`;
+}
+
+function valueInsideFunction(value: ParameterValue, media: boolean): string {
+  if (!isVariableReference(value)) return media ? `asset(${literal(value)})` : literal(value);
+  const read = variableInsideFunction(value);
+  if (value.wrap) return `${literal(value.wrap)}.replace("{}", () => ${read})`;
+  return media ? `asset(${read})` : read;
+}
+
+function isFieldSet(entry: unknown): entry is Record<string, ParameterValue> {
+  return typeof entry === "object" && entry !== null && !Array.isArray(entry);
+}
+
+// jsPsych resolves timeline variables inside a list's entries only for the fields a plugin
+// declares, and the psychophysics plugin declares few of an object's fields. A list holding any
+// bound field is therefore built by a function when the trial starts, reading each column itself.
+function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets: boolean) {
+  const isMediaField = (name: string) =>
+    hasAssets && isMediaType(item.properties?.[name]?.jspsychType);
+  const fieldSets = entries.filter(isFieldSet);
+  const bound = fieldSets.some((entry) => Object.values(entry).some(isVariableReference));
+  const named = fieldSets.some((entry) => Object.keys(entry).some(isMediaField));
+  if (!bound && !named) return literal(entries);
+
+  const compiled = entries.map((entry) => {
+    if (!isFieldSet(entry)) return literal(entry);
+    const fields = Object.entries(entry).map(
+      ([name, value]) => `${literal(name)}: ${valueInsideFunction(value, isMediaField(name))}`,
+    );
+    return `{ ${fields.join(", ")} }`;
+  });
+  const list = `[${compiled.join(", ")}]`;
+  return bound ? `() => ${list}` : list;
 }
 
 function dataExpression(trial: TrialNode) {
@@ -79,6 +109,11 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
   const properties = context.bundle.plugins[trial.plugin]?.properties ?? {};
   const entries = [`type: ${pluginIdentifier(trial.plugin)}`];
   for (const [name, value] of Object.entries(trial.params ?? {})) {
+    const item = properties[name]?.items;
+    if (item?.properties && Array.isArray(value)) {
+      entries.push(`${name}: ${entriesExpression(value, item, context.hasAssets)}`);
+      continue;
+    }
     const media =
       context.hasAssets && isMediaParameter(trial.plugin, name, properties[name]?.jspsychType);
     entries.push(`${name}: ${parameterExpression(value, media)}`);
@@ -162,6 +197,8 @@ function compileNode(node: SpecNode, context: CompileContext): string {
 export interface CompileOptions {
   /** Extra entries for the `initJsPsych` object, e.g. a finish hook for the preview iframe. */
   initEntries?: string;
+  /** `"inline"` embeds media in the page; `"files"` points at files beside it. */
+  assets?: "inline" | "files";
 }
 
 const SETTING_KEYS = [
@@ -221,8 +258,8 @@ export function compileSpec(
   const source =
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
-    (assets.length > 0 ? `${compileAssetMap(assets)}\n` : "") +
-    (spec.data ? `${compileParticipantProperties()}\n` : "") +
+    (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
+    (spec.data ? `${compileParticipantProperties(spec.name)}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
   return {
     source,

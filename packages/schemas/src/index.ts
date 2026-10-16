@@ -1,4 +1,4 @@
-export { extractSchemas, officialPluginPackages } from "./extract.ts";
+export { extractSchemas, pluginPackages } from "./extract.ts";
 export type {
   ExtractionReport,
   ParameterSchema,
@@ -6,4 +6,6 @@ export type {
   PluginSchema,
   PluginSchemas,
   SchemaBundle,
+  Variant,
+  Variants,
 } from "./types.ts";

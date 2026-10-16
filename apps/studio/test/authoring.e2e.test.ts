@@ -31,6 +31,12 @@ async function openTab(page: Page, id: "timeline" | "conditions" | "files" | "st
   await page.getByTestId(`tab-${id}`).click();
 }
 
+/** New, open and the project download live in the header's overflow menu. */
+async function headerAction(page: Page, testId: string) {
+  await page.getByTestId("header-menu").click();
+  await page.getByTestId(testId).click();
+}
+
 async function showAllParameters(page: Page) {
   const toggle = page.getByTestId("toggle-parameters");
   if ((await toggle.innerText()).startsWith("show all")) await toggle.click();
@@ -309,6 +315,38 @@ describe("a list whose entries are objects", () => {
   }, 180_000);
 });
 
+describe("a canvas step", () => {
+  it("offers each shape its own fields and draws it in the preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "psychophysics", "slot-0");
+
+    expect(await page.getByTestId("value-stimuli-0-obj_type").inputValue()).toBe("cross");
+    expect(await page.getByTestId("value-stimuli-0-radius").count()).toBe(0);
+
+    await page.getByTestId("value-stimuli-0-obj_type").selectOption("circle");
+    await expect
+      .poll(() => page.getByTestId("step-problems").innerText())
+      .toContain('(circle) needs "radius"');
+    await page.getByTestId("value-stimuli-0-radius").fill("50");
+    await page.getByTestId("value-stimuli-0-radius").blur();
+    await setText(page, "value-stimuli-0-fill_color", "red");
+    expect(await page.getByTestId("value-stimuli-0-content").count()).toBe(0);
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.timeline[0].params.stimuli).toEqual([
+      { obj_type: "circle", radius: 50, fill_color: "red" },
+    ]);
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect.poll(() => preview.locator("#myCanvas").count(), { timeout: 20_000 }).toBe(1);
+
+    await page.close();
+  }, 180_000);
+});
+
 describe("splitting participants between groups", () => {
   it("builds two groups and runs exactly one of them", async () => {
     const page = await browser.newPage();
@@ -427,7 +465,7 @@ describe("working with what is already there", () => {
     expect(spec.conditions.flanker_trials).toHaveLength(5);
 
     page.on("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("new-project").click();
+    await headerAction(page, "new-project");
     await expect
       .poll(() => page.getByTestId("example-flanker").count(), { timeout: 5_000 })
       .toBe(1);
@@ -609,7 +647,7 @@ describe("finding things in the sidebar", () => {
 
     // The Stroop example downloads its results, so it is not flagged.
     page.on("dialog", (dialog) => dialog.accept());
-    await page.getByTestId("new-project").click();
+    await headerAction(page, "new-project");
     await page.getByTestId("example-stroop").click();
     await expect
       .poll(() => page.getByTestId("tab-study").innerText(), { timeout: 5_000 })
@@ -787,10 +825,10 @@ describe("seeing one step without clicking through the rest", () => {
     await expect
       .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
       .toMatch(/RED|BLUE/);
-    expect(await page.getByTestId("preview-note").innerText()).toContain("selected step only");
+    expect(await page.getByTestId("preview-note").innerText()).toContain("Nothing is saved");
 
     // Back to the whole thing.
-    await page.getByTestId("run-from-step").click();
+    await page.getByTestId("run-whole").click();
     await expect
       .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
       .toContain("colour words");
@@ -816,6 +854,41 @@ describe("seeing one step without clicking through the rest", () => {
     await page.getByTestId("view-spec").click();
     const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
     expect(spec.data).toEqual({ save: "post", experiment_id: "realExperiment" });
+
+    await page.close();
+  }, 120_000);
+});
+
+describe("saying who made the experiment", () => {
+  it("records authors and hands them to the data description", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+    await openTab(page, "study");
+
+    await page.getByTestId("add-author").click();
+    await setText(page, "author-name-0", "A Researcher");
+    await setText(page, "author-id-0", "https://orcid.org/0000-0002-1825-0097");
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.authors).toEqual([
+      { name: "A Researcher", identifier: "https://orcid.org/0000-0002-1825-0097" },
+    ]);
+
+    await page.close();
+  }, 120_000);
+
+  it("leaves authors out entirely when nobody is named", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+    await openTab(page, "study");
+
+    await page.getByTestId("add-author").click();
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.authors).toBeUndefined();
 
     await page.close();
   }, 120_000);

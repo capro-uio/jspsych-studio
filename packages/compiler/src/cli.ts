@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
-import { extractSchemas, officialPluginPackages } from "@jspsych-studio/schemas";
+import { extractSchemas, pluginPackages } from "@jspsych-studio/schemas";
 import { compileSpec } from "./compile.ts";
 import { emitHtml } from "./targets/html.ts";
 import { SpecError } from "./validate.ts";
@@ -20,7 +20,7 @@ if (command !== "compile" || !specPath) {
 }
 
 const spec = JSON.parse(readFileSync(specPath, "utf8")) as Spec;
-const report = await extractSchemas(officialPluginPackages());
+const report = await extractSchemas(pluginPackages());
 const schemas = { jspsych: report.jspsych, plugins: report.schemas };
 
 try {

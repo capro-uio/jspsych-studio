@@ -901,6 +901,837 @@
       "required": [
         "questions"
       ]
+    },
+    "psychophysics": {
+      "plugin": "psychophysics",
+      "package": "@kurokida/jspsych-psychophysics",
+      "version": "5.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "properties": {
+              "startX": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "startX",
+                "description": "The horizontal start position.",
+                "default": 0
+              },
+              "startY": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "startY",
+                "description": "The vertical start position.",
+                "default": 0
+              },
+              "endX": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "endX",
+                "description": "The horizontal end position.",
+                "default": null
+              },
+              "endY": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "endY",
+                "description": "The vertical end position.",
+                "default": null
+              },
+              "show_start_time": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "Show start time",
+                "description": "Time to start presenting the stimuli",
+                "default": 0
+              },
+              "show_end_time": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "Show end time",
+                "description": "Time to end presenting the stimuli",
+                "default": null
+              },
+              "show_start_frame": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "Show start frame",
+                "description": "Time to start presenting the stimuli in frames",
+                "default": 0
+              },
+              "show_end_frame": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "Show end frame",
+                "description": "Time to end presenting the stimuli in frames",
+                "default": null
+              },
+              "line_width": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "Line width",
+                "description": "The line width",
+                "default": 1
+              },
+              "lineJoin": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "lineJoin",
+                "description": "The type of the corner when two lines meet.",
+                "default": "miter"
+              },
+              "miterLimit": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "miterLimit",
+                "description": "The maximum miter length.",
+                "default": 10
+              },
+              "drawFunc": {
+                "type": "string",
+                "format": "expression",
+                "jspsychType": "FUNCTION",
+                "title": "Draw function",
+                "description": "This function enables to move objects horizontally and vertically.",
+                "default": null
+              },
+              "change_attr": {
+                "type": "string",
+                "format": "expression",
+                "jspsychType": "FUNCTION",
+                "title": "Change attributes",
+                "description": "This function enables to change attributes of objects immediately before drawing.",
+                "default": null
+              },
+              "is_frame": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "time is in frames",
+                "description": "If true, time is treated in frames.",
+                "default": false
+              },
+              "prepared": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "Stimulus prepared flag",
+                "description": "If true, the stimulus is prepared for presentation",
+                "default": false
+              },
+              "origin_center": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "origin_center",
+                "description": "The origin is the center of the window.",
+                "default": true
+              },
+              "is_presented": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "is_presented",
+                "description": "This will be true when the stimulus is presented.",
+                "default": false
+              },
+              "trial_ends_after_audio": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "Trial ends after audio",
+                "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+                "default": false
+              },
+              "modulate_color": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "jspsychType": "FLOAT"
+                },
+                "jspsychType": "FLOAT",
+                "title": "modulate_color",
+                "description": "The base RGBA array of the gabor patch.",
+                "default": [
+                  1,
+                  1,
+                  1,
+                  1
+                ]
+              },
+              "offset_color": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "jspsychType": "FLOAT"
+                },
+                "jspsychType": "FLOAT",
+                "title": "offset_color",
+                "description": "The offset RGBA array of the gabor patch.",
+                "default": [
+                  0.5,
+                  0.5,
+                  0.5,
+                  0
+                ]
+              },
+              "min_validModulationRange": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "min_validModulationRange",
+                "description": "The minimum of the validation range of the gabor patch.",
+                "default": -2
+              },
+              "max_validModulationRange": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "max_validModulationRange",
+                "description": "The maximum of the validation range of the gabor patch.",
+                "default": 2
+              },
+              "tilt": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "tilt",
+                "description": "The angle of the gabor patch in degrees.",
+                "default": 0
+              },
+              "sf": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "spatial frequency",
+                "description": "The spatial frequency of the gabor patch.",
+                "default": 0.05
+              },
+              "phase": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "phase",
+                "description": "The phase (degrees) of the gabor patch.",
+                "default": 0
+              },
+              "sc": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "standard deviation",
+                "description": "The standard deviation of the distribution.",
+                "default": 20
+              },
+              "contrast": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "contrast",
+                "description": "The contrast of the gabor patch.",
+                "default": 20
+              },
+              "contrastPreMultiplicator": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "contrastPreMultiplicator",
+                "description": "A scaling factor",
+                "default": 1
+              },
+              "drift": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "drift",
+                "description": "The velocity of the drifting gabor patch.",
+                "default": 0
+              },
+              "method": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "gabor_drawing_method",
+                "description": "The method of drawing the gabor patch.",
+                "default": "ml-matrix"
+              },
+              "disableNorm": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "disableNorm",
+                "description": "Disable normalization of the gaussian function.",
+                "default": false
+              },
+              "disableGauss": {
+                "type": "boolean",
+                "jspsychType": "BOOL",
+                "title": "disableGauss",
+                "description": "Disable to convolve with a Gaussian.",
+                "default": false
+              },
+              "mask_func": {
+                "type": "string",
+                "format": "expression",
+                "jspsychType": "FUNCTION",
+                "title": "Masking function",
+                "description": "Masking the image manually.",
+                "default": null
+              },
+              "text_color": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "text color",
+                "description": "The color of the text.",
+                "default": "#000000"
+              },
+              "fontStyle": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "font style",
+                "description": "Font style",
+                "default": "normal"
+              },
+              "fontWeight": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "font weight",
+                "description": "Font weight",
+                "default": "normal"
+              },
+              "fontSize": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "font size",
+                "description": "Font size",
+                "default": "20px"
+              },
+              "fontFamily": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "font family",
+                "description": "Font family",
+                "default": "Verdana, Arial, Helvetica, sans-serif"
+              },
+              "pixi_angle": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "pixi angle",
+                "description": "jspsych-psychophysics Copyright (c) 2019-2026 Daiichiro Kuroki Released under the MIT license jspsych-psychophysics is a plugin for conducting online/Web-based psychophysical experiments using jsPsych (de Leeuw, 2015). Please see http://jspsychophysics.hes.kyushu-u.ac.jp/ about how to use this plugin. This application uses following libraries ml-matrix: Copyright (c) 2014 Michaël Zasso PixiJS: Copyright (c) 2013-2023 Mathew Groves, Chad Engler See LICENSE file for details */ declare const info: { name: string; version: string; description: string; parameters: { stimuli: { type: ParameterType; array: boolean; pretty_name: string; description: string; nested: { startX: { type: ParameterType; pretty_name: string; default: number; description: string; }; startY: { type: ParameterType; pretty_name: string; default: number; description: string; }; endX: { type: ParameterType; pretty_name: string; default: any; description: string; }; endY: { type: ParameterType; pretty_name: string; default: any; description: string; }; show_start_time: { type: ParameterType; pretty_name: string; default: number; description: string; }; show_end_time: { type: ParameterType; pretty_name: string; default: any; description: string; }; show_start_frame: { type: ParameterType; pretty_name: string; default: number; description: string; }; show_end_frame: { type: ParameterType; pretty_name: string; default: any; description: string; }; line_width: { type: ParameterType; pretty_name: string; default: number; description: string; }; lineJoin: { type: ParameterType; pretty_name: string; default: string; description: string; }; miterLimit: { type: ParameterType; pretty_name: string; default: number; description: string; }; drawFunc: { type: ParameterType; pretty_name: string; default: any; description: string; }; change_attr: { type: ParameterType; pretty_name: string; default: any; description: string; }; is_frame: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; prepared: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; origin_center: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; is_presented: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; trial_ends_after_audio: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; modulate_color: { type: ParameterType; array: boolean; pretty_name: string; default: number[]; description: string; }; offset_color: { type: ParameterType; array: boolean; pretty_name: string; default: number[]; description: string; }; min_validModulationRange: { type: ParameterType; pretty_name: string; default: number; description: string; }; max_validModulationRange: { type: ParameterType; pretty_name: string; default: number; description: string; }; tilt: { type: ParameterType; pretty_name: string; default: number; description: string; }; sf: { type: ParameterType; pretty_name: string; default: number; description: string; }; phase: { type: ParameterType; pretty_name: string; default: number; description: string; }; sc: { type: ParameterType; pretty_name: string; default: number; description: string; }; contrast: { type: ParameterType; pretty_name: string; default: number; description: string; }; contrastPreMultiplicator: { type: ParameterType; pretty_name: string; default: number; description: string; }; drift: { type: ParameterType; pretty_name: string; default: number; description: string; }; method: { type: ParameterType; pretty_name: string; default: string; description: string; }; disableNorm: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; disableGauss: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; mask_func: { type: ParameterType; pretty_name: string; default: any; description: string; }; text_color: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontStyle: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontWeight: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontSize: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontFamily: { type: ParameterType; pretty_name: string; default: string; description: string; }; /** The angle (degrees) of the stimulus when using PixiJS.",
+                "default": null
+              },
+              "pixi_rotation": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "pixi rotation",
+                "description": "The rotation (radians) of the stimulus when using PixiJS.",
+                "default": null
+              },
+              "pixi_mask": {
+                "type": "string",
+                "format": "expression",
+                "jspsychType": "FUNCTION",
+                "title": "pixi mask",
+                "description": "Mask parameter for PixiJS. This function should return a PIXI.Graphics object that will be used as a mask for the stimulus.",
+                "default": null
+              },
+              "pixi_filters": {
+                "type": "string",
+                "format": "expression",
+                "jspsychType": "FUNCTION",
+                "title": "pixi filters",
+                "description": "Filter parameter for PixiJS. This function should return a PIXI.Filter object that will be used to filter the stimulus.",
+                "default": null
+              },
+              "pixi_zIndex": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "pixi zIndex",
+                "description": "The z-index of the stimulus when using PixiJS. Stimuli with higher z-index will be drawn on top of those with lower z-index.",
+                "default": null
+              },
+              "random_dot_area_width": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "random dot area width",
+                "description": "The width of the area where the random dots are presented (in pixels).",
+                "default": 100
+              },
+              "random_dot_area_height": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "random dot area height",
+                "description": "The height of the area where the random dots are presented (in pixels).",
+                "default": 100
+              },
+              "random_dot_size": {
+                "type": "integer",
+                "jspsychType": "INT",
+                "title": "random dot size",
+                "description": "The size of the random dots (in pixels).",
+                "default": 5
+              },
+              "random_dot_density": {
+                "type": "number",
+                "jspsychType": "FLOAT",
+                "title": "random dot density",
+                "description": "The density of the random dots, ranging from 0 to 1.",
+                "default": 0.5
+              },
+              "random_dot_background_color": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "random dot background color",
+                "description": "The background color of the canvas for the random dots.",
+                "default": "white"
+              },
+              "random_dot_color": {
+                "type": "string",
+                "jspsychType": "STRING",
+                "title": "random dot color",
+                "description": "The color of the random dots.",
+                "default": "black"
+              },
+              "obj_type": {
+                "title": "Shape",
+                "description": "What kind of object this is.",
+                "type": "string",
+                "jspsychType": "SELECT",
+                "enum": [
+                  "cross",
+                  "circle",
+                  "rect",
+                  "line",
+                  "text",
+                  "image"
+                ]
+              },
+              "radius": {
+                "title": "Radius",
+                "description": "Radius of the circle, in pixels.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "width": {
+                "title": "Width",
+                "description": "Width of the rectangle, in pixels.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "height": {
+                "title": "Height",
+                "description": "Height of the rectangle, in pixels.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "line_length": {
+                "title": "Length",
+                "description": "Length of the line, or of each arm of the cross, in pixels.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "angle": {
+                "title": "Angle",
+                "description": "Rotation of the line, in degrees.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "line_color": {
+                "title": "Line colour",
+                "description": "Colour of the outline or line, as any CSS colour.",
+                "type": "string",
+                "jspsychType": "STRING"
+              },
+              "fill_color": {
+                "title": "Fill colour",
+                "description": "Colour inside the shape, as any CSS colour.",
+                "type": "string",
+                "jspsychType": "STRING"
+              },
+              "content": {
+                "title": "Text",
+                "description": "The text to draw; a line break starts a new line.",
+                "type": "string",
+                "jspsychType": "STRING"
+              },
+              "file": {
+                "title": "Image",
+                "description": "The image file to draw.",
+                "type": "string",
+                "format": "asset-image",
+                "jspsychType": "IMAGE"
+              },
+              "scale": {
+                "title": "Scale",
+                "description": "Size relative to the image's own, e.g. 0.5 for half.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "image_width": {
+                "title": "Image width",
+                "description": "Width to draw the image at, in pixels; keeps its shape.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              },
+              "image_height": {
+                "title": "Image height",
+                "description": "Height to draw the image at, in pixels; keeps its shape.",
+                "type": "number",
+                "jspsychType": "FLOAT"
+              }
+            },
+            "required": [
+              "obj_type"
+            ],
+            "variants": {
+              "by": "obj_type",
+              "shared": [
+                "startX",
+                "startY",
+                "show_start_time",
+                "show_end_time",
+                "origin_center"
+              ],
+              "options": {
+                "cross": {
+                  "properties": [
+                    "line_length",
+                    "line_width",
+                    "line_color"
+                  ],
+                  "required": [
+                    "line_length"
+                  ]
+                },
+                "circle": {
+                  "properties": [
+                    "radius",
+                    "line_width",
+                    "line_color",
+                    "fill_color"
+                  ],
+                  "required": [
+                    "radius"
+                  ],
+                  "any_of": [
+                    [
+                      "line_color",
+                      "fill_color"
+                    ]
+                  ]
+                },
+                "rect": {
+                  "properties": [
+                    "width",
+                    "height",
+                    "line_width",
+                    "line_color",
+                    "fill_color"
+                  ],
+                  "required": [
+                    "width",
+                    "height"
+                  ],
+                  "any_of": [
+                    [
+                      "line_color",
+                      "fill_color"
+                    ]
+                  ]
+                },
+                "line": {
+                  "properties": [
+                    "line_length",
+                    "angle",
+                    "line_width",
+                    "line_color"
+                  ],
+                  "required": [
+                    "line_length",
+                    "angle"
+                  ]
+                },
+                "text": {
+                  "properties": [
+                    "content",
+                    "text_color",
+                    "fontSize",
+                    "fontFamily",
+                    "fontWeight",
+                    "fontStyle"
+                  ],
+                  "required": [
+                    "content"
+                  ]
+                },
+                "image": {
+                  "properties": [
+                    "file",
+                    "scale",
+                    "image_width",
+                    "image_height"
+                  ],
+                  "required": [
+                    "file"
+                  ],
+                  "at_most_one_of": [
+                    [
+                      "scale",
+                      "image_width",
+                      "image_height"
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "jspsychType": "COMPLEX",
+          "title": "Stimuli",
+          "description": "The objects drawn on the canvas, each placed by its centre.",
+          "examples": [
+            [
+              {
+                "obj_type": "cross",
+                "line_length": 40
+              }
+            ]
+          ]
+        },
+        "pixi_app": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Pixi application",
+          "default": null
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "Choices",
+          "description": "The keys the subject is allowed to press to respond to the stimulus.",
+          "default": "ALL_KEYS"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "Prompt",
+          "description": "Any content here will be displayed below the stimulus.",
+          "default": null
+        },
+        "upper_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "Upper prompt",
+          "description": "Any content here will be displayed above the stimulus.",
+          "default": null
+        },
+        "lower_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "Lower prompt",
+          "description": "This is the same as the prompt.",
+          "default": null
+        },
+        "canvas_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Canvas width",
+          "description": "The width of the canvas.",
+          "default": null
+        },
+        "canvas_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Canvas height",
+          "description": "The height of the canvas.",
+          "default": null
+        },
+        "canvas_offsetX": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Canvas offset X",
+          "description": "This value is subtracted from the width of the canvas.",
+          "default": 0
+        },
+        "canvas_offsetY": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Canvas offset Y",
+          "description": "This value is subtracted from the height of the canvas.",
+          "default": 8
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Trial duration",
+          "description": "How long to show trial before it ends.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "Response ends trial",
+          "description": "If true, trial will end when subject makes a response.",
+          "default": true
+        },
+        "background_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "Background color",
+          "description": "The background color of the canvas.",
+          "default": "grey"
+        },
+        "response_type": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "key, mouse or button",
+          "description": "How to make a response.",
+          "default": "key"
+        },
+        "response_start_time": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Response start",
+          "description": "When the subject is allowed to respond to the stimulus.",
+          "default": 0
+        },
+        "raf_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Step function",
+          "description": "This function enables to move objects as you wish.",
+          "default": null
+        },
+        "mouse_down_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Mouse down function",
+          "description": "This function is set to the event listener of the mousedown.",
+          "default": null
+        },
+        "mouse_move_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Mouse move function",
+          "description": "This function is set to the event listener of the mousemove.",
+          "default": null
+        },
+        "mouse_up_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Mouse up function",
+          "description": "This function is set to the event listener of the mouseup.",
+          "default": null
+        },
+        "key_down_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Key down function",
+          "description": "This function is set to the event listener of the keydown.",
+          "default": null
+        },
+        "key_up_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Key up function",
+          "description": "This function is set to the event listener of the keyup.",
+          "default": null
+        },
+        "touchstart_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Touch start function",
+          "description": "This function is set to the event listener of the CANVAS touchstart.",
+          "default": null
+        },
+        "touchend_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Touch end function",
+          "description": "This function is set to the event listener of the CANVAS touchend.",
+          "default": null
+        },
+        "touchcancel_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Touch cancel function",
+          "description": "This function is set to the event listener of the CANVAS touchcancel.",
+          "default": null
+        },
+        "touchmove_func": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "Touch move function",
+          "description": "This function is set to the event listener of the CANVAS touchmove.",
+          "default": null
+        },
+        "button_choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "Button choices",
+          "description": "The labels for the buttons.",
+          "default": [
+            "Next"
+          ]
+        },
+        "button_html": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "button html"
+        },
+        "button_layout": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button layout",
+          "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+          "default": "grid"
+        },
+        "grid_rows": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "grid rows",
+          "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+          "default": 1
+        },
+        "grid_columns": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "grid columns",
+          "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+          "default": null
+        },
+        "vert_button_margin": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "Margin vertical",
+          "description": "The vertical margin of the button.",
+          "default": "0px"
+        },
+        "horiz_button_margin": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "Margin horizontal",
+          "description": "The horizontal margin of the button.",
+          "default": "8px"
+        },
+        "clear_canvas": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "clear_canvas",
+          "description": "Clear the canvas per frame.",
+          "default": true
+        }
+      },
+      "required": [
+        "stimuli"
+      ]
     }
   }
 }

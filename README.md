@@ -49,6 +49,10 @@ asserts the authored spec matches the reference file, then checks the preview ac
 four-row conditions table, randomised, twice through, scored against a correct-key column, repeating
 while cumulative accuracy stays below 0.75.
 
+`examples/shapes.json` is the image example: four PNGs (blue and orange squares and circles) carried
+in the spec as data URLs, named from a conditions column, preloaded, and judged on shape while
+colour is recorded but irrelevant.
+
 ## Design rules
 
 - **One-way compile.** The spec compiles to JavaScript; JavaScript is never parsed back.
@@ -62,3 +66,18 @@ while cumulative accuracy stays below 0.75.
   collaborator. The builder shows the generated code as you edit.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
   browser, because the preview compiles there. A test enforces it.
+- **Versioned provenance.** Exports say what made them: the Psych-DS `isBasedOn`, the header
+  comment in `experiment.js`, the `generator` meta tag and the project readme all name Studio and
+  jsPsych with their versions. Studio's comes from `packages/compiler/package.json`, so a release
+  is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere.
+  While the workspaces sit at `0.0.0` no Studio version is claimed, because a dataset built by
+  "jsPsych Studio 0.0.0" names a build nobody can obtain.
+
+## License
+
+MIT — see [LICENSE](LICENSE). Experiments you build with it are yours, under whatever terms you
+like; nothing Studio generates carries this licence onward.
+
+The repository also ships jsPsych's own documentation text inside
+`packages/schemas/plugin-schemas.json`, which is MIT licensed too. See
+[THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

@@ -1,12 +1,16 @@
 <script lang="ts">
   import AssetPanel from "./lib/AssetPanel.svelte";
   import ConditionsTable from "./lib/ConditionsTable.svelte";
+  import AuthorsPanel from "./lib/AuthorsPanel.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
   import SettingsPanel from "./lib/SettingsPanel.svelte";
   import AddStep from "./lib/AddStep.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
   import { panels } from "./lib/panels.svelte.ts";
   import { setTheme, theme, type Theme } from "./lib/theme.svelte.ts";
+  import { download, specFilename } from "./lib/files.ts";
+  import HeaderMenu from "./lib/HeaderMenu.svelte";
+  import { buildExperimentHtml, buildProjectZip } from "./lib/experiment.svelte.ts";
   import { backgroundColor, textColor } from "@jspsych-studio/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
@@ -15,6 +19,7 @@
     addAtInsertion,
     canHoldChildren,
     conditionTableNames,
+    exportedSpec,
     loadSpec,
     parseSpec,
     startNewProject,
@@ -34,6 +39,35 @@
   const firstTrial = () => newTrial(DEFAULT_PLUGIN, startingParams(DEFAULT_PLUGIN));
 
   let importError = $state("");
+  let downloadError = $state("");
+
+  async function downloadExperiment() {
+    try {
+      const html = await buildExperimentHtml();
+      download(`${specFilename(project.spec)}.html`, html, "text/html");
+      downloadError = "";
+    } catch (error) {
+      downloadError = `Not ready to download: ${(error as Error).message.split("\n")[0]}`;
+    }
+  }
+
+  function downloadProject() {
+    download(
+      `${specFilename(project.spec)}.json`,
+      JSON.stringify(exportedSpec(), null, 2),
+      "application/json",
+    );
+  }
+
+  async function downloadEverything() {
+    try {
+      const zip = await buildProjectZip();
+      download(`${specFilename(project.spec)}.zip`, zip, "application/zip");
+      downloadError = "";
+    } catch (error) {
+      downloadError = `Not ready to download: ${(error as Error).message.split("\n")[0]}`;
+    }
+  }
 
   const DEFAULT_PLUGIN = "html-keyboard-response";
 
@@ -51,6 +85,13 @@
   const marked = (id: string) => id === "study" && unsavedData;
 
   // Starting over throws away whatever is open, so only ask when there is something to lose.
+  function startOver() {
+    if (!confirmDiscard()) return;
+    startNewProject();
+    // Starting over should land where an experiment begins, not wherever you happened to be.
+    tab = "timeline";
+  }
+
   function confirmDiscard() {
     const empty = project.spec.timeline.length === 0;
     return empty || window.confirm("Start a new experiment? The one open here will be discarded.");
@@ -79,35 +120,44 @@
     bind:value={project.spec.name}
   />
   <span class="spacer"></span>
-  <label class="theme">
-    <span class="visually-hidden">Appearance</span>
-    <select
-      data-testid="theme"
-      value={theme.choice}
-      onchange={(event) => setTheme(event.currentTarget.value as Theme)}
-    >
-      <option value="system">system</option>
-      <option value="light">light</option>
-      <option value="dark">dark</option>
-    </select>
-  </label>
-  <button
-    class="plain"
-    data-testid="new-project"
-    onclick={() => {
-      if (!confirmDiscard()) return;
-      startNewProject();
-      // Starting over should land where an experiment begins, not wherever you happened to be.
-      tab = "timeline";
-    }}>new</button
-  >
-  {#if importError}
-    <p class="import-error" data-testid="import-error">{importError}</p>
+  {#if importError || downloadError}
+    <p class="notice" data-testid="import-error">{importError || downloadError}</p>
   {/if}
-  <label class="import">
-    import spec
-    <input type="file" accept="application/json" data-testid="import-spec" onchange={importSpec} />
-  </label>
+
+  <button class="primary" data-testid="download-zip" onclick={downloadEverything}>
+    Download experiment
+  </button>
+
+  <HeaderMenu label="More actions">
+    <button class="item" data-testid="new-project" onclick={startOver}>New experiment</button>
+    <label class="item">
+      Open a project…
+      <input
+        type="file"
+        accept="application/json"
+        data-testid="import-spec"
+        onchange={importSpec}
+      />
+    </label>
+    <button class="item" data-testid="download-html" onclick={downloadExperiment}>
+      Download as one HTML file
+    </button>
+    <button class="item" data-testid="download-spec" onclick={downloadProject}>
+      Download project file only
+    </button>
+    <div class="group">
+      <span>Appearance</span>
+      <div class="segmented">
+        {#each ["system", "light", "dark"] as const as option (option)}
+          <button
+            class:active={theme.choice === option}
+            data-testid={`theme-${option}`}
+            onclick={() => setTheme(option)}>{option}</button
+          >
+        {/each}
+      </div>
+    </div>
+  </HeaderMenu>
 </header>
 
 <main
@@ -162,6 +212,7 @@
       {:else if tab === "files"}
         <AssetPanel />
       {:else}
+        <AuthorsPanel />
         <DataPanel />
         <SettingsPanel />
       {/if}
@@ -190,35 +241,74 @@
   .spacer {
     flex: 1;
   }
-  .import input {
-    display: none;
-  }
-  .import-error {
+  .notice {
     margin: 0;
     color: var(--accent);
     font-size: 0.85rem;
   }
-  .theme select {
-    border: 0;
-    color: var(--muted);
-    font-size: 0.85rem;
-  }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-  }
-  .import,
-  .plain {
+  .primary {
+    border: 1px solid var(--rule);
+    border-radius: 5px;
+    background: none;
     cursor: pointer;
-    color: var(--muted);
+    padding: 0.3rem 0.6rem;
     font-size: 0.85rem;
   }
-  .plain {
+  .primary:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .item {
+    display: block;
+    width: 100%;
+    text-align: left;
     border: 0;
     background: none;
+    cursor: pointer;
+    padding: 0.35rem 0.45rem;
+    border-radius: 4px;
+    font-size: 0.85rem;
+  }
+  .item:hover {
+    background: var(--selected);
+  }
+  .item input {
+    display: none;
+  }
+  .group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.4rem 0.45rem 0.2rem;
+    border-top: 1px solid var(--rule);
+    margin-top: 0.2rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .segmented {
+    display: flex;
+  }
+  .segmented button {
+    flex: 1;
+    border: 1px solid var(--rule);
+    background: none;
+    cursor: pointer;
+    padding: 0.15rem 0.3rem;
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+  .segmented button + button {
+    border-left: 0;
+  }
+  .segmented button:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+  .segmented button:last-child {
+    border-radius: 0 4px 4px 0;
+  }
+  .segmented button.active {
+    border-color: var(--accent);
+    color: var(--accent);
   }
   main {
     display: grid;

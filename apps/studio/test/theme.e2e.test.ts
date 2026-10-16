@@ -12,6 +12,13 @@ const background = (page: Page) =>
 const colorScheme = (page: Page) =>
   page.evaluate(() => getComputedStyle(document.documentElement).colorScheme);
 
+/** Appearance lives in the header's overflow menu, so choosing it means opening that first. */
+async function chooseTheme(page: Page, choice: "system" | "light" | "dark") {
+  await page.getByTestId("header-menu").click();
+  await page.getByTestId(`theme-${choice}`).click();
+  await page.keyboard.press("Escape");
+}
+
 const DARK = "rgb(21, 23, 28)";
 const LIGHT = "rgb(252, 252, 253)";
 
@@ -46,17 +53,17 @@ describe("appearance", () => {
     await page.goto(appUrl);
     expect(await background(page)).toBe(DARK);
 
-    await page.getByTestId("theme").selectOption("light");
+    await chooseTheme(page, "light");
     await expect.poll(() => background(page), { timeout: 5_000 }).toBe(LIGHT);
     expect(await colorScheme(page)).toBe("light");
 
-    await page.getByTestId("theme").selectOption("dark");
+    await chooseTheme(page, "dark");
     await expect.poll(() => background(page), { timeout: 5_000 }).toBe(DARK);
     await page.close();
 
     const light = await browser.newPage({ colorScheme: "light" });
     await light.goto(appUrl);
-    await light.getByTestId("theme").selectOption("dark");
+    await chooseTheme(light, "dark");
     await expect.poll(() => background(light), { timeout: 5_000 }).toBe(DARK);
     await light.close();
   }, 120_000);
@@ -65,14 +72,16 @@ describe("appearance", () => {
     const context = await browser.newContext({ colorScheme: "dark" });
     const page = await context.newPage();
     await page.goto(appUrl);
-    await page.getByTestId("theme").selectOption("light");
+    await chooseTheme(page, "light");
     await expect.poll(() => background(page), { timeout: 5_000 }).toBe(LIGHT);
 
     await page.reload();
     expect(await background(page)).toBe(LIGHT);
-    expect(await page.getByTestId("theme").inputValue()).toBe("light");
+    await page.getByTestId("header-menu").click();
+    expect(await page.getByTestId("theme-light").getAttribute("class")).toContain("active");
+    await page.keyboard.press("Escape");
 
-    await page.getByTestId("theme").selectOption("system");
+    await chooseTheme(page, "system");
     await expect.poll(() => background(page), { timeout: 5_000 }).toBe(DARK);
     await context.close();
   }, 120_000);

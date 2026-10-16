@@ -60,10 +60,11 @@ export function compileDataStep(settings: DataSettings, experimentName: string) 
   };
 }
 
-export function compileParticipantProperties() {
+export function compileParticipantProperties(experimentName: string) {
   return (
     `const urlParameters = Object.fromEntries(new URLSearchParams(window.location.search));\n` +
     `jsPsych.data.addProperties({\n` +
+    `  experiment: ${literal(experimentName)},\n` +
     `  participant_id: urlParameters.participant_id ?? jsPsych.randomization.randomID(10),\n` +
     `  ...urlParameters,\n` +
     `});\n`

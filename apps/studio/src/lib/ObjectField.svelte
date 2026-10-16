@@ -2,6 +2,7 @@
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
+  import { switchVariant, visibleFields } from "./schemas.ts";
 
   interface Props {
     schema: ParameterSchema;
@@ -13,10 +14,14 @@
 
   const { schema, assets, value, testId, onchange }: Props = $props();
 
-  const fields = $derived(Object.entries(schema.properties ?? {}));
+  const fields = $derived(visibleFields(schema, value));
   const isRequired = (name: string) => (schema.required ?? []).includes(name);
 
   function update(name: string, next: unknown) {
+    if (schema.variants && name === schema.variants.by && typeof next === "string") {
+      onchange(switchVariant(schema.variants, value, next));
+      return;
+    }
     const merged = { ...value };
     if (next === "" && !isRequired(name)) delete merged[name];
     else merged[name] = next;

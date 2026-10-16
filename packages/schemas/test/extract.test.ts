@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { extractSchemas, officialPluginPackages } from "../src/extract.ts";
+import { extractSchemas, pluginPackages } from "../src/extract.ts";
 
-const packages = officialPluginPackages();
+const packages = pluginPackages();
 const report = await extractSchemas(packages);
 
 describe("extractSchemas", () => {
@@ -46,5 +46,41 @@ describe("extractSchemas", () => {
     const questions = report.schemas["survey-likert"].properties.questions;
     expect(questions.type).toBe("array");
     expect(questions.items?.properties).toHaveProperty("labels");
+  });
+
+  it("falls back to the help text a plugin declares in its own info", () => {
+    const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
+    expect(canvasWidth.description).toMatch(/width/i);
+  });
+});
+
+describe("curated third-party plugins", () => {
+  const stimuli = report.schemas["psychophysics"].properties.stimuli;
+  const item = stimuli.items!;
+
+  it("adds the shape field the plugin reads but does not declare", () => {
+    expect(item.required).toEqual(["obj_type"]);
+    expect(item.properties?.obj_type.enum).toContain("circle");
+  });
+
+  it("names, for every shape offered, the fields that shape reads", () => {
+    const shapes = item.properties!.obj_type.enum as string[];
+    expect(Object.keys(item.variants!.options).sort()).toEqual([...shapes].sort());
+    for (const variant of Object.values(item.variants!.options)) {
+      for (const name of [...variant.properties, ...variant.required]) {
+        expect(item.properties).toHaveProperty(name);
+      }
+    }
+    for (const name of item.variants!.shared) expect(item.properties).toHaveProperty(name);
+  });
+
+  it("describes every field it adds", () => {
+    for (const name of ["obj_type", "radius", "fill_color", "file", "content"]) {
+      expect(item.properties![name].description).toBeTruthy();
+    }
+  });
+
+  it("gives a new step a valid starting object", () => {
+    expect(stimuli.examples?.[0]).toEqual([{ obj_type: "cross", line_length: 40 }]);
   });
 });

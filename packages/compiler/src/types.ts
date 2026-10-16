@@ -107,8 +107,16 @@ export interface ExperimentSettings {
   text_color?: string;
 }
 
+/** Whoever made the experiment, in the shape Psych-DS expects for a person. */
+export interface Author {
+  name: string;
+  /** A URL that identifies them across datasets, usually an ORCID. */
+  identifier?: string;
+}
+
 export interface Spec {
   name: string;
+  authors?: Author[];
   settings?: ExperimentSettings;
   data?: DataSettings;
   assets?: Asset[];
