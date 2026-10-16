@@ -4,9 +4,12 @@ A no-code builder for [jsPsych](https://www.jspsych.org) experiments. Researcher
 in a UI; the tool compiles it to readable, correct jsPsych source they can host anywhere.
 
 **Status: early.** You can build a flanker task end to end in the browser — nested timeline,
-conditions table, generated parameter forms, image and sound files, live preview of the real
-experiment, a choice of where results go, and export to a self-contained HTML file. There is no hosting, survey editor, or
-study-level flow yet.
+conditions table generated from a design, generated parameter forms (questionnaire items
+included), rich stimulus text, image and sound files, group assignment and branching on
+performance, a psychophysics canvas step, live preview of the whole experiment or a single step,
+a choice of where results go, and export to a self-contained HTML file or a zipped project.
+Canvas objects are positioned by coordinates; there is no drag-to-place editor yet. There is no
+hosting or study-level flow, and no release has been cut.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
 open a working experiment in one click.
@@ -28,7 +31,7 @@ maintainable by a small team.
 
 | Package                    | What it does                                                                                                                                                 |
 | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@jspsych-studio/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the eventual form UI is generated rather than hand-written |
+| `@jspsych-studio/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the builder's forms are generated rather than hand-written |
 | `@jspsych-studio/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
 
 ## Use
