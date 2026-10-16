@@ -1,5 +1,11 @@
 export { compileSpec } from "./compile.ts";
 export { DATAPIPE_URL } from "./data.ts";
+export {
+  DEFAULT_ID_PARAM,
+  idParamOf,
+  PARTICIPANT_PLACEHOLDER,
+  RECRUITMENT_PLATFORMS,
+} from "./recruitment.ts";
 export { DEFAULT_BACKGROUND, DEFAULT_TEXT, backgroundColor, textColor } from "./appearance.ts";
 export type { CompileOptions } from "./compile.ts";
 export { formatSource } from "./format.ts";

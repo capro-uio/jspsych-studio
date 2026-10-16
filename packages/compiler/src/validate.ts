@@ -2,6 +2,7 @@ import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/s
 import type { AssignNode, BranchNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { accuracyComparison } from "./conditions.ts";
+import { recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
@@ -358,6 +359,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
       message: "uploading data needs an experiment id from the service receiving it",
     });
   }
+  problems.push(...recruitmentProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
   if (problems.length > 0) throw new SpecError(spec.name, problems);

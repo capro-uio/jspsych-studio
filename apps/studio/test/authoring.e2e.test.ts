@@ -148,6 +148,52 @@ describe("authoring the flanker task through the UI", () => {
   }, 180_000);
 });
 
+describe("recruiting from a platform", () => {
+  it("fills in the platform's id parameter and sends participants back once data is saved", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response", "slot-0");
+    await setFixed(page, "stimulus", "<p>hello</p>");
+
+    await openTab(page, "study");
+    await page.getByTestId("recruitment-platform").selectOption("prolific");
+    expect(await page.getByTestId("recruitment-id-param").getAttribute("placeholder")).toBe(
+      "PROLIFIC_PID",
+    );
+    expect(await page.getByTestId("recruitment-hint").innerText()).toContain("completion URL");
+
+    const completion = "https://app.prolific.com/submissions/complete?cc=C1A2B3";
+    await setText(page, "recruitment-complete", completion);
+    // Sending someone away before their data is uploaded would leave it on their computer.
+    await expect
+      .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 5_000 })
+      .toContain("needs data uploaded first");
+
+    await page.getByTestId("data-mode").selectOption("post");
+    await setText(page, "data-experiment-id", "abc123DEF456");
+    await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
+
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.recruitment).toEqual({
+      platform: "prolific",
+      endings: { complete: { url: completion } },
+    });
+
+    await page.getByTestId("view-code").click();
+    await expect
+      .poll(() => page.getByTestId("generated-code").innerText(), { timeout: 5_000 })
+      .toContain('urlParameters["PROLIFIC_PID"]');
+
+    await page.getByTestId("recruitment-platform").selectOption("none");
+    await page.getByTestId("view-spec").click();
+    await expect
+      .poll(async () => JSON.parse(await page.getByTestId("spec-json").innerText()).recruitment)
+      .toBeUndefined();
+    await page.close();
+  }, 120_000);
+});
+
 describe("choosing where data goes", () => {
   it("warns when nothing is saved, and records the upload settings once chosen", async () => {
     const page = await browser.newPage();

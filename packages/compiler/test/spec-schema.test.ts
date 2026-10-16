@@ -90,6 +90,23 @@ describe("what the schema catches before anything runs", () => {
     expect(problems(spec)).toContain("must have required property 'experiment_id'");
   });
 
+  it("a recruitment return address that is not https", () => {
+    const spec = flanker();
+    spec.recruitment = { endings: { complete: { url: "http://app.prolific.com/done" } } };
+    expect(problems(spec)).toContain('must match pattern "^https://"');
+  });
+
+  it("but accepts a platform's id parameter and return address", () => {
+    const spec = flanker();
+    spec.data = { save: "post", experiment_id: "abc" };
+    spec.recruitment = {
+      platform: "sona",
+      id_param: "id",
+      endings: { complete: { url: "https://u.sona-systems.com/c?survey_code={participant_id}" } },
+    };
+    expect(problems(spec)).toEqual([]);
+  });
+
   it("an accuracy rule compared both ways at once", () => {
     const spec: Spec = {
       name: "both ways",

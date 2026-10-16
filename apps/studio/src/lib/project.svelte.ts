@@ -231,12 +231,13 @@ export function openExample(spec: Spec) {
 }
 
 export function exportedSpec(): Spec {
-  const { name, authors, settings, data, assets, conditions, timeline } = project.spec;
-  const spec: Spec = { $schema: SPEC_SCHEMA_ID, name, timeline };
+  // Only the fields the builder keeps empty placeholders for are pruned; everything else passes
+  // through, so a field added to the spec format is never dropped from exports by omission.
+  const { $schema: _opened, authors, settings, assets, conditions, ...rest } = project.spec;
+  const spec: Spec = { $schema: SPEC_SCHEMA_ID, ...rest };
   const named = (authors ?? []).filter((author) => author.name.trim());
   if (named.length > 0) spec.authors = named;
   if (settings && Object.keys(settings).length > 0) spec.settings = settings;
-  if (data) spec.data = data;
   if (assets?.length) spec.assets = assets;
   if (Object.keys(conditions ?? {}).length > 0) spec.conditions = conditions;
   return spec;

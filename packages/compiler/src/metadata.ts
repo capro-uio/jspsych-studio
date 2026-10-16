@@ -1,4 +1,5 @@
 import manifest from "../package.json" with { type: "json" };
+import { idParamOf } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
 
@@ -35,6 +36,7 @@ export function dataColumns(spec: Spec): string[] {
   if (spec.data) {
     columns.add("participant_id");
     columns.add("experiment");
+    columns.add(idParamOf(spec.recruitment));
   }
 
   const walk = (nodes: SpecNode[]) => {

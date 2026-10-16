@@ -87,6 +87,23 @@ export interface DataSettings {
   filename_prefix?: string;
 }
 
+export type RecruitmentPlatform = "prolific" | "sona" | "connect" | "custom";
+
+/** Where a participant goes when the study ends a particular way. */
+export interface Ending {
+  /** The platform's return URL; `{participant_id}` is replaced with the participant's id. */
+  url: string;
+}
+
+/** How the study meets the platform participants are recruited from. */
+export interface RecruitmentSettings {
+  platform?: RecruitmentPlatform;
+  /** The URL parameter the platform passes the participant's id in, if not the platform's usual one. */
+  id_param?: string;
+  /** `complete` is where a participant goes once their data is saved. */
+  endings?: { complete?: Ending };
+}
+
 export interface Asset {
   /** The name the spec refers to this file by, e.g. "face.png". */
   name: string;
@@ -121,6 +138,7 @@ export interface Spec {
   authors?: Author[];
   settings?: ExperimentSettings;
   data?: DataSettings;
+  recruitment?: RecruitmentSettings;
   assets?: Asset[];
   conditions?: Record<string, Record<string, unknown>[]>;
   timeline: SpecNode[];

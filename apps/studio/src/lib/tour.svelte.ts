@@ -71,8 +71,9 @@ export const TOUR_STEPS: TourStep[] = [
     tab: "study",
     title: "The study",
     body:
-      "Who made it, where results go, and settings that apply to every step. Until you choose " +
-      "where data goes, a dot on this tab reminds you that nothing is being kept.",
+      "Who made it, where results go, which platform participants come from, and settings that " +
+      "apply to every step. Until you choose where data goes, a dot on this tab reminds you " +
+      "that nothing is being kept.",
   },
   {
     id: "preview",

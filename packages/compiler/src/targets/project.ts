@@ -1,6 +1,7 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
 import { assetPath } from "../assets.ts";
 import { compileSpec } from "../compile.ts";
+import { completionUrlOf, idParamOf } from "../recruitment.ts";
 import { formatSource } from "../format.ts";
 import {
   datasetDescription,
@@ -53,6 +54,23 @@ ${
       ? "Each participant's results download to their own computer at the end. You will need to collect those files from them."
       : "This experiment does not keep its results. Choose where data should go in the builder before recruiting anyone."
 }
+${recruitmentSection(spec)}`;
+}
+
+function recruitmentSection(spec: Spec) {
+  if (!spec.recruitment) return "";
+  const idParam = idParamOf(spec.recruitment);
+  const url = completionUrlOf(spec.recruitment);
+  return `
+## Recruiting
+
+Each participant's id is read from the \`${idParam}\` parameter of the link they arrive by, and
+recorded as \`participant_id\`. Without it they are given a random id.${
+    url
+      ? ` Once their data is uploaded they are sent to ${url}, or, if the upload fails, shown a link
+to it once their file has downloaded.`
+      : ""
+  }
 `;
 }
 

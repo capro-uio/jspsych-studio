@@ -3,6 +3,7 @@
   import ConditionsTable from "./lib/ConditionsTable.svelte";
   import AuthorsPanel from "./lib/AuthorsPanel.svelte";
   import DataPanel from "./lib/DataPanel.svelte";
+  import RecruitmentPanel from "./lib/RecruitmentPanel.svelte";
   import SettingsPanel from "./lib/SettingsPanel.svelte";
   import AddStep from "./lib/AddStep.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
@@ -222,6 +223,7 @@
       {:else}
         <AuthorsPanel />
         <DataPanel />
+        <RecruitmentPanel />
         <SettingsPanel />
       {/if}
     </div>
