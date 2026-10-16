@@ -10,8 +10,8 @@ performance, a psychophysics canvas step whose objects you drag into place, live
 whole experiment or a single step, a choice of where results go, a guided tour of the builder,
 and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
-There is no hosting or study-level flow (consent, counterbalanced task order) yet, and no release
-has been cut.
+There is no hosting or study-level flow (consent, counterbalanced task order) yet. 0.1.0 is the
+first release, and every export names the version that built it.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
 open a working experiment in one click.
@@ -58,6 +58,10 @@ while cumulative accuracy stays below 0.75.
 `examples/shapes.json` is the image example: four PNGs (blue and orange squares and circles) carried
 in the spec as data URLs, named from a conditions column, preloaded, and judged on shape while
 colour is recorded but irrelevant.
+
+`examples/stroop.json` is the checkpoint example: a colour-word Stroop with a fixation cross before
+each word, congruency and ink colour recorded on every trial, and a checkpoint after the
+instructions.
 
 ## Recruiting from a platform
 
