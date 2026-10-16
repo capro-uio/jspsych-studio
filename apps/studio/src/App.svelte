@@ -6,6 +6,7 @@
   import AddStep from "./lib/AddStep.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
   import { panels } from "./lib/panels.svelte.ts";
+  import { setTheme, theme, type Theme } from "./lib/theme.svelte.ts";
   import { backgroundColor, textColor } from "@jspsych-studio/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
@@ -78,6 +79,18 @@
     bind:value={project.spec.name}
   />
   <span class="spacer"></span>
+  <label class="theme">
+    <span class="visually-hidden">Appearance</span>
+    <select
+      data-testid="theme"
+      value={theme.choice}
+      onchange={(event) => setTheme(event.currentTarget.value as Theme)}
+    >
+      <option value="system">system</option>
+      <option value="light">light</option>
+      <option value="dark">dark</option>
+    </select>
+  </label>
   <button
     class="plain"
     data-testid="new-project"
@@ -185,6 +198,18 @@
     color: var(--accent);
     font-size: 0.85rem;
   }
+  .theme select {
+    border: 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
   .import,
   .plain {
     cursor: pointer;
@@ -214,6 +239,7 @@
   }
   .tabs {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.15rem;
     border-bottom: 1px solid var(--rule);
   }
@@ -221,10 +247,12 @@
     border: 0;
     border-bottom: 2px solid transparent;
     background: none;
-    padding: 0.3rem 0.45rem;
+    padding: 0.3rem 0.35rem;
     cursor: pointer;
     color: var(--muted);
     font-size: 0.85rem;
+    /* A tab that cannot show its own name is worse than one that wraps to the next line. */
+    white-space: nowrap;
   }
   .tabs button.active {
     color: inherit;

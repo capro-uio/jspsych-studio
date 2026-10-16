@@ -5,18 +5,35 @@
   --rule: #e2e5ea;
   --selected: #e8eefc;
   --accent: #b3261e;
-  color-scheme: light dark;
+  color-scheme: light;
 }
 
+/* The system setting decides, unless the document says otherwise. The dark values appear twice
+   because CSS has no way to name a set of declarations and apply it under two conditions. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #15171c;
     --fg: #e8eaee;
     --muted: #9aa2af;
     --rule: #2b2f38;
     --selected: #223052;
     --accent: #f2b8b5;
+    color-scheme: dark;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #15171c;
+  --fg: #e8eaee;
+  --muted: #9aa2af;
+  --rule: #2b2f38;
+  --selected: #223052;
+  --accent: #f2b8b5;
+  color-scheme: dark;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 * {

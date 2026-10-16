@@ -142,7 +142,7 @@
     width: 100%;
     border: 1px solid var(--rule);
     border-radius: 6px;
-    background: #fff;
+    background: var(--stimulus-background, #fff);
   }
   pre {
     flex: 1;
