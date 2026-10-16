@@ -28,7 +28,7 @@ const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
   TIMELINE: { type: "array", format: "timeline" },
 };
 
-interface RawParameter {
+export interface RawParameter {
   type: number;
   default?: unknown;
   array?: boolean;
@@ -81,7 +81,7 @@ export function readDescriptions(packageName: string) {
   return descriptions;
 }
 
-function toParameterSchema(
+export function toParameterSchema(
   name: string,
   raw: RawParameter,
   typeNames: Map<number, ParameterTypeName>,
@@ -98,7 +98,11 @@ function toParameterSchema(
   const description = descriptions[name] ?? raw.description;
   if (description) schema.description = description;
   if ("default" in raw) schema.default = raw.default;
-  if (raw.options) schema.enum = raw.options;
+  if (raw.options) {
+    // A list of choices holds several options, not one, so the options constrain each entry.
+    const chosen = schema.type === "array" && schema.items ? schema.items : schema;
+    chosen.enum = raw.options;
+  }
   if (raw.nested) {
     const nested = toObjectSchema(raw.nested, typeNames, descriptions);
     if (schema.type === "array") schema.items = nested as ParameterSchema;

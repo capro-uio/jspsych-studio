@@ -65,9 +65,15 @@ export function visibleFields(schema: ParameterSchema, value: Record<string, unk
   return fields.filter(([name]) => shown.has(name) || name in value);
 }
 
-/** Changing an entry's variant drops the fields only the old one read, rather than leave them. */
+/**
+ * Changing an entry's variant drops the fields only the old one read, rather than leave them;
+ * fields no variant claims, such as motion, are kept.
+ */
 export function switchVariant(variants: Variants, value: Record<string, unknown>, next: string) {
-  const kept = new Set([...variants.shared, ...(variants.options[next]?.properties ?? [])]);
-  const fields = Object.entries(value).filter(([name]) => kept.has(name));
+  const claimed = new Set(Object.values(variants.options).flatMap((option) => option.properties));
+  const reads = new Set([...variants.shared, ...(variants.options[next]?.properties ?? [])]);
+  const fields = Object.entries(value).filter(
+    ([name]) => name !== variants.by && (!claimed.has(name) || reads.has(name)),
+  );
   return { [variants.by]: next, ...Object.fromEntries(fields) };
 }
