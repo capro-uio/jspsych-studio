@@ -121,8 +121,10 @@ compiler's validator; the schema narrows what reaches it rather than replacing i
   jsPsych with their versions. Studio's comes from `packages/compiler/package.json`, so a release
   is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere, and
   regenerates `codemeta.json` with the new version, its release URL and the jsPsych it builds for
-  (`npm run codemeta` does the same by hand; CI fails if it is out of date). Everything else in
-  `codemeta.json`, such as the authors, is written by hand.
+  (`npm run codemeta` does the same by hand; CI fails if it is out of date). The description,
+  licence, keywords and links come from the root `package.json`, so they are said once; only what
+  npm has no field for, such as the authors and development status, is written in
+  `codemeta.json` by hand.
   While the workspaces sit at `0.0.0` no Studio version is claimed, because a dataset built by
   "jsPsych Studio 0.0.0" names a build nobody can obtain.
 

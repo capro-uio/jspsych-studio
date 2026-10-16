@@ -47,11 +47,16 @@ if (command === "codemeta") {
     "out",
     fileURLToPath(new URL("../../../codemeta.json", import.meta.url)),
   );
-  const updated = updateCodemeta(JSON.parse(readFileSync(outputPath, "utf8")), {
-    version: manifest.version,
-    jspsych: report.jspsych,
-    date: new Date().toISOString().slice(0, 10),
-  });
+  const repositoryManifest = fileURLToPath(new URL("../../../package.json", import.meta.url));
+  const updated = updateCodemeta(
+    JSON.parse(readFileSync(outputPath, "utf8")),
+    JSON.parse(readFileSync(repositoryManifest, "utf8")),
+    {
+      version: manifest.version,
+      jspsych: report.jspsych,
+      date: new Date().toISOString().slice(0, 10),
+    },
+  );
   // Formatted as the repository formats it, so a regeneration diffs only where something changed.
   const options = { ...(await resolveConfig(outputPath)), filepath: outputPath };
   writeFileSync(outputPath, await format(JSON.stringify(updated), options));
