@@ -37,3 +37,13 @@ export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
   const timeline = options.from?.length ? trim(spec.timeline, options.from) : spec.timeline;
   return { ...rest, timeline };
 }
+
+// jsPsych focuses its display at the start of every trial so keypresses reach it. Inside the
+// preview that would pull the cursor out of whatever the studio is editing, so the frame may only
+// move focus once it already has it: click into the preview and it behaves as it will for real.
+export const FOCUS_GUARD = `(() => {
+  const focus = HTMLElement.prototype.focus;
+  HTMLElement.prototype.focus = function (...args) {
+    if (document.hasFocus()) focus.apply(this, args);
+  };
+})();`;
