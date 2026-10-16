@@ -11,7 +11,7 @@ jobs:
     env:
       PLAYWRIGHT_CHANNEL: chromium
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -26,7 +26,7 @@ jobs:
   schemas-up-to-date:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -40,7 +40,7 @@ jobs:
   codemeta-up-to-date:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v5
         with:
           node-version: 24
@@ -53,7 +53,7 @@ jobs:
   workflows:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
       - name: Check the workflow files
         uses: docker://rhysd/actionlint:1.7.12
         with:
