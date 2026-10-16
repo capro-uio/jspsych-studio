@@ -1,4 +1,5 @@
 {
+  "$schema": "https://www.capro.dev/jspsych-studio/spec-schema.json",
   "name": "flanker-practice",
   "conditions": {
     "flanker_trials": [

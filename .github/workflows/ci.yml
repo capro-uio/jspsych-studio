@@ -32,5 +32,6 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run schemas
+      - run: npm run spec-schema
       - name: Fail if the committed schemas differ from a fresh extraction
-        run: git diff --exit-code packages/schemas/plugin-schemas.json
+        run: git diff --exit-code packages/schemas/plugin-schemas.json packages/compiler/spec-schema.json

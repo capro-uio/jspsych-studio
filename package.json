@@ -10,6 +10,7 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "schemas": "npm run build --workspace @jspsych-studio/schemas",
+    "spec-schema": "npm run spec-schema --workspace @jspsych-studio/compiler",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc -p packages/schemas/tsconfig.json && tsc -p packages/compiler/tsconfig.json && npm run check --workspace @jspsych-studio/studio",
