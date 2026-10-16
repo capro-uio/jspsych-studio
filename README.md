@@ -10,8 +10,8 @@ performance, a psychophysics canvas step whose objects you drag into place, live
 whole experiment or a single step, a choice of where results go, a guided tour of the builder,
 and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
-There is no hosting or study-level flow (consent, counterbalanced task order) yet, and no release
-has been cut.
+There is no hosting or study-level flow (consent, counterbalanced task order) yet. 0.0.1 is the
+first release, and every export names the version that built it.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
 open a working experiment in one click.
@@ -58,6 +58,10 @@ while cumulative accuracy stays below 0.75.
 `examples/shapes.json` is the image example: four PNGs (blue and orange squares and circles) carried
 in the spec as data URLs, named from a conditions column, preloaded, and judged on shape while
 colour is recorded but irrelevant.
+
+`examples/stroop.json` is the checkpoint example: a colour-word Stroop with a fixation cross before
+each word, congruency and ink colour recorded on every trial, and a checkpoint after the
+instructions.
 
 ## Recruiting from a platform
 
@@ -115,7 +119,12 @@ compiler's validator; the schema narrows what reaches it rather than replacing i
 - **Versioned provenance.** Exports say what made them: the Psych-DS `isBasedOn`, the header
   comment in `experiment.js`, the `generator` meta tag and the project readme all name Studio and
   jsPsych with their versions. Studio's comes from `packages/compiler/package.json`, so a release
-  is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere.
+  is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere, and
+  regenerates `codemeta.json` with the new version, its release URL and the jsPsych it builds for
+  (`npm run codemeta` does the same by hand; CI fails if it is out of date). The description,
+  licence, keywords and links come from the root `package.json`, so they are said once; only what
+  npm has no field for, such as the authors and development status, is written in
+  `codemeta.json` by hand.
   While the workspaces sit at `0.0.0` no Studio version is claimed, because a dataset built by
   "jsPsych Studio 0.0.0" names a build nobody can obtain.
 

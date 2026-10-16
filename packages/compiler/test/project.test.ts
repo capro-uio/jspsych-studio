@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import manifest from "../package.json" with { type: "json" };
 import { projectFiles } from "../src/targets/project.ts";
 import type { Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
@@ -93,20 +94,38 @@ describe("downloading the whole project", () => {
     const source = files["experiment.js"] as string;
 
     expect(source.startsWith("/*")).toBe(true);
-    expect(source).toContain("Built with jsPsych Studio on 2026-10-16");
+    expect(source).toContain(`Built with jsPsych Studio ${manifest.version} on 2026-10-16`);
     expect(source).toContain("generated from experiment.json");
-    expect(files["index.html"]).toContain('<meta name="generator" content="jsPsych Studio" />');
+    expect(files["index.html"]).toContain(
+      `<meta name="generator" content="jsPsych Studio ${manifest.version}" />`,
+    );
   });
 
-  it("leaves the Studio version out until there is a release", async () => {
+  it("names the Studio version that built it", async () => {
     const files = await projectFiles(spec, schemas);
     const metadata = JSON.parse(files["dataset_description.json"] as string);
 
-    // Every workspace sits at 0.0.0 before the first release, and a dataset built by
-    // "jsPsych Studio 0.0.0" names a build nobody can obtain. jsPsych still has a real one.
-    expect(metadata.isBasedOn[0].softwareVersion).toBeUndefined();
+    expect(metadata.isBasedOn[0].softwareVersion).toBe(manifest.version);
     expect(metadata.isBasedOn[1].softwareVersion).toEqual(expect.any(String));
-    expect(files["experiment.js"]).toContain("Built with jsPsych Studio on");
+  });
+
+  it("leaves the Studio version out of an unreleased build", async () => {
+    // A dataset built by "jsPsych Studio 0.0.0" names a build nobody can obtain.
+    vi.resetModules();
+    vi.doMock("../package.json", () => ({ default: { ...manifest, version: "0.0.0" } }));
+    try {
+      const unreleased = await import("../src/targets/project.ts");
+      const files = await unreleased.projectFiles(spec, schemas, { generatedAt: "2026-10-16" });
+      const metadata = JSON.parse(files["dataset_description.json"] as string);
+
+      expect(metadata.isBasedOn[0].softwareVersion).toBeUndefined();
+      expect(files["experiment.js"]).toContain("Built with jsPsych Studio on 2026-10-16");
+      expect(files["index.html"]).toContain('<meta name="generator" content="jsPsych Studio" />');
+      expect(files["README.md"]).toContain("Built with jsPsych Studio.");
+    } finally {
+      vi.doUnmock("../package.json");
+      vi.resetModules();
+    }
   });
 
   it("says which Studio built it, once there is a version", async () => {

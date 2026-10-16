@@ -35,3 +35,16 @@ jobs:
       - run: npm run spec-schema
       - name: Fail if the committed schemas differ from a fresh extraction
         run: git diff --exit-code packages/schemas/plugin-schemas.json packages/compiler/spec-schema.json
+
+  codemeta-up-to-date:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run codemeta
+      - name: Fail if codemeta.json is behind the version or the jsPsych it builds for
+        run: git diff --exit-code codemeta.json

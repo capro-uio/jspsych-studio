@@ -1,6 +1,6 @@
 {
   "name": "@jspsych-studio/compiler",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
   "license": "MIT",
   "type": "module",
@@ -10,7 +10,9 @@
   },
   "scripts": {
     "test": "vitest run",
-    "spec-schema": "node --experimental-strip-types src/cli.ts schema"
+    "spec-schema": "node --experimental-strip-types src/cli.ts schema",
+    "codemeta": "node --experimental-strip-types src/cli.ts codemeta",
+    "version": "npm run codemeta"
   },
   "dependencies": {
     "@jspsych-studio/schemas": "*",

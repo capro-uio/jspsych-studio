@@ -1,8 +1,11 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
+import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
 import { extractSchemas, pluginPackages } from "@jspsych-studio/schemas";
+import manifest from "../package.json" with { type: "json" };
+import { updateCodemeta } from "./codemeta.ts";
 import { compileSpec } from "./compile.ts";
 import { emitHtml } from "./targets/html.ts";
 import { specSchema } from "./spec-schema.ts";
@@ -16,10 +19,11 @@ function optionValue(name: string, fallback: string) {
 
 const [command, specPath] = process.argv.slice(2);
 
-if (!["compile", "schema"].includes(command) || (command === "compile" && !specPath)) {
+if (!["compile", "schema", "codemeta"].includes(command) || (command === "compile" && !specPath)) {
   console.error(
     "usage: jspsych-studio compile <spec.json> [--out <file>] [--base <cdn|path>]\n" +
-      "       jspsych-studio schema [--out <file>]",
+      "       jspsych-studio schema [--out <file>]\n" +
+      "       jspsych-studio codemeta [--out <file>]",
   );
   process.exit(2);
 }
@@ -35,6 +39,28 @@ if (command === "schema") {
   writeFileSync(outputPath, `${JSON.stringify(specSchema(schemas.plugins), null, 2)}\n`);
   const count = Object.keys(schemas.plugins).length;
   console.log(`spec schema for jsPsych ${report.jspsych}, ${count} plugin(s) -> ${outputPath}`);
+  process.exit(0);
+}
+
+if (command === "codemeta") {
+  const outputPath = optionValue(
+    "out",
+    fileURLToPath(new URL("../../../codemeta.json", import.meta.url)),
+  );
+  const repositoryManifest = fileURLToPath(new URL("../../../package.json", import.meta.url));
+  const updated = updateCodemeta(
+    JSON.parse(readFileSync(outputPath, "utf8")),
+    JSON.parse(readFileSync(repositoryManifest, "utf8")),
+    {
+      version: manifest.version,
+      jspsych: report.jspsych,
+      date: new Date().toISOString().slice(0, 10),
+    },
+  );
+  // Formatted as the repository formats it, so a regeneration diffs only where something changed.
+  const options = { ...(await resolveConfig(outputPath)), filepath: outputPath };
+  writeFileSync(outputPath, await format(JSON.stringify(updated), options));
+  console.log(`codemeta for jsPsych Studio ${manifest.version} -> ${outputPath}`);
   process.exit(0);
 }
 
