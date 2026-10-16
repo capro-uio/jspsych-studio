@@ -417,7 +417,8 @@ describe("routing on performance", () => {
     expect(spec.timeline[1].then).toHaveLength(1);
     expect(spec.timeline[1].otherwise).toHaveLength(1);
 
-    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    // The preview rebuilds a moment after the last edit, so it can still show the empty path.
+    await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
     await page.close();
   }, 180_000);
 });
