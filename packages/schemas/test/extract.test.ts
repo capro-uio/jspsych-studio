@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { extractSchemas, pluginPackages } from "../src/extract.ts";
+import { CURATED_PLUGINS } from "../src/curated.ts";
+import { extractSchemas, pluginPackages, toParameterSchema } from "../src/extract.ts";
 
 const packages = pluginPackages();
 const report = await extractSchemas(packages);
@@ -42,6 +43,18 @@ describe("extractSchemas", () => {
     expect(pages.items?.jspsychType).toBe("HTML_STRING");
   });
 
+  it("puts a list's options on its entries, since the list holds several", () => {
+    const select = 1;
+    const schema = toParameterSchema(
+      "colours",
+      { type: select, array: true, options: ["red", "blue"] },
+      new Map([[select, "SELECT"]]),
+      {},
+    );
+    expect(schema.enum).toBeUndefined();
+    expect(schema.items?.enum).toEqual(["red", "blue"]);
+  });
+
   it("expands nested COMPLEX parameters", () => {
     const questions = report.schemas["survey-likert"].properties.questions;
     expect(questions.type).toBe("array");
@@ -82,5 +95,16 @@ describe("curated third-party plugins", () => {
 
   it("gives a new step a valid starting object", () => {
     expect(stimuli.examples?.[0]).toEqual([{ obj_type: "cross", line_length: 40 }]);
+  });
+
+  it("says so when the plugin stops declaring its objects", () => {
+    const curate = CURATED_PLUGINS["@kurokida/jspsych-psychophysics"];
+    const changed = {
+      ...report.schemas["psychophysics"],
+      properties: {
+        stimuli: { title: "stimuli", type: "string" as const, jspsychType: "STRING" as const },
+      },
+    };
+    expect(() => curate(changed)).toThrow(/curation in curated.ts needs updating/);
   });
 });

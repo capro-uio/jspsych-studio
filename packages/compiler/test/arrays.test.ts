@@ -52,3 +52,44 @@ describe("array parameters", () => {
     expect(compileSpec(spec, schemas).source).toContain('images: [asset("a.png"), asset("b.png")]');
   });
 });
+
+describe("lists of choices", () => {
+  const plugins = {
+    ...schemas,
+    plugins: {
+      pick: {
+        plugin: "pick",
+        package: "pick",
+        version: "1.0.0",
+        required: [],
+        properties: {
+          colours: {
+            title: "colours",
+            type: "array" as const,
+            jspsychType: "SELECT" as const,
+            items: {
+              title: "colours",
+              type: "string" as const,
+              jspsychType: "SELECT" as const,
+              enum: ["red", "blue"],
+            },
+          },
+        },
+      },
+    },
+  };
+  const pick = (colours: ParameterValue): Spec => ({
+    name: "choices",
+    timeline: [{ kind: "trial", plugin: "pick", params: { colours } }],
+  });
+
+  it("accepts several of the options", () => {
+    expect(() => compileSpec(pick(["red", "blue"]), plugins)).not.toThrow();
+  });
+
+  it("rejects an entry that is not one of the options", () => {
+    expect(() => compileSpec(pick(["red", "green"]), plugins)).toThrow(
+      /expects each entry to be one of "red", "blue"/,
+    );
+  });
+});

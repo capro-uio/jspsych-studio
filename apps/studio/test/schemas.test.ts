@@ -66,4 +66,14 @@ describe("switchVariant", () => {
       ),
     ).toEqual({ obj_type: "rect", fill_color: "red" });
   });
+
+  it("keeps a field no shape claims, such as motion", () => {
+    expect(
+      switchVariant(
+        canvasObject.variants!,
+        { obj_type: "cross", line_length: 4, endX: 100 },
+        "text",
+      ),
+    ).toEqual({ obj_type: "text", endX: 100 });
+  });
 });

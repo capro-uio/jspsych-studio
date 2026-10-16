@@ -78,7 +78,13 @@ const CANVAS_OBJECT_VARIANTS: Variants = {
 
 function curatePsychophysics(schema: PluginSchema): PluginSchema {
   const stimuli = schema.properties.stimuli;
-  const item = stimuli.items!;
+  const item = stimuli?.items;
+  if (!item?.properties) {
+    throw new Error(
+      `${schema.package}@${schema.version} no longer declares "stimuli" as a list of objects; ` +
+        `its curation in curated.ts needs updating`,
+    );
+  }
   stimuli.description = "The objects drawn on the canvas, each placed by its centre.";
   item.properties = { ...item.properties, ...CANVAS_OBJECT_FIELDS };
   item.required = ["obj_type"];

@@ -41,7 +41,11 @@ function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
     return `expects one of ${parameter.enum.map((option) => JSON.stringify(option)).join(", ")}`;
   }
   if (parameter.type === "array") {
-    if (Array.isArray(value)) return null;
+    if (Array.isArray(value)) {
+      const options = parameter.items?.enum;
+      if (!options || value.every((entry) => options.includes(entry))) return null;
+      return `expects each entry to be one of ${options.map((option) => JSON.stringify(option)).join(", ")}`;
+    }
     if (parameter.jspsychType === "KEYS" && KEY_LIST_KEYWORDS.has(value as string)) return null;
     return "expects a list of values";
   }
