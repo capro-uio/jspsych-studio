@@ -214,10 +214,20 @@ export function startNewProject() {
   project.insertion = { path: [], index: 0 };
 }
 
+/** Nothing has been made here yet, so replacing it loses nothing. */
+export function isUntouched() {
+  return JSON.stringify(project.spec) === JSON.stringify(emptySpec());
+}
+
 export function loadSpec(spec: Spec) {
   project.spec = { conditions: {}, ...spec };
   project.selection = null;
   project.insertion = { path: [], index: spec.timeline.length };
+}
+
+/** Examples are shared module data, so each opening edits its own copy. */
+export function openExample(spec: Spec) {
+  loadSpec(structuredClone(spec));
 }
 
 export function exportedSpec(): Spec {

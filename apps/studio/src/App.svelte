@@ -15,12 +15,16 @@
   import NodeForm from "./lib/NodeForm.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
+  import Tour from "./lib/Tour.svelte";
+  import { startTour, TOUR_HOME_ID } from "./lib/tour.svelte.ts";
+  import { TABS, ui } from "./lib/ui.svelte.ts";
   import {
     addAtInsertion,
     canHoldChildren,
     conditionTableNames,
     exportedSpec,
     loadSpec,
+    openExample,
     parseSpec,
     startNewProject,
     newBlock,
@@ -71,15 +75,6 @@
 
   const DEFAULT_PLUGIN = "html-keyboard-response";
 
-  const TABS = [
-    { id: "timeline", label: "Timeline" },
-    { id: "conditions", label: "Conditions" },
-    { id: "files", label: "Files" },
-    { id: "study", label: "Study" },
-  ] as const;
-
-  let tab = $state<(typeof TABS)[number]["id"]>("timeline");
-
   // A warning that lives behind a tab is a warning nobody reads, so the tab says it is there.
   const unsavedData = $derived(!project.spec.data && project.spec.timeline.length > 0);
   const marked = (id: string) => id === "study" && unsavedData;
@@ -89,7 +84,7 @@
     if (!confirmDiscard()) return;
     startNewProject();
     // Starting over should land where an experiment begins, not wherever you happened to be.
-    tab = "timeline";
+    ui.tab = "timeline";
   }
 
   function confirmDiscard() {
@@ -104,7 +99,7 @@
     if (!file) return;
     try {
       loadSpec(parseSpec(await file.text()));
-      tab = "timeline";
+      ui.tab = "timeline";
       importError = "";
     } catch (error) {
       importError = `Could not import ${file.name}: ${(error as Error).message}`;
@@ -128,35 +123,45 @@
     Download experiment
   </button>
 
-  <HeaderMenu label="More actions">
-    <button class="item" data-testid="new-project" onclick={startOver}>New experiment</button>
-    <label class="item">
-      Open a project…
-      <input
-        type="file"
-        accept="application/json"
-        data-testid="import-spec"
-        onchange={importSpec}
-      />
-    </label>
-    <button class="item" data-testid="download-html" onclick={downloadExperiment}>
-      Download as one HTML file
-    </button>
-    <button class="item" data-testid="download-spec" onclick={downloadProject}>
-      Download project file only
-    </button>
-    <div class="group">
-      <span>Appearance</span>
-      <div class="segmented">
-        {#each ["system", "light", "dark"] as const as option (option)}
-          <button
-            class:active={theme.choice === option}
-            data-testid={`theme-${option}`}
-            onclick={() => setTheme(option)}>{option}</button
-          >
-        {/each}
+  <HeaderMenu label="More actions" id={TOUR_HOME_ID}>
+    {#snippet children(close)}
+      <button class="item" data-testid="new-project" onclick={startOver}>New experiment</button>
+      <label class="item">
+        Open a project…
+        <input
+          type="file"
+          accept="application/json"
+          data-testid="import-spec"
+          onchange={importSpec}
+        />
+      </label>
+      <button class="item" data-testid="download-html" onclick={downloadExperiment}>
+        Download as one HTML file
+      </button>
+      <button class="item" data-testid="download-spec" onclick={downloadProject}>
+        Download project file only
+      </button>
+      <button
+        class="item"
+        data-testid="start-tour-menu"
+        onclick={() => {
+          close();
+          startTour();
+        }}>Take the tour</button
+      >
+      <div class="group">
+        <span>Appearance</span>
+        <div class="segmented">
+          {#each ["system", "light", "dark"] as const as option (option)}
+            <button
+              class:active={theme.choice === option}
+              data-testid={`theme-${option}`}
+              onclick={() => setTheme(option)}>{option}</button
+            >
+          {/each}
+        </div>
       </div>
-    </div>
+    {/snippet}
   </HeaderMenu>
 </header>
 
@@ -171,11 +176,11 @@
         <button
           role="tab"
           id={`tab-${option.id}`}
-          aria-selected={tab === option.id}
+          aria-selected={ui.tab === option.id}
           aria-controls={`panel-${option.id}`}
-          class:active={tab === option.id}
+          class:active={ui.tab === option.id}
           data-testid={`tab-${option.id}`}
-          onclick={() => (tab = option.id)}
+          onclick={() => (ui.tab = option.id)}
         >
           {option.label}
           {#if marked(option.id)}<span class="mark" title="This experiment keeps no results">•</span
@@ -184,19 +189,22 @@
       {/each}
     </div>
 
-    <div class="panel" role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
-      {#if tab === "timeline"}
+    <div class="panel" role="tabpanel" id={`panel-${ui.tab}`} aria-labelledby={`tab-${ui.tab}`}>
+      {#if ui.tab === "timeline"}
         {#if project.spec.timeline.length === 0}
           <p class="muted">
             Nothing here yet. Open an example to see how one fits together, or use the + above to
             add your first step.
           </p>
+          <button class="tour" data-testid="start-tour" onclick={startTour}>
+            New here? Take a one-minute tour
+          </button>
           <div class="examples">
             {#each examples as example (example.id)}
               <button
                 class="example"
                 data-testid={`example-${example.id}`}
-                onclick={() => loadSpec(structuredClone(example.spec))}
+                onclick={() => openExample(example.spec)}
               >
                 <strong>{example.title}</strong>
                 <span class="muted">{example.description}</span>
@@ -207,9 +215,9 @@
         {:else}
           <Tree nodes={project.spec.timeline} />
         {/if}
-      {:else if tab === "conditions"}
+      {:else if ui.tab === "conditions"}
         <ConditionsTable />
-      {:else if tab === "files"}
+      {:else if ui.tab === "files"}
         <AssetPanel />
       {:else}
         <AuthorsPanel />
@@ -224,6 +232,8 @@
   <PanelDivider index={1} label="Resize the settings panel" />
   <section class="preview"><Preview /></section>
 </main>
+
+<Tour />
 
 <style>
   header {
@@ -357,6 +367,12 @@
     gap: 0.6rem;
     min-height: 0;
     overflow: auto;
+  }
+  .tour {
+    align-self: flex-start;
+    border-color: var(--accent);
+    color: var(--accent);
+    font-size: 0.85rem;
   }
   .examples {
     display: flex;

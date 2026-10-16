@@ -11,6 +11,8 @@ export interface HtmlTargetOptions {
   base?: string;
   /** Which Studio built the page; defaults to this build's own version. */
   studio?: string;
+  /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
+  headScripts?: string[];
 }
 
 const CDN = "https://unpkg.com";
@@ -46,9 +48,10 @@ export async function emitHtml(
   options: HtmlTargetOptions,
 ): Promise<HtmlOutput> {
   const { core, pluginUrls, stylesheet } = scriptUrls(result, options.base ?? "cdn");
-  const scripts = [core, ...pluginUrls]
-    .map((url) => `    <script src="${url}"></script>`)
-    .join("\n");
+  const scripts = [
+    ...(options.headScripts ?? []).map((script) => `    <script>${script}</script>`),
+    ...[core, ...pluginUrls].map((url) => `    <script src="${url}"></script>`),
+  ].join("\n");
 
   // The jsPsych browser bundle already declares a global `initJsPsych`, so the experiment body
   // must not re-declare it. `studioExperiment` is the handle the preview iframe talks to.

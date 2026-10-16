@@ -2,7 +2,7 @@
   import { compileSpec, emitHtml, formatSource, SpecError } from "@jspsych-studio/compiler";
   import type { Spec } from "@jspsych-studio/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
-  import { previewSpec } from "./preview.ts";
+  import { FOCUS_GUARD, previewSpec } from "./preview.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
 
@@ -40,7 +40,7 @@
       });
       error = "";
       exportedSource = exported.source;
-      emitHtml(running, { title: spec.name }).then((output) => {
+      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then((output) => {
         if (compileId !== latestCompile) return;
         html = output.html;
       });
@@ -111,7 +111,9 @@
         ↻ Start again
       </button>
       <span class="spacer"></span>
-      <span class="note" data-testid="preview-note">Nothing is saved from a preview</span>
+      <span class="note" data-testid="preview-note"
+        >Click into it to answer with keys. Nothing is saved from a preview</span
+      >
     </div>
   {/if}
 

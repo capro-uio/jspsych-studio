@@ -47,6 +47,19 @@ describe("emitted literals", () => {
 });
 
 describe("emitHtml", () => {
+  it("runs head scripts before jsPsych loads", async () => {
+    const compiled = compileSpec(specWith("<p>hi</p>"), schemas);
+    const { html } = await emitHtml(compiled, { title: "t", headScripts: ["window.first = 1;"] });
+    expect(html.indexOf("window.first = 1;")).toBeGreaterThan(-1);
+    expect(html.indexOf("window.first = 1;")).toBeLessThan(html.indexOf("<script src="));
+  });
+
+  it("adds no head scripts unless asked", async () => {
+    const compiled = compileSpec(specWith("<p>hi</p>"), schemas);
+    const { html } = await emitHtml(compiled, { title: "t" });
+    expect(html).not.toMatch(/<script>[^\n]/);
+  });
+
   it("pins exact versions rather than a floating range", async () => {
     const compiled = compileSpec(specWith("hi"), schemas);
     const { html } = await emitHtml(compiled, { title: "pinning" });
