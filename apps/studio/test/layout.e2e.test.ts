@@ -168,3 +168,21 @@ describe("resizing the panels", () => {
     await page.close();
   }, 120_000);
 });
+
+describe("the sidebar tabs", () => {
+  it("never cuts off a tab's name, however narrow the panel", async () => {
+    const page = await browser.newPage({ viewport: { width: 1100, height: 800 } });
+    await page.goto(appUrl);
+
+    const clipped = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid^="tab-"]')].map((tab) => ({
+        name: tab.textContent?.trim(),
+        cut: tab.scrollWidth > tab.clientWidth + 1,
+      })),
+    );
+
+    expect(clipped.length).toBe(4);
+    expect(clipped.filter((tab) => tab.cut)).toEqual([]);
+    await page.close();
+  }, 120_000);
+});
