@@ -29,6 +29,8 @@ export interface ParameterSchema {
   examples?: unknown[];
   /** For a set of fields whose meaning depends on one of them, such as a canvas object's shape. */
   variants?: Variants;
+  /** A purpose-built editor the builder offers in place of the generic form. */
+  editor?: "canvas";
   jspsychType: ParameterTypeName;
 }
 

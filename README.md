@@ -6,10 +6,10 @@ in a UI; the tool compiles it to readable, correct jsPsych source they can host 
 **Status: early.** You can build a flanker task end to end in the browser — nested timeline,
 conditions table generated from a design, generated parameter forms (questionnaire items
 included), rich stimulus text, image and sound files, group assignment and branching on
-performance, a psychophysics canvas step, live preview of the whole experiment or a single step,
-a choice of where results go, and export to a self-contained HTML file or a zipped project.
-Canvas objects are positioned by coordinates; there is no drag-to-place editor yet. There is no
-hosting or study-level flow, and no release has been cut.
+performance, a psychophysics canvas step whose objects you drag into place, live preview of the
+whole experiment or a single step, a choice of where results go, and export to a self-contained
+HTML file or a zipped project. There is no hosting or study-level flow, and no release has been
+cut.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
 open a working experiment in one click.

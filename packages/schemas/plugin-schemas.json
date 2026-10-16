@@ -1473,6 +1473,7 @@
           "jspsychType": "COMPLEX",
           "title": "Stimuli",
           "description": "The objects drawn on the canvas, each placed by its centre.",
+          "editor": "canvas",
           "examples": [
             [
               {

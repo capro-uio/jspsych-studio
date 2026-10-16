@@ -13,6 +13,11 @@
   const { parameter, assets, value, testId, onchange }: Props = $props();
 
   const media = $derived(["IMAGE", "AUDIO", "VIDEO"].includes(parameter.jspsychType));
+  const placeholder = $derived(
+    typeof parameter.default === "string" || typeof parameter.default === "number"
+      ? String(parameter.default)
+      : undefined,
+  );
   const numeric = $derived(parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT");
 
   function parseKeys(raw: string) {
@@ -29,7 +34,7 @@
   <input
     data-testid={testId}
     type="checkbox"
-    checked={Boolean(value)}
+    checked={Boolean(value ?? parameter.default)}
     onchange={(event) => onchange(event.currentTarget.checked)}
   />
 {:else if numeric}
@@ -37,6 +42,7 @@
     data-testid={testId}
     type="number"
     value={value as number}
+    {placeholder}
     onchange={(event) =>
       onchange(
         Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
@@ -76,6 +82,7 @@
   <input
     data-testid={testId}
     value={value as string}
+    {placeholder}
     onchange={(event) => onchange(event.currentTarget.value)}
   />
 {/if}
