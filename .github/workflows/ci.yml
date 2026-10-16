@@ -21,7 +21,12 @@ jobs:
       - run: npx prettier --check .
       - run: npm run lint
       - run: npm run typecheck
-      - run: npm test
+      - run: npm run coverage
+      - uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: packages/compiler/coverage/lcov.info,packages/schemas/coverage/lcov.info,apps/studio/coverage/lcov.info
+          fail_ci_if_error: true
 
   schemas-up-to-date:
     runs-on: ubuntu-latest
