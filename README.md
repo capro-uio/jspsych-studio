@@ -10,7 +10,7 @@ performance, a psychophysics canvas step whose objects you drag into place, live
 whole experiment or a single step, a choice of where results go, a guided tour of the builder,
 and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
-There is no hosting or study-level flow (consent, counterbalanced task order) yet. 0.1.0 is the
+There is no hosting or study-level flow (consent, counterbalanced task order) yet. 0.0.1 is the
 first release, and every export names the version that built it.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
