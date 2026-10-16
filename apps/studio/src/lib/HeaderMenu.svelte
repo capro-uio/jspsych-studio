@@ -3,10 +3,11 @@
 
   interface Props {
     label: string;
-    children: Snippet;
+    id?: string;
+    children: Snippet<[close: () => void]>;
   }
 
-  const { label, children }: Props = $props();
+  const { label, id, children }: Props = $props();
 
   let open = $state(false);
   let container: HTMLDivElement | undefined = $state();
@@ -32,6 +33,7 @@
 <div class="menu" bind:this={container}>
   <button
     class="toggle"
+    {id}
     data-testid="header-menu"
     aria-haspopup="menu"
     aria-expanded={open}
@@ -40,7 +42,7 @@
   >
   {#if open}
     <div class="items" role="menu" data-testid="header-menu-items">
-      {@render children()}
+      {@render children(() => (open = false))}
     </div>
   {/if}
 </div>

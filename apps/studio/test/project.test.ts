@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { parseSpec } from "../src/lib/project.svelte.ts";
+import { beforeEach, describe, expect, it } from "vitest";
+import { isUntouched, parseSpec, project, startNewProject } from "../src/lib/project.svelte.ts";
 
 describe("parseSpec", () => {
   it("accepts a well-formed spec", () => {
@@ -34,5 +34,18 @@ describe("parseSpec", () => {
       timeline: [{ kind: "loop", repeat_while: {}, children: [{ kind: "nope" }] }],
     };
     expect(() => parseSpec(JSON.stringify(spec))).toThrow(/timeline › loop/);
+  });
+});
+
+describe("isUntouched", () => {
+  beforeEach(() => startNewProject());
+
+  it("holds for a fresh project", () => {
+    expect(isUntouched()).toBe(true);
+  });
+
+  it("stops holding once anything is changed, steps or not", () => {
+    project.spec.name = "renamed";
+    expect(isUntouched()).toBe(false);
   });
 });
