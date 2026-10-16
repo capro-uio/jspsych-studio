@@ -86,6 +86,7 @@ function curatePsychophysics(schema: PluginSchema): PluginSchema {
     );
   }
   stimuli.description = "The objects drawn on the canvas, each placed by its centre.";
+  stimuli.editor = "canvas";
   item.properties = { ...item.properties, ...CANVAS_OBJECT_FIELDS };
   item.required = ["obj_type"];
   item.variants = CANVAS_OBJECT_VARIANTS;

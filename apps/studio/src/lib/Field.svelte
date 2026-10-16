@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import { isVariableReference } from "@jspsych-studio/compiler";
+  import CanvasField from "./CanvasField.svelte";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
   import type { ParameterValue } from "@jspsych-studio/compiler";
@@ -13,9 +14,11 @@
     columns: string[];
     value: ParameterValue | undefined;
     onchange: (value: ParameterValue | undefined) => void;
+    /** The step's other settings, for an editor that depends on them. */
+    params?: Record<string, unknown>;
   }
 
-  const { assets, name, parameter, required, columns, value, onchange }: Props = $props();
+  const { assets, name, parameter, required, columns, value, onchange, params }: Props = $props();
 
   const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
   const media = $derived(MEDIA_TYPES.has(parameter.jspsychType));
@@ -98,13 +101,24 @@
   {:else if mode === "fixed"}
     {#if list}
       <div class="wide">
-        <ListField
-          testId={`value-${name}`}
-          {parameter}
-          {assets}
-          values={Array.isArray(value) ? value : []}
-          onchange={(values) => onchange(values as ParameterValue)}
-        />
+        {#if parameter.editor === "canvas"}
+          <CanvasField
+            {name}
+            {parameter}
+            {assets}
+            {value}
+            {params}
+            onchange={(values) => onchange(values as ParameterValue)}
+          />
+        {:else}
+          <ListField
+            testId={`value-${name}`}
+            {parameter}
+            {assets}
+            values={Array.isArray(value) ? value : []}
+            onchange={(values) => onchange(values as ParameterValue)}
+          />
+        {/if}
       </div>
     {:else if multiline}
       <div class="wide">

@@ -345,6 +345,80 @@ describe("a canvas step", () => {
 
     await page.close();
   }, 180_000);
+
+  it("places objects by dragging them on the stage", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "psychophysics", "slot-0");
+
+    // Objects are measured from the centre unless they say otherwise, and the form says so too.
+    expect(await page.getByTestId("value-stimuli-0-origin_center").isChecked()).toBe(true);
+
+    const stage = page.getByTestId("stage-stimuli");
+    const onScreen = (x: number, y: number) =>
+      stage.evaluate(
+        (svg, point) => {
+          const screen = new DOMPoint(point.x, point.y).matrixTransform(
+            (svg as SVGSVGElement).getScreenCTM()!,
+          );
+          return { x: screen.x, y: screen.y };
+        },
+        { x, y },
+      );
+    const dragOnStage = async (from: [number, number], to: [number, number]) => {
+      await stage.scrollIntoViewIfNeeded();
+      const start = await onScreen(...from);
+      const end = await onScreen(...to);
+      await page.mouse.move(start.x, start.y);
+      await page.mouse.down();
+      await page.mouse.move(end.x, end.y, { steps: 8 });
+      await page.mouse.up();
+    };
+    const firstObject = async () => {
+      await page.getByTestId("view-spec").click();
+      return JSON.parse(await page.getByTestId("spec-json").innerText()).timeline[0].params
+        .stimuli[0];
+    };
+
+    // The step starts with a cross at the centre of the 800 × 600 stand-in for the window.
+    await dragOnStage([400, 300], [550, 200]);
+    expect(await firstObject()).toMatchObject({ startX: 150, startY: -100 });
+
+    // Dropping it a few pixels off centre lands it exactly on centre.
+    await dragOnStage([550, 200], [404, 297]);
+    expect(await firstObject()).toMatchObject({ startX: 0, startY: 0 });
+
+    const object = page.getByTestId("stage-stimuli-object-0");
+    await object.focus();
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("Shift+ArrowDown");
+    expect(await firstObject()).toMatchObject({ startX: 1, startY: 10 });
+
+    // Selecting on the stage and in the form are one selection.
+    await object.click();
+    await expect.poll(() => page.locator(".entry.selected").count()).toBe(1);
+    await page.getByTestId("add-value-stimuli").click();
+    await page.getByTestId("value-stimuli-1-obj_type").focus();
+    await page.getByTestId("value-stimuli-1-obj_type").selectOption("rect");
+    await expect
+      .poll(() => page.getByTestId("stage-stimuli-object-1").getAttribute("aria-pressed"))
+      .toBe("true");
+
+    // A selection belongs to its step, so moving to another canvas step shows nothing selected.
+    await addTrial(page, "psychophysics", "slot-1");
+    await page.getByTestId("node-0").click();
+    await page.getByTestId("stage-stimuli-object-0").focus();
+    await page.getByTestId("node-1").click();
+    expect(await page.locator(".entry.selected").count()).toBe(0);
+    await page.getByTestId("node-0").click();
+    await page.getByTestId("stage-stimuli-object-1").focus();
+
+    // Removing the selected object leaves nothing selected rather than its neighbour.
+    await page.getByTestId("remove-value-stimuli-1").click();
+    await expect.poll(() => page.locator(".entry.selected").count()).toBe(0);
+
+    await page.close();
+  }, 180_000);
 });
 
 describe("splitting participants between groups", () => {

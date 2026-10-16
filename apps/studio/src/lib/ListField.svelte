@@ -9,9 +9,11 @@
     assets: string[];
     values: unknown[];
     onchange: (values: unknown[]) => void;
+    selected?: number | null;
+    onselect?: (index: number) => void;
   }
 
-  const { testId, parameter, assets, values, onchange }: Props = $props();
+  const { testId, parameter, assets, values, onchange, selected, onselect }: Props = $props();
 
   const item = $derived(parameter.items ?? parameter);
   const entriesAreObjects = $derived(Boolean(item.properties));
@@ -39,7 +41,7 @@
 
 <div class="list">
   {#each values as entry, index (index)}
-    <div class="entry">
+    <div class="entry" class:selected={selected === index} onfocusin={() => onselect?.(index)}>
       <span class="position">{index + 1}</span>
       {#if entriesAreObjects}
         <ObjectField
@@ -82,6 +84,9 @@
     display: flex;
     gap: 0.3rem;
     align-items: start;
+  }
+  .entry.selected :global(.object) {
+    border-color: var(--accent);
   }
   .entry > :global(.rich) {
     flex: 1;
