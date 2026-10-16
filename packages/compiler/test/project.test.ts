@@ -1,12 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
 import manifest from "../package.json" with { type: "json" };
-import { projectFiles } from "../src/targets/project.ts";
+import type { DatasetDescription } from "../src/metadata.ts";
+import { projectFiles, type ProjectFile } from "../src/targets/project.ts";
 import type { Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 // A one-pixel PNG, as the builder would hold it after someone added a file.
 const PIXEL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+// Producer is checked for absence: tools belong under isBasedOn, never as the producer.
+const describedDataset = (files: Record<string, ProjectFile>) =>
+  JSON.parse(files["dataset_description.json"] as string) as DatasetDescription & {
+    producer?: unknown;
+  };
 
 const spec: Spec = {
   name: "picture-study",
@@ -68,7 +75,7 @@ describe("downloading the whole project", () => {
 
   it("describes the data it will produce, in Psych-DS form", async () => {
     const files = await projectFiles(spec, schemas, { generatedAt: "2026-10-16" });
-    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    const metadata = describedDataset(files);
 
     expect(metadata["@context"]).toBe("https://schema.org/");
     expect(metadata["@type"]).toBe("Dataset");
@@ -78,8 +85,9 @@ describe("downloading the whole project", () => {
     // right, with its version, because it is what wrote the rows.
     expect(metadata.isBasedOn).toMatchObject([
       { "@type": "SoftwareApplication", name: "jsPsych Studio" },
-      { "@type": "SoftwareApplication", name: "jsPsych", softwareVersion: expect.any(String) },
+      { "@type": "SoftwareApplication", name: "jsPsych" },
     ]);
+    expect(metadata.isBasedOn[1].softwareVersion).toMatch(/^\d+\.\d+\.\d+/);
     expect(metadata.producer).toBeUndefined();
     expect(metadata.author).toBeUndefined();
 
@@ -103,7 +111,7 @@ describe("downloading the whole project", () => {
 
   it("names the Studio version that built it", async () => {
     const files = await projectFiles(spec, schemas);
-    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    const metadata = describedDataset(files);
 
     expect(metadata.isBasedOn[0].softwareVersion).toBe(manifest.version);
     expect(metadata.isBasedOn[1].softwareVersion).toEqual(expect.any(String));
@@ -116,7 +124,7 @@ describe("downloading the whole project", () => {
     try {
       const unreleased = await import("../src/targets/project.ts");
       const files = await unreleased.projectFiles(spec, schemas, { generatedAt: "2026-10-16" });
-      const metadata = JSON.parse(files["dataset_description.json"] as string);
+      const metadata = describedDataset(files);
 
       expect(metadata.isBasedOn[0].softwareVersion).toBeUndefined();
       expect(files["experiment.js"]).toContain("Built with jsPsych Studio on 2026-10-16");
@@ -133,7 +141,7 @@ describe("downloading the whole project", () => {
       generatedAt: "2026-10-16",
       studio: "1.2.0",
     });
-    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    const metadata = describedDataset(files);
 
     expect(metadata.isBasedOn[0]).toMatchObject({
       name: "jsPsych Studio",
@@ -151,7 +159,7 @@ describe("downloading the whole project", () => {
       { ...spec, recruitment: { id_param: "PROLIFIC_PID" } },
       schemas,
     );
-    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    const metadata = describedDataset(files);
     expect(metadata.variableMeasured).toContain("PROLIFIC_PID");
   });
 
@@ -181,7 +189,7 @@ describe("downloading the whole project", () => {
       ],
     };
     const files = await projectFiles(withAuthors, schemas);
-    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    const metadata = describedDataset(files);
 
     expect(metadata.author).toEqual([
       {

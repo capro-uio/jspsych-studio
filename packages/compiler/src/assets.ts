@@ -39,7 +39,7 @@ export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inl
   );
 }
 
-export function compilePreloadStep(assets: Asset[]) {
+export function compilePreloadStep() {
   return {
     plugin: PRELOAD_PLUGIN,
     source:

@@ -20,8 +20,6 @@
 
   const { assets, name, parameter, required, columns, value, onchange, params }: Props = $props();
 
-  const MEDIA_TYPES = new Set(["IMAGE", "AUDIO", "VIDEO"]);
-  const media = $derived(MEDIA_TYPES.has(parameter.jspsychType));
   // KEYS keeps its comma-separated control: it accepts "ALL_KEYS" as well as a list.
   const list = $derived(parameter.type === "array" && parameter.jspsychType !== "KEYS");
 
@@ -32,7 +30,8 @@
   const numeric = $derived(parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT");
 
   function fixedSeed(): ParameterValue {
-    if (list) return Array.isArray(parameter.default) ? [...parameter.default] : [""];
+    if (list)
+      return Array.isArray(parameter.default) ? [...(parameter.default as unknown[])] : [""];
     if (parameter.jspsychType === "BOOL") return Boolean(parameter.default);
     if (numeric) return typeof parameter.default === "number" ? parameter.default : 0;
     if (parameter.enum) return parameter.enum[0] as string;
@@ -45,16 +44,6 @@
     else onchange(fixedSeed());
   }
 
-  function parseKeys(raw: string): ParameterValue {
-    const trimmed = raw.trim();
-    if (trimmed === "ALL_KEYS" || trimmed === "NO_KEYS") return trimmed;
-    return trimmed
-      .split(",")
-      .map((key) => key.trim())
-      .filter(Boolean);
-  }
-
-  const keysAsText = $derived(Array.isArray(value) ? value.join(",") : String(value ?? ""));
   const mode = $derived(value === undefined ? "unset" : isBound ? "column" : "fixed");
 </script>
 

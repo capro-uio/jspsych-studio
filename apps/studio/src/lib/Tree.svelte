@@ -4,23 +4,14 @@
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
-  import {
-    conditionColumns,
-    isInsertionAt,
-    moveNode,
-    project,
-    removeNode,
-    setInsertion,
-    type NodePath,
-  } from "./project.svelte.ts";
+  import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
 
   interface Props {
     nodes: SpecNode[];
     path?: NodePath;
-    inGroup?: boolean;
   }
 
-  const { nodes, path = [], inGroup = false }: Props = $props();
+  const { nodes, path = [] }: Props = $props();
 
   function describeAccuracy(rule: {
     scope: string;
@@ -94,7 +85,7 @@
             >
               {slot.name}
             </button>
-            <Tree nodes={slot.children} path={[...childPath, slotIndex]} inGroup />
+            <Tree nodes={slot.children} path={[...childPath, slotIndex]} />
           </div>
         {/each}
       {:else if node.kind === "block" || node.kind === "loop"}

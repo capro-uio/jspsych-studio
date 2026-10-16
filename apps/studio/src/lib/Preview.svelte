@@ -27,7 +27,10 @@
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
   const selectionKey = $derived(project.selection?.join(".") ?? "");
-  const runningFrom = $derived(fromSelected && project.selection ? project.selection : null);
+  // Built from the key so the compiler gets plain numbers, and reselecting a step does not rebuild.
+  const runningFrom = $derived(
+    fromSelected && selectionKey ? selectionKey.split(".").map(Number) : null,
+  );
 
   function rebuild(spec: Spec, from: number[] | null) {
     const compileId = ++latestCompile;
@@ -40,10 +43,18 @@
       });
       error = "";
       exportedSource = exported.source;
-      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then((output) => {
-        if (compileId !== latestCompile) return;
-        html = output.html;
-      });
+      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then(
+        (output) => {
+          if (compileId !== latestCompile) return;
+          html = output.html;
+        },
+        (problem: unknown) => {
+          if (compileId !== latestCompile) return;
+          const reason = problem instanceof Error ? problem.message : String(problem);
+          error = `The preview could not be built: ${reason}`;
+          html = "";
+        },
+      );
     } catch (problem) {
       if (!(problem instanceof SpecError)) throw problem;
       error = problem.message;
@@ -59,9 +70,7 @@
   $effect(() => {
     const json = specJson;
     const from = runningFrom;
-    // Reading the key as well keeps the preview following the selection while running from a step.
-    selectionKey;
-    const timer = setTimeout(() => rebuild(JSON.parse(json), from), REBUILD_DELAY_MS);
+    const timer = setTimeout(() => rebuild(JSON.parse(json) as Spec, from), REBUILD_DELAY_MS);
     return () => clearTimeout(timer);
   });
 
@@ -69,9 +78,15 @@
   $effect(() => {
     if (view !== "code" || !exportedSource) return;
     const wanted = exportedSource;
-    formatSource(wanted).then((formatted) => {
-      if (wanted === exportedSource) source = formatted;
-    });
+    // Unformatted code is still the right code, so a formatter failure shows it as it is.
+    formatSource(wanted).then(
+      (formatted) => {
+        if (wanted === exportedSource) source = formatted;
+      },
+      () => {
+        if (wanted === exportedSource) source = wanted;
+      },
+    );
   });
 </script>
 
@@ -121,6 +136,9 @@
     {@const problems = currentProblems()}
     {@const overall = overallProblems(problems)}
     <div class="error" data-testid="compile-error">
+      {#if problems.length === 0}
+        <p>{error}</p>
+      {/if}
       {#each overall as problem (problem.message)}
         <p>{problem.message}</p>
       {/each}

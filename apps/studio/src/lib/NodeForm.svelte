@@ -1,13 +1,5 @@
 <script lang="ts">
-  import type {
-    AssignNode,
-    BranchNode,
-    BlockNode,
-    CheckpointNode,
-    LoopNode,
-    ParameterValue,
-    TrialNode,
-  } from "@jspsych-studio/compiler";
+  import type { AssignNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
   import {
     allConditionColumns,
@@ -24,12 +16,12 @@
   const stepProblems = $derived(
     project.selection ? problemsAt(currentProblems(), project.selection) : [],
   );
-  const trial = $derived(node?.kind === "trial" ? (node as TrialNode) : null);
-  const block = $derived(node?.kind === "block" ? (node as BlockNode) : null);
-  const loop = $derived(node?.kind === "loop" ? (node as LoopNode) : null);
-  const assign = $derived(node?.kind === "assign" ? (node as AssignNode) : null);
-  const checkpoint = $derived(node?.kind === "checkpoint" ? (node as CheckpointNode) : null);
-  const branch = $derived(node?.kind === "branch" ? (node as BranchNode) : null);
+  const trial = $derived(node?.kind === "trial" ? node : null);
+  const block = $derived(node?.kind === "block" ? node : null);
+  const loop = $derived(node?.kind === "loop" ? node : null);
+  const assign = $derived(node?.kind === "assign" ? node : null);
+  const checkpoint = $derived(node?.kind === "checkpoint" ? node : null);
+  const branch = $derived(node?.kind === "branch" ? node : null);
 
   const branchComparison = $derived(
     branch?.when.accuracy_at_least === undefined ? "below" : "at_least",
@@ -145,7 +137,7 @@
       {required}
       {columns}
       value={trial.params?.[name]}
-      onchange={(value) => setParameter(name, value)}
+      onchange={(value: ParameterValue | undefined) => setParameter(name, value)}
       params={trial.params}
     />
   {/each}

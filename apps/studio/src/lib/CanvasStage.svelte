@@ -4,6 +4,7 @@
     fromColumn,
     geometry,
     imageSize,
+    imageSizeLoader,
     nudge,
     numberOr,
     pinned,
@@ -39,7 +40,7 @@
   let svg: SVGSVGElement | undefined = $state();
   let drag = $state.raw<Drag | null>(null);
   let naturalSizes = $state<Record<string, { width: number; height: number }>>({});
-  const requestedImages = new Set<string>();
+  const requestImageSize = imageSizeLoader((url, size) => (naturalSizes[url] = size));
 
   const asObject = (entry: unknown): CanvasObject =>
     entry && typeof entry === "object" && !Array.isArray(entry) ? (entry as CanvasObject) : {};
@@ -60,13 +61,7 @@
   $effect(() => {
     for (const object of stored) {
       const url = imageUrl(object);
-      if (!url || requestedImages.has(url)) continue;
-      requestedImages.add(url);
-      const image = new Image();
-      image.onload = () => {
-        naturalSizes[url] = { width: image.naturalWidth, height: image.naturalHeight };
-      };
-      image.src = url;
+      if (url) requestImageSize(url);
     }
   });
 

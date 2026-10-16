@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { asText } from "./text.ts";
   import FactorBuilder from "./FactorBuilder.svelte";
   import { conditionColumns, project } from "./project.svelte.ts";
 
@@ -129,7 +130,7 @@
                   <td>
                     <input
                       data-testid={`cell-${name}-${index}-${column}`}
-                      value={String(row[column] ?? "")}
+                      value={asText(row[column])}
                       onchange={(event) => setCell(name, index, column, event.currentTarget.value)}
                     />
                   </td>
@@ -169,7 +170,7 @@
   </div>
 
   {#if adding === "factors"}
-    <FactorBuilder onbuilt={(name) => (open = name)} />
+    <FactorBuilder onbuilt={(name: string) => (open = name)} />
   {:else}
     <input data-testid="table-name" placeholder="new table name" bind:value={tableName} />
     <textarea
