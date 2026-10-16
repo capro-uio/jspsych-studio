@@ -115,6 +115,8 @@ export interface Author {
 }
 
 export interface Spec {
+  /** The published JSON Schema, so an editor can check and complete a spec file. */
+  $schema?: string;
   name: string;
   authors?: Author[];
   settings?: ExperimentSettings;

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://www.capro.dev/jspsych-studio/spec-schema.json",
   "name": "stroop-demo",
   "data": {
     "save": "download"

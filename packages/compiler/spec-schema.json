@@ -1,0 +1,3636 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://www.capro.dev/jspsych-studio/spec-schema.json",
+  "title": "jsPsych Studio experiment spec",
+  "description": "A declarative experiment the Studio compiler turns into jsPsych source. Edit it here or open it in the builder at https://www.capro.dev/jspsych-studio/.",
+  "type": "object",
+  "required": [
+    "name",
+    "timeline"
+  ],
+  "properties": {
+    "$schema": {
+      "title": "This schema, so an editor knows how to check the file.",
+      "type": "string"
+    },
+    "name": {
+      "title": "What the experiment is called.",
+      "type": "string",
+      "minLength": 1
+    },
+    "authors": {
+      "title": "Whoever made the experiment, in the shape Psych-DS expects for a person.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "identifier": {
+            "title": "A URL that identifies them across datasets, usually an ORCID.",
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "settings": {
+      "$ref": "#/definitions/experimentSettings"
+    },
+    "data": {
+      "$ref": "#/definitions/dataSettings"
+    },
+    "assets": {
+      "title": "Files the experiment shows, carried in the spec so it stays self-contained.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/asset"
+      }
+    },
+    "conditions": {
+      "title": "Conditions tables, each a list of rows a block can run over.",
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "timeline": {
+      "title": "The steps of the experiment, in order.",
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/node"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "node": {
+      "title": "A step in the timeline.",
+      "type": "object",
+      "required": [
+        "kind"
+      ],
+      "properties": {
+        "kind": {
+          "title": "What this step is.",
+          "enum": [
+            "trial",
+            "block",
+            "loop",
+            "assign",
+            "branch",
+            "checkpoint"
+          ]
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "trial"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/trial"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "block"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/block"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "loop"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/loop"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "assign"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/assign"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "branch"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/branch"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "checkpoint"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/checkpoint"
+          }
+        }
+      ]
+    },
+    "trial": {
+      "title": "One step the participant sees, run by a jsPsych plugin.",
+      "type": "object",
+      "required": [
+        "kind",
+        "plugin"
+      ],
+      "properties": {
+        "kind": {
+          "const": "trial"
+        },
+        "plugin": {
+          "title": "The jsPsych plugin that runs this step.",
+          "enum": [
+            "audio-keyboard-response",
+            "call-function",
+            "fullscreen",
+            "html-button-response",
+            "html-keyboard-response",
+            "image-button-response",
+            "image-keyboard-response",
+            "instructions",
+            "preload",
+            "psychophysics",
+            "survey-likert",
+            "survey-text"
+          ]
+        },
+        "tag": {
+          "title": "A label other steps can refer to, such as a loop judging these trials' accuracy.",
+          "type": "string"
+        },
+        "params": {
+          "title": "The plugin's parameters.",
+          "type": "object"
+        },
+        "record": {
+          "title": "Extra columns written to the data file for this trial.",
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/definitions/parameterValue"
+          }
+        },
+        "score": {
+          "$ref": "#/definitions/scoringRule"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "audio-keyboard-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The audio file to be played.",
+                    "anyOf": [
+                      {
+                        "format": "asset-audio",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "Prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use set this parameter to `false` to force the participant to listen to the stimulus for a fixed amount of time, even if they respond before the time is complete",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_ends_after_audio": {
+                    "title": "Trial ends after audio",
+                    "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_allowed_while_playing": {
+                    "title": "response allowed while playing",
+                    "description": "If true, then responses are allowed while the audio is playing. If false, then the audio must finish playing before a keyboard response is accepted. Once the audio has played all the way through, a valid keyboard response is allowed (including while the audio is being re-played via on-screen playback controls).",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "wait_for_key_release": {
+                    "title": "wait for key release",
+                    "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "call-function"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "func": {
+                    "title": "func",
+                    "description": "The function to call.",
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "async": {
+                    "title": "async",
+                    "description": "Set to true if `func` is an asynchoronous function. If this is true, then the first argument passed to `func` will be a callback that you should call when the async operation is complete. You can pass data to the callback. See example below.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "func"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "fullscreen"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "fullscreen_mode": {
+                    "title": "fullscreen mode",
+                    "description": "A value of `true` causes the experiment to enter fullscreen mode. A value of `false` causes the browser to exit fullscreen mode.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "message": {
+                    "title": "message",
+                    "description": "`<p>The experiment will switch to full screen mode when you press the button below</p>` | The HTML content to display above the button to enter fullscreen mode.",
+                    "default": "<p>The experiment will switch to full screen mode when you press the button below</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "The text that appears on the button to enter fullscreen mode.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "delay_after": {
+                    "title": "delay after",
+                    "description": "The length of time to delay after entering fullscreen mode before ending the trial. This can be useful because entering fullscreen is jarring and most browsers display some kind of message that the browser has entered fullscreen mode.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "html-button-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML content to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "Labels for the buttons. Each different string in the array will generate a different button.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_html": {
+                    "title": "button html",
+                    "description": "A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "ow long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_layout": {
+                    "title": "button layout",
+                    "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+                    "default": "grid",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_rows": {
+                    "title": "grid rows",
+                    "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_columns": {
+                    "title": "grid columns",
+                    "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "enable_button_after": {
+                    "title": "enable button after",
+                    "description": "How long the button will delay enabling in milliseconds.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "choices"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "html-keyboard-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The string to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see {@link https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values this page} and {@link https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/ this page (event.key column)} for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the trial_duration parameter). If false, then the trial will continue until the value for trial_duration is reached. You can set this parameter to false to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "wait_for_key_release": {
+                    "title": "wait for key release",
+                    "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "image-button-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The path of the image file to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_height": {
+                    "title": "stimulus height",
+                    "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_width": {
+                    "title": "stimulus width",
+                    "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "maintain_aspect_ratio": {
+                    "title": "maintain aspect ratio",
+                    "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "Labels for the buttons. Each different string in the array will generate a different button.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_html": {
+                    "title": "button html",
+                    "description": "``(choice: string, choice_index: number)=>`<button class=\"jspsych-btn\">${choice}</button>``; | A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to show the stimulus for in milliseconds. If the value is null, then the stimulus will be shown until the participant makes a response.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_layout": {
+                    "title": "button layout",
+                    "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+                    "default": "grid",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_rows": {
+                    "title": "grid rows",
+                    "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_columns": {
+                    "title": "grid columns",
+                    "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "render_on_canvas": {
+                    "title": "render on canvas",
+                    "description": "If true, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "enable_button_after": {
+                    "title": "enable button after",
+                    "description": "How long the button will delay enabling in milliseconds.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "choices"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "image-keyboard-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The path of the image file to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_height": {
+                    "title": "stimulus height",
+                    "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_width": {
+                    "title": "stimulus width",
+                    "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "maintain_aspect_ratio": {
+                    "title": "maintain aspect ratio",
+                    "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "his array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to show the stimulus for in milliseconds. If the value is `null`, then the stimulus will be shown until the participant makes a response.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "render_on_canvas": {
+                    "title": "render on canvas",
+                    "description": "If `true`, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If `false`, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "wait_for_key_release": {
+                    "title": "wait for key release",
+                    "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "instructions"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "pages": {
+                    "title": "pages",
+                    "description": "Each element of the array is the content for a single page. Each page should be an HTML-formatted string.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "html",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "key_forward": {
+                    "title": "key forward",
+                    "description": "This is the key that the participant can press in order to advance to the next page. This key should be specified as a string (e.g., `'a'`, `'ArrowLeft'`, `' '`, `'Enter'`).",
+                    "default": "ArrowRight",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "key_backward": {
+                    "title": "key backward",
+                    "description": "This is the key that the participant can press to return to the previous page. This key should be specified as a string (e.g., `'a'`, `'ArrowLeft'`, `' '`, `'Enter'`).",
+                    "default": "ArrowLeft",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "allow_backward": {
+                    "title": "allow backward",
+                    "description": "If true, the participant can return to previous pages of the instructions. If false, they may only advace to the next page.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "allow_keys": {
+                    "title": "allow keys",
+                    "description": "If `true`, the participant can use keyboard keys to navigate the pages. If `false`, they may not.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "show_clickable_nav": {
+                    "title": "show clickable nav",
+                    "description": "If true, then a `Previous` and `Next` button will be displayed beneath the instructions. Participants can click the buttons to navigate.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "show_page_number": {
+                    "title": "show page number",
+                    "description": "If true, and clickable navigation is enabled, then Page x/y will be shown between the nav buttons.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "page_label": {
+                    "title": "page label",
+                    "description": "The text that appears before x/y pages displayed when show_page_number is true.",
+                    "default": "Page",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_label_previous": {
+                    "title": "button label previous",
+                    "description": "The text that appears on the button to go backwards.",
+                    "default": "Previous",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_label_next": {
+                    "title": "button label next",
+                    "description": "The text that appears on the button to go forwards.",
+                    "default": "Next",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "on_page_change": {
+                    "title": "Page change callback",
+                    "description": "The callback function when page changes",
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "pages"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "preload"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "auto_preload": {
+                    "title": "auto preload",
+                    "description": "If `true`, the plugin will preload any files that can be automatically preloaded based on the main experiment timeline that is passed to `jsPsych.run`. If `false`, any file(s) to be preloaded should be specified by passing a timeline array to the `trials` parameter and/or an array of file paths to the `images`, `audio`, and/or `video` parameters. Setting this parameter to `false` is useful when you plan to preload your files in smaller batches throughout the experiment.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trials": {
+                    "title": "trials",
+                    "description": "An array containing one or more jsPsych trial or timeline objects. This parameter is useful when you want to automatically preload stimuli files from a specific subset of the experiment. See [Creating an Experiment: The Timeline](../overview/timeline.md) for information on constructing timelines.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "format": "timeline",
+                        "type": "array"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "images": {
+                    "title": "images",
+                    "description": "Array with one or more image files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into an image plugin/parameter with timeline variables or dynamic parameters, or because the image is embedded in an HTML string.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "audio": {
+                    "title": "audio",
+                    "description": "Array with one or more audio files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into an audio plugin/parameter with timeline variables or dynamic parameters, or because the audio is embedded in an HTML string.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "video": {
+                    "title": "video",
+                    "description": "Array with one or more video files to load. This parameter is often used in cases where media files cannot be automatically preloaded based on the timeline, e.g. because the media files are passed into a video plugin/parameter with timeline variables or dynamic parameters, or because the video is embedded in an HTML string.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "message": {
+                    "title": "message",
+                    "description": "HTML-formatted message to show above the progress bar while the files are loading. If `null`, then no message is shown.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "show_progress_bar": {
+                    "title": "show progress bar",
+                    "description": "If `true`, a progress bar will be shown while the files are loading. If `false`, no progress bar is shown.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "continue_after_error": {
+                    "title": "continue after error",
+                    "description": "Whether or not to continue with the experiment if a loading error occurs. If false, then if a loading error occurs, the error_message will be shown on the page and the trial will not end. If true, then if if a loading error occurs, the trial will end and preloading failure will be logged in the trial data.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "error_message": {
+                    "title": "error message",
+                    "description": "HTML-formatted message to be shown on the page after loading fails or times out. Only applies when `continue_after_error` is `false`.",
+                    "default": "The experiment failed to load.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "show_detailed_errors": {
+                    "title": "show detailed errors",
+                    "description": "Whether or not to show a detailed error message on the page. If true, then detailed error messages will be shown on the page for all files that failed to load, along with the general error_message. This parameter is only relevant when continue_after_error is false.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "max_load_time": {
+                    "title": "max load time",
+                    "description": "The maximum amount of time that the plugin should wait before stopping the preload and either ending the trial (if continue_after_error is true) or stopping the experiment with an error message (if continue_after_error is false). If null, the plugin will wait indefintely for the files to load.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "on_error": {
+                    "title": "on error",
+                    "description": "Function to be called after a file fails to load. The function takes the file name as its only argument.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "on_success": {
+                    "title": "on success",
+                    "description": "Function to be called after a file loads successfully. The function takes the file name as its only argument.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "psychophysics"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "Stimuli",
+                    "description": "The objects drawn on the canvas, each placed by its centre.",
+                    "examples": [
+                      [
+                        {
+                          "obj_type": "cross",
+                          "line_length": 40
+                        }
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "startX": {
+                              "title": "startX",
+                              "description": "The horizontal start position.",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "startY": {
+                              "title": "startY",
+                              "description": "The vertical start position.",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "endX": {
+                              "title": "endX",
+                              "description": "The horizontal end position.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "endY": {
+                              "title": "endY",
+                              "description": "The vertical end position.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "show_start_time": {
+                              "title": "Show start time",
+                              "description": "Time to start presenting the stimuli",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "show_end_time": {
+                              "title": "Show end time",
+                              "description": "Time to end presenting the stimuli",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "show_start_frame": {
+                              "title": "Show start frame",
+                              "description": "Time to start presenting the stimuli in frames",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "show_end_frame": {
+                              "title": "Show end frame",
+                              "description": "Time to end presenting the stimuli in frames",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "line_width": {
+                              "title": "Line width",
+                              "description": "The line width",
+                              "default": 1,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "lineJoin": {
+                              "title": "lineJoin",
+                              "description": "The type of the corner when two lines meet.",
+                              "default": "miter",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "miterLimit": {
+                              "title": "miterLimit",
+                              "description": "The maximum miter length.",
+                              "default": 10,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "drawFunc": {
+                              "title": "Draw function",
+                              "description": "This function enables to move objects horizontally and vertically.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "format": "expression",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "change_attr": {
+                              "title": "Change attributes",
+                              "description": "This function enables to change attributes of objects immediately before drawing.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "format": "expression",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "is_frame": {
+                              "title": "time is in frames",
+                              "description": "If true, time is treated in frames.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "prepared": {
+                              "title": "Stimulus prepared flag",
+                              "description": "If true, the stimulus is prepared for presentation",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "origin_center": {
+                              "title": "origin_center",
+                              "description": "The origin is the center of the window.",
+                              "default": true,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "is_presented": {
+                              "title": "is_presented",
+                              "description": "This will be true when the stimulus is presented.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "trial_ends_after_audio": {
+                              "title": "Trial ends after audio",
+                              "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "modulate_color": {
+                              "title": "modulate_color",
+                              "description": "The base RGBA array of the gabor patch.",
+                              "default": [
+                                1,
+                                1,
+                                1,
+                                1
+                              ],
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  }
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "offset_color": {
+                              "title": "offset_color",
+                              "description": "The offset RGBA array of the gabor patch.",
+                              "default": [
+                                0.5,
+                                0.5,
+                                0.5,
+                                0
+                              ],
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "number"
+                                  }
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "min_validModulationRange": {
+                              "title": "min_validModulationRange",
+                              "description": "The minimum of the validation range of the gabor patch.",
+                              "default": -2,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "max_validModulationRange": {
+                              "title": "max_validModulationRange",
+                              "description": "The maximum of the validation range of the gabor patch.",
+                              "default": 2,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "tilt": {
+                              "title": "tilt",
+                              "description": "The angle of the gabor patch in degrees.",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "sf": {
+                              "title": "spatial frequency",
+                              "description": "The spatial frequency of the gabor patch.",
+                              "default": 0.05,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "phase": {
+                              "title": "phase",
+                              "description": "The phase (degrees) of the gabor patch.",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "sc": {
+                              "title": "standard deviation",
+                              "description": "The standard deviation of the distribution.",
+                              "default": 20,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "contrast": {
+                              "title": "contrast",
+                              "description": "The contrast of the gabor patch.",
+                              "default": 20,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "contrastPreMultiplicator": {
+                              "title": "contrastPreMultiplicator",
+                              "description": "A scaling factor",
+                              "default": 1,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "drift": {
+                              "title": "drift",
+                              "description": "The velocity of the drifting gabor patch.",
+                              "default": 0,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "method": {
+                              "title": "gabor_drawing_method",
+                              "description": "The method of drawing the gabor patch.",
+                              "default": "ml-matrix",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "disableNorm": {
+                              "title": "disableNorm",
+                              "description": "Disable normalization of the gaussian function.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "disableGauss": {
+                              "title": "disableGauss",
+                              "description": "Disable to convolve with a Gaussian.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "mask_func": {
+                              "title": "Masking function",
+                              "description": "Masking the image manually.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "format": "expression",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "text_color": {
+                              "title": "text color",
+                              "description": "The color of the text.",
+                              "default": "#000000",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "fontStyle": {
+                              "title": "font style",
+                              "description": "Font style",
+                              "default": "normal",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "fontWeight": {
+                              "title": "font weight",
+                              "description": "Font weight",
+                              "default": "normal",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "fontSize": {
+                              "title": "font size",
+                              "description": "Font size",
+                              "default": "20px",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "fontFamily": {
+                              "title": "font family",
+                              "description": "Font family",
+                              "default": "Verdana, Arial, Helvetica, sans-serif",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "pixi_angle": {
+                              "title": "pixi angle",
+                              "description": "jspsych-psychophysics Copyright (c) 2019-2026 Daiichiro Kuroki Released under the MIT license jspsych-psychophysics is a plugin for conducting online/Web-based psychophysical experiments using jsPsych (de Leeuw, 2015). Please see http://jspsychophysics.hes.kyushu-u.ac.jp/ about how to use this plugin. This application uses following libraries ml-matrix: Copyright (c) 2014 Michaël Zasso PixiJS: Copyright (c) 2013-2023 Mathew Groves, Chad Engler See LICENSE file for details */ declare const info: { name: string; version: string; description: string; parameters: { stimuli: { type: ParameterType; array: boolean; pretty_name: string; description: string; nested: { startX: { type: ParameterType; pretty_name: string; default: number; description: string; }; startY: { type: ParameterType; pretty_name: string; default: number; description: string; }; endX: { type: ParameterType; pretty_name: string; default: any; description: string; }; endY: { type: ParameterType; pretty_name: string; default: any; description: string; }; show_start_time: { type: ParameterType; pretty_name: string; default: number; description: string; }; show_end_time: { type: ParameterType; pretty_name: string; default: any; description: string; }; show_start_frame: { type: ParameterType; pretty_name: string; default: number; description: string; }; show_end_frame: { type: ParameterType; pretty_name: string; default: any; description: string; }; line_width: { type: ParameterType; pretty_name: string; default: number; description: string; }; lineJoin: { type: ParameterType; pretty_name: string; default: string; description: string; }; miterLimit: { type: ParameterType; pretty_name: string; default: number; description: string; }; drawFunc: { type: ParameterType; pretty_name: string; default: any; description: string; }; change_attr: { type: ParameterType; pretty_name: string; default: any; description: string; }; is_frame: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; prepared: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; origin_center: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; is_presented: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; trial_ends_after_audio: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; modulate_color: { type: ParameterType; array: boolean; pretty_name: string; default: number[]; description: string; }; offset_color: { type: ParameterType; array: boolean; pretty_name: string; default: number[]; description: string; }; min_validModulationRange: { type: ParameterType; pretty_name: string; default: number; description: string; }; max_validModulationRange: { type: ParameterType; pretty_name: string; default: number; description: string; }; tilt: { type: ParameterType; pretty_name: string; default: number; description: string; }; sf: { type: ParameterType; pretty_name: string; default: number; description: string; }; phase: { type: ParameterType; pretty_name: string; default: number; description: string; }; sc: { type: ParameterType; pretty_name: string; default: number; description: string; }; contrast: { type: ParameterType; pretty_name: string; default: number; description: string; }; contrastPreMultiplicator: { type: ParameterType; pretty_name: string; default: number; description: string; }; drift: { type: ParameterType; pretty_name: string; default: number; description: string; }; method: { type: ParameterType; pretty_name: string; default: string; description: string; }; disableNorm: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; disableGauss: { type: ParameterType; pretty_name: string; default: boolean; description: string; }; mask_func: { type: ParameterType; pretty_name: string; default: any; description: string; }; text_color: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontStyle: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontWeight: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontSize: { type: ParameterType; pretty_name: string; default: string; description: string; }; fontFamily: { type: ParameterType; pretty_name: string; default: string; description: string; }; /** The angle (degrees) of the stimulus when using PixiJS.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "pixi_rotation": {
+                              "title": "pixi rotation",
+                              "description": "The rotation (radians) of the stimulus when using PixiJS.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "pixi_mask": {
+                              "title": "pixi mask",
+                              "description": "Mask parameter for PixiJS. This function should return a PIXI.Graphics object that will be used as a mask for the stimulus.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "format": "expression",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "pixi_filters": {
+                              "title": "pixi filters",
+                              "description": "Filter parameter for PixiJS. This function should return a PIXI.Filter object that will be used to filter the stimulus.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "format": "expression",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "pixi_zIndex": {
+                              "title": "pixi zIndex",
+                              "description": "The z-index of the stimulus when using PixiJS. Stimuli with higher z-index will be drawn on top of those with lower z-index.",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_area_width": {
+                              "title": "random dot area width",
+                              "description": "The width of the area where the random dots are presented (in pixels).",
+                              "default": 100,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_area_height": {
+                              "title": "random dot area height",
+                              "description": "The height of the area where the random dots are presented (in pixels).",
+                              "default": 100,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_size": {
+                              "title": "random dot size",
+                              "description": "The size of the random dots (in pixels).",
+                              "default": 5,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_density": {
+                              "title": "random dot density",
+                              "description": "The density of the random dots, ranging from 0 to 1.",
+                              "default": 0.5,
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_background_color": {
+                              "title": "random dot background color",
+                              "description": "The background color of the canvas for the random dots.",
+                              "default": "white",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "random_dot_color": {
+                              "title": "random dot color",
+                              "description": "The color of the random dots.",
+                              "default": "black",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "obj_type": {
+                              "title": "Shape",
+                              "description": "What kind of object this is.",
+                              "anyOf": [
+                                {
+                                  "enum": [
+                                    "cross",
+                                    "circle",
+                                    "rect",
+                                    "line",
+                                    "text",
+                                    "image"
+                                  ],
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "radius": {
+                              "title": "Radius",
+                              "description": "Radius of the circle, in pixels.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "width": {
+                              "title": "Width",
+                              "description": "Width of the rectangle, in pixels.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "height": {
+                              "title": "Height",
+                              "description": "Height of the rectangle, in pixels.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "line_length": {
+                              "title": "Length",
+                              "description": "Length of the line, or of each arm of the cross, in pixels.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "angle": {
+                              "title": "Angle",
+                              "description": "Rotation of the line, in degrees.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "line_color": {
+                              "title": "Line colour",
+                              "description": "Colour of the outline or line, as any CSS colour.",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "fill_color": {
+                              "title": "Fill colour",
+                              "description": "Colour inside the shape, as any CSS colour.",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "content": {
+                              "title": "Text",
+                              "description": "The text to draw; a line break starts a new line.",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "file": {
+                              "title": "Image",
+                              "description": "The image file to draw.",
+                              "anyOf": [
+                                {
+                                  "format": "asset-image",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "scale": {
+                              "title": "Scale",
+                              "description": "Size relative to the image's own, e.g. 0.5 for half.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "image_width": {
+                              "title": "Image width",
+                              "description": "Width to draw the image at, in pixels; keeps its shape.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "image_height": {
+                              "title": "Image height",
+                              "description": "Height to draw the image at, in pixels; keeps its shape.",
+                              "anyOf": [
+                                {
+                                  "type": "number"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "obj_type"
+                          ]
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "pixi_app": {
+                    "title": "Pixi application",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "Choices",
+                    "description": "The keys the subject is allowed to press to respond to the stimulus.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "Prompt",
+                    "description": "Any content here will be displayed below the stimulus.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "upper_prompt": {
+                    "title": "Upper prompt",
+                    "description": "Any content here will be displayed above the stimulus.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "lower_prompt": {
+                    "title": "Lower prompt",
+                    "description": "This is the same as the prompt.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "canvas_width": {
+                    "title": "Canvas width",
+                    "description": "The width of the canvas.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "canvas_height": {
+                    "title": "Canvas height",
+                    "description": "The height of the canvas.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "canvas_offsetX": {
+                    "title": "Canvas offset X",
+                    "description": "This value is subtracted from the width of the canvas.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "canvas_offsetY": {
+                    "title": "Canvas offset Y",
+                    "description": "This value is subtracted from the height of the canvas.",
+                    "default": 8,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "Trial duration",
+                    "description": "How long to show trial before it ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "Response ends trial",
+                    "description": "If true, trial will end when subject makes a response.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "background_color": {
+                    "title": "Background color",
+                    "description": "The background color of the canvas.",
+                    "default": "grey",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_type": {
+                    "title": "key, mouse or button",
+                    "description": "How to make a response.",
+                    "default": "key",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "response_start_time": {
+                    "title": "Response start",
+                    "description": "When the subject is allowed to respond to the stimulus.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "raf_func": {
+                    "title": "Step function",
+                    "description": "This function enables to move objects as you wish.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "mouse_down_func": {
+                    "title": "Mouse down function",
+                    "description": "This function is set to the event listener of the mousedown.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "mouse_move_func": {
+                    "title": "Mouse move function",
+                    "description": "This function is set to the event listener of the mousemove.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "mouse_up_func": {
+                    "title": "Mouse up function",
+                    "description": "This function is set to the event listener of the mouseup.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "key_down_func": {
+                    "title": "Key down function",
+                    "description": "This function is set to the event listener of the keydown.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "key_up_func": {
+                    "title": "Key up function",
+                    "description": "This function is set to the event listener of the keyup.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "touchstart_func": {
+                    "title": "Touch start function",
+                    "description": "This function is set to the event listener of the CANVAS touchstart.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "touchend_func": {
+                    "title": "Touch end function",
+                    "description": "This function is set to the event listener of the CANVAS touchend.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "touchcancel_func": {
+                    "title": "Touch cancel function",
+                    "description": "This function is set to the event listener of the CANVAS touchcancel.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "touchmove_func": {
+                    "title": "Touch move function",
+                    "description": "This function is set to the event listener of the CANVAS touchmove.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_choices": {
+                    "title": "Button choices",
+                    "description": "The labels for the buttons.",
+                    "default": [
+                      "Next"
+                    ],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_html": {
+                    "title": "button html",
+                    "anyOf": [
+                      {
+                        "format": "expression",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_layout": {
+                    "title": "button layout",
+                    "description": "Setting to `'grid'` will make the container element have the CSS property `display: grid` and enable the use of `grid_rows` and `grid_columns`. Setting to `'flex'` will make the container element have the CSS property `display: flex`. You can customize how the buttons are laid out by adding inline CSS in the `button_html` parameter.",
+                    "default": "grid",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_rows": {
+                    "title": "grid rows",
+                    "description": "The number of rows in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of rows will be determined automatically based on the number of buttons and the number of columns.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "grid_columns": {
+                    "title": "grid columns",
+                    "description": "The number of columns in the button grid. Only applicable when `button_layout` is set to `'grid'`. If null, the number of columns will be determined automatically based on the number of buttons and the number of rows.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "vert_button_margin": {
+                    "title": "Margin vertical",
+                    "description": "The vertical margin of the button.",
+                    "default": "0px",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "horiz_button_margin": {
+                    "title": "Margin horizontal",
+                    "description": "The horizontal margin of the button.",
+                    "default": "8px",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "clear_canvas": {
+                    "title": "clear_canvas",
+                    "description": "Clear the canvas per frame.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "survey-likert"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "title": "questions",
+                    "description": "Array containing one or more objects with parameters for the question(s) that should be shown on the page.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "prompt": {
+                              "title": "prompt",
+                              "description": "Question prompt.",
+                              "anyOf": [
+                                {
+                                  "format": "html",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "labels": {
+                              "title": "labels",
+                              "description": "Array of likert labels to display for this question.",
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "required": {
+                              "title": "required",
+                              "description": "Whether or not a response to this question must be given in order to continue.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "name": {
+                              "title": "name",
+                              "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                              "default": "",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "default_response": {
+                              "title": "default response",
+                              "description": "Default response value for this question (0-based index of labels array).",
+                              "default": null,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "prompt",
+                            "labels"
+                          ]
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "randomize_question_order": {
+                    "title": "randomize question order",
+                    "description": "If true, the order of the questions in the 'questions' array will be randomized.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "preamble": {
+                    "title": "preamble",
+                    "description": "HTML-formatted string to display at top of the page above all of the questions.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "scale_width": {
+                    "title": "scale width",
+                    "description": "Width of the likert scales in pixels.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to submit responses.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "autocomplete": {
+                    "title": "autocomplete",
+                    "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "survey-text"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "title": "questions",
+                    "description": "An array of objects, each object represents a question that appears on the screen. Each object contains a prompt, options, required, and horizontal parameter that will be applied to the question. See examples below for further clarification.`prompt`: Type string, default value is *undefined*. The string is prompt/question that will be associated with a group of options (radio buttons). All questions will get presented on the same page (trial). `options`: Type array, defualt value is *undefined*. An array of strings. The array contains a set of options to display for an individual question.`required`: Type boolean, default value is null. The boolean value indicates if a question is required('true') or not ('false'), using the HTML5 `required` attribute. If this parameter is undefined, the question will be optional. `horizontal`:Type boolean, default value is false. If true, then the question is centered and the options are displayed horizontally. `name`: Name of the question. Used for storing data. If left undefined then default names (`Q0`, `Q1`, `...`) will be used for the questions.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "prompt": {
+                              "title": "prompt",
+                              "description": "Question prompt.",
+                              "anyOf": [
+                                {
+                                  "format": "html",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "placeholder": {
+                              "title": "placeholder",
+                              "description": "Placeholder text in the response text box.",
+                              "default": "",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "rows": {
+                              "title": "rows",
+                              "description": "The number of rows for the response text box.",
+                              "default": 1,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "columns": {
+                              "title": "columns",
+                              "description": "The number of columns for the response text box.",
+                              "default": 40,
+                              "anyOf": [
+                                {
+                                  "type": "integer"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "required": {
+                              "title": "required",
+                              "description": "Whether or not a response to this question must be given in order to continue.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            },
+                            "name": {
+                              "title": "name",
+                              "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                              "default": "",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "prompt"
+                          ]
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "randomize_question_order": {
+                    "title": "randomize question order",
+                    "description": "If true, the display order of `questions` is randomly determined at the start of the trial. In the data object, `Q0` will still refer to the first question in the array, regardless of where it was presented visually.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "preamble": {
+                    "title": "preamble",
+                    "description": "HTML formatted string to display at the top of the page above all the questions.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to submit responses.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "autocomplete": {
+                    "title": "autocomplete",
+                    "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    },
+    "block": {
+      "title": "Runs its steps once per row of a conditions table.",
+      "type": "object",
+      "required": [
+        "kind",
+        "conditions",
+        "children"
+      ],
+      "properties": {
+        "kind": {
+          "const": "block"
+        },
+        "conditions": {
+          "title": "The name of the conditions table this block runs over.",
+          "type": "string"
+        },
+        "randomize_order": {
+          "title": "Shuffle the rows for every participant.",
+          "type": "boolean"
+        },
+        "repetitions": {
+          "title": "How many times to go through the whole table.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "children": {
+          "title": "The steps run for each row.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "loop": {
+      "title": "Repeats its steps while a tagged set of trials stays below an accuracy threshold.",
+      "type": "object",
+      "required": [
+        "kind",
+        "repeat_while",
+        "children"
+      ],
+      "properties": {
+        "kind": {
+          "const": "loop"
+        },
+        "id": {
+          "type": "string"
+        },
+        "repeat_while": {
+          "$ref": "#/definitions/accuracyRule"
+        },
+        "children": {
+          "title": "The steps that repeat.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "assign": {
+      "title": "Splits participants between groups: a between-subjects manipulation.",
+      "type": "object",
+      "required": [
+        "kind",
+        "method",
+        "groups"
+      ],
+      "properties": {
+        "kind": {
+          "const": "assign"
+        },
+        "method": {
+          "title": "How a group is chosen.",
+          "description": "`random` decides in the browser; `balanced` asks the data service for the next group, which requires uploading data with an experiment id.",
+          "enum": [
+            "random",
+            "balanced"
+          ]
+        },
+        "record_as": {
+          "title": "Column name the chosen group is recorded under.",
+          "type": "string"
+        },
+        "groups": {
+          "title": "The groups participants are split between.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "children"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "children": {
+                "title": "The group's steps.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/node"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "branch": {
+      "title": "Sends a participant down one of two paths depending on how they did.",
+      "type": "object",
+      "required": [
+        "kind",
+        "when",
+        "then"
+      ],
+      "properties": {
+        "kind": {
+          "const": "branch"
+        },
+        "when": {
+          "$ref": "#/definitions/accuracyRule"
+        },
+        "then": {
+          "title": "Steps run when the rule holds.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        },
+        "otherwise": {
+          "title": "Steps run when it does not.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/node"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "checkpoint": {
+      "title": "Records that a participant reached a point in the study, for drop-out analysis.",
+      "type": "object",
+      "required": [
+        "kind",
+        "name"
+      ],
+      "properties": {
+        "kind": {
+          "const": "checkpoint"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "variableReference": {
+      "title": "A value read from a column of the enclosing conditions table.",
+      "type": "object",
+      "required": [
+        "var"
+      ],
+      "properties": {
+        "var": {
+          "title": "The column name.",
+          "type": "string"
+        },
+        "wrap": {
+          "title": "Markup the column's value is placed inside, with the value where `%s` is.",
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "parameterValue": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/variableReference"
+        },
+        {
+          "type": [
+            "string",
+            "number",
+            "boolean",
+            "null"
+          ]
+        },
+        {
+          "type": "array"
+        }
+      ]
+    },
+    "scoringRule": {
+      "title": "What counts as a correct response on this trial.",
+      "type": "object",
+      "required": [
+        "correct_if_response_equals"
+      ],
+      "properties": {
+        "correct_if_response_equals": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/variableReference"
+            },
+            {
+              "type": [
+                "string",
+                "number"
+              ]
+            }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "accuracyRule": {
+      "title": "A threshold applied to the trials carrying one tag.",
+      "type": "object",
+      "required": [
+        "scope"
+      ],
+      "properties": {
+        "scope": {
+          "title": "The tag whose trials are measured.",
+          "type": "string",
+          "minLength": 1
+        },
+        "accuracy_below": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "accuracy_at_least": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false,
+      "not": {
+        "title": "A rule compares accuracy one way, not both at once.",
+        "required": [
+          "accuracy_below",
+          "accuracy_at_least"
+        ]
+      }
+    },
+    "experimentSettings": {
+      "title": "Settings that apply to the whole experiment rather than to one step.",
+      "type": "object",
+      "properties": {
+        "default_iti": {
+          "title": "Gap in milliseconds after every trial, unless a step sets its own.",
+          "type": "number",
+          "minimum": 0
+        },
+        "minimum_valid_rt": {
+          "title": "Responses faster than this are ignored, in milliseconds.",
+          "type": "number",
+          "minimum": 0
+        },
+        "show_progress_bar": {
+          "type": "boolean"
+        },
+        "progress_bar_message": {
+          "type": "string"
+        },
+        "background_color": {
+          "title": "What the participant's screen looks like behind the stimulus.",
+          "type": "string"
+        },
+        "text_color": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "dataSettings": {
+      "title": "Where a participant's results go.",
+      "type": "object",
+      "required": [
+        "save"
+      ],
+      "properties": {
+        "save": {
+          "title": "`download` saves a CSV on the participant's machine, `post` uploads it.",
+          "enum": [
+            "download",
+            "post"
+          ]
+        },
+        "endpoint": {
+          "title": "Upload target; defaults to DataPipe.",
+          "type": "string"
+        },
+        "experiment_id": {
+          "title": "The experiment id the endpoint files the data under.",
+          "type": "string"
+        },
+        "filename_prefix": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "save": {
+                "const": "post"
+              }
+            },
+            "required": [
+              "save"
+            ]
+          },
+          "then": {
+            "title": "Uploading needs an experiment id from the service receiving the data.",
+            "required": [
+              "experiment_id"
+            ]
+          }
+        }
+      ]
+    },
+    "asset": {
+      "type": "object",
+      "required": [
+        "name",
+        "url"
+      ],
+      "properties": {
+        "name": {
+          "title": "The name the spec refers to this file by, e.g. \"face.png\".",
+          "type": "string",
+          "minLength": 1
+        },
+        "url": {
+          "title": "A data URL holding the file.",
+          "type": "string",
+          "pattern": "^data:"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

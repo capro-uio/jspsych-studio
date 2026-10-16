@@ -39,6 +39,7 @@ npm run dev              # the builder at http://localhost:5180
 npm test                 # unit tests plus two real-browser end-to-end runs
 npm run typecheck
 npm run schemas          # regenerate packages/schemas/plugin-schemas.json, print coverage
+npm run spec-schema      # regenerate packages/compiler/spec-schema.json
 node --experimental-strip-types packages/compiler/src/cli.ts compile examples/flanker.json
 ```
 
@@ -52,6 +53,23 @@ while cumulative accuracy stays below 0.75.
 `examples/shapes.json` is the image example: four PNGs (blue and orange squares and circles) carried
 in the spec as data URLs, named from a conditions column, preloaded, and judged on shape while
 colour is recorded but irrelevant.
+
+## Editing a spec by hand
+
+Every spec names a JSON Schema in `$schema`, so a spec file opened in VS Code, Positron or any
+other editor with a JSON language server gets completion, hover documentation and validation —
+including each plugin's own parameters and the JSDoc describing them, since the schema is built
+from the same extraction that drives the builder's forms. The builder writes `$schema` into
+everything it exports, so a downloaded spec is ready to edit before anything is installed.
+
+`npm run spec-schema` regenerates `packages/compiler/spec-schema.json`, which the Pages deploy
+serves alongside the builder.
+
+The schema encodes the structural rules — which step kinds exist, what each one requires, that a
+parameter may hold a `{ "var": "column" }` reference anywhere a literal is allowed, that uploading
+data needs an experiment id. The rules that need the whole spec at once, such as whether a
+referenced conditions column actually exists upstream of the step reading it, stay in the
+compiler's validator; the schema narrows what reaches it rather than replacing it.
 
 ## Design rules
 

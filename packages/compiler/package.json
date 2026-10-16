@@ -9,7 +9,8 @@
     "jspsych-studio": "src/cli.ts"
   },
   "scripts": {
-    "test": "vitest run"
+    "test": "vitest run",
+    "spec-schema": "node --experimental-strip-types src/cli.ts schema"
   },
   "dependencies": {
     "@jspsych-studio/schemas": "*",
@@ -17,6 +18,7 @@
   },
   "devDependencies": {
     "@jspsych/plugin-html-keyboard-response": "^2.0.0",
+    "ajv": "^8.20.0",
     "jspsych": "^8.3.0",
     "playwright": "^1.56.0"
   }

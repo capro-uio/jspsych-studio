@@ -1,5 +1,6 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
 import { slotsOf } from "@jspsych-studio/compiler";
+import { SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
 import type { AssignNode, BranchNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
 
 export type NodePath = number[];
@@ -221,7 +222,7 @@ export function loadSpec(spec: Spec) {
 
 export function exportedSpec(): Spec {
   const { name, authors, settings, data, assets, conditions, timeline } = project.spec;
-  const spec: Spec = { name, timeline };
+  const spec: Spec = { $schema: SPEC_SCHEMA_ID, name, timeline };
   const named = (authors ?? []).filter((author) => author.name.trim());
   if (named.length > 0) spec.authors = named;
   if (settings && Object.keys(settings).length > 0) spec.settings = settings;
