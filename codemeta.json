@@ -1,0 +1,35 @@
+{
+  "@context": "https://w3id.org/codemeta/3.0",
+  "@type": "SoftwareSourceCode",
+  "name": "jsPsych Studio",
+  "description": "A no-code builder for jsPsych experiments: author in the browser, export readable jsPsych you can host anywhere.",
+  "codeRepository": "https://github.com/capro-uio/jspsych-studio",
+  "issueTracker": "https://github.com/capro-uio/jspsych-studio/issues",
+  "url": "https://www.capro.dev/jspsych-studio/",
+  "license": "https://spdx.org/licenses/MIT",
+  "developmentStatus": "https://www.repostatus.org/#wip",
+  "applicationCategory": "Behavioral experiment builder",
+  "keywords": ["jsPsych", "psychology", "behavioural experiments", "online experiments", "no-code"],
+  "programmingLanguage": ["TypeScript", "Svelte"],
+  "runtimePlatform": "Web browser",
+  "dateCreated": "2026-10-14",
+  "author": [
+    {
+      "@type": "Person",
+      "@id": "https://orcid.org/0000-0002-5756-0223",
+      "givenName": "Athanasia Mo",
+      "familyName": "Mowinckel"
+    }
+  ],
+  "version": "0.0.1",
+  "dateModified": "2026-10-16",
+  "downloadUrl": "https://github.com/capro-uio/jspsych-studio/releases/tag/v0.0.1",
+  "softwareRequirements": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "jsPsych",
+      "version": "8.3.0",
+      "url": "https://www.jspsych.org/"
+    }
+  ]
+}

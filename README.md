@@ -119,7 +119,10 @@ compiler's validator; the schema narrows what reaches it rather than replacing i
 - **Versioned provenance.** Exports say what made them: the Psych-DS `isBasedOn`, the header
   comment in `experiment.js`, the `generator` meta tag and the project readme all name Studio and
   jsPsych with their versions. Studio's comes from `packages/compiler/package.json`, so a release
-  is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere.
+  is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere, and
+  regenerates `codemeta.json` with the new version, its release URL and the jsPsych it builds for
+  (`npm run codemeta` does the same by hand; CI fails if it is out of date). Everything else in
+  `codemeta.json`, such as the authors, is written by hand.
   While the workspaces sit at `0.0.0` no Studio version is claimed, because a dataset built by
   "jsPsych Studio 0.0.0" names a build nobody can obtain.
 
