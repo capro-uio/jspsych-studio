@@ -48,3 +48,12 @@ jobs:
       - run: npm run codemeta
       - name: Fail if codemeta.json is behind the version or the jsPsych it builds for
         run: git diff --exit-code codemeta.json
+
+  workflows:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check the workflow files
+        uses: docker://rhysd/actionlint:1.7.12
+        with:
+          args: -color

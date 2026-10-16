@@ -1,0 +1,25 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # A release gets a fortnight in the wild before it is proposed here, so a compromised or
+    # broken version is usually pulled before it reaches this repository.
+    cooldown:
+      default-days: 14
+    groups:
+      # A plugin update changes the extracted schemas, so they are taken together and the
+      # schemas-up-to-date check says when packages/schemas/plugin-schemas.json needs regenerating.
+      jspsych:
+        patterns: ["jspsych", "@jspsych/*", "@jspsych-contrib/*"]
+      tooling:
+        dependency-type: development
+        exclude-patterns: ["jspsych", "@jspsych/*", "@jspsych-contrib/*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    cooldown:
+      default-days: 14
