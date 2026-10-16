@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { asText } from "./text.ts";
   import FactorBuilder from "./FactorBuilder.svelte";
   import { conditionColumns, project } from "./project.svelte.ts";
 
@@ -129,7 +130,7 @@
                   <td>
                     <input
                       data-testid={`cell-${name}-${index}-${column}`}
-                      value={String(row[column] ?? "")}
+                      value={asText(row[column])}
                       onchange={(event) => setCell(name, index, column, event.currentTarget.value)}
                     />
                   </td>

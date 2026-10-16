@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import type { Spec, SpecNode } from "@jspsych-studio/compiler";
 
 const CONDITIONS_CSV = [
   "stim,correct_key,congruency",
@@ -24,6 +25,21 @@ async function setText(page: Page, testId: string, value: string) {
   const field = page.getByTestId(testId);
   await field.fill(value);
   await field.blur();
+}
+
+/** The project file the builder would download, as shown in its spec view. */
+async function authoredSpec(page: Page) {
+  return JSON.parse(await page.getByTestId("spec-json").innerText()) as Spec;
+}
+
+/** The step at a place in the spec, checked to be the kind the test expects. */
+function stepOfKind<K extends SpecNode["kind"]>(node: SpecNode | undefined, kind: K) {
+  expect(node?.kind).toBe(kind);
+  return node as Extract<SpecNode, { kind: K }>;
+}
+
+function trialParams(node: SpecNode | undefined) {
+  return stepOfKind(node, "trial").params ?? {};
 }
 
 /** The sidebar is tabbed, so reaching conditions, files or study settings means opening that tab. */
@@ -131,10 +147,10 @@ describe("authoring the flanker task through the UI", () => {
     await buildFlanker(page);
 
     await page.getByTestId("view-spec").click();
-    const authored = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const authored = await authoredSpec(page);
     const reference = JSON.parse(
       readFileSync(new URL("../../../examples/flanker.json", import.meta.url), "utf8"),
-    );
+    ) as Spec;
     expect(authored).toEqual(reference);
 
     await page.getByTestId("view-experiment").click();
@@ -174,7 +190,7 @@ describe("recruiting from a platform", () => {
     await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.recruitment).toEqual({
       platform: "prolific",
       endings: { complete: { url: completion } },
@@ -187,9 +203,7 @@ describe("recruiting from a platform", () => {
 
     await page.getByTestId("recruitment-platform").selectOption("none");
     await page.getByTestId("view-spec").click();
-    await expect
-      .poll(async () => JSON.parse(await page.getByTestId("spec-json").innerText()).recruitment)
-      .toBeUndefined();
+    await expect.poll(async () => (await authoredSpec(page)).recruitment).toBeUndefined();
     await page.close();
   }, 120_000);
 });
@@ -215,7 +229,7 @@ describe("choosing where data goes", () => {
     await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.data).toEqual({ save: "post", experiment_id: "abc123DEF456" });
 
     await page.getByTestId("view-code").click();
@@ -247,11 +261,11 @@ describe("using an image file", () => {
     await page.getByTestId("value-stimulus").selectOption("square.png");
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.assets).toHaveLength(1);
-    expect(spec.assets[0].name).toBe("square.png");
-    expect(spec.assets[0].url.startsWith("data:image/png;base64,")).toBe(true);
-    expect(spec.timeline[0].params.stimulus).toBe("square.png");
+    expect(spec.assets?.[0]?.name).toBe("square.png");
+    expect(spec.assets?.[0]?.url).toMatch(/^data:image\/png;base64,/);
+    expect(trialParams(spec.timeline[0]).stimulus).toBe("square.png");
 
     await page.getByTestId("view-experiment").click();
     const preview = page.frameLocator('[data-testid="preview"]');
@@ -309,12 +323,12 @@ describe("a parameter that takes a list", () => {
     ).toBeGreaterThan(80);
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(spec.timeline[0].params.pages).toEqual([
+    const spec = await authoredSpec(page);
+    expect(trialParams(spec.timeline[0]).pages).toEqual([
       "<p>Welcome to the study.</p>",
       "<p>Press Enter to start.</p>",
     ]);
-    expect(spec.timeline[0].params.show_clickable_nav).toBe(true);
+    expect(trialParams(spec.timeline[0]).show_clickable_nav).toBe(true);
 
     await page.getByTestId("view-experiment").click();
     const preview = page.frameLocator('[data-testid="preview"]');
@@ -345,8 +359,8 @@ describe("a list whose entries are objects", () => {
     await setText(page, "value-questions-0-labels-1", "agree");
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(spec.timeline[0].params.questions).toEqual([
+    const spec = await authoredSpec(page);
+    expect(trialParams(spec.timeline[0]).questions).toEqual([
       { prompt: "I enjoyed this task", labels: ["disagree", "agree"] },
     ]);
 
@@ -380,8 +394,8 @@ describe("a canvas step", () => {
     expect(await page.getByTestId("value-stimuli-0-content").count()).toBe(0);
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(spec.timeline[0].params.stimuli).toEqual([
+    const spec = await authoredSpec(page);
+    expect(trialParams(spec.timeline[0]).stimuli).toEqual([
       { obj_type: "circle", radius: 50, fill_color: "red" },
     ]);
 
@@ -422,8 +436,7 @@ describe("a canvas step", () => {
     };
     const firstObject = async () => {
       await page.getByTestId("view-spec").click();
-      return JSON.parse(await page.getByTestId("spec-json").innerText()).timeline[0].params
-        .stimuli[0];
+      return (trialParams((await authoredSpec(page)).timeline[0]).stimuli as unknown[])[0];
     };
 
     // The step starts with a cross at the centre of the 800 × 600 stand-in for the window.
@@ -484,14 +497,12 @@ describe("splitting participants between groups", () => {
     }
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.timeline[0].kind).toBe("assign");
-    expect(spec.timeline[0].record_as).toBe("spacing");
-    expect(spec.timeline[0].groups.map((group: { name: string }) => group.name)).toEqual([
-      "wide",
-      "narrow",
-    ]);
-    expect(spec.timeline[0].groups[0].children).toHaveLength(1);
+    const split = stepOfKind(spec.timeline[0], "assign");
+    expect(split.record_as).toBe("spacing");
+    expect(split.groups.map((group) => group.name)).toEqual(["wide", "narrow"]);
+    expect(split.groups[0].children).toHaveLength(1);
 
     await page.getByTestId("view-experiment").click();
     const preview = page.frameLocator('[data-testid="preview"]');
@@ -529,13 +540,14 @@ describe("routing on performance", () => {
     await setFixed(page, "stimulus", "<p>stop</p>");
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.timeline[1]).toMatchObject({
       kind: "branch",
       when: { scope: "screening", accuracy_at_least: 0.75 },
     });
-    expect(spec.timeline[1].then).toHaveLength(1);
-    expect(spec.timeline[1].otherwise).toHaveLength(1);
+    const branch = stepOfKind(spec.timeline[1], "branch");
+    expect(branch.then).toHaveLength(1);
+    expect(branch.otherwise).toHaveLength(1);
 
     // The preview rebuilds a moment after the last edit, so it can still show the empty path.
     await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
@@ -572,7 +584,7 @@ describe("working with what is already there", () => {
 
     await openTab(page, "conditions");
     await page.getByTestId("open-table-flanker_trials").click();
-    await expect(page.getByTestId("grid-flanker_trials")).toBeDefined();
+    await page.getByTestId("grid-flanker_trials").waitFor({ timeout: 5_000 });
     expect(await page.getByTestId("cell-flanker_trials-0-congruency").inputValue()).toBe(
       "congruent",
     );
@@ -581,9 +593,9 @@ describe("working with what is already there", () => {
     await page.getByTestId("add-row-flanker_trials").click();
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(spec.conditions.flanker_trials[0].stim).toBe("^^^^^");
-    expect(spec.conditions.flanker_trials).toHaveLength(5);
+    const spec = await authoredSpec(page);
+    expect(spec.conditions?.flanker_trials?.[0].stim).toBe("^^^^^");
+    expect(spec.conditions?.flanker_trials).toHaveLength(5);
 
     page.on("dialog", (dialog) => dialog.accept());
     await headerAction(page, "new-project");
@@ -630,8 +642,8 @@ describe("writing stimulus text", () => {
     await page.getByTestId("value-stimulus-size").selectOption("48px");
 
     await page.getByTestId("view-spec").click();
-    const authored = JSON.parse(await page.getByTestId("spec-json").innerText());
-    const stimulus = authored.timeline[0].params.stimulus as string;
+    const authored = await authoredSpec(page);
+    const stimulus = trialParams(authored.timeline[0]).stimulus as string;
     expect(stimulus).toContain("Welcome");
     expect(stimulus).toMatch(/<b>|font-weight|<strong>/);
     expect(stimulus).toContain("48px");
@@ -650,8 +662,8 @@ describe("writing stimulus text", () => {
     await html.fill("<p>typed as markup</p>");
     await html.blur();
     await page.getByTestId("view-spec").click();
-    const edited = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(edited.timeline[0].params.stimulus).toBe("<p>typed as markup</p>");
+    const edited = await authoredSpec(page);
+    expect(trialParams(edited.timeline[0]).stimulus).toBe("<p>typed as markup</p>");
 
     await page.close();
   }, 180_000);
@@ -674,8 +686,8 @@ describe("writing stimulus text", () => {
     });
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    const stimulus = spec.timeline[0].params.stimulus as string;
+    const spec = await authoredSpec(page);
+    const stimulus = trialParams(spec.timeline[0]).stimulus as string;
     expect(stimulus).toContain("colour me");
     expect(stimulus).toMatch(/color: rgb\(204, 0, 0\)|#cc0000/i);
 
@@ -798,16 +810,16 @@ describe("building a conditions table from a design", () => {
     await page.getByTestId("build-table").click();
 
     // The new table opens so you can see what you got.
-    await expect(page.getByTestId("grid-stroop_trials")).toBeDefined();
+    await page.getByTestId("grid-stroop_trials").waitFor({ timeout: 5_000 });
     expect(await page.getByTestId("cell-stroop_trials-0-word").inputValue()).toBe("RED");
     expect(await page.getByTestId("cell-stroop_trials-3-ink").inputValue()).toBe("blue");
 
     await openTab(page, "timeline");
     await addStep(page, "slot-0", "block");
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(spec.conditions.stroop_trials).toHaveLength(4);
-    expect(spec.conditions.stroop_trials[0]).toEqual({ word: "RED", ink: "red" });
+    const spec = await authoredSpec(page);
+    expect(spec.conditions?.stroop_trials).toHaveLength(4);
+    expect(spec.conditions?.stroop_trials?.[0]).toEqual({ word: "RED", ink: "red" });
 
     await page.close();
   }, 120_000);
@@ -845,10 +857,12 @@ describe("deciding where a step goes", () => {
     await setFixed(page, "stimulus", "<p>second</p>");
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
-    expect(
-      spec.timeline.map((step: { params: { stimulus: string } }) => step.params.stimulus),
-    ).toEqual(["<p>first</p>", "<p>second</p>", "<p>third</p>"]);
+    const spec = await authoredSpec(page);
+    expect(spec.timeline.map((step) => trialParams(step).stimulus)).toEqual([
+      "<p>first</p>",
+      "<p>second</p>",
+      "<p>third</p>",
+    ]);
 
     await page.close();
   }, 120_000);
@@ -912,7 +926,7 @@ describe("a step that is not ready says so itself", () => {
 
     await page.getByTestId("slot-0").click();
     const menu = page.getByTestId("slot-0-menu");
-    await expect(menu).toBeDefined();
+    await menu.waitFor({ timeout: 5_000 });
     expect(await menu.innerText()).toContain("Trial");
     expect(await menu.innerText()).toContain("repeat steps until performance is good enough");
 
@@ -973,7 +987,7 @@ describe("seeing one step without clicking through the rest", () => {
 
     // The exported file is the one that saves.
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.data).toEqual({ save: "post", experiment_id: "realExperiment" });
 
     await page.close();
@@ -992,7 +1006,7 @@ describe("saying who made the experiment", () => {
     await setText(page, "author-id-0", "https://orcid.org/0000-0002-1825-0097");
 
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.authors).toEqual([
       { name: "A Researcher", identifier: "https://orcid.org/0000-0002-1825-0097" },
     ]);
@@ -1008,7 +1022,7 @@ describe("saying who made the experiment", () => {
 
     await page.getByTestId("add-author").click();
     await page.getByTestId("view-spec").click();
-    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    const spec = await authoredSpec(page);
     expect(spec.authors).toBeUndefined();
 
     await page.close();

@@ -27,7 +27,10 @@
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
   const selectionKey = $derived(project.selection?.join(".") ?? "");
-  const runningFrom = $derived(fromSelected && project.selection ? project.selection : null);
+  // Derived from the key, not the selection array, so stepping through steps reruns the preview.
+  const runningFrom = $derived(
+    fromSelected && selectionKey ? selectionKey.split(".").map(Number) : null,
+  );
 
   function rebuild(spec: Spec, from: number[] | null) {
     const compileId = ++latestCompile;
@@ -40,10 +43,17 @@
       });
       error = "";
       exportedSource = exported.source;
-      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then((output) => {
-        if (compileId !== latestCompile) return;
-        html = output.html;
-      });
+      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then(
+        (output) => {
+          if (compileId !== latestCompile) return;
+          html = output.html;
+        },
+        (problem: unknown) => {
+          if (compileId !== latestCompile) return;
+          error = `The preview could not be built: ${String(problem)}`;
+          html = "";
+        },
+      );
     } catch (problem) {
       if (!(problem instanceof SpecError)) throw problem;
       error = problem.message;
@@ -59,9 +69,7 @@
   $effect(() => {
     const json = specJson;
     const from = runningFrom;
-    // Reading the key as well keeps the preview following the selection while running from a step.
-    selectionKey;
-    const timer = setTimeout(() => rebuild(JSON.parse(json), from), REBUILD_DELAY_MS);
+    const timer = setTimeout(() => rebuild(JSON.parse(json) as Spec, from), REBUILD_DELAY_MS);
     return () => clearTimeout(timer);
   });
 
@@ -69,9 +77,15 @@
   $effect(() => {
     if (view !== "code" || !exportedSource) return;
     const wanted = exportedSource;
-    formatSource(wanted).then((formatted) => {
-      if (wanted === exportedSource) source = formatted;
-    });
+    // Unformatted code is still the right code, so a formatter failure shows it as it is.
+    formatSource(wanted).then(
+      (formatted) => {
+        if (wanted === exportedSource) source = formatted;
+      },
+      () => {
+        if (wanted === exportedSource) source = wanted;
+      },
+    );
   });
 </script>
 

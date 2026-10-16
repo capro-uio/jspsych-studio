@@ -75,7 +75,7 @@
       }
     };
     let cancelled = false;
-    tick().then(() => {
+    void tick().then(() => {
       if (cancelled) return;
       target = selector ? document.querySelector<HTMLElement>(selector) : null;
       if (target) bringIntoView(target);

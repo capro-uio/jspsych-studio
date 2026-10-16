@@ -14,10 +14,10 @@ export interface Insertion {
   index: number;
 }
 
-export const project = $state({
+export const project = $state<{ spec: Spec; selection: NodePath | null; insertion: Insertion }>({
   spec: emptySpec(),
-  selection: null as NodePath | null,
-  insertion: { path: [], index: 0 } as Insertion,
+  selection: null,
+  insertion: { path: [], index: 0 },
 });
 
 // A path walks the tree one index per level. A node with several child lists — a split's groups,

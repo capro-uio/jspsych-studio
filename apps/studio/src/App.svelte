@@ -8,7 +8,7 @@
   import AddStep from "./lib/AddStep.svelte";
   import PanelDivider from "./lib/PanelDivider.svelte";
   import { panels } from "./lib/panels.svelte.ts";
-  import { setTheme, theme, type Theme } from "./lib/theme.svelte.ts";
+  import { setTheme, theme } from "./lib/theme.svelte.ts";
   import { download, specFilename } from "./lib/files.ts";
   import HeaderMenu from "./lib/HeaderMenu.svelte";
   import { buildExperimentHtml, buildProjectZip } from "./lib/experiment.svelte.ts";
@@ -20,28 +20,14 @@
   import { startTour, TOUR_HOME_ID } from "./lib/tour.svelte.ts";
   import { TABS, ui } from "./lib/ui.svelte.ts";
   import {
-    addAtInsertion,
-    canHoldChildren,
-    conditionTableNames,
     exportedSpec,
     loadSpec,
     openExample,
     parseSpec,
     startNewProject,
-    newBlock,
-    newLoop,
-    newAssign,
-    newBranch,
-    newCheckpoint,
-    newTrial,
     project,
   } from "./lib/project.svelte.ts";
-  import { pluginNames, startingParams } from "./lib/schemas.ts";
   import { examples } from "./lib/examples.ts";
-
-  const tables = $derived(conditionTableNames());
-
-  const firstTrial = () => newTrial(DEFAULT_PLUGIN, startingParams(DEFAULT_PLUGIN));
 
   let importError = $state("");
   let downloadError = $state("");
@@ -73,8 +59,6 @@
       downloadError = `Not ready to download: ${(error as Error).message.split("\n")[0]}`;
     }
   }
-
-  const DEFAULT_PLUGIN = "html-keyboard-response";
 
   // A warning that lives behind a tab is a warning nobody reads, so the tab says it is there.
   const unsavedData = $derived(!project.spec.data && project.spec.timeline.length > 0);
@@ -125,7 +109,7 @@
   </button>
 
   <HeaderMenu label="More actions" id={TOUR_HOME_ID}>
-    {#snippet children(close)}
+    {#snippet children(close: () => void)}
       <button class="item" data-testid="new-project" onclick={startOver}>New experiment</button>
       <label class="item">
         Open a project…

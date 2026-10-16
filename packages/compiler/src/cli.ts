@@ -5,7 +5,7 @@ import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
 import { extractSchemas, pluginPackages } from "@jspsych-studio/schemas";
 import manifest from "../package.json" with { type: "json" };
-import { updateCodemeta } from "./codemeta.ts";
+import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
 import { compileSpec } from "./compile.ts";
 import { emitHtml } from "./targets/html.ts";
 import { specSchema } from "./spec-schema.ts";
@@ -49,8 +49,8 @@ if (command === "codemeta") {
   );
   const repositoryManifest = fileURLToPath(new URL("../../../package.json", import.meta.url));
   const updated = updateCodemeta(
-    JSON.parse(readFileSync(outputPath, "utf8")),
-    JSON.parse(readFileSync(repositoryManifest, "utf8")),
+    JSON.parse(readFileSync(outputPath, "utf8")) as Codemeta,
+    JSON.parse(readFileSync(repositoryManifest, "utf8")) as PackageManifest,
     {
       version: manifest.version,
       jspsych: report.jspsych,

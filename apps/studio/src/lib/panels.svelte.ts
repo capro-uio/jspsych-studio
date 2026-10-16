@@ -4,8 +4,12 @@ const MINIMUM = 12;
 
 function load(): number[] {
   try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-    if (Array.isArray(stored) && stored.length === DEFAULTS.length) return stored as number[];
+    const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
+    const valid =
+      Array.isArray(stored) &&
+      stored.length === DEFAULTS.length &&
+      stored.every((width) => typeof width === "number" && Number.isFinite(width));
+    if (valid) return stored as number[];
   } catch {
     // A blocked or corrupt store is not worth failing over; the defaults are fine.
   }

@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import RichText from "./RichText.svelte";
+  import { asText } from "./text.ts";
 
   interface Props {
     parameter: ParameterSchema;
@@ -72,7 +73,7 @@
 {:else if parameter.jspsychType === "KEYS"}
   <input
     data-testid={testId}
-    value={Array.isArray(value) ? value.join(",") : String(value ?? "")}
+    value={Array.isArray(value) ? value.join(",") : asText(value)}
     placeholder="f,j or ALL_KEYS"
     onchange={(event) => onchange(parseKeys(event.currentTarget.value))}
   />

@@ -235,7 +235,7 @@ export function compileSpec(
   const steps = spec.timeline.map((node) => compileNode(node, context));
 
   if (assets.length > 0) {
-    const preload = compilePreloadStep(assets);
+    const preload = compilePreloadStep();
     plugins.add(preload.plugin);
     steps.unshift(preload.source);
   }

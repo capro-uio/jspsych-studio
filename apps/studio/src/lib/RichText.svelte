@@ -42,10 +42,9 @@
 
   // The editable surface holds the document; rewriting it from `value` on every keystroke would
   // move the caret, so it is only seeded when the step being edited changes underneath it.
-  $effect(() => {
-    if (!editor || editingMarkup) return;
-    if (editor.innerHTML !== value) editor.innerHTML = value ?? "";
-  });
+  function seedFromValue(surface: HTMLDivElement) {
+    if (surface.innerHTML !== value) surface.innerHTML = value ?? "";
+  }
 
   function publish() {
     if (editor) onchange(editor.innerHTML);
@@ -171,6 +170,7 @@
       aria-multiline="true"
       data-testid={testId}
       bind:this={editor}
+      {@attach seedFromValue}
       oninput={publish}
       onkeyup={rememberSelection}
       onmouseup={rememberSelection}

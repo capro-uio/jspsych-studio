@@ -5,8 +5,15 @@ import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta } from "../src/codemeta.ts";
 import { GENERATOR_URL } from "../src/metadata.ts";
 
-const readRoot = (file: string) =>
-  JSON.parse(readFileSync(new URL(`../../../${file}`, import.meta.url), "utf8"));
+interface CommittedCodemeta {
+  version: string;
+  description: string;
+  codeRepository: string;
+  softwareRequirements: { version: string }[];
+}
+
+const readRoot = <T>(file: string) =>
+  JSON.parse(readFileSync(new URL(`../../../${file}`, import.meta.url), "utf8")) as T;
 
 const handWritten = {
   "@context": "https://w3id.org/codemeta/3.0",
@@ -71,14 +78,16 @@ describe("codemeta for a release", () => {
   });
 
   it("is current with this build in the committed file", () => {
-    const committed = readRoot("codemeta.json");
+    const committed = readRoot<CommittedCodemeta>("codemeta.json");
     expect(committed.version).toBe(manifest.version);
     expect(committed.softwareRequirements[0].version).toBe(bundle.jspsych);
-    expect(committed.description).toBe(readRoot("package.json").description);
+    expect(committed.description).toBe(
+      readRoot<{ description: string }>("package.json").description,
+    );
   });
 
   // Exports link to the generator by this address, so it has to be the repository's own.
   it("names the same repository that exports link to", () => {
-    expect(readRoot("codemeta.json").codeRepository).toBe(GENERATOR_URL);
+    expect(readRoot<CommittedCodemeta>("codemeta.json").codeRepository).toBe(GENERATOR_URL);
   });
 });

@@ -112,6 +112,8 @@ export function datasetDescription(spec: Spec, options: MetadataOptions) {
   };
 }
 
+export type DatasetDescription = ReturnType<typeof datasetDescription>;
+
 /** A note at the top of the generated experiment saying where it came from. */
 export function sourceHeader(spec: Spec, options: MetadataOptions) {
   const date = options.generatedAt ?? new Date().toISOString().slice(0, 10);

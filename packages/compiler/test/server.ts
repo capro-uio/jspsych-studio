@@ -41,7 +41,7 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
           response.writeHead(500).end("nope");
           return;
         }
-        uploads.push(JSON.parse(Buffer.concat(chunks).toString()));
+        uploads.push(JSON.parse(Buffer.concat(chunks).toString()) as (typeof uploads)[number]);
         response.writeHead(200, { "content-type": "application/json" }).end("{}");
       });
       return;

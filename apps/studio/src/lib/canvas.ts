@@ -1,4 +1,5 @@
 import { isVariableReference, type ParameterValue } from "@jspsych-studio/compiler";
+import { asText } from "./text.ts";
 
 export type CanvasObject = Record<string, unknown>;
 
@@ -137,7 +138,7 @@ export function imageSize(object: CanvasObject, natural: Size): Size {
  */
 export function geometry(object: CanvasObject) {
   const lines = typeof object.content === "string" ? object.content.split("\n") : [""];
-  const fontSize = Number.parseFloat(String(object.fontSize ?? "20px"));
+  const fontSize = Number.parseFloat(asText(object.fontSize ?? "20px"));
   return {
     lineWidth: positive(object.line_width, 1),
     radius: positive(object.radius, STAND_IN_SIZE / 2),

@@ -57,7 +57,9 @@ export function recruitmentProblems(spec: Spec): Problem[] {
   if (!recruitment) return [];
   const problems: Problem[] = [];
   if (recruitment.platform !== undefined && !isPlatform(recruitment.platform)) {
-    problems.push({ message: `recruitment names an unknown platform "${recruitment.platform}"` });
+    problems.push({
+      message: `recruitment names an unknown platform "${String(recruitment.platform)}"`,
+    });
   }
   const endings: unknown = recruitment.endings ?? {};
   if (typeof endings !== "object" || endings === null || Array.isArray(endings)) {

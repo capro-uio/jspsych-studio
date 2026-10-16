@@ -36,7 +36,7 @@ describe("how the experiment looks", () => {
     expect(html.indexOf("<style>")).toBeLessThan(html.indexOf("<script"));
   });
 
-  it("states the text colour on the element jsPsych colours itself", async () => {
+  it("states the text colour on the element jsPsych colours itself", () => {
     const compiled = compileSpec(spec({ text_color: "#eeeeee" }), schemas);
     expect(compiled.styles).toContain(".jspsych-content");
   });

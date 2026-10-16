@@ -39,10 +39,10 @@ export interface RawParameter {
 }
 
 // jsPsych's ESM build assigns to `window` at import time, so Node needs a stand-in.
-async function importWithWindowShim(specifier: string) {
+async function importWithWindowShim(specifier: string): Promise<Record<string, unknown>> {
   const globals = globalThis as { window?: unknown };
   globals.window ??= globalThis;
-  return import(specifier);
+  return (await import(specifier)) as Record<string, unknown>;
 }
 
 function parameterTypeNames(parameterType: Record<string, unknown>) {
