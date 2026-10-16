@@ -25,7 +25,29 @@ export interface ParameterSchema {
   required?: string[];
   enum?: unknown[];
   default?: unknown;
+  /** Values a new step can start from, so it is not born invalid. */
+  examples?: unknown[];
+  /** For a set of fields whose meaning depends on one of them, such as a canvas object's shape. */
+  variants?: Variants;
   jspsychType: ParameterTypeName;
+}
+
+export interface Variant {
+  /** The fields this variant reads, beyond the shared ones. */
+  properties: string[];
+  required: string[];
+  /** Groups of fields of which at least one must be set. */
+  any_of?: string[][];
+  /** Groups of fields of which at most one may be set. */
+  at_most_one_of?: string[][];
+}
+
+export interface Variants {
+  /** The field whose value picks the variant. */
+  by: string;
+  /** The fields every variant reads. */
+  shared: string[];
+  options: Record<string, Variant>;
 }
 
 export interface PluginSchema {

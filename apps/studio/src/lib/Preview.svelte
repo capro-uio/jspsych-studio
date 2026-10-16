@@ -8,6 +8,12 @@
 
   type View = "experiment" | "code" | "spec";
 
+  const VIEWS = [
+    { id: "experiment", label: "Experiment", hint: "What a participant sees" },
+    { id: "code", label: "Code", hint: "The jsPsych this builds, as it will be exported" },
+    { id: "spec", label: "Project file", hint: "What the download and import use" },
+  ] as const;
+
   let view = $state<View>("experiment");
   let html = $state("");
   let source = $state("");
@@ -67,48 +73,47 @@
       if (wanted === exportedSource) source = formatted;
     });
   });
-
-  function download(filename: string, contents: string, type: string) {
-    const url = URL.createObjectURL(new Blob([contents], { type }));
-    const link = Object.assign(document.createElement("a"), { href: url, download: filename });
-    link.click();
-    URL.revokeObjectURL(url);
-  }
 </script>
 
 <section>
-  <nav>
-    {#each ["experiment", "code", "spec"] as const as option (option)}
+  <div class="views" role="tablist">
+    {#each VIEWS as option (option.id)}
       <button
-        class:active={view === option}
-        data-testid={`view-${option}`}
-        onclick={() => (view = option)}>{option}</button
+        role="tab"
+        aria-selected={view === option.id}
+        class:active={view === option.id}
+        data-testid={`view-${option.id}`}
+        title={option.hint}
+        onclick={() => (view = option.id)}>{option.label}</button
       >
     {/each}
-    <span class="spacer"></span>
-    {#if view === "experiment"}
-      <button
-        class:active={fromSelected}
-        data-testid="run-from-step"
-        disabled={!project.selection}
-        title={project.selection
-          ? "Run only the selected step, with the blocks it sits in"
-          : "Select a step to run just that one"}
-        onclick={() => (fromSelected = !fromSelected)}>from step</button
-      >
-      <button data-testid="restart" onclick={() => (runToken += 1)}>restart</button>
-    {/if}
-    <button
-      data-testid="download-html"
-      disabled={!html}
-      onclick={() => download(`${project.spec.name}.html`, html, "text/html")}>.html</button
-    >
-    <button
-      data-testid="download-spec"
-      onclick={() => download(`${project.spec.name}.json`, specJson, "application/json")}
-      >.json</button
-    >
-  </nav>
+  </div>
+
+  {#if view === "experiment"}
+    <div class="runbar">
+      <div class="segmented" role="group" aria-label="What to run">
+        <button
+          class:active={!fromSelected}
+          data-testid="run-whole"
+          onclick={() => (fromSelected = false)}>Whole experiment</button
+        >
+        <button
+          class:active={fromSelected}
+          data-testid="run-from-step"
+          disabled={!project.selection}
+          title={project.selection
+            ? "Run only the selected step, with the blocks it sits in"
+            : "Select a step first"}
+          onclick={() => (fromSelected = true)}>Selected step</button
+        >
+      </div>
+      <button class="restart" data-testid="restart" onclick={() => (runToken += 1)}>
+        ↻ Start again
+      </button>
+      <span class="spacer"></span>
+      <span class="note" data-testid="preview-note">Nothing is saved from a preview</span>
+    </div>
+  {/if}
 
   {#if error}
     {@const problems = currentProblems()}
@@ -127,10 +132,6 @@
   {/if}
 
   {#if view === "experiment"}
-    <p class="note" data-testid="preview-note">
-      {runningFrom ? "Running the selected step only." : "Running the whole experiment."} Data is not
-      saved from a preview.
-    </p>
     {#if html}
       {#key `${html}-${runToken}`}
         <iframe
@@ -157,18 +158,66 @@
     min-height: 0;
     height: 100%;
   }
-  nav {
+  /* Switching what you look at, and acting on what you see, are different things and look it. */
+  .views {
     display: flex;
-    gap: 0.3rem;
+    gap: 0.15rem;
+    border-bottom: 1px solid var(--rule);
+  }
+  .views button {
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    padding: 0.3rem 0.5rem;
+    cursor: pointer;
+    color: var(--muted);
+    font-size: 0.85rem;
+  }
+  .views button.active {
+    color: inherit;
+    border-bottom-color: var(--accent);
+  }
+  .runbar {
+    display: flex;
+    gap: 0.4rem;
     align-items: center;
-    margin-bottom: 0.4rem;
+    padding: 0.4rem 0;
+  }
+  .segmented {
+    display: flex;
+  }
+  .segmented button {
+    border: 1px solid var(--rule);
+    background: none;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    font-size: 0.8rem;
+    color: var(--muted);
+  }
+  .segmented button:first-child {
+    border-radius: 4px 0 0 4px;
+  }
+  .segmented button:last-child {
+    border-radius: 0 4px 4px 0;
+    border-left: 0;
+  }
+  .segmented button.active {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .restart {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 0.8rem;
   }
   .spacer {
     flex: 1;
   }
-  nav button.active {
-    border-color: var(--accent);
-    color: var(--accent);
+  .note {
+    font-size: 0.75rem;
+    color: var(--muted);
   }
   .note {
     margin: 0 0 0.35rem;

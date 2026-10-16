@@ -1,6 +1,6 @@
-import type { ParameterSchema, PluginSchemas } from "@jspsych-studio/schemas";
+import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/schemas";
 import type { AssignNode, BranchNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
-import { assetNames, isMediaParameter } from "./assets.ts";
+import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { accuracyComparison } from "./conditions.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 
@@ -37,6 +37,9 @@ const KEY_LIST_KEYWORDS = new Set(["ALL_KEYS", "NO_KEYS"]);
 // Only the types the extractor resolved unambiguously. A KEYS parameter is a list that also
 // accepts the strings "ALL_KEYS" and "NO_KEYS", so it is checked on its own terms.
 function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
+  if (parameter.enum && !parameter.enum.includes(value)) {
+    return `expects one of ${parameter.enum.map((option) => JSON.stringify(option)).join(", ")}`;
+  }
   if (parameter.type === "array") {
     if (Array.isArray(value)) return null;
     if (parameter.jspsychType === "KEYS" && KEY_LIST_KEYWORDS.has(value as string)) return null;
@@ -84,17 +87,7 @@ function checkTrial(
     if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
     } else if (isMediaParameter(trial.plugin, name, parameter.jspsychType)) {
-      const named = (Array.isArray(value) ? value : [value]).filter(
-        (entry): entry is string => typeof entry === "string" && entry !== "",
-      );
-      for (const entry of named) {
-        if (assets.has(entry) || looksLikePath(entry)) continue;
-        report(
-          `${where}, parameter "${name}" names "${entry}", which is neither an added file nor a ` +
-            `path` +
-            (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
-        );
-      }
+      checkFiles(value, assets, `${where}, parameter "${name}"`, report);
     } else if (parameter.items?.properties) {
       const problem = literalTypeProblem(value, parameter);
       if (problem) {
@@ -102,7 +95,12 @@ function checkTrial(
           `${where}, parameter "${name}" ${problem} but the spec holds ${JSON.stringify(value)}`,
         );
       } else {
-        checkObjectEntries(value, parameter, `${where}, parameter "${name}"`, problems, path);
+        checkObjectEntries(value, parameter, `${where}, parameter "${name}"`, {
+          columns,
+          assets,
+          problems,
+          path,
+        });
       }
     } else {
       const problem = literalTypeProblem(value, parameter);
@@ -131,18 +129,71 @@ function checkTrial(
   }
 }
 
+function checkFiles(
+  value: ParameterValue,
+  assets: Set<string>,
+  where: string,
+  report: (message: string) => void,
+) {
+  const named = (Array.isArray(value) ? value : [value]).filter(
+    (entry): entry is string => typeof entry === "string" && entry !== "",
+  );
+  for (const entry of named) {
+    if (assets.has(entry) || looksLikePath(entry)) continue;
+    report(
+      `${where} names "${entry}", which is neither an added file nor a path` +
+        (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
+    );
+  }
+}
+
+interface EntryContext {
+  columns: Set<string>;
+  assets: Set<string>;
+  problems: Problem[];
+  path: number[];
+}
+
+// A variant's rules mirror the checks its plugin makes when the trial starts, which it reports
+// with a blocking alert in front of the participant rather than an error.
+function checkVariant(
+  entry: Record<string, unknown>,
+  variants: Variants,
+  position: string,
+  report: (message: string) => void,
+) {
+  const chosen = entry[variants.by];
+  if (typeof chosen !== "string") return;
+  const variant = variants.options[chosen];
+  if (!variant) return;
+  const list = (names: string[]) => names.map((name) => `"${name}"`).join(", ");
+  for (const name of variant.required) {
+    if (!(name in entry)) report(`${position} (${chosen}) needs "${name}"`);
+  }
+  for (const group of variant.any_of ?? []) {
+    if (!group.some((name) => name in entry)) {
+      report(`${position} (${chosen}) needs one of ${list(group)}`);
+    }
+  }
+  for (const group of variant.at_most_one_of ?? []) {
+    if (group.filter((name) => name in entry).length > 1) {
+      report(`${position} (${chosen}) takes only one of ${list(group)}`);
+    }
+  }
+}
+
 // Entries of a list of objects (a survey's questions, say) carry their own required fields, and a
 // misspelled key there would otherwise be handed to the plugin and ignored at run time.
 function checkObjectEntries(
   value: ParameterValue,
   parameter: ParameterSchema,
   where: string,
-  problems: Problem[],
-  path: number[],
+  context: EntryContext,
 ) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => context.problems.push({ message, path: context.path });
   const item = parameter.items;
   if (!item?.properties || !Array.isArray(value)) return;
+  const fields = item.properties;
 
   value.forEach((entry, index) => {
     const position = `${where}, entry ${index + 1}`;
@@ -150,12 +201,34 @@ function checkObjectEntries(
       report(`${position} should be a set of fields`);
       return;
     }
-    for (const name of Object.keys(entry)) {
-      if (!(name in item.properties!)) report(`${position} has no field "${name}"`);
+    const fieldSet = entry as Record<string, ParameterValue>;
+    for (const [name, field] of Object.entries(fieldSet)) {
+      const schema = fields[name];
+      if (!schema) {
+        report(`${position} has no field "${name}"`);
+      } else if (isVariableReference(field)) {
+        checkColumn(
+          field.var,
+          context.columns,
+          `${position}, field "${name}"`,
+          context.problems,
+          context.path,
+        );
+      } else if (isMediaType(schema.jspsychType)) {
+        checkFiles(field, context.assets, `${position}, field "${name}"`, report);
+      } else {
+        const problem = literalTypeProblem(field, schema);
+        if (problem) {
+          report(
+            `${position}, field "${name}" ${problem} but the spec holds ${JSON.stringify(field)}`,
+          );
+        }
+      }
     }
     for (const name of item.required ?? []) {
-      if (!(name in entry)) report(`${position} is missing "${name}"`);
+      if (!(name in fieldSet)) report(`${position} is missing "${name}"`);
     }
+    if (item.variants) checkVariant(fieldSet, item.variants, position, report);
   });
 }
 

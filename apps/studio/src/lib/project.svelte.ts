@@ -220,8 +220,10 @@ export function loadSpec(spec: Spec) {
 }
 
 export function exportedSpec(): Spec {
-  const { name, settings, data, assets, conditions, timeline } = project.spec;
+  const { name, authors, settings, data, assets, conditions, timeline } = project.spec;
   const spec: Spec = { name, timeline };
+  const named = (authors ?? []).filter((author) => author.name.trim());
+  if (named.length > 0) spec.authors = named;
   if (settings && Object.keys(settings).length > 0) spec.settings = settings;
   if (data) spec.data = data;
   if (assets?.length) spec.assets = assets;

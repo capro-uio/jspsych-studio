@@ -1,0 +1,111 @@
+{
+  "name": "shapes-demo",
+  "data": {
+    "save": "download"
+  },
+  "assets": [
+    {
+      "name": "blue-square.png",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAACDklEQVR42u3TQQ0AAAgDMcygDPmIAAs8efSSKVgaIUmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEl6XFaP2XWAmAECiAECiAECiAECiAECiAECiAECiAECiAECiBkgZoAAYoAAYoAAYoAAYoAAYoAAYoAAYoAAYoAAYgYIIAYIIAYIIAYIIAYIIAYIIAYIIAYIIAYIIGaAmAECiAECiAECiAECiAECiAECiAECiAECiAECiBkggBgggBgggBgggBgggBgggBgggBgggBgggJgBYgYIIAYIIAYIIAYIIAYIIAYIIAYIIAYIIAYIIGaAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGIGiBkggBgggBgggBgggBgggBgggBgggBgggBgggJgB4nQDBBADBBADBBADBBADBBADBBADBBADBBAzQMwAAcQAAcQAAcQAAcQAAcQAAcQAAcQAAcQAAcQMEDNAADFAADFAADFAADFAADFAADFAADFAADFAADEDBBADBBADBBADBBADBBADBBADBBADBBADBBAzQMwAAcQAAcQAAcQAAcQAAcQAAcQAAcQAAcQAAcQMEEAMEEAMEEAMEEAMEEAMEEAMEEAMEEAMEEDMADEDBBADBBADBBADBBADRJIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZJ0bAFtnkMWMtI8zwAAAABJRU5ErkJggg=="
+    },
+    {
+      "name": "blue-circle.png",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAEgUlEQVR42u3dy23jMBRG4ZTgEryZvUtQCSpBwDSiDlSCSnAJLsEluIAsVMKMBBAYTyC/9SL5HeDfBYkd84S85BXz9QUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwCb49fu76FP2qfs0fU4h5z5/HuR89fVN+B7D9yr8ZhGrDMMgPva5PCHAp7mEn1WTBlsU4hAG52kBGZ7NKbymg08Ia0gxLHHaPt2GpLiVLrzW0ieHuWeKJhIp7snSmFkwpRjVk8V0bBneU+UTxjtS7MIavktQjLFZZXivO588iEEUvClHrmKMimJE4HpH6kKM0fMVO18Zi7Hf2NnFVjP8jvZGjOWUWHaZNRLdsl1ya9hskqgclVljstmkMqLS2rptDezJ09oStqQSS65k5ThYUi225NLbpd4QdUk6chi064Qk5BCSkENIQg4hCTmEJOQQksA5h3MSvHBCTo64JHHivpAcO+0j0bal6N1aQBCNhxE3OBrBinJRtKs7RD2yNUHUHQnVI0b0tHLUBlVyqY1sSyux1JpdEFfzJHylkBH+mRylQZR8XE73gSBuPMzgBkcjXWEuCvbJ20kU5nkV7NpQzB5iFjF7iFnE7CFmkbUEMXtkPIsw4L4cunWlYoKGRNHI+LIcB4NDQjzDPiJIY2BISMMIxbko1jUliibGKQRxEYO44MHySiyz7F6J3SytJaL1ZClBPFIrHsm9I4iBIDeTuxyFQSAPUqg/RNQho4IcDQB5kGPOgri1RNx6okAXhboCXRTqGhRF46IdLLGTtQFBPCAlHqDSYiJaTggiBJlcEDeYiJtOnIGIsxCCCEEIIgQhiBCEIEIQgghBCCIEIYgQxEGhiINCrSai1YQgQhDt7qLd3QNT4oGptQTxyK145PaOIC5tEJc2OAsRZyDvC+LiOHFx3B1BXD0qrh61kyV2sBTqokBXqIsCXcuJaDFRh4j6Iw5B/BtouRX/BjpI0hkM8iMdM/4J0hoQ8iMtMzQuigZFyyyxvJpCEA9QSb4PSNnNErtXn0viphM5M+G2IJUBkn0qJijWRXGu9US0lswhyM4skufsMXz2DDCLiNnDLCJmD7OImD1WlsStJ24tgSZGTYl4XxKP5HqkFncE2SvYky3M90a4gl0U5hoZRUOipZZYWm1cEt2+unXxQBIXPLiIAQ/aUNQjEdYd2knUI6Lu2IwkB5JEI4dnzBXtoigniZCDJEIOkgg5SCLkAEnIgTcksQW87FYuOZyTiHOO9E7ctaXM2z7ihDxySXYaHOdpPNRbpS4R9YYll1hS4X9RarPJy7NGbeTkN5u4UuiJq3nMGnmLUrrBcfzGQ5e6wbLLcgovbgnnKkoX3rutWxCFGJhKlirRreGz8wxMKcrQ29VEPqt04T3oncLsO19tJLJ04bXakcJqM0u9sTOVU3hNZgpsTpgiDM7jQucrl/Czhp9Z+AQQqzRlGMRN+At/erL4P199fRO+R0kGAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMB2+AvKjRqx3zAFjAAAAABJRU5ErkJggg=="
+    },
+    {
+      "name": "orange-square.png",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAACDklEQVR42u3TMQ0AAAgDQQQgEP8jJsACI8N9UgXNRUiSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSJEmSHteVY3YdIGaAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGIGiBkggBgggBgggBgggBgggBgggBgggBgggBgggJgBAogBAogBAogBAogBAogBAogBAogBAogBAogZIGaAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGKAAGIGCCAGCCAGCCAGCCAGCCAGCCAGCCAGCCAGCCBmgJgBAogBAogBAogBAogBAogBAogBAogBAogBAogZIIAYIIAYIIAYIIAYIIAYIIAYIIAYIIAYIICYAWIGCCAGCCAGCCAGCCAGCCAGCCAGCCAGCCAGCCBmgDjdAAHEAAHEAAHEAAHEAAHEAAHEAAHEAAHEDBAzQAAxQAAxQAAxQAAxQAAxQAAxQAAxQAAxQAAxA8QMEEAMEEAMEEAMEEAMEEAMEEAMEEAMEEAMEEDMAAHEAAHEAAHEAAHEAAHEAAHEAAHEAAHEAAHEDBAzQAAxQAAxQAAxQAAxQAAxQAAxQAAxQAAxQAAxAwQQAwQQAwQQAwQQAwQQAwQQAwQQAwQQAwQQM0DMAAHEAAHEAAHEAAHEAJEkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkSZIkHVskMTGhYjI+LQAAAABJRU5ErkJggg=="
+    },
+    {
+      "name": "orange-circle.png",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMgAAADICAYAAACtWK6eAAAEgUlEQVR42u3dy23jMBRG4RQwC5fgElyCStBylipFHagEleASXIJL8D4blTAjAQTGE8hvvUh+B/h3QWLHPCEvecV8fQEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAsAm+f/8q+pR96j5Nn1PIuc+fBzlffX0TvsfwvQq/WcQqwzCIj30uTwjwaS7hZ9WkwRaFOITBeVpAhmdzCq/p4BPCGlIMS5y2T7chKW6lC6+19Mlh7pmiiUSKe7I0ZhZMKUb1ZDEdW4b3VPmE8Y4Uu7CG7xIUY2xWGd7rzicPYhAFb8qRqxijohgRuN6RuhBj9HzFzlfGYuw3dnax1Qy/o70RYzklll1mjUS3bJfcGjabJCpHZdaYbDapjKi0tm5bA3vytLaELanEkitZOQ6WVIstufR2qTdEXZKOHAbtOiEJOYQk5BCSkENIQg4hCTmEJHDO4ZwEL5yQkyMuSZy4LyTHTvtItG0percWEETjYcQNjkawolwU7eoOUY9sTRB1R0L1iBE9rRy1QZVcaiPb0kostWYXxNU8CV8pZIR/JkdpECUfl9N9IIgbDzO4wdFIV5iLgn3ydhKFeV4FuzYUs4eYRcweYhYxe4hZZC1BzB4ZzyIMuC+Hbl2pmKAhUTQyvizHweCQEM+wjwjSGBgS0jBCcS6KdU2JoolxCkFcxCAueLC8Esssu1diN0triWg9WUoQj9SKR3LvCGIgyM3kLkdhEMiDFOoPEXXIqCBHA0Ae5JizIG4tEbeeKNBFoa5AF4W6BkXRuGgHS+xkbUAQD0iJB6i0mIiWE4IIQSYXxA0m4qYTZyDiLIQgQhCCCEEIIgQhiBCEIEIQgghBCCIEcVAo4qBQq4loNSGIEES7u2h398CUeGBqLUE8ciseub0jiEsbxKUNzkLEGcj7grg4Tlwcd0cQV4+Kq0ftZIkdLIW6KNAV6qJA13IiWkzUIaL+iEMQ/wZabsW/gQ6SdAaD/EjHjH+CtAaE/EjLDI2LokHRMkssr6YQxANUku8DUnazxO7V55K46UTOTLgtSGWAZJ+KCYp1UZxrPRGtJXMIsjOL5Dl7DJ89A8wiYvYwi4jZwywiZo+VJXHriVtLoIlRUyLel8QjuR6pxR1B9gr2ZAvzvRGuYBeFuUZG0ZBoqSWWVhuXRLevbl08kMQFDy5iwIM2FPVIhHWHdhL1iKg7NiPJgSTRyOEZc0W7KMpJIuQgiZCDJEIOkgg5QBJy4A1JbAEvu5VLDuck4pwjvRN3bSnzto84IY9ckp0Gx3kaD/VWqUtEvWHJJZZU+F+U2mzy8qxRGzn5zSauFHriah6zRt6ilG5wHL/x0KVusOyynMKLW8K5itKF927rFkQhBqaSpUp0a/jsPANTijL0djWRzypdeA96pzD7zlcbiSxdeK12pLDazFJv7EzlFF6TmQKbE6YIg/O40PnKJfys4WcWPgHEKk0ZBnET/sKfniz+z1df34TvUZIBAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALAd/gK9BE7ywvAaPwAAAABJRU5ErkJggg=="
+    }
+  ],
+  "conditions": {
+    "shape_trials": [
+      {
+        "image": "blue-square.png",
+        "shape": "square",
+        "colour": "blue",
+        "answer": "f"
+      },
+      {
+        "image": "orange-circle.png",
+        "shape": "circle",
+        "colour": "orange",
+        "answer": "j"
+      },
+      {
+        "image": "orange-square.png",
+        "shape": "square",
+        "colour": "orange",
+        "answer": "f"
+      },
+      {
+        "image": "blue-circle.png",
+        "shape": "circle",
+        "colour": "blue",
+        "answer": "j"
+      }
+    ]
+  },
+  "timeline": [
+    {
+      "kind": "trial",
+      "plugin": "instructions",
+      "params": {
+        "pages": [
+          "<p>You will see a coloured shape on each trial.</p><p>Press <b>f</b> for a <b>square</b>, <b>j</b> for a <b>circle</b>.</p>",
+          "<p>The colour does not matter — judge the shape only.</p><p>Answer as quickly as you can without making mistakes.</p>"
+        ],
+        "show_clickable_nav": true
+      }
+    },
+    {
+      "kind": "checkpoint",
+      "name": "instructions-read"
+    },
+    {
+      "kind": "block",
+      "conditions": "shape_trials",
+      "randomize_order": true,
+      "repetitions": 3,
+      "children": [
+        {
+          "kind": "trial",
+          "plugin": "html-keyboard-response",
+          "params": {
+            "stimulus": "<p style=font-size:48px>+</p>",
+            "choices": "NO_KEYS",
+            "trial_duration": 400
+          }
+        },
+        {
+          "kind": "trial",
+          "plugin": "image-keyboard-response",
+          "tag": "shapes",
+          "params": {
+            "stimulus": {
+              "var": "image"
+            },
+            "stimulus_height": 200,
+            "choices": ["f", "j"]
+          },
+          "record": {
+            "shape": {
+              "var": "shape"
+            },
+            "colour": {
+              "var": "colour"
+            }
+          },
+          "score": {
+            "correct_if_response_equals": {
+              "var": "answer"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

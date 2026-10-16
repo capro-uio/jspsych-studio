@@ -8,6 +8,7 @@ import type {
   PluginSchema,
   PluginSchemas,
 } from "./types.ts";
+import { CURATED_PLUGINS } from "./curated.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
   BOOL: { type: "boolean" },
@@ -32,6 +33,7 @@ interface RawParameter {
   default?: unknown;
   array?: boolean;
   pretty_name?: string;
+  description?: string;
   options?: unknown[];
   nested?: Record<string, RawParameter>;
 }
@@ -93,7 +95,7 @@ function toParameterSchema(
     schema = { type: "array", items: schema, jspsychType } as ParameterSchema;
   }
   schema.title = raw.pretty_name ?? name.replace(/_/g, " ");
-  const description = descriptions[name];
+  const description = descriptions[name] ?? raw.description;
   if (description) schema.description = description;
   if ("default" in raw) schema.default = raw.default;
   if (raw.options) schema.enum = raw.options;
@@ -139,13 +141,14 @@ async function extractOne(
   }
 
   const { properties, required } = toObjectSchema(plugin.info.parameters, typeNames, descriptions);
-  return {
+  const schema = {
     plugin: plugin.info.name,
     package: packageName,
     version: plugin.info.version,
     properties,
     required,
   };
+  return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
 }
 
 export async function extractSchemas(packageNames: string[]): Promise<ExtractionReport> {
@@ -188,4 +191,9 @@ export function officialPluginPackages(): string[] {
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
   ) as { devDependencies: Record<string, string> };
   return Object.keys(manifest.devDependencies).filter((name) => name.includes("/plugin-"));
+}
+
+/** jsPsych's own plugins plus the third-party ones whose gaps are filled in by hand. */
+export function pluginPackages(): string[] {
+  return [...officialPluginPackages(), ...Object.keys(CURATED_PLUGINS)];
 }

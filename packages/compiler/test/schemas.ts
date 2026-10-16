@@ -8,6 +8,7 @@ const report = await extractSchemas([
   "@jspsych/plugin-image-keyboard-response",
   "@jspsych/plugin-preload",
   "@jspsych/plugin-survey-likert",
+  "@kurokida/jspsych-psychophysics",
 ]);
 
 export const schemas: SchemaBundle = { jspsych: report.jspsych, plugins: report.schemas };

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 import { writeFileSync } from "node:fs";
-import { extractSchemas, officialPluginPackages } from "./extract.ts";
+import { extractSchemas, pluginPackages } from "./extract.ts";
 
 const MINIMUM_COVERAGE = 0.95;
 
 const outputPath = new URL("../plugin-schemas.json", import.meta.url);
 const packages = process.argv.slice(2).filter((arg) => !arg.startsWith("-"));
-const report = await extractSchemas(packages.length > 0 ? packages : officialPluginPackages());
+const report = await extractSchemas(packages.length > 0 ? packages : pluginPackages());
 
 const bundle = { jspsych: report.jspsych, plugins: report.schemas };
 writeFileSync(outputPath, `${JSON.stringify(bundle, null, 2)}\n`);

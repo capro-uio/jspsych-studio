@@ -1,5 +1,6 @@
 import flanker from "../../../../examples/flanker.json";
 import stroop from "../../../../examples/stroop.json";
+import shapes from "../../../../examples/shapes.json";
 import type { Spec } from "@jspsych-studio/compiler";
 
 export interface Example {
@@ -21,5 +22,12 @@ export const examples: Example[] = [
     title: "Stroop task",
     description: "Instructions, a checkpoint, and a randomised block scored against a key.",
     spec: stroop as unknown as Spec,
+  },
+  {
+    id: "shapes",
+    title: "Shape judgement",
+    description:
+      "Image stimuli: four PNGs shown from a conditions table, shape judged, colour ignored.",
+    spec: shapes as unknown as Spec,
   },
 ];
