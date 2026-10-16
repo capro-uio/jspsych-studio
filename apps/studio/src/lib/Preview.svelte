@@ -27,7 +27,7 @@
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
   const selectionKey = $derived(project.selection?.join(".") ?? "");
-  // Derived from the key, not the selection array, so stepping through steps reruns the preview.
+  // Built from the key so the compiler gets plain numbers, and reselecting a step does not rebuild.
   const runningFrom = $derived(
     fromSelected && selectionKey ? selectionKey.split(".").map(Number) : null,
   );
@@ -50,7 +50,8 @@
         },
         (problem: unknown) => {
           if (compileId !== latestCompile) return;
-          error = `The preview could not be built: ${String(problem)}`;
+          const reason = problem instanceof Error ? problem.message : String(problem);
+          error = `The preview could not be built: ${reason}`;
           html = "";
         },
       );
@@ -135,6 +136,9 @@
     {@const problems = currentProblems()}
     {@const overall = overallProblems(problems)}
     <div class="error" data-testid="compile-error">
+      {#if problems.length === 0}
+        <p>{error}</p>
+      {/if}
       {#each overall as problem (problem.message)}
         <p>{problem.message}</p>
       {/each}

@@ -137,7 +137,7 @@
       {required}
       {columns}
       value={trial.params?.[name]}
-      onchange={(value) => setParameter(name, value)}
+      onchange={(value: ParameterValue | undefined) => setParameter(name, value)}
       params={trial.params}
     />
   {/each}

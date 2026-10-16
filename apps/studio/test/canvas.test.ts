@@ -3,6 +3,7 @@ import {
   extent as extentWith,
   fromStage,
   geometry,
+  imageSizeLoader,
   imageSize,
   lockedAxes,
   nudge,
@@ -183,5 +184,46 @@ describe("extent", () => {
       height: 8,
     });
     expect(extent({})).toEqual({ width: 40, height: 40 });
+  });
+});
+
+describe("loading image sizes", () => {
+  function fakeImages() {
+    const created: {
+      onload: (() => void) | null;
+      src: string;
+      naturalWidth: number;
+      naturalHeight: number;
+    }[] = [];
+    const createImage = () => {
+      const image = {
+        onload: null as (() => void) | null,
+        src: "",
+        naturalWidth: 40,
+        naturalHeight: 30,
+      };
+      created.push(image);
+      return image as unknown as HTMLImageElement;
+    };
+    return { created, createImage };
+  }
+
+  it("reports an image's natural size once it has loaded", () => {
+    const { created, createImage } = fakeImages();
+    const sizes: [string, { width: number; height: number }][] = [];
+    const request = imageSizeLoader((url, size) => sizes.push([url, size]), createImage);
+    request("data:image/png;base64,AAAA");
+    expect(created[0].src).toBe("data:image/png;base64,AAAA");
+    created[0].onload?.();
+    expect(sizes).toEqual([["data:image/png;base64,AAAA", { width: 40, height: 30 }]]);
+  });
+
+  it("asks for each address only once", () => {
+    const { created, createImage } = fakeImages();
+    const request = imageSizeLoader(() => {}, createImage);
+    request("a.png");
+    request("a.png");
+    request("b.png");
+    expect(created.map((image) => image.src)).toEqual(["a.png", "b.png"]);
   });
 });

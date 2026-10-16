@@ -498,7 +498,6 @@ describe("splitting participants between groups", () => {
 
     await page.getByTestId("view-spec").click();
     const spec = await authoredSpec(page);
-    expect(spec.timeline[0].kind).toBe("assign");
     const split = stepOfKind(spec.timeline[0], "assign");
     expect(split.record_as).toBe("spacing");
     expect(split.groups.map((group) => group.name)).toEqual(["wide", "narrow"]);

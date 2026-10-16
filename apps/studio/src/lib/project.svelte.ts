@@ -1,6 +1,7 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
 import { slotsOf } from "@jspsych-studio/compiler";
 import { SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
+import { unique } from "./lists.ts";
 import type { AssignNode, BranchNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
 
 export type NodePath = number[];
@@ -165,7 +166,7 @@ export function tagsInUse(): string[] {
     }
   };
   walk(project.spec.timeline);
-  return [...new Set(found)];
+  return unique(found);
 }
 
 export function conditionTableNames() {
@@ -181,7 +182,7 @@ export function assetOptions() {
 }
 
 export function allConditionColumns() {
-  return [...new Set(conditionTableNames().flatMap(conditionColumns))];
+  return unique(conditionTableNames().flatMap(conditionColumns));
 }
 
 const NODE_KINDS = new Set(["trial", "block", "loop"]);

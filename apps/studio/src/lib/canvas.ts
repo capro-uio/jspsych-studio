@@ -183,3 +183,26 @@ export function extent(
       return { width: STAND_IN_SIZE, height: STAND_IN_SIZE };
   }
 }
+
+export interface ImageSize {
+  width: number;
+  height: number;
+}
+
+/**
+ * Asks for each image address once and reports its natural size when it has loaded. The record of
+ * what was asked for is a plain lookup, not state: reading it must not make anything re-run.
+ */
+export function imageSizeLoader(
+  onSize: (url: string, size: ImageSize) => void,
+  createImage: () => HTMLImageElement = () => new Image(),
+) {
+  const requested = new Set<string>();
+  return (url: string) => {
+    if (requested.has(url)) return;
+    requested.add(url);
+    const image = createImage();
+    image.onload = () => onSize(url, { width: image.naturalWidth, height: image.naturalHeight });
+    image.src = url;
+  };
+}

@@ -2,14 +2,18 @@ const STORAGE_KEY = "jspsych-studio:panel-widths";
 const DEFAULTS = [18, 32, 50];
 const MINIMUM = 12;
 
+/** Widths the layout can actually show: one per panel, none too narrow, filling the window. */
+export function isLayout(widths: unknown): widths is number[] {
+  if (!Array.isArray(widths) || widths.length !== DEFAULTS.length) return false;
+  if (!widths.every((width) => typeof width === "number" && width >= MINIMUM)) return false;
+  const total = (widths as number[]).reduce((sum, width) => sum + width, 0);
+  return Math.abs(total - 100) < 1;
+}
+
 function load(): number[] {
   try {
     const stored: unknown = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null");
-    const valid =
-      Array.isArray(stored) &&
-      stored.length === DEFAULTS.length &&
-      stored.every((width) => typeof width === "number" && Number.isFinite(width));
-    if (valid) return stored as number[];
+    if (isLayout(stored)) return stored;
   } catch {
     // A blocked or corrupt store is not worth failing over; the defaults are fine.
   }

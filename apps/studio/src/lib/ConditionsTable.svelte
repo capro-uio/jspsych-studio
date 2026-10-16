@@ -170,7 +170,7 @@
   </div>
 
   {#if adding === "factors"}
-    <FactorBuilder onbuilt={(name) => (open = name)} />
+    <FactorBuilder onbuilt={(name: string) => (open = name)} />
   {:else}
     <input data-testid="table-name" placeholder="new table name" bind:value={tableName} />
     <textarea

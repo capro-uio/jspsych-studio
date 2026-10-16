@@ -53,3 +53,23 @@ describe("the preview and the keyboard", () => {
     await page.close();
   }, 120_000);
 });
+
+describe("when the formatter cannot load", () => {
+  // Prettier is fetched on demand, so a deploy that replaced its chunk can make it unavailable.
+  it("says the preview could not be built, and still shows the code unformatted", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.route("**/assets/standalone-*.js", (route) => route.abort());
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    await expect
+      .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 15_000 })
+      .toContain("The preview could not be built");
+
+    await page.getByTestId("view-code").click();
+    await expect
+      .poll(() => page.getByTestId("generated-code").innerText(), { timeout: 15_000 })
+      .toContain("initJsPsych");
+    await page.close();
+  }, 120_000);
+});
