@@ -1,7 +1,8 @@
 <script lang="ts">
-  import { compileSpec, emitHtml, SpecError } from "@jspsych-studio/compiler";
+  import { compileSpec, emitHtml, formatSource, SpecError } from "@jspsych-studio/compiler";
   import type { Spec } from "@jspsych-studio/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
+  import { previewSpec } from "./preview.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
 
@@ -10,31 +11,38 @@
   let view = $state<View>("experiment");
   let html = $state("");
   let source = $state("");
+  let exportedSource = $state("");
   let error = $state("");
   let runToken = $state(0);
   let latestCompile = 0;
+  let fromSelected = $state(false);
 
   const REBUILD_DELAY_MS = 150;
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
+  const selectionKey = $derived(project.selection?.join(".") ?? "");
+  const runningFrom = $derived(fromSelected && project.selection ? project.selection : null);
 
-  function rebuild(spec: Spec) {
+  function rebuild(spec: Spec, from: number[] | null) {
     const compileId = ++latestCompile;
     try {
-      const compiled = compileSpec(spec, schemas, {
+      // The experiment as it will be exported decides what is valid and what the code view shows.
+      // What runs in the frame is a preview of it, which never saves data.
+      const exported = compileSpec(spec, schemas);
+      const running = compileSpec(previewSpec(spec, { from }), schemas, {
         initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
       });
       error = "";
-      emitHtml(compiled, { title: spec.name }).then((output) => {
+      exportedSource = exported.source;
+      emitHtml(running, { title: spec.name }).then((output) => {
         if (compileId !== latestCompile) return;
         html = output.html;
-        source = output.body;
       });
     } catch (problem) {
       if (!(problem instanceof SpecError)) throw problem;
       error = problem.message;
       html = "";
-      source = "";
+      exportedSource = "";
     }
   }
 
@@ -44,8 +52,20 @@
   // edit settles keeps the preview from recompiling and reformatting on every keystroke.
   $effect(() => {
     const json = specJson;
-    const timer = setTimeout(() => rebuild(JSON.parse(json)), REBUILD_DELAY_MS);
+    const from = runningFrom;
+    // Reading the key as well keeps the preview following the selection while running from a step.
+    selectionKey;
+    const timer = setTimeout(() => rebuild(JSON.parse(json), from), REBUILD_DELAY_MS);
     return () => clearTimeout(timer);
+  });
+
+  // Formatting is only worth doing when someone is looking at the code.
+  $effect(() => {
+    if (view !== "code" || !exportedSource) return;
+    const wanted = exportedSource;
+    formatSource(wanted).then((formatted) => {
+      if (wanted === exportedSource) source = formatted;
+    });
   });
 
   function download(filename: string, contents: string, type: string) {
@@ -67,6 +87,15 @@
     {/each}
     <span class="spacer"></span>
     {#if view === "experiment"}
+      <button
+        class:active={fromSelected}
+        data-testid="run-from-step"
+        disabled={!project.selection}
+        title={project.selection
+          ? "Run only the selected step, with the blocks it sits in"
+          : "Select a step to run just that one"}
+        onclick={() => (fromSelected = !fromSelected)}>from step</button
+      >
       <button data-testid="restart" onclick={() => (runToken += 1)}>restart</button>
     {/if}
     <button
@@ -98,6 +127,10 @@
   {/if}
 
   {#if view === "experiment"}
+    <p class="note" data-testid="preview-note">
+      {runningFrom ? "Running the selected step only." : "Running the whole experiment."} Data is not
+      saved from a preview.
+    </p>
     {#if html}
       {#key `${html}-${runToken}`}
         <iframe
@@ -136,6 +169,11 @@
   nav button.active {
     border-color: var(--accent);
     color: var(--accent);
+  }
+  .note {
+    margin: 0 0 0.35rem;
+    font-size: 0.78rem;
+    color: var(--muted);
   }
   iframe {
     flex: 1;

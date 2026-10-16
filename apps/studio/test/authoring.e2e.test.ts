@@ -767,3 +767,56 @@ describe("a step that is not ready says so itself", () => {
     await page.close();
   }, 120_000);
 });
+
+describe("seeing one step without clicking through the rest", () => {
+  it("runs the selected step, in the block it belongs to", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-stroop").click();
+
+    const preview = page.frameLocator('[data-testid="preview"]');
+    // From the start, the instructions come first.
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("colour words");
+
+    // Pick the scored trial, deep inside the block, and run only that.
+    await page.getByTestId("node-2-1").click();
+    await page.getByTestId("run-from-step").click();
+
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toMatch(/RED|BLUE/);
+    expect(await page.getByTestId("preview-note").innerText()).toContain("selected step only");
+
+    // Back to the whole thing.
+    await page.getByTestId("run-from-step").click();
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("colour words");
+
+    await page.close();
+  }, 180_000);
+
+  it("never uploads from a preview, however the experiment saves data", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+
+    await openTab(page, "study");
+    await page.getByTestId("data-mode").selectOption("post");
+    await setText(page, "data-experiment-id", "realExperiment");
+
+    await page.getByTestId("view-code").click();
+    const generated = await page.getByTestId("generated-code").innerText();
+    expect(generated).not.toContain("pipe.jspsych.org");
+    expect(generated).not.toContain("realExperiment");
+
+    // The exported file is the one that saves.
+    await page.getByTestId("view-spec").click();
+    const spec = JSON.parse(await page.getByTestId("spec-json").innerText());
+    expect(spec.data).toEqual({ save: "post", experiment_id: "realExperiment" });
+
+    await page.close();
+  }, 120_000);
+});
