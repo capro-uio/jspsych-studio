@@ -29,11 +29,11 @@ export interface PreviewOptions {
 }
 
 /**
- * The experiment as the preview should run it: never saving data, since a preview is not a
- * participant, and optionally narrowed to one step.
+ * The experiment as the preview should run it: never saving data or sending anyone back to a
+ * recruitment platform, since a preview is not a participant, and optionally narrowed to one step.
  */
 export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
-  const { data: _ignored, ...rest } = spec;
+  const { data: _data, recruitment: _recruitment, ...rest } = spec;
   const timeline = options.from?.length ? trim(spec.timeline, options.from) : spec.timeline;
   return { ...rest, timeline };
 }

@@ -8,8 +8,10 @@ conditions table generated from a design, generated parameter forms (questionnai
 included), rich stimulus text, image and sound files, group assignment and branching on
 performance, a psychophysics canvas step whose objects you drag into place, live preview of the
 whole experiment or a single step, a choice of where results go, a guided tour of the builder,
-and export to a self-contained HTML file or a zipped project. There is no hosting or study-level
-flow, and no release has been cut.
+and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
+SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
+There is no hosting or study-level flow (consent, counterbalanced task order) yet, and no release
+has been cut.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
 open a working experiment in one click.
@@ -56,6 +58,29 @@ while cumulative accuracy stays below 0.75.
 `examples/shapes.json` is the image example: four PNGs (blue and orange squares and circles) carried
 in the spec as data URLs, named from a conditions column, preloaded, and judged on shape while
 colour is recorded but irrelevant.
+
+## Recruiting from a platform
+
+Prolific, SONA and CloudResearch Connect all pass the participant's id in the study URL and expect
+the participant to come back to a URL they give you. `recruitment` names the parameter the id
+arrives in, and where to send the participant once their data is saved:
+
+```json
+"recruitment": {
+  "platform": "prolific",
+  "id_param": "PROLIFIC_PID",
+  "endings": {
+    "complete": { "url": "https://app.prolific.com/submissions/complete?cc=C1A2B3" }
+  }
+}
+```
+
+The id becomes `participant_id` on every row, alongside every other URL parameter. Write
+`{participant_id}` in the address where the platform expects the id back, as SONA's credit URL
+does. The redirect happens only after the upload succeeds, so it needs `"save": "post"`. If the
+upload fails, the data is downloaded and the participant gets a link back to the platform once they
+have the file. The builder's Study tab fills in each platform's parameter, and its preview never
+redirects.
 
 ## Editing a spec by hand
 

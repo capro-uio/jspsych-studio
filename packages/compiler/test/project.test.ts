@@ -127,6 +127,27 @@ describe("downloading the whole project", () => {
     expect(files["README.md"]).toContain("Built with jsPsych Studio 1.2.0.");
   });
 
+  it("lists the platform's id parameter among the columns", async () => {
+    const files = await projectFiles(
+      { ...spec, recruitment: { id_param: "PROLIFIC_PID" } },
+      schemas,
+    );
+    const metadata = JSON.parse(files["dataset_description.json"] as string);
+    expect(metadata.variableMeasured).toContain("PROLIFIC_PID");
+  });
+
+  it("says in its readme how participants arrive and where they go back to", async () => {
+    const url = "https://app.prolific.com/submissions/complete?cc=C1A2B3";
+    const recruitment = { id_param: "PROLIFIC_PID", endings: { complete: { url } } };
+    const files = await projectFiles({ ...spec, recruitment }, schemas);
+    expect(files["README.md"]).toContain("## Recruiting");
+    expect(files["README.md"]).toContain("`PROLIFIC_PID` parameter");
+    expect(files["README.md"]).toContain(`sent to ${url}`);
+
+    const plain = await projectFiles(spec, schemas);
+    expect(plain["README.md"]).not.toContain("## Recruiting");
+  });
+
   it("names the experiment on every row of the data", async () => {
     const files = await projectFiles(spec, schemas);
     expect(files["experiment.js"]).toContain('experiment: "picture-study"');

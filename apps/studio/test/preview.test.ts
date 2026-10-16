@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { previewSpec } from "../src/lib/preview.ts";
+import { compileSpec } from "@jspsych-studio/compiler";
 import type { Spec } from "@jspsych-studio/compiler";
+import { previewSpec } from "../src/lib/preview.ts";
+import { schemas } from "../src/lib/schemas.ts";
 
 const trial = (stimulus: string, tag?: string) => ({
   kind: "trial" as const,
@@ -12,6 +14,10 @@ const trial = (stimulus: string, tag?: string) => ({
 const spec: Spec = {
   name: "study",
   data: { save: "post", experiment_id: "real" },
+  recruitment: {
+    id_param: "PROLIFIC_PID",
+    endings: { complete: { url: "https://app.prolific.com/submissions/complete?cc=C1" } },
+  },
   conditions: { rows: [{ word: "RED" }] },
   timeline: [
     trial("<p>welcome</p>"),
@@ -41,6 +47,12 @@ describe("what the preview runs", () => {
   it("never saves data, however the experiment is set up", () => {
     expect(previewSpec(spec).data).toBeUndefined();
     expect(previewSpec(spec, { from: [0] }).data).toBeUndefined();
+  });
+
+  // Redirecting needs uploaded data, so a preview that kept the hand-off would not even compile.
+  it("never sends anyone back to a recruitment platform", () => {
+    expect(previewSpec(spec).recruitment).toBeUndefined();
+    expect(() => compileSpec(previewSpec(spec), schemas)).not.toThrow();
   });
 
   it("runs the whole experiment when no step is chosen", () => {

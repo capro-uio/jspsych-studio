@@ -3,6 +3,7 @@ import { compileAppearance } from "./appearance.ts";
 import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } from "./assets.ts";
 import { compileAccuracyPredicate } from "./conditions.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
+import { completionUrlOf, idParamOf } from "./recruitment.ts";
 import {
   GROUP_VARIABLE,
   compileAssignmentStep,
@@ -239,7 +240,7 @@ export function compileSpec(
     steps.unshift(preload.source);
   }
   if (spec.data) {
-    const dataStep = compileDataStep(spec.data, spec.name);
+    const dataStep = compileDataStep(spec.data, spec.name, completionUrlOf(spec.recruitment));
     plugins.add(dataStep.plugin);
     steps.push(dataStep.source);
   }
@@ -259,7 +260,7 @@ export function compileSpec(
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
-    (spec.data ? `${compileParticipantProperties(spec.name)}\n` : "") +
+    (spec.data ? `${compileParticipantProperties(spec.name, idParamOf(spec.recruitment))}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
   return {
     source,

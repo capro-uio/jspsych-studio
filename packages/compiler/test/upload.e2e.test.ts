@@ -2,7 +2,7 @@ import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
-import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { emitHtml } from "../src/targets/html.ts";
 import type { Spec } from "../src/types.ts";
@@ -15,9 +15,12 @@ const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 let browser: Browser;
 let server: StaticServer;
 
-const spec = (endpoint: string): Spec => ({
+const PLATFORM = "https://platform.example";
+
+const spec = (endpoint: string, recruitment?: Spec["recruitment"]): Spec => ({
   name: "uploading",
   data: { save: "post", experiment_id: "testExperiment", endpoint },
+  recruitment,
   timeline: [
     {
       kind: "trial",
@@ -28,15 +31,20 @@ const spec = (endpoint: string): Spec => ({
   ],
 });
 
-async function runExperiment(): Promise<Page> {
-  const compiled = compileSpec(spec(server.url), schemas, {
+async function runExperiment(
+  recruitment?: Spec["recruitment"],
+  query = "participant_id=p42",
+): Promise<Page> {
+  const compiled = compileSpec(spec(server.url, recruitment), schemas, {
     initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
   });
   const { html } = await emitHtml(compiled, { title: "uploading", base: "/node_modules" });
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
 
   const page = await browser.newPage();
-  await page.goto(`${server.url}/${PAGE_NAME}?participant_id=p42`);
+  // The platform is not really there; answering for it lets the test see where the page went.
+  await page.route(`${PLATFORM}/**`, (route) => route.fulfill({ body: "back on the platform" }));
+  await page.goto(`${server.url}/${PAGE_NAME}?${query}`);
   await page.locator("#jspsych-content").waitFor();
   await page.keyboard.press("Space");
   return page;
@@ -46,6 +54,12 @@ beforeAll(async () => {
   server = await serveDirectory(workspaceRoot);
   browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 120_000);
+
+// A failed assertion must not leave later tests uploading to a server that refuses everything.
+afterEach(() => {
+  server.uploads.length = 0;
+  server.failUploads = false;
+});
 
 afterAll(async () => {
   await browser?.close();
@@ -74,7 +88,6 @@ describe("a compiled experiment that uploads its data", () => {
   }, 120_000);
 
   it("tells the participant and downloads instead when the upload fails", async () => {
-    server.uploads.length = 0;
     server.failUploads = true;
     const page = await runExperiment();
 
@@ -87,7 +100,39 @@ describe("a compiled experiment that uploads its data", () => {
         timeout: 15_000,
       })
       .toBe(true);
-    server.failUploads = false;
+    await page.close();
+  }, 120_000);
+});
+
+describe("a compiled experiment recruited from a platform", () => {
+  const prolific: Spec["recruitment"] = {
+    platform: "prolific",
+    id_param: "PROLIFIC_PID",
+    endings: { complete: { url: `${PLATFORM}/complete?cc=C1A2B3&pid={participant_id}` } },
+  };
+
+  it("files the data under the platform's id, then sends the participant back", async () => {
+    // A participant_id left over in the link must not replace the platform's id.
+    const page = await runExperiment(
+      prolific,
+      "participant_id=test&PROLIFIC_PID=pro%2042&STUDY_ID=s1",
+    );
+
+    await page.waitForURL(`${PLATFORM}/complete?cc=C1A2B3&pid=pro%2042`, { timeout: 15_000 });
+    expect(server.uploads).toHaveLength(1);
+    expect(server.uploads[0].filename).toBe("uploading_pro 42.csv");
+    expect(server.uploads[0].data).toContain("s1");
+    await page.close();
+  }, 120_000);
+
+  it("keeps the participant on the page with a way back when the upload fails", async () => {
+    server.failUploads = true;
+    const page = await runExperiment(prolific, "PROLIFIC_PID=p7");
+
+    const link = page.getByRole("link", { name: "continue here to finish the study" });
+    await link.waitFor({ timeout: 15_000 });
+    expect(page.url()).toContain(PAGE_NAME);
+    expect(await link.getAttribute("href")).toBe(`${PLATFORM}/complete?cc=C1A2B3&pid=p7`);
     await page.close();
   }, 120_000);
 });

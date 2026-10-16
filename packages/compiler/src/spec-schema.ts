@@ -1,4 +1,5 @@
 import type { ParameterSchema, PluginSchema, PluginSchemas } from "@jspsych-studio/schemas";
+import { RECRUITMENT_PLATFORMS, SECURE_URL_PATTERN } from "./recruitment.ts";
 import type { SpecNode } from "./types.ts";
 
 /** Where the schema is published, so a spec can name it in `$schema` and editors can fetch it. */
@@ -263,6 +264,7 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
       },
       settings: reference("experimentSettings"),
       data: reference("dataSettings"),
+      recruitment: reference("recruitmentSettings"),
       assets: {
         title: "Files the experiment shows, carried in the spec so it stays self-contained.",
         type: "array",
@@ -383,6 +385,38 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             },
           },
         ],
+      },
+      recruitmentSettings: {
+        title: "How the study meets the platform participants are recruited from.",
+        type: "object",
+        properties: {
+          platform: { enum: [...RECRUITMENT_PLATFORMS] },
+          id_param: {
+            title: "The URL parameter the platform passes the participant's id in.",
+            type: "string",
+            minLength: 1,
+          },
+          endings: {
+            title: "Where a participant goes when the study ends.",
+            type: "object",
+            properties: {
+              complete: {
+                type: "object",
+                required: ["url"],
+                properties: {
+                  url: {
+                    title: "The platform's return URL; `{participant_id}` is replaced with the id.",
+                    type: "string",
+                    pattern: SECURE_URL_PATTERN,
+                  },
+                },
+                additionalProperties: false,
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+        additionalProperties: false,
       },
       asset: {
         type: "object",
