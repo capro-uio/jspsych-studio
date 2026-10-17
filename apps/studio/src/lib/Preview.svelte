@@ -5,11 +5,13 @@
   import { FOCUS_GUARD, previewSpec } from "./preview.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
+  import Flow from "./Flow.svelte";
 
-  type View = "experiment" | "code" | "spec";
+  type View = "experiment" | "flow" | "code" | "spec";
 
   const VIEWS = [
     { id: "experiment", label: "Experiment", hint: "What a participant sees" },
+    { id: "flow", label: "Flow", hint: "How the study runs, step by step" },
     { id: "code", label: "Code", hint: "The jsPsych this builds, as it will be exported" },
     { id: "spec", label: "Project file", hint: "What the download and import use" },
   ] as const;
@@ -164,6 +166,8 @@
     {:else}
       <p class="placeholder">Nothing to run yet.</p>
     {/if}
+  {:else if view === "flow"}
+    <Flow />
   {:else if view === "code"}
     <pre data-testid="generated-code">{source}</pre>
   {:else}

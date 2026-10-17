@@ -31,7 +31,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await browser?.close();
-  await new Promise<void>((resolve) => server?.httpServer.close(() => resolve()));
+  await server?.close();
 });
 
 describe("appearance", () => {

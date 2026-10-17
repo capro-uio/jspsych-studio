@@ -24,3 +24,8 @@ export function slotsOf(node: SpecNode): Slot[] | null {
   }
   return null;
 }
+
+/** The single child list a node runs in order: a block's or a loop's steps. */
+export function childrenOf(node: SpecNode): SpecNode[] | null {
+  return node.kind === "block" || node.kind === "loop" ? node.children : null;
+}
