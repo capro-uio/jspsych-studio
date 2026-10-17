@@ -263,8 +263,8 @@ export function compileSpec(
   };
   const steps = spec.timeline.map((node) => compileNode(node, context));
 
-  if (assets.length > 0) {
-    const preload = compilePreloadStep();
+  const preload = compilePreloadStep(assets);
+  if (preload) {
     plugins.add(preload.plugin);
     steps.unshift(preload.source);
   }

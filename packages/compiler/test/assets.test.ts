@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import type { Spec } from "../src/types.ts";
+import { preloadListOf } from "../src/assets.ts";
+import type { Asset, Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
@@ -78,5 +79,60 @@ describe("media assets", () => {
       params: { stimulus: "fcae.png" },
     });
     expect(() => compileSpec(spec, schemas)).toThrow(/neither an added file nor a path/);
+  });
+});
+
+describe("preloading files", () => {
+  const html: Spec["timeline"][number] = {
+    kind: "trial",
+    plugin: "html-keyboard-response",
+    params: { stimulus: "<p>hi</p>" },
+  };
+  const withAssets = (assets: Asset[]): Spec => ({ name: "media", assets, timeline: [html] });
+  const preloadOf = (source: string) => {
+    const start = source.indexOf("type: jsPsychPreload");
+    return source.slice(start, source.indexOf("\n}", start));
+  };
+
+  it("puts each file in the list the preload plugin loads it with", () => {
+    const { source } = compileSpec(
+      withAssets([
+        { name: "face.png", url: PIXEL },
+        { name: "tone.wav", url: "data:audio/wav;base64,UklGRg==" },
+        { name: "clip.webm", url: "data:video/webm;base64,GkXfow==" },
+        { name: "voice.webm", url: "data:audio/webm;base64,GkXfow==" },
+      ]),
+      schemas,
+    );
+    const preload = preloadOf(source);
+    expect(preload).toContain('images: [assets["face.png"]],');
+    expect(preload).toContain('audio: [assets["tone.wav"], assets["voice.webm"]],');
+    expect(preload).toContain('video: [assets["clip.webm"]],');
+  });
+
+  it("leaves out a list with no files in it", () => {
+    const preload = preloadOf(
+      compileSpec(withAssets([{ name: "face.png", url: PIXEL }]), schemas).source,
+    );
+    expect(preload).not.toContain("audio:");
+    expect(preload).not.toContain("video:");
+  });
+
+  it("adds no preload step for files that are not media", () => {
+    const { source, plugins } = compileSpec(
+      withAssets([{ name: "words.txt", url: "data:text/plain;base64,aGk=" }]),
+      schemas,
+    );
+    expect(plugins).not.toContain("preload");
+    expect(source).toContain('"words.txt"');
+  });
+
+  it("goes by the file's extension when its address names no media type", () => {
+    const hosted = (name: string): Asset => ({ name, url: `https://example.org/${name}` });
+    expect(preloadListOf(hosted("Face.JPG"))).toBe("images");
+    expect(preloadListOf(hosted("tone.mp3"))).toBe("audio");
+    expect(preloadListOf(hosted("clip.mp4"))).toBe("video");
+    expect(preloadListOf(hosted("words.txt"))).toBeNull();
+    expect(preloadListOf(hosted("README"))).toBeNull();
   });
 });
