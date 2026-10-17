@@ -1,7 +1,7 @@
 import manifest from "../package.json" with { type: "json" };
 import { orderColumn } from "./counterbalance.ts";
 import { ENDING_COLUMN } from "./data.ts";
-import { idParamOf } from "./recruitment.ts";
+import { idParamOf, needsParticipantId } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
 
@@ -35,7 +35,7 @@ const ALWAYS_RECORDED = ["trial_type", "trial_index", "time_elapsed", "plugin_ve
  */
 export function dataColumns(spec: Spec): string[] {
   const columns = new Set(ALWAYS_RECORDED);
-  if (spec.data) {
+  if (needsParticipantId(spec)) {
     columns.add("participant_id");
     columns.add("experiment");
     columns.add(idParamOf(spec.recruitment));
@@ -68,6 +68,15 @@ export function dataColumns(spec: Spec): string[] {
   };
   walk(spec.timeline);
   return [...columns].sort();
+}
+
+/**
+ * The columns a link parameter may not write, recorded under a prefix instead. The platform's id is
+ * the one link parameter the study records under its own name.
+ */
+export function reservedLinkColumns(spec: Spec) {
+  const idParam = idParamOf(spec.recruitment);
+  return dataColumns(spec).filter((column) => column !== idParam);
 }
 
 export interface MetadataOptions {

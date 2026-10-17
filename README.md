@@ -110,7 +110,9 @@ arrives in, and where to send the participant once their data is saved:
 }
 ```
 
-The id becomes `participant_id` on every row, alongside every other URL parameter. Write
+The id becomes `participant_id` on every row, alongside every other URL parameter. A parameter
+named like a column the study writes itself, such as `?correct=1` or `?stimulus=…`, is recorded as
+`url_correct` or `url_stimulus` instead, so a link cannot change a participant's data. Write
 `{participant_id}` in the address where the platform expects the id back, as SONA's credit URL
 does. The redirect happens only after the upload succeeds, so it needs `"save": "post"`. If the
 upload fails, the data is downloaded and the participant gets a link back to the platform once they

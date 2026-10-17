@@ -89,14 +89,21 @@ describe("ending the study early", () => {
     }
   });
 
-  it("keeps a link from setting the columns the study writes itself", () => {
-    const { source } = compileSpec(study(), schemas);
-    expect(source).toContain('.filter(([name]) => !["ending","checkpoint"].includes(name))');
-  });
-
   it("lists the ending column in the dataset description", () => {
     expect(dataColumns(study())).toContain("ending");
     expect(dataColumns({ ...study(), timeline: [consent] })).not.toContain("ending");
+  });
+
+  // Such a study saves nothing, but the participant's id still goes into the address it returns to.
+  it("lists the participant columns for a study that only sends participants back", () => {
+    const sendsBack = study({
+      data: undefined,
+      recruitment: { endings: { no_consent: { url: PROLIFIC, keep: "nothing" } } },
+    });
+    expect(dataColumns(sendsBack)).toEqual(
+      expect.arrayContaining(["experiment", "participant_id"]),
+    );
+    expect(dataColumns({ ...sendsBack, recruitment: undefined })).not.toContain("participant_id");
   });
 
   it("rejects an end step whose ending the study does not have", () => {
@@ -178,7 +185,7 @@ describe("what an early ending keeps", () => {
   ])("sends a participant back with nothing kept from a study that %s", (_, data) => {
     const url = `${PROLIFIC}&pid={participant_id}`;
     const source = keeping({ url, keep: "nothing" }, data);
-    expect(source).toContain("const participantId = urlParameters[");
+    expect(source).toContain("const participantId = linkParameters.get(");
     expect(endStep(source)).toContain("window.location.assign(");
   });
 

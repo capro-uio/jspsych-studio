@@ -7,6 +7,7 @@ import { compileSpec } from "../src/compile.ts";
 import { emitHtml } from "../src/targets/html.ts";
 import type { Spec } from "../src/types.ts";
 import { serveDirectory, type StaticServer } from "./server.ts";
+import { recordsOf } from "./csv.ts";
 import { schemas } from "./schemas.ts";
 
 const PAGE_NAME = "upload.e2e.html";
@@ -27,6 +28,7 @@ const spec = (endpoint: string, recruitment?: Spec["recruitment"]): Spec => ({
       plugin: "html-keyboard-response",
       tag: "probe",
       params: { stimulus: "<p>press any key</p>" },
+      record: { url_tag: "the study's own" },
     },
   ],
 });
@@ -133,6 +135,34 @@ describe("a compiled experiment recruited from a platform", () => {
     await link.waitFor({ timeout: 15_000 });
     expect(page.url()).toContain(PAGE_NAME);
     expect(await link.getAttribute("href")).toBe(`${PLATFORM}/complete?cc=C1A2B3&pid=p7`);
+    await page.close();
+  }, 120_000);
+});
+
+describe("a link carrying parameters named like the study's own columns", () => {
+  it("records them beside the study's columns instead of over them", async () => {
+    const page = await runExperiment(
+      undefined,
+      "participant_id=p42&tag=forged&response=forged&stimulus=forged&experiment=forged&campaign=spring",
+    );
+    await expect.poll(() => server.uploads.length, { timeout: 15_000 }).toBe(1);
+
+    const trial = recordsOf(server.uploads[0].data).find(
+      (record) => record.trial_type === "html-keyboard-response",
+    );
+    expect(trial).toMatchObject({
+      tag: "probe",
+      stimulus: "<p>press any key</p>",
+      experiment: "uploading",
+      participant_id: "p42",
+      url_tag: "the study's own",
+      url_url_tag: "forged",
+      url_response: "forged",
+      url_stimulus: "forged",
+      url_experiment: "forged",
+      campaign: "spring",
+    });
+    expect(trial?.response).not.toBe("forged");
     await page.close();
   }, 120_000);
 });

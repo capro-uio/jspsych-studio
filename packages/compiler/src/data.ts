@@ -156,18 +156,36 @@ export function compileRedirectStep(url: string) {
 /** The column the row written on reaching an early ending names that ending in. */
 export const ENDING_COLUMN = "ending";
 
-// jsPsych writes added properties over a trial's own data, so a link carrying ?ending=… would
-// otherwise relabel every row, and the rows an ending keeps are picked out by that column. The
-// validator keeps the spec's own recorded columns off them too.
+// The rows an ending keeps are picked out by these columns, so the validator keeps the spec's own
+// recorded columns off them.
 export const STUDY_COLUMNS = [ENDING_COLUMN, "checkpoint"];
 
-export function compileParticipantProperties(experimentName: string, idParam: string) {
+/** A link parameter named like a column the study writes is recorded under this prefix instead. */
+export const URL_PARAMETER_PREFIX = "url_";
+
+// jsPsych writes added properties over a trial's own data, so a link carrying ?correct=1 would
+// otherwise rewrite that column on every row.
+export function compileParticipantProperties(options: {
+  experimentName: string;
+  idParam: string;
+  /** The columns the spec says the study writes, which a link parameter must not overwrite. */
+  reserved: string[];
+  /** The globals of the plugins the study runs, whose own data fields are only known at run time. */
+  pluginIdentifiers: string[];
+}) {
+  const { experimentName, idParam, reserved, pluginIdentifiers } = options;
   return (
+    `const linkParameters = new URLSearchParams(window.location.search);\n` +
+    `const ${PARTICIPANT_ID} = linkParameters.get(${literal(idParam)}) ?? jsPsych.randomization.randomID(10);\n` +
+    `const reservedColumns = new Set([\n` +
+    `  ...${literal(reserved)},\n` +
+    `  ...[${pluginIdentifiers.join(", ")}].flatMap((plugin) => Object.keys(plugin.info.data ?? {})),\n` +
+    `]);\n` +
+    `const unreserved = (name) =>\n` +
+    `  reservedColumns.has(name) ? unreserved(${literal(URL_PARAMETER_PREFIX)} + name) : name;\n` +
     `const urlParameters = Object.fromEntries(\n` +
-    `  [...new URLSearchParams(window.location.search)].filter(([name]) => !${literal(STUDY_COLUMNS)}.includes(name)),\n` +
+    `  [...linkParameters].map(([name, value]) => [unreserved(name), value]),\n` +
     `);\n` +
-    `const ${PARTICIPANT_ID} = urlParameters[${literal(idParam)}] ?? jsPsych.randomization.randomID(10);\n` +
-    // The platform's id wins over any participant_id that also happens to be in the link.
     `jsPsych.data.addProperties({\n` +
     `  experiment: ${literal(experimentName)},\n` +
     `  ...urlParameters,\n` +
