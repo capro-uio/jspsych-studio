@@ -10,7 +10,7 @@ import type {
 } from "./types.ts";
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
-import { accuracyComparison } from "./conditions.ts";
+import { accuracyComparison, isResponseRule } from "./conditions.ts";
 import { recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 
@@ -314,14 +314,34 @@ function checkCounterbalance(
   }
 }
 
+const ANSWER_TYPES = new Set(["string", "number", "boolean"]);
+
+// The compiler never runs the JSON Schema, so a hand-edited rule reaches this unfiltered.
+function branchRuleProblem(rule: BranchNode["when"]) {
+  if (!isResponseRule(rule)) {
+    return rule.accuracy_below !== undefined && rule.accuracy_at_least !== undefined
+      ? "a branch compares accuracy one way, not both at once"
+      : null;
+  }
+  if ("accuracy_below" in rule || "accuracy_at_least" in rule) {
+    return "a branch decides on accuracy or on an answer, not both at once";
+  }
+  if (!ANSWER_TYPES.has(typeof rule.response_equals) || rule.response_equals === "") {
+    return "a branch deciding on an answer needs the answer it looks for";
+  }
+  if (rule.question !== undefined && (typeof rule.question !== "string" || !rule.question)) {
+    return "a branch reading one question of a survey needs that question's name";
+  }
+  return null;
+}
+
 function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: number[]) {
   const report = (message: string) => problems.push({ message, path });
   if (node.then.length === 0 && (node.otherwise ?? []).length === 0) {
     report("a branch needs steps on at least one of its paths");
   }
-  if (node.when.accuracy_below !== undefined && node.when.accuracy_at_least !== undefined) {
-    report("a branch compares accuracy one way, not both at once");
-  }
+  const ruleProblem = branchRuleProblem(node.when);
+  if (ruleProblem) report(ruleProblem);
   // The trials being judged have to have happened already, so they cannot live inside the branch.
   const earlier = new Set(collectTags(spec.timeline).filter(Boolean));
   const inside = new Set(collectTags(slotsOf(node)?.flatMap((slot) => slot.children) ?? []));

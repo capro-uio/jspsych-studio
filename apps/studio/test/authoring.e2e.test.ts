@@ -599,6 +599,42 @@ describe("routing on performance", () => {
     await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
     await page.close();
   }, 180_000);
+
+  it("builds a branch on what the participant answered", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addTrial(page, "html-keyboard-response", "slot-0");
+    await setText(page, "trial-tag", "consent");
+    await setFixed(page, "stimulus", "<p>press y to agree, n to decline</p>");
+
+    await addStep(page, "slot-1", "branch");
+    await page.getByTestId("branch-basis").selectOption("response");
+    await setText(page, "branch-scope", "consent");
+    await setText(page, "branch-answer", "n");
+    await page.getByTestId("node-1-0-0").click();
+    await setFixed(page, "stimulus", "<p>thank you anyway</p>");
+
+    await page.getByTestId("view-spec").click();
+    const spec = await authoredSpec(page);
+    expect(spec.timeline[1]).toMatchObject({
+      kind: "branch",
+      when: { scope: "consent", response_equals: "n" },
+    });
+    expect(await page.getByTestId("node-1").innerText()).toContain("if consent answered “n”");
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("press y to agree");
+    await preview.locator("#jspsych-content").click();
+    await page.keyboard.press("n");
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 10_000 })
+      .toContain("thank you anyway");
+    await page.close();
+  }, 180_000);
 });
 
 describe("opening an example", () => {

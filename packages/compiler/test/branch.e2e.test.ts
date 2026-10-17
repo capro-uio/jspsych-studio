@@ -56,17 +56,63 @@ const spec: Spec = {
   ],
 };
 
-async function run(answers: string[]) {
-  const { html } = await emitHtml(compileSpec(spec, schemas), {
-    title: "screening",
+// Consent as buttons: the second button, index 1, declines and leads out of the study.
+const consentSpec: Spec = {
+  name: "consent",
+  timeline: [
+    {
+      kind: "trial",
+      plugin: "html-button-response",
+      tag: "consent",
+      params: { stimulus: "<p>do you agree?</p>", choices: ["I agree", "I do not agree"] },
+    },
+    {
+      kind: "branch",
+      when: { scope: "consent", response_equals: 1 },
+      then: [
+        {
+          kind: "trial",
+          plugin: "html-keyboard-response",
+          params: { stimulus: "<p>thank you for your time</p>" },
+        },
+      ],
+      otherwise: [
+        {
+          kind: "trial",
+          plugin: "html-keyboard-response",
+          params: { stimulus: "<p>the study continues</p>" },
+        },
+      ],
+    },
+  ],
+};
+
+async function openPage(experiment: Spec) {
+  const { html } = await emitHtml(compileSpec(experiment, schemas), {
+    title: experiment.name,
     base: "/node_modules",
   });
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
-
   const page = await browser.newPage();
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(error.message));
   await page.goto(`${server.url}/${PAGE_NAME}`);
+  return { page, errors };
+}
+
+async function answerConsent(button: string) {
+  const { page, errors } = await openPage(consentSpec);
+  await page.getByRole("button", { name: button, exact: true }).click();
+  await expect
+    .poll(() => page.locator("#jspsych-content").innerText(), { timeout: 10_000 })
+    .toMatch(/continues|thank you/);
+  const shown = await page.locator("#jspsych-content").innerText();
+  await page.close();
+  return { shown, errors };
+}
+
+async function run(answers: string[]) {
+  const { page, errors } = await openPage(spec);
 
   for (const answer of answers) {
     await expect
@@ -110,5 +156,19 @@ describe("a study that routes on performance", () => {
   it("takes the other path on a borderline score", async () => {
     const { shown } = await run(["f", "j"]);
     expect(shown).toContain("thank you for your time");
+  }, 120_000);
+});
+
+describe("a study that routes on an answer", () => {
+  it("leads a participant who declines consent out of the study", async () => {
+    const { shown, errors } = await answerConsent("I do not agree");
+    expect(errors).toEqual([]);
+    expect(shown).toContain("thank you for your time");
+    expect(shown).not.toContain("the study continues");
+  }, 120_000);
+
+  it("continues for a participant who agrees", async () => {
+    const { shown } = await answerConsent("I agree");
+    expect(shown).toContain("the study continues");
   }, 120_000);
 });

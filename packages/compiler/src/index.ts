@@ -1,5 +1,6 @@
 export { compileSpec } from "./compile.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
+export { accuracyComparison, isResponseRule } from "./conditions.ts";
 export { DATAPIPE_URL } from "./data.ts";
 export {
   DEFAULT_ID_PARAM,

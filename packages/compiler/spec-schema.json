@@ -3466,7 +3466,7 @@
       "additionalProperties": false
     },
     "branch": {
-      "title": "Sends a participant down one of two paths depending on how they did.",
+      "title": "Sends a participant down one of two paths depending on how they did or what they answered.",
       "type": "object",
       "required": [
         "kind",
@@ -3478,7 +3478,14 @@
           "const": "branch"
         },
         "when": {
-          "$ref": "#/definitions/accuracyRule"
+          "oneOf": [
+            {
+              "$ref": "#/definitions/accuracyRule"
+            },
+            {
+              "$ref": "#/definitions/responseRule"
+            }
+          ]
         },
         "then": {
           "title": "Steps run when the rule holds.",
@@ -3605,6 +3612,42 @@
           "accuracy_at_least"
         ]
       }
+    },
+    "responseRule": {
+      "title": "Holds when the latest answer on the trials carrying one tag matches.",
+      "type": "object",
+      "required": [
+        "scope",
+        "response_equals"
+      ],
+      "properties": {
+        "scope": {
+          "title": "The tag whose most recent trial is read.",
+          "type": "string",
+          "minLength": 1
+        },
+        "response_equals": {
+          "title": "The answer looked for, compared as text: `1` matches the second button.",
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": [
+                "number",
+                "boolean"
+              ]
+            }
+          ]
+        },
+        "question": {
+          "title": "The question to read when a trial asks several, as a survey does.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
     },
     "experimentSettings": {
       "title": "Settings that apply to the whole experiment rather than to one step.",

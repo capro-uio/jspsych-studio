@@ -1,7 +1,7 @@
 import type { ParameterSchema, SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAppearance } from "./appearance.ts";
 import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } from "./assets.ts";
-import { compileAccuracyPredicate } from "./conditions.ts";
+import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
 import { compileDataStep, compileParticipantProperties } from "./data.ts";
 import { completionUrlOf, idParamOf } from "./recruitment.ts";
 import {
@@ -190,7 +190,7 @@ function compileCounterbalance(node: CounterbalanceNode, context: CompileContext
 }
 
 function compileBranch(node: BranchNode, context: CompileContext) {
-  const predicate = compileAccuracyPredicate(node.when);
+  const predicate = compileBranchPredicate(node.when);
   const paths: string[] = [];
   const gate = (children: SpecNode[], taken: boolean) => {
     if (children.length === 0) return;

@@ -6,9 +6,9 @@ in a UI; the tool compiles it to readable, correct jsPsych source they can host 
 **Status: early.** You can build a flanker task end to end in the browser — nested timeline,
 conditions table generated from a design, generated parameter forms (questionnaire items
 included), rich stimulus text, image and sound files, group assignment and branching on
-performance, a psychophysics canvas step whose objects you drag into place, live preview of the
-whole experiment or a single step, a choice of where results go, a guided tour of the builder,
-and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
+performance or on an answer, a psychophysics canvas step whose objects you drag into place, live
+preview of the whole experiment or a single step, a choice of where results go, a guided tour of the
+builder, and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
 Tasks can run in a counterbalanced order. There is no hosting or consent flow yet. 0.0.1 is the
 first release, and every export names the version that built it.

@@ -81,3 +81,48 @@ describe("branching on how a participant did", () => {
     );
   });
 });
+
+describe("branching on what a participant answered", () => {
+  const onAnswer = (when: Record<string, unknown>) =>
+    study(branch({ when: { scope: "screening", ...when } as BranchNode["when"] }));
+
+  it("compares the latest tagged answer as text", () => {
+    const { source } = compileSpec(onAnswer({ response_equals: 1 }), schemas);
+    expect(source).toContain('filter({ tag: "screening" })');
+    expect(source).toContain('String(latest.response ?? "") === "1"');
+    expect(source).not.toContain('select("correct")');
+    expect(source).toContain("conditional_function: () => !(");
+  });
+
+  it("reads one question of a survey", () => {
+    const { source } = compileSpec(
+      onAnswer({ response_equals: "No", question: "consent" }),
+      schemas,
+    );
+    expect(source).toContain('.response?.["consent"] ?? "") === "No"');
+  });
+
+  it("rejects a rule that also compares accuracy", () => {
+    expect(() =>
+      compileSpec(onAnswer({ response_equals: "no", accuracy_at_least: 0.5 }), schemas),
+    ).toThrow(/accuracy or on an answer, not both/);
+  });
+
+  it.each([[""], [null], [{ answer: "no" }]])("rejects looking for %j", (answer) => {
+    expect(() => compileSpec(onAnswer({ response_equals: answer }), schemas)).toThrow(
+      /needs the answer it looks for/,
+    );
+  });
+
+  it("rejects naming a survey question with nothing", () => {
+    expect(() => compileSpec(onAnswer({ response_equals: "no", question: "" }), schemas)).toThrow(
+      /needs that question's name/,
+    );
+  });
+
+  it("still needs the answer to come from an earlier trial", () => {
+    expect(() =>
+      compileSpec(study(branch({ when: { scope: "later", response_equals: "no" } })), schemas),
+    ).toThrow(/no trial before it carries that tag/);
+  });
+});

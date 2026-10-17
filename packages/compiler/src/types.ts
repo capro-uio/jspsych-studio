@@ -16,6 +16,16 @@ export interface AccuracyRule {
   accuracy_at_least?: number;
 }
 
+/** Holds when the latest answer on the tagged trials matches, such as a consent question's "no". */
+export interface ResponseRule {
+  /** The tag whose most recent trial is read. */
+  scope: string;
+  /** Compared as text, so `1` matches the second button and `"no"` a survey answer. */
+  response_equals: string | number | boolean;
+  /** The question to read when a trial asks several, as a survey does. */
+  question?: string;
+}
+
 export interface TrialNode {
   kind: "trial";
   plugin: string;
@@ -61,10 +71,10 @@ export interface CounterbalanceNode {
   tasks: Group[];
 }
 
-/** Sends a participant down one of two paths depending on how they did. */
+/** Sends a participant down one of two paths depending on how they did or what they answered. */
 export interface BranchNode {
   kind: "branch";
-  when: AccuracyRule;
+  when: AccuracyRule | ResponseRule;
   then: SpecNode[];
   otherwise?: SpecNode[];
 }

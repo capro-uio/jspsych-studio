@@ -5,6 +5,7 @@
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
   import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
+  import { describeAccuracy, describeBranchRule } from "./rules.ts";
 
   interface Props {
     nodes: SpecNode[];
@@ -12,16 +13,6 @@
   }
 
   const { nodes, path = [] }: Props = $props();
-
-  function describeAccuracy(rule: {
-    scope: string;
-    accuracy_below?: number;
-    accuracy_at_least?: number;
-  }) {
-    const below = rule.accuracy_at_least === undefined;
-    const threshold = below ? (rule.accuracy_below ?? 0) : rule.accuracy_at_least!;
-    return `${below ? "under" : "at least"} ${Math.round(threshold * 100)}% on ${rule.scope || "…"}`;
-  }
 
   function label(node: SpecNode) {
     if (node.kind === "trial") return node.plugin + (node.tag ? ` · ${node.tag}` : "");
@@ -38,7 +29,7 @@
       const order = node.method === "random" ? "random" : "Latin-square";
       return `${node.tasks.map((task) => task.name).join(", ")} · ${order} order`;
     }
-    if (node.kind === "branch") return `if accuracy ${describeAccuracy(node.when)}`;
+    if (node.kind === "branch") return describeBranchRule(node.when);
     return `repeat while accuracy ${describeAccuracy(node.repeat_while)}`;
   }
 
