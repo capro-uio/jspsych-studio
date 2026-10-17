@@ -92,8 +92,22 @@ export interface LoopNode {
   children: SpecNode[];
 }
 
+/** Ends the study here, the way one of the recruitment endings says, after saving the data. */
+export interface EndNode {
+  kind: "end";
+  /** The name of an ending in `recruitment.endings`. */
+  ending: string;
+}
+
 export type SpecNode =
-  TrialNode | BlockNode | LoopNode | AssignNode | CounterbalanceNode | BranchNode | CheckpointNode;
+  | TrialNode
+  | BlockNode
+  | LoopNode
+  | AssignNode
+  | CounterbalanceNode
+  | BranchNode
+  | CheckpointNode
+  | EndNode;
 
 /** A named list of steps inside a node, such as a group or a branch's path. */
 export interface Slot {
@@ -113,10 +127,12 @@ export interface DataSettings {
 
 export type RecruitmentPlatform = "prolific" | "sona" | "connect" | "custom";
 
-/** Where a participant goes when the study ends a particular way. */
+/** What happens when the study ends a particular way: a return address, or a message. */
 export interface Ending {
   /** The platform's return URL; `{participant_id}` is replaced with the participant's id. */
-  url: string;
+  url?: string;
+  /** Shown to the participant, who stays on the page, instead of being sent anywhere. */
+  message?: string;
 }
 
 /** How the study meets the platform participants are recruited from. */
@@ -124,8 +140,11 @@ export interface RecruitmentSettings {
   platform?: RecruitmentPlatform;
   /** The URL parameter the platform passes the participant's id in, if not the platform's usual one. */
   id_param?: string;
-  /** `complete` is where a participant goes once their data is saved. */
-  endings?: { complete?: Ending };
+  /**
+   * `complete` is how the study ends once every step has run; any other ending is reached through
+   * an `end` step, such as `no_consent` for a participant who declines.
+   */
+  endings?: Record<string, Ending>;
 }
 
 export interface Asset {

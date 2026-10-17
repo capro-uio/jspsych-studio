@@ -2,9 +2,14 @@ export { compileSpec } from "./compile.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
 export { accuracyComparison, isResponseRule } from "./conditions.ts";
 export { DATAPIPE_URL } from "./data.ts";
+export { escapeHtmlText } from "./emit.ts";
 export {
+  COMPLETE_ENDING,
   DEFAULT_ID_PARAM,
+  earlyEndingNames,
+  endingOf,
   idParamOf,
+  isEndingName,
   PARTICIPANT_PLACEHOLDER,
   RECRUITMENT_PLATFORMS,
 } from "./recruitment.ts";

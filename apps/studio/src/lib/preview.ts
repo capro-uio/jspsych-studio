@@ -1,4 +1,10 @@
-import { slotsOf, type Spec, type SpecNode } from "@jspsych-studio/compiler";
+import {
+  escapeHtmlText,
+  slotsOf,
+  type Ending,
+  type Spec,
+  type SpecNode,
+} from "@jspsych-studio/compiler";
 
 /**
  * The steps leading to `path`, keeping the containers that give a step its context — a block still
@@ -45,12 +51,29 @@ export interface PreviewOptions {
  * recruitment platform, since a preview is not a participant, and optionally narrowed to one step.
  */
 export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
-  const { data: _data, recruitment: _recruitment, ...rest } = spec;
+  const { data: _data, recruitment, ...rest } = spec;
   const timeline = structuredClone(
     options.from?.length ? trim(spec.timeline, options.from) : spec.timeline,
   );
   drawLocally(timeline);
-  return { ...rest, timeline };
+  return {
+    ...rest,
+    ...(recruitment?.endings && { recruitment: { endings: previewEndings(recruitment.endings) } }),
+    timeline,
+  };
+}
+
+// An end step has to reach an ending that exists, so the preview keeps every ending, saying where
+// a participant would be sent instead of sending them.
+function previewEndings(endings: Record<string, Ending>) {
+  return Object.fromEntries(
+    Object.entries(endings).map(([name, ending]) => [
+      name,
+      ending.url === undefined
+        ? ending
+        : { message: `<p>Here the participant is sent to ${escapeHtmlText(ending.url)}</p>` },
+    ]),
+  );
 }
 
 // jsPsych focuses its display at the start of every trial so keypresses reach it. Inside the

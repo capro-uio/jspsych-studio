@@ -2,8 +2,9 @@ import type { ParameterSchema, SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAppearance } from "./appearance.ts";
 import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } from "./assets.ts";
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
-import { compileDataStep, compileParticipantProperties } from "./data.ts";
-import { completionUrlOf, idParamOf } from "./recruitment.ts";
+import { compileParticipantProperties } from "./data.ts";
+import { compileCompletion, compileEndStep } from "./endings.ts";
+import { idParamOf } from "./recruitment.ts";
 import {
   GROUP_VARIABLE,
   compileAssignmentStep,
@@ -213,6 +214,11 @@ function compileNode(node: SpecNode, context: CompileContext): string {
     context.plugins.add("call-function");
     return compileCheckpointStep(node);
   }
+  if (node.kind === "end") {
+    const step = compileEndStep(node, context.spec);
+    context.plugins.add(step.plugin);
+    return step.source;
+  }
   return compileAssign(node, context);
 }
 
@@ -261,10 +267,10 @@ export function compileSpec(
     plugins.add(preload.plugin);
     steps.unshift(preload.source);
   }
-  if (spec.data) {
-    const dataStep = compileDataStep(spec.data, spec.name, completionUrlOf(spec.recruitment));
-    plugins.add(dataStep.plugin);
-    steps.push(dataStep.source);
+  const completion = compileCompletion(spec);
+  if (completion) {
+    plugins.add(completion.plugin);
+    steps.push(completion.source);
   }
   const timeline = steps.join(",\n");
   const packages = Object.fromEntries(

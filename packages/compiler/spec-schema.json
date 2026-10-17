@@ -90,7 +90,8 @@
             "assign",
             "counterbalance",
             "branch",
-            "checkpoint"
+            "checkpoint",
+            "end"
           ]
         }
       },
@@ -198,6 +199,21 @@
           },
           "then": {
             "$ref": "#/definitions/checkpoint"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "end"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/end"
           }
         }
       ]
@@ -3522,6 +3538,25 @@
       },
       "additionalProperties": false
     },
+    "end": {
+      "title": "Ends the study here, the way one of the recruitment endings says, after saving the data.",
+      "type": "object",
+      "required": [
+        "kind",
+        "ending"
+      ],
+      "properties": {
+        "kind": {
+          "const": "end"
+        },
+        "ending": {
+          "title": "The name of an ending in `recruitment.endings`, such as `no_consent`.",
+          "type": "string",
+          "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+        }
+      },
+      "additionalProperties": false
+    },
     "variableReference": {
       "title": "A value read from a column of the enclosing conditions table.",
       "type": "object",
@@ -3745,28 +3780,47 @@
           "minLength": 1
         },
         "endings": {
-          "title": "Where a participant goes when the study ends.",
+          "title": "What happens when the study ends each way it can.",
+          "description": "`complete` is how the study ends once every step has run; any other ending is reached through an `end` step, such as `no_consent` for a participant who declines.",
           "type": "object",
-          "properties": {
-            "complete": {
-              "type": "object",
-              "required": [
-                "url"
-              ],
-              "properties": {
-                "url": {
-                  "title": "The platform's return URL; `{participant_id}` is replaced with the id.",
-                  "type": "string",
-                  "pattern": "^https://"
-                }
-              },
-              "additionalProperties": false
-            }
+          "propertyNames": {
+            "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
           },
-          "additionalProperties": false
+          "additionalProperties": {
+            "$ref": "#/definitions/ending"
+          }
         }
       },
       "additionalProperties": false
+    },
+    "ending": {
+      "title": "Where the participant goes, or what they are shown, once their data is saved.",
+      "type": "object",
+      "properties": {
+        "url": {
+          "title": "The platform's return URL; `{participant_id}` is replaced with the id.",
+          "type": "string",
+          "pattern": "^https://"
+        },
+        "message": {
+          "title": "Shown to the participant, who stays on the page, instead of a return URL.",
+          "type": "string",
+          "pattern": "\\S"
+        }
+      },
+      "additionalProperties": false,
+      "oneOf": [
+        {
+          "required": [
+            "url"
+          ]
+        },
+        {
+          "required": [
+            "message"
+          ]
+        }
+      ]
     },
     "asset": {
       "type": "object",

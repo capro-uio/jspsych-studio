@@ -1,9 +1,13 @@
 import {
+  COMPLETE_ENDING,
+  earlyEndingNames,
+  endingOf,
   idParamOf,
+  isEndingName,
   PARTICIPANT_PLACEHOLDER,
   RECRUITMENT_PLATFORMS,
 } from "@jspsych-studio/compiler";
-import type { RecruitmentPlatform, Spec } from "@jspsych-studio/compiler";
+import type { Ending, RecruitmentPlatform, Spec } from "@jspsych-studio/compiler";
 
 interface PlatformGuide {
   label: string;
@@ -48,14 +52,54 @@ export function guideFor(platform: RecruitmentPlatform | undefined): PlatformGui
   return GUIDES[platform ?? "custom"];
 }
 
-/** Switching platform drops any id parameter typed for the last one, and keeps the return address. */
-export function choosePlatform(spec: Spec, platform: RecruitmentPlatform | "none") {
-  if (platform === "none") {
-    delete spec.recruitment;
+export type PlatformChoice = RecruitmentPlatform | "none";
+export type EndingKind = "message" | "url";
+
+export const DEFAULT_EARLY_ENDING = "ended_early";
+const DEFAULT_MESSAGE = "<p>Thank you for your time. The study ends here.</p>";
+
+function hasReturnAddress(spec: Spec) {
+  return Object.values(spec.recruitment?.endings ?? {}).some(
+    (ending) => endingKind(ending) === "url",
+  );
+}
+
+/**
+ * A spec written by hand may name no platform; it counts as an unnamed one when it hands
+ * participants to or from a platform at all, and as none when it only has messages to show.
+ */
+export function platformChoice(spec: Spec): PlatformChoice {
+  const recruitment = spec.recruitment;
+  if (recruitment?.platform) return recruitment.platform;
+  return recruitment?.id_param || hasReturnAddress(spec) ? "custom" : "none";
+}
+
+/** Removes the recruitment settings once nothing is left in them. */
+function tidy(spec: Spec) {
+  const recruitment = spec.recruitment;
+  if (!recruitment) return;
+  if (recruitment.endings && Object.keys(recruitment.endings).length === 0) {
+    delete recruitment.endings;
+  }
+  if (Object.keys(recruitment).length === 0) delete spec.recruitment;
+}
+
+/**
+ * Switching platform drops any id parameter typed for the last one, and keeps the return
+ * addresses. Choosing none drops every hand-off back to a platform, but keeps the messages an
+ * early ending shows.
+ */
+export function choosePlatform(spec: Spec, platform: PlatformChoice) {
+  const { id_param: _previous, platform: _platform, ...rest } = spec.recruitment ?? {};
+  if (platform !== "none") {
+    spec.recruitment = { ...rest, platform };
     return;
   }
-  const { id_param: _previous, ...rest } = spec.recruitment ?? {};
-  spec.recruitment = { ...rest, platform };
+  const endings = Object.entries(rest.endings ?? {}).filter(
+    ([, ending]) => endingKind(ending) === "message",
+  );
+  spec.recruitment = { ...rest, endings: Object.fromEntries(endings) };
+  tidy(spec);
 }
 
 /** Typing the platform's own parameter, or nothing, stores nothing, so the field and spec agree. */
@@ -70,6 +114,53 @@ export function setIdParam(spec: Spec, value: string) {
 export function setCompletionUrl(spec: Spec, value: string) {
   if (!spec.recruitment) return;
   const url = value.trim();
-  if (url) spec.recruitment.endings = { complete: { url } };
-  else delete spec.recruitment.endings;
+  if (url) (spec.recruitment.endings ??= {})[COMPLETE_ENDING] = { url };
+  else delete spec.recruitment.endings?.[COMPLETE_ENDING];
+  tidy(spec);
+}
+
+/** The endings an end step can reach before the study is complete. */
+export function earlyEndings(spec: Spec) {
+  return earlyEndingNames(spec.recruitment).flatMap((name) => {
+    const ending = endingOf(spec.recruitment, name);
+    return ending ? [{ name, ending }] : [];
+  });
+}
+
+/** Adds an ending that shows a message, or says why the name will not do. */
+export function addEnding(spec: Spec, name: string): string | undefined {
+  const ending = name.trim();
+  if (ending === COMPLETE_ENDING) return "the study already ends this way after its last step";
+  if (endingOf(spec.recruitment, ending)) return `there is already an ending called ${ending}`;
+  if (!isEndingName(ending)) {
+    return "start with a letter, and use only letters, digits, - and _ (e.g. no_consent)";
+  }
+  spec.recruitment ??= {};
+  (spec.recruitment.endings ??= {})[ending] = { message: DEFAULT_MESSAGE };
+  return undefined;
+}
+
+export function removeEnding(spec: Spec, name: string) {
+  delete spec.recruitment?.endings?.[name];
+  tidy(spec);
+}
+
+export function endingKind(ending: Ending): EndingKind {
+  return ending.url === undefined ? "message" : "url";
+}
+
+/** Switching between a message and a return address starts the other one empty. */
+export function setEndingKind(spec: Spec, name: string, kind: EndingKind) {
+  const endings = spec.recruitment?.endings;
+  const ending = endingOf(spec.recruitment, name);
+  if (!endings || !ending || endingKind(ending) === kind) return;
+  endings[name] = kind === "url" ? { url: "" } : { message: "" };
+}
+
+/** Sets the message or the address, whichever the ending has. */
+export function setEndingTarget(spec: Spec, name: string, value: string) {
+  const ending = endingOf(spec.recruitment, name);
+  if (!ending) return;
+  if (endingKind(ending) === "url") ending.url = value.trim();
+  else ending.message = value;
 }

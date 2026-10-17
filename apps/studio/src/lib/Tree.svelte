@@ -22,6 +22,7 @@
       return `once for each of ${rows} rows${repeats} · ${node.conditions}`;
     }
     if (node.kind === "checkpoint") return `reached “${node.name}”`;
+    if (node.kind === "end") return `finish as “${node.ending || "…"}”`;
     if (node.kind === "assign") {
       return `${node.groups.map((group) => group.name).join(" or ")} · ${node.method}`;
     }

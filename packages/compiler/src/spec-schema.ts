@@ -1,5 +1,10 @@
 import type { ParameterSchema, PluginSchema, PluginSchemas } from "@jspsych-studio/schemas";
-import { RECRUITMENT_PLATFORMS, SECURE_URL_PATTERN } from "./recruitment.ts";
+import {
+  ENDING_NAME_PATTERN,
+  RECRUITMENT_PLATFORMS,
+  SECURE_URL_PATTERN,
+  VISIBLE_TEXT_PATTERN,
+} from "./recruitment.ts";
 import type { SpecNode } from "./types.ts";
 
 /** Where the schema is published, so a spec can name it in `$schema` and editors can fetch it. */
@@ -211,6 +216,18 @@ const NODE_DEFINITIONS = {
     required: ["name"],
     properties: { name: { type: "string", minLength: 1 } },
   },
+  end: {
+    title:
+      "Ends the study here, the way one of the recruitment endings says, after saving the data.",
+    required: ["ending"],
+    properties: {
+      ending: {
+        title: "The name of an ending in `recruitment.endings`, such as `no_consent`.",
+        type: "string",
+        pattern: ENDING_NAME_PATTERN,
+      },
+    },
+  },
 } satisfies Record<SpecNode["kind"], JsonSchema>;
 
 type NodeKind = keyof typeof NODE_DEFINITIONS;
@@ -324,6 +341,7 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
       counterbalance: nodeDefinition("counterbalance"),
       branch: nodeDefinition("branch"),
       checkpoint: nodeDefinition("checkpoint"),
+      end: nodeDefinition("end"),
       variableReference: {
         title: "A value read from a column of the enclosing conditions table.",
         type: "object",
@@ -454,26 +472,34 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             minLength: 1,
           },
           endings: {
-            title: "Where a participant goes when the study ends.",
+            title: "What happens when the study ends each way it can.",
+            description:
+              "`complete` is how the study ends once every step has run; any other ending is " +
+              "reached through an `end` step, such as `no_consent` for a participant who declines.",
             type: "object",
-            properties: {
-              complete: {
-                type: "object",
-                required: ["url"],
-                properties: {
-                  url: {
-                    title: "The platform's return URL; `{participant_id}` is replaced with the id.",
-                    type: "string",
-                    pattern: SECURE_URL_PATTERN,
-                  },
-                },
-                additionalProperties: false,
-              },
-            },
-            additionalProperties: false,
+            propertyNames: { pattern: ENDING_NAME_PATTERN },
+            additionalProperties: reference("ending"),
           },
         },
         additionalProperties: false,
+      },
+      ending: {
+        title: "Where the participant goes, or what they are shown, once their data is saved.",
+        type: "object",
+        properties: {
+          url: {
+            title: "The platform's return URL; `{participant_id}` is replaced with the id.",
+            type: "string",
+            pattern: SECURE_URL_PATTERN,
+          },
+          message: {
+            title: "Shown to the participant, who stays on the page, instead of a return URL.",
+            type: "string",
+            pattern: VISIBLE_TEXT_PATTERN,
+          },
+        },
+        additionalProperties: false,
+        oneOf: [{ required: ["url"] }, { required: ["message"] }],
       },
       asset: {
         type: "object",

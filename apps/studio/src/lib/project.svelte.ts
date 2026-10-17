@@ -1,12 +1,14 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
-import { slotsOf } from "@jspsych-studio/compiler";
+import { earlyEndingNames, slotsOf } from "@jspsych-studio/compiler";
 import { NODE_KINDS, SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
 import { unique } from "./lists.ts";
+import { addEnding, DEFAULT_EARLY_ENDING } from "./recruitment.ts";
 import { DEFAULT_THRESHOLD } from "./rules.ts";
 import type {
   AssignNode,
   BranchNode,
   CounterbalanceNode,
+  EndNode,
   Spec,
   SpecNode,
   TrialNode,
@@ -156,6 +158,14 @@ export function newBranch(first: SpecNode): BranchNode {
   };
 }
 
+/** An end step reaches an ending that exists, adding one that shows a message if there is none. */
+export function newEnd(): EndNode {
+  const [existing] = earlyEndingNames(project.spec.recruitment);
+  if (existing) return { kind: "end", ending: existing };
+  addEnding(project.spec, DEFAULT_EARLY_ENDING);
+  return { kind: "end", ending: DEFAULT_EARLY_ENDING };
+}
+
 export function newCheckpoint(): SpecNode {
   return { kind: "checkpoint", name: "checkpoint" };
 }
@@ -217,7 +227,7 @@ function assertNodes(nodes: unknown, where: string): asserts nodes is SpecNode[]
       }
     } else if (kind === "block" || kind === "loop") {
       assertNodes((node as { children?: unknown }).children, `${where} › ${kind}`);
-    } else if (kind !== "checkpoint") {
+    } else if (kind !== "checkpoint" && kind !== "end") {
       const slots: unknown = slotsOf(node);
       if (!Array.isArray(slots)) throw new Error(`${where} › ${kind} holds no list of paths`);
       for (const slot of slots as { name?: unknown; children?: unknown }[]) {

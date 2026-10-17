@@ -1,5 +1,6 @@
 import manifest from "../package.json" with { type: "json" };
 import { orderColumn } from "./counterbalance.ts";
+import { ENDING_COLUMN } from "./data.ts";
 import { idParamOf } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
@@ -52,6 +53,10 @@ export function dataColumns(spec: Spec): string[] {
       }
       if (node.kind === "checkpoint") {
         columns.add("checkpoint");
+        continue;
+      }
+      if (node.kind === "end") {
+        columns.add(ENDING_COLUMN);
         continue;
       }
       if (node.kind === "assign") columns.add(node.record_as ?? "group");

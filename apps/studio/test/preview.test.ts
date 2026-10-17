@@ -51,8 +51,41 @@ describe("what the preview runs", () => {
 
   // Redirecting needs uploaded data, so a preview that kept the hand-off would not even compile.
   it("never sends anyone back to a recruitment platform", () => {
-    expect(previewSpec(spec).recruitment).toBeUndefined();
+    expect(previewSpec(spec).recruitment).toEqual({
+      endings: {
+        complete: {
+          message:
+            "<p>Here the participant is sent to https://app.prolific.com/submissions/complete?cc=C1</p>",
+        },
+      },
+    });
     expect(() => compileSpec(previewSpec(spec), schemas)).not.toThrow();
+  });
+
+  it("keeps the endings an end step reaches, so the step still runs", () => {
+    const ending: Spec = {
+      ...spec,
+      recruitment: {
+        platform: "prolific",
+        endings: {
+          no_consent: { url: "https://app.prolific.com/x?cc=NO&a=<b>" },
+          screened_out: { message: "<p>Thanks anyway.</p>" },
+        },
+      },
+      timeline: [trial("<p>consent</p>", "consent"), { kind: "end", ending: "no_consent" }],
+    };
+    const previewed = previewSpec(ending);
+    expect(previewed.recruitment?.endings?.no_consent.message).toContain("cc=NO&amp;a=&lt;b&gt;");
+    expect(previewed.recruitment?.endings?.screened_out).toEqual({
+      message: "<p>Thanks anyway.</p>",
+    });
+    expect(previewed.recruitment).not.toHaveProperty("platform");
+    expect(() => compileSpec(previewed, schemas)).not.toThrow();
+  });
+
+  it("leaves out recruitment when the study has no endings", () => {
+    const direct: Spec = { ...spec, recruitment: { platform: "sona" } };
+    expect(previewSpec(direct)).not.toHaveProperty("recruitment");
   });
 
   it("runs the whole experiment when no step is chosen", () => {

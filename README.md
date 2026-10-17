@@ -117,6 +117,28 @@ upload fails, the data is downloaded and the participant gets a link back to the
 have the file. The builder's Study tab fills in each platform's parameter, and its preview never
 redirects.
 
+## Ending early
+
+A study can end before its last step, for a participant who declines consent or is screened out.
+Name the ending under `recruitment.endings`, with either a return address or a message, and put an
+`end` step where the study should stop, usually inside a branch on the participant's answer:
+
+```json
+"recruitment": {
+  "endings": { "no_consent": { "message": "<p>Thank you for your time.</p>" } }
+},
+"timeline": [
+  { "kind": "trial", "plugin": "html-button-response", "tag": "consent",
+    "params": { "stimulus": "<p>Do you agree to take part?</p>", "choices": ["Yes", "No"] } },
+  { "kind": "branch", "when": { "scope": "consent", "response_equals": 1 },
+    "then": [{ "kind": "end", "ending": "no_consent" }] }
+]
+```
+
+Reaching the end step writes a row naming the ending in an `ending` column, saves the data the
+way the study does, then shows the message or sends the participant to the address. Every `end`
+step must name an ending the study has.
+
 ## Editing a spec by hand
 
 Every spec names a JSON Schema in `$schema`, so a spec file opened in VS Code, Positron or any

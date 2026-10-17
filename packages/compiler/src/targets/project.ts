@@ -1,7 +1,8 @@
 import type { SchemaBundle } from "@jspsych-studio/schemas";
 import { assetPath } from "../assets.ts";
 import { compileSpec } from "../compile.ts";
-import { completionUrlOf, idParamOf } from "../recruitment.ts";
+import { ENDING_COLUMN } from "../data.ts";
+import { completionUrlOf, earlyEndingNames, idParamOf } from "../recruitment.ts";
 import { formatSource } from "../format.ts";
 import {
   datasetDescription,
@@ -61,6 +62,7 @@ function recruitmentSection(spec: Spec) {
   if (!spec.recruitment) return "";
   const idParam = idParamOf(spec.recruitment);
   const url = completionUrlOf(spec.recruitment);
+  const early = earlyEndingNames(spec.recruitment);
   return `
 ## Recruiting
 
@@ -71,7 +73,7 @@ recorded as \`participant_id\`. Without it they are given a random id.${
 to it once their file has downloaded.`
       : ""
   }
-`;
+${early.length > 0 ? `\nThe study can also end early, as ${early.map((name) => `\`${name}\``).join(", ")}. A participant who ends that way has a row with that name in the \`${ENDING_COLUMN}\` column.\n` : ""}`;
 }
 
 /**

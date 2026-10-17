@@ -3,6 +3,7 @@ import type {
   AssignNode,
   BranchNode,
   CounterbalanceNode,
+  EndNode,
   ParameterValue,
   Spec,
   SpecNode,
@@ -11,7 +12,7 @@ import type {
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, isResponseRule } from "./conditions.ts";
-import { recruitmentProblems } from "./recruitment.ts";
+import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
@@ -359,6 +360,18 @@ function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: nu
   }
 }
 
+function checkEnd(node: EndNode, spec: Spec, report: (message: string) => void) {
+  const names = endingNames(spec.recruitment);
+  const known = names.length > 0 ? ` (endings: ${names.join(", ")})` : "";
+  if (!node.ending) {
+    report(`an end step needs to name the ending it reaches${known}`);
+  } else if (!names.includes(node.ending)) {
+    report(
+      `an end step reaches the ending "${node.ending}", which the study does not have${known}`,
+    );
+  }
+}
+
 function checkColumn(
   column: string,
   columns: Set<string>,
@@ -389,6 +402,10 @@ function checkNodes(
 
     if (node.kind === "checkpoint") {
       if (!node.name) report("a checkpoint needs a name");
+      return;
+    }
+    if (node.kind === "end") {
+      checkEnd(node, spec, report);
       return;
     }
     if (node.kind === "assign" || node.kind === "counterbalance" || node.kind === "branch") {
