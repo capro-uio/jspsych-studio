@@ -131,6 +131,32 @@ describe("what the schema catches before anything runs", () => {
     expect(problems(spec)).toContain("must match exactly one schema in oneOf");
   });
 
+  it("a completed study that keeps less than all its data", () => {
+    const spec = flanker();
+    spec.recruitment = { endings: { complete: { message: "<p>Done.</p>", keep: "nothing" } } };
+    expect(problems(spec)).toContain("must be equal to constant");
+  });
+
+  it("an ending that keeps something unknown", () => {
+    const spec = flanker();
+    spec.recruitment = {
+      endings: { no_consent: { message: "<p>bye</p>", keep: "some" as never } },
+    };
+    expect(problems(spec)).toContain("must be equal to one of the allowed values");
+  });
+
+  it("a trial recording a column the study writes itself", () => {
+    const spec = flanker();
+    (spec.timeline[0] as { record?: unknown }).record = { ending: "no_consent" };
+    expect(problems(spec)).toContain("must NOT be valid");
+  });
+
+  it("but accepts an early ending that keeps nothing", () => {
+    const spec = flanker();
+    spec.recruitment = { endings: { no_consent: { message: "<p>bye</p>", keep: "nothing" } } };
+    expect(problems(spec)).toEqual([]);
+  });
+
   it("an end step that names no ending", () => {
     const spec = flanker();
     spec.timeline.push({ kind: "end" } as never);

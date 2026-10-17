@@ -652,6 +652,7 @@ describe("ending the study early", () => {
     await setText(page, "new-ending-name", "no_consent");
     await page.getByTestId("add-ending").click();
     await setText(page, "ending-message-no_consent", "<p>Thank you anyway.</p>");
+    await page.getByTestId("ending-keep-no_consent").selectOption("nothing");
     await openTab(page, "timeline");
 
     await addStep(page, "slot-1", "branch");
@@ -669,7 +670,7 @@ describe("ending the study early", () => {
       { kind: "end", ending: "no_consent" },
     ]);
     expect(spec.recruitment).toEqual({
-      endings: { no_consent: { message: "<p>Thank you anyway.</p>" } },
+      endings: { no_consent: { message: "<p>Thank you anyway.</p>", keep: "nothing" } },
     });
 
     await page.getByTestId("view-experiment").click();

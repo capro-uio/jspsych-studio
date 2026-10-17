@@ -133,7 +133,14 @@ export interface Ending {
   url?: string;
   /** Shown to the participant, who stays on the page, instead of being sent anywhere. */
   message?: string;
+  /**
+   * What is saved on reaching it: every row (the default), only the row saying which ending it
+   * was, or nothing at all. Only an early ending can keep less than everything.
+   */
+  keep?: Retention;
 }
+
+export type Retention = "all" | "checkpoint" | "nothing";
 
 /** How the study meets the platform participants are recruited from. */
 export interface RecruitmentSettings {

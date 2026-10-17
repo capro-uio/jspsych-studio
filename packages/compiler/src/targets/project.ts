@@ -2,7 +2,13 @@ import type { SchemaBundle } from "@jspsych-studio/schemas";
 import { assetPath } from "../assets.ts";
 import { compileSpec } from "../compile.ts";
 import { ENDING_COLUMN } from "../data.ts";
-import { completionUrlOf, earlyEndingNames, idParamOf } from "../recruitment.ts";
+import {
+  completionUrlOf,
+  earlyEndingNames,
+  endingOf,
+  idParamOf,
+  retentionOf,
+} from "../recruitment.ts";
 import { formatSource } from "../format.ts";
 import {
   datasetDescription,
@@ -11,7 +17,7 @@ import {
   type MetadataOptions,
 } from "../metadata.ts";
 import { emitHtml } from "./html.ts";
-import type { Spec } from "../types.ts";
+import type { Retention, Spec } from "../types.ts";
 
 export type ProjectFile = string | Uint8Array;
 
@@ -62,7 +68,6 @@ function recruitmentSection(spec: Spec) {
   if (!spec.recruitment) return "";
   const idParam = idParamOf(spec.recruitment);
   const url = completionUrlOf(spec.recruitment);
-  const early = earlyEndingNames(spec.recruitment);
   return `
 ## Recruiting
 
@@ -73,7 +78,27 @@ recorded as \`participant_id\`. Without it they are given a random id.${
 to it once their file has downloaded.`
       : ""
   }
-${early.length > 0 ? `\nThe study can also end early, as ${early.map((name) => `\`${name}\``).join(", ")}. A participant who ends that way has a row with that name in the \`${ENDING_COLUMN}\` column.\n` : ""}`;
+${earlyEndingsNote(spec)}`;
+}
+
+const KEPT: Record<Retention, string> = {
+  all: "all their data is kept",
+  checkpoint: "only that row is kept",
+  nothing: "nothing is kept or sent",
+};
+
+// Whoever hosts the study has to be able to tell an ethics board what happens to a participant
+// who leaves early, without reading the code.
+function earlyEndingsNote(spec: Spec) {
+  const early = earlyEndingNames(spec.recruitment);
+  if (early.length === 0) return "";
+  const kept = early.map((name) => {
+    return `- \`${name}\`: ${KEPT[retentionOf(endingOf(spec.recruitment, name))]}\n`;
+  });
+  return (
+    `\nThe study can also end early. A participant who does gets a row naming the ending in the ` +
+    `\`${ENDING_COLUMN}\` column, and then:\n\n${kept.join("")}`
+  );
 }
 
 /**

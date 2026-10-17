@@ -1,7 +1,7 @@
-import { rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { chromium, type Browser, type Page } from "playwright";
+import { chromium, type Browser, type Download, type Page } from "playwright";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { emitHtml } from "../src/targets/html.ts";
@@ -64,13 +64,15 @@ async function answerConsent(study: Study, key: string, query = "participant_id=
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
 
   const page = await browser.newPage({ acceptDownloads: true });
-  const downloads: string[] = [];
-  page.on("download", (download) => downloads.push(download.suggestedFilename()));
+  const downloads: Download[] = [];
+  const requests: string[] = [];
+  page.on("download", (download) => downloads.push(download));
+  page.on("request", (request) => requests.push(`${request.method()} ${request.url()}`));
   await page.route(`${PLATFORM}/**`, (route) => route.fulfill({ body: "back on the platform" }));
   await page.goto(`${server.url}/${PAGE_NAME}?${query}`);
   await page.locator("#jspsych-content").getByText("press y").waitFor();
   await page.keyboard.press(key);
-  return { page, downloads };
+  return { page, downloads, requests };
 }
 
 async function shownMessage(page: Page) {
@@ -122,7 +124,9 @@ describe("a participant who declines consent", () => {
     );
 
     expect(await shownMessage(page)).not.toContain("the task");
-    await expect.poll(() => downloads, { timeout: 15_000 }).toEqual(["consenting_p1.csv"]);
+    await expect
+      .poll(() => downloads.map((download) => download.suggestedFilename()), { timeout: 15_000 })
+      .toEqual(["consenting_p1.csv"]);
     expect(server.uploads).toHaveLength(0);
     await page.close();
   }, 120_000);
@@ -155,6 +159,103 @@ describe("a participant who agrees", () => {
     await page.waitForURL(`${PLATFORM}/complete`, { timeout: 15_000 });
     expect(server.uploads).toHaveLength(1);
     expect(server.uploads[0].data).not.toContain("no_consent");
+    await page.close();
+  }, 120_000);
+});
+
+/** The rows of a CSV after its header. */
+function rowsOf(csv: string) {
+  return csv.trim().split("\n").slice(1);
+}
+
+async function contentsOf(download: Download) {
+  return readFileSync(await download.path(), "utf8");
+}
+
+describe("an ending that keeps only a checkpoint", () => {
+  const SCREENED: Ending = { ...THANKS, keep: "checkpoint" };
+
+  it("uploads the one row saying who ended there, and none of their answers", async () => {
+    const { page } = await answerConsent({ noConsent: SCREENED }, "n");
+
+    await shownMessage(page);
+    expect(server.uploads).toHaveLength(1);
+    const rows = rowsOf(server.uploads[0].data);
+    expect(rows).toHaveLength(1);
+    const [row] = rows;
+    expect(row).toContain("no_consent");
+    expect(row).toContain("p1");
+    expect(server.uploads[0].data).not.toContain("press y");
+    await page.close();
+  }, 120_000);
+
+  it("downloads only that row when the upload fails", async () => {
+    server.failUploads = true;
+    const { page, downloads } = await answerConsent({ noConsent: SCREENED }, "n");
+
+    await expect.poll(() => downloads.length, { timeout: 15_000 }).toBe(1);
+    const saved = await contentsOf(downloads[0]);
+    expect(rowsOf(saved)).toHaveLength(1);
+    expect(saved).toContain("no_consent");
+    expect(saved).not.toContain("press y");
+    await page.close();
+  }, 120_000);
+});
+
+describe("an ending that keeps nothing", () => {
+  const DISCARDED: Ending = { ...THANKS, keep: "nothing" };
+  const dataRequests = (requests: string[]) =>
+    requests.filter((request) => request.includes("/api/"));
+
+  it("sends nothing to the data service and saves nothing on the computer", async () => {
+    const { page, downloads, requests } = await answerConsent({ noConsent: DISCARDED }, "n");
+
+    expect(await shownMessage(page)).not.toContain("the task");
+    // Long enough for a save that should not happen to have been attempted.
+    await page.waitForTimeout(1_000);
+    expect(dataRequests(requests)).toEqual([]);
+    expect(server.uploads).toHaveLength(0);
+    expect(downloads).toHaveLength(0);
+    await page.close();
+  }, 120_000);
+
+  it("downloads nothing when the study saves locally", async () => {
+    const { page, downloads } = await answerConsent(
+      { noConsent: DISCARDED, data: { save: "download" } },
+      "n",
+    );
+
+    await shownMessage(page);
+    await page.waitForTimeout(1_000);
+    expect(downloads).toHaveLength(0);
+    await page.close();
+  }, 120_000);
+
+  it("sends the participant back to the platform without uploading first", async () => {
+    const { page, requests } = await answerConsent(
+      { noConsent: { url: `${PLATFORM}/declined?pid={participant_id}`, keep: "nothing" } },
+      "n",
+    );
+
+    await page.waitForURL(`${PLATFORM}/declined?pid=p1`, { timeout: 15_000 });
+    expect(dataRequests(requests)).toEqual([]);
+    expect(server.uploads).toHaveLength(0);
+    await page.close();
+  }, 120_000);
+
+  it("sends them back with their id from a study that keeps no data at all", async () => {
+    const { page, downloads } = await answerConsent(
+      {
+        noConsent: { url: `${PLATFORM}/declined?pid={participant_id}`, keep: "nothing" },
+        data: null,
+      },
+      "n",
+      "PROLIFIC_PID=x&participant_id=p9",
+    );
+
+    await page.waitForURL(`${PLATFORM}/declined?pid=p9`, { timeout: 15_000 });
+    expect(downloads).toHaveLength(0);
+    expect(server.uploads).toHaveLength(0);
     await page.close();
   }, 120_000);
 });

@@ -2,10 +2,11 @@ import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { compileEndStep } from "../src/endings.ts";
 import { dataColumns } from "../src/metadata.ts";
-import type { Spec } from "../src/types.ts";
+import type { Ending, Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const PROLIFIC = "https://app.prolific.com/submissions/complete?cc=NOCONSENT";
+const THANKS: Ending = { message: "<p>Thank you anyway.</p>" };
 
 const consent = {
   kind: "trial" as const,
@@ -117,6 +118,110 @@ describe("ending the study early", () => {
     });
     expect(() => compileSpec(unnamed, schemas)).toThrow(
       /an end step needs to name the ending it reaches$/m,
+    );
+  });
+});
+
+describe("what an early ending keeps", () => {
+  const keeping = (
+    ending: Ending,
+    data: Spec["data"] | null = { save: "post", experiment_id: "x" },
+  ) =>
+    compileSpec(
+      study({ data: data ?? undefined, recruitment: { endings: { no_consent: ending } } }),
+      schemas,
+    ).source;
+  // From the end step's marker up to the task after the branch, leaving out the final save.
+  const endStep = (source: string) =>
+    source.slice(source.indexOf('ending: "no_consent"'), source.indexOf("\\u003cp>task"));
+
+  it("keeps every row unless it says otherwise", () => {
+    const step = endStep(keeping(THANKS));
+    expect(step).toContain("data: jsPsych.data.get().csv()");
+  });
+
+  it("uploads, or downloads after a failed upload, only the row naming the ending", () => {
+    const step = endStep(keeping({ ...THANKS, keep: "checkpoint" }));
+    const kept = 'jsPsych.data.get().filter({ ending: "no_consent" })';
+    expect(step).toContain(`data: ${kept}.csv()`);
+    expect(step).toContain(`${kept}.localSave("csv", filename)`);
+  });
+
+  it("downloads only that row when the study saves locally", () => {
+    const step = endStep(keeping({ ...THANKS, keep: "checkpoint" }, { save: "download" }));
+    expect(step).toContain('jsPsych.data.get().filter({ ending: "no_consent" }).localSave("csv"');
+  });
+
+  it.each([
+    ["uploading", { save: "post" as const, experiment_id: "x" }],
+    ["downloading", { save: "download" as const }],
+  ])("saves and sends nothing when it keeps nothing, even a study %s", (_, data) => {
+    const step = endStep(keeping({ ...THANKS, keep: "nothing" }, data));
+    expect(step).not.toContain("fetch(");
+    expect(step).not.toContain("localSave");
+    expect(step).not.toContain(".csv()");
+    expect(step).toContain('jsPsych.abortExperiment("\\u003cp>Thank you anyway.\\u003c/p>");');
+  });
+
+  it("sends the participant back without saving when it keeps nothing", () => {
+    const step = endStep(keeping({ url: `${PROLIFIC}&pid={participant_id}`, keep: "nothing" }));
+    expect(step).not.toContain("fetch(");
+    expect(step).toContain("async: true");
+    expect(step).toContain(
+      `window.location.assign(${JSON.stringify(`${PROLIFIC}&pid=`)} + encodeURIComponent(participantId));`,
+    );
+  });
+
+  it.each([
+    ["downloads its data", { save: "download" as const }],
+    ["keeps no data", null],
+  ])("sends a participant back with nothing kept from a study that %s", (_, data) => {
+    const url = `${PROLIFIC}&pid={participant_id}`;
+    const source = keeping({ url, keep: "nothing" }, data);
+    expect(source).toContain("const participantId = urlParameters[");
+    expect(endStep(source)).toContain("window.location.assign(");
+  });
+
+  it("still needs uploading before a redirect that keeps something", () => {
+    expect(() => keeping({ url: PROLIFIC, keep: "checkpoint" }, { save: "download" })).toThrow(
+      "needs data uploaded first",
+    );
+  });
+
+  it("keeps the spec's own columns off the one that picks out the kept row", () => {
+    const recording = study();
+    recording.timeline[0] = { ...consent, record: { ending: "no_consent" } };
+    expect(() => compileSpec(recording, schemas)).toThrow(
+      'records "ending", which is a column the study writes itself',
+    );
+    const grouping = study();
+    grouping.timeline.unshift({
+      kind: "assign",
+      method: "random",
+      record_as: "checkpoint",
+      groups: [
+        { name: "a", children: [consent] },
+        { name: "b", children: [consent] },
+      ],
+    });
+    expect(() => compileSpec(grouping, schemas)).toThrow(
+      'cannot record its group as "checkpoint", which is a column the study writes itself',
+    );
+  });
+
+  it("leaves a completed study keeping everything", () => {
+    const completing = study({
+      recruitment: { endings: { complete: { url: PROLIFIC, keep: "nothing" } } },
+      timeline: [consent],
+    });
+    expect(() => compileSpec(completing, schemas)).toThrow(
+      'the "complete" ending keeps all the data; only an early ending can keep less',
+    );
+  });
+
+  it("rejects keeping something it does not know", () => {
+    expect(() => keeping({ ...THANKS, keep: "some" as never })).toThrow(
+      'keeps "all", "checkpoint", "nothing", not "some"',
     );
   });
 });
