@@ -8,6 +8,11 @@ updates:
     # broken version is usually pulled before it reaches this repository.
     cooldown:
       default-days: 14
+    ignore:
+      # Node's types describe the runtime, so they move with the Node version CI and the workflows
+      # run (24), not ahead of it: newer types would let code use APIs that do not exist there.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
       # A plugin update changes the extracted schemas, so they are taken together and the
       # schemas-up-to-date check says when packages/schemas/plugin-schemas.json needs regenerating.
