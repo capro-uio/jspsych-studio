@@ -122,6 +122,36 @@ describe("what the schema catches before anything runs", () => {
     expect(problems(spec)).toContain("must NOT be valid");
   });
 
+  it("a branch rule that mixes accuracy with an answer", () => {
+    const spec: Spec = {
+      name: "mixed rule",
+      timeline: [
+        { kind: "trial", plugin: "html-button-response", tag: "consent" },
+        {
+          kind: "branch",
+          when: { scope: "consent", response_equals: 1, accuracy_below: 0.5 } as never,
+          then: [{ kind: "trial", plugin: "preload" }],
+        },
+      ],
+    };
+    expect(problems(spec)).toContain("must match exactly one schema in oneOf");
+  });
+
+  it("but accepts a branch on a survey answer", () => {
+    const spec: Spec = {
+      name: "consent",
+      timeline: [
+        { kind: "trial", plugin: "html-button-response", tag: "consent" },
+        {
+          kind: "branch",
+          when: { scope: "consent", response_equals: "No", question: "consent" },
+          then: [{ kind: "trial", plugin: "preload" }],
+        },
+      ],
+    };
+    expect(problems(spec)).toEqual([]);
+  });
+
   it("a split with only one group", () => {
     const spec: Spec = {
       name: "one group",

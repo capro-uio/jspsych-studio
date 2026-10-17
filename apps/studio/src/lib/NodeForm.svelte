@@ -1,7 +1,19 @@
 <script lang="ts">
-  import { latinSquareOrders } from "@jspsych-studio/compiler";
+  import { isResponseRule, latinSquareOrders } from "@jspsych-studio/compiler";
   import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
+  import {
+    accuracyComparisonOf,
+    branchBasis,
+    setAccuracyComparison,
+    setAnswer,
+    setBranchBasis,
+    setQuestion,
+    setThreshold,
+    thresholdOf,
+    type AccuracyComparison,
+    type BranchBasis,
+  } from "./rules.ts";
   import {
     allConditionColumns,
     assetOptions,
@@ -25,27 +37,8 @@
   const checkpoint = $derived(node?.kind === "checkpoint" ? node : null);
   const branch = $derived(node?.kind === "branch" ? node : null);
 
-  const branchComparison = $derived(
-    branch?.when.accuracy_at_least === undefined ? "below" : "at_least",
-  );
-
-  function setBranchComparison(comparison: string) {
-    if (!branch) return;
-    const threshold = branch.when.accuracy_at_least ?? branch.when.accuracy_below ?? 0.8;
-    if (comparison === "at_least") {
-      delete branch.when.accuracy_below;
-      branch.when.accuracy_at_least = threshold;
-    } else {
-      delete branch.when.accuracy_at_least;
-      branch.when.accuracy_below = threshold;
-    }
-  }
-
-  function setBranchThreshold(value: number) {
-    if (!branch) return;
-    if (branchComparison === "at_least") branch.when.accuracy_at_least = value;
-    else branch.when.accuracy_below = value;
-  }
+  const accuracyRule = $derived(branch && !isResponseRule(branch.when) ? branch.when : null);
+  const responseRule = $derived(branch && isResponseRule(branch.when) ? branch.when : null);
   const columns = $derived(allConditionColumns());
   const assets = $derived(assetOptions());
 
@@ -358,9 +351,21 @@
 {:else if branch}
   <h2>Branch</h2>
   <p class="help">
-    Sends participants down one of two paths depending on how they did earlier. The trials being
-    judged must come before this step.
+    Sends participants down one of two paths depending on how they did or what they answered
+    earlier. The trials being judged must come before this step.
   </p>
+  <div class="field">
+    <label for="branch-basis"><span class="name">decide on</span></label>
+    <select
+      id="branch-basis"
+      data-testid="branch-basis"
+      value={branchBasis(branch.when)}
+      onchange={(event) => setBranchBasis(branch, event.currentTarget.value as BranchBasis)}
+    >
+      <option value="accuracy">how accurate they were</option>
+      <option value="response">what they answered</option>
+    </select>
+  </div>
   <div class="field">
     <label for="branch-scope"><span class="name">judge trials tagged</span></label>
     <input
@@ -370,31 +375,61 @@
       onchange={(event) => (branch.when.scope = event.currentTarget.value)}
     />
   </div>
-  <div class="field">
-    <label for="branch-comparison"><span class="name">take the first path when</span></label>
-    <select
-      id="branch-comparison"
-      data-testid="branch-comparison"
-      value={branchComparison}
-      onchange={(event) => setBranchComparison(event.currentTarget.value)}
-    >
-      <option value="at_least">accuracy is at least</option>
-      <option value="below">accuracy is below</option>
-    </select>
-  </div>
-  <div class="field">
-    <label for="branch-threshold"><span class="name">threshold</span></label>
-    <input
-      id="branch-threshold"
-      data-testid="branch-threshold"
-      type="number"
-      min="0"
-      max="1"
-      step="0.05"
-      value={branch.when.accuracy_at_least ?? branch.when.accuracy_below ?? 0.8}
-      onchange={(event) => setBranchThreshold(event.currentTarget.valueAsNumber)}
-    />
-  </div>
+  {#if accuracyRule}
+    <div class="field">
+      <label for="branch-comparison"><span class="name">take the first path when</span></label>
+      <select
+        id="branch-comparison"
+        data-testid="branch-comparison"
+        value={accuracyComparisonOf(accuracyRule)}
+        onchange={(event) =>
+          setAccuracyComparison(accuracyRule, event.currentTarget.value as AccuracyComparison)}
+      >
+        <option value="at_least">accuracy is at least</option>
+        <option value="below">accuracy is below</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="branch-threshold"><span class="name">threshold</span></label>
+      <input
+        id="branch-threshold"
+        data-testid="branch-threshold"
+        type="number"
+        min="0"
+        max="1"
+        step="0.05"
+        value={thresholdOf(accuracyRule)}
+        onchange={(event) => setThreshold(accuracyRule, event.currentTarget.valueAsNumber)}
+      />
+    </div>
+  {:else if responseRule}
+    <div class="field">
+      <label for="branch-answer"
+        ><span class="name">take the first path when the answer is</span></label
+      >
+      <input
+        id="branch-answer"
+        data-testid="branch-answer"
+        placeholder="e.g. no, or 1 for the second button"
+        value={String(responseRule.response_equals)}
+        onchange={(event) => setAnswer(responseRule, event.currentTarget.value)}
+      />
+    </div>
+    <div class="field">
+      <label for="branch-question"><span class="name">survey question</span></label>
+      <input
+        id="branch-question"
+        data-testid="branch-question"
+        placeholder="only when the trial asks several"
+        value={responseRule.question ?? ""}
+        onchange={(event) => setQuestion(responseRule, event.currentTarget.value)}
+      />
+    </div>
+    <p class="help">
+      The latest answer on those trials is compared as text. Buttons count from 0, so the second
+      button is 1.
+    </p>
+  {/if}
 {:else if checkpoint}
   <h2>Checkpoint</h2>
   <p class="help">Records that the participant got this far, for drop-out analysis.</p>

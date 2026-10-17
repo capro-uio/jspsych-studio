@@ -2,6 +2,7 @@ import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
 import { slotsOf } from "@jspsych-studio/compiler";
 import { NODE_KINDS, SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
 import { unique } from "./lists.ts";
+import { DEFAULT_THRESHOLD } from "./rules.ts";
 import type {
   AssignNode,
   BranchNode,
@@ -149,7 +150,7 @@ export function newBranch(first: SpecNode): BranchNode {
   const [existing] = tagsInUse();
   return {
     kind: "branch",
-    when: { scope: existing ?? "", accuracy_at_least: 0.8 },
+    when: { scope: existing ?? "", accuracy_at_least: DEFAULT_THRESHOLD },
     then: [first],
     otherwise: [],
   };

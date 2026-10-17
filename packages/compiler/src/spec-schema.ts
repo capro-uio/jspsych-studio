@@ -197,10 +197,11 @@ const NODE_DEFINITIONS = {
     },
   },
   branch: {
-    title: "Sends a participant down one of two paths depending on how they did.",
+    title:
+      "Sends a participant down one of two paths depending on how they did or what they answered.",
     required: ["when", "then"],
     properties: {
-      when: reference("accuracyRule"),
+      when: { oneOf: [reference("accuracyRule"), reference("responseRule")] },
       then: nodeList("Steps run when the rule holds."),
       otherwise: nodeList("Steps run when it does not."),
     },
@@ -368,6 +369,28 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
           title: "A rule compares accuracy one way, not both at once.",
           required: ["accuracy_below", "accuracy_at_least"],
         },
+      },
+      responseRule: {
+        title: "Holds when the latest answer on the trials carrying one tag matches.",
+        type: "object",
+        required: ["scope", "response_equals"],
+        properties: {
+          scope: {
+            title: "The tag whose most recent trial is read.",
+            type: "string",
+            minLength: 1,
+          },
+          response_equals: {
+            title: "The answer looked for, compared as text: `1` matches the second button.",
+            anyOf: [{ type: "string", minLength: 1 }, { type: ["number", "boolean"] }],
+          },
+          question: {
+            title: "The question to read when a trial asks several, as a survey does.",
+            type: "string",
+            minLength: 1,
+          },
+        },
+        additionalProperties: false,
       },
       experimentSettings: {
         title: "Settings that apply to the whole experiment rather than to one step.",
