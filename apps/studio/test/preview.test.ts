@@ -76,6 +76,65 @@ describe("what the preview runs", () => {
     expect(timeline[0]).toMatchObject({ params: { stimulus: "<p>narrow</p>" } });
   });
 
+  // The service counts participants, so a preview asking it would skew the real balance; and the
+  // preview saves no data, so a counted draw would not even compile.
+  it("draws counted groups and orders in the browser, leaving the experiment as it was", () => {
+    const counted: Spec = {
+      name: "counted",
+      data: { save: "post", experiment_id: "real" },
+      timeline: [
+        {
+          kind: "counterbalance",
+          method: "latin_square",
+          tasks: [
+            {
+              name: "first",
+              children: [
+                {
+                  kind: "assign",
+                  method: "balanced",
+                  groups: [
+                    { name: "a", children: [trial("<p>a</p>")] },
+                    { name: "b", children: [trial("<p>b</p>")] },
+                  ],
+                },
+              ],
+            },
+            { name: "second", children: [trial("<p>second</p>")] },
+          ],
+        },
+      ],
+    };
+    const { timeline } = previewSpec(counted);
+    expect(timeline[0]).toMatchObject({
+      method: "random",
+      tasks: [{ children: [{ method: "random" }] }, {}],
+    });
+    expect(counted.timeline[0]).toMatchObject({ method: "latin_square" });
+    expect(() => compileSpec(previewSpec(counted), schemas)).not.toThrow();
+    const { source } = compileSpec(previewSpec(counted), schemas);
+    expect(source).not.toContain("/api/condition/");
+  });
+
+  it("unwraps a counterbalance so only the chosen task runs", () => {
+    const ordered: Spec = {
+      name: "ordered",
+      timeline: [
+        {
+          kind: "counterbalance",
+          method: "latin_square",
+          tasks: [
+            { name: "flanker", children: [trial("<p>flanker</p>")] },
+            { name: "stroop", children: [trial("<p>stroop</p>")] },
+          ],
+        },
+      ],
+    };
+    const preview = previewSpec(ordered, { from: [0, 1, 0] });
+    expect(preview.timeline).toEqual([trial("<p>stroop</p>")]);
+    expect(() => compileSpec(preview, schemas)).not.toThrow();
+  });
+
   it("runs a single top-level step on its own", () => {
     expect(previewSpec(spec, { from: [0] }).timeline).toEqual([trial("<p>welcome</p>")]);
   });

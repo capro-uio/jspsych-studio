@@ -48,6 +48,19 @@ export interface AssignNode {
   groups: Group[];
 }
 
+/** Runs every task for every participant, in an order that varies between participants. */
+export interface CounterbalanceNode {
+  kind: "counterbalance";
+  /**
+   * `"random"` shuffles the tasks in the browser; `"latin_square"` asks the data service for the
+   * participant's row of a balanced Latin square.
+   */
+  method: "random" | "latin_square";
+  /** Column name the order used is recorded under. */
+  record_as?: string;
+  tasks: Group[];
+}
+
 /** Sends a participant down one of two paths depending on how they did. */
 export interface BranchNode {
   kind: "branch";
@@ -69,7 +82,8 @@ export interface LoopNode {
   children: SpecNode[];
 }
 
-export type SpecNode = TrialNode | BlockNode | LoopNode | AssignNode | BranchNode | CheckpointNode;
+export type SpecNode =
+  TrialNode | BlockNode | LoopNode | AssignNode | CounterbalanceNode | BranchNode | CheckpointNode;
 
 /** A named list of steps inside a node, such as a group or a branch's path. */
 export interface Slot {

@@ -517,6 +517,53 @@ describe("splitting participants between groups", () => {
   }, 180_000);
 });
 
+describe("counterbalancing the order of tasks", () => {
+  it("builds two tasks and runs both, one after the other", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addStep(page, "slot-0", "counterbalance");
+    await setText(page, "task-name-0", "flanker");
+    await setText(page, "task-name-1", "stroop");
+    await setText(page, "counterbalance-column", "task_order");
+
+    // Without uploading there is nobody to count participants, and the step says so.
+    await page.getByTestId("counterbalance-method").selectOption("latin_square");
+    expect(await page.getByTestId("counterbalance-orders").innerText()).toContain("2 orders");
+    await expect
+      .poll(() => page.getByTestId("step-problems").innerText())
+      .toContain("only random order");
+    await page.getByTestId("counterbalance-method").selectOption("random");
+    await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
+
+    for (const [index, label] of ["flanker", "stroop"].entries()) {
+      await page.getByTestId(`node-0-${index}-0`).click();
+      await setFixed(page, "stimulus", `<p>${label} task</p>`);
+    }
+
+    await page.getByTestId("view-spec").click();
+    const spec = await authoredSpec(page);
+    const counterbalance = stepOfKind(spec.timeline[0], "counterbalance");
+    expect(counterbalance.method).toBe("random");
+    expect(counterbalance.record_as).toBe("task_order");
+    expect(counterbalance.tasks.map((task) => task.name)).toEqual(["flanker", "stroop"]);
+
+    await page.getByTestId("view-experiment").click();
+    const content = page.frameLocator('[data-testid="preview"]').locator("#jspsych-content");
+    await expect
+      .poll(() => content.innerText(), { timeout: 20_000 })
+      .toMatch(/flanker task|stroop task/);
+    const first = await content.innerText();
+    const second = first.includes("flanker") ? "stroop task" : "flanker task";
+
+    await content.click();
+    await page.keyboard.press("Space");
+    await expect.poll(() => content.innerText(), { timeout: 5_000 }).toContain(second);
+
+    await page.close();
+  }, 180_000);
+});
+
 describe("routing on performance", () => {
   it("builds a branch with a step on each path", async () => {
     const page = await browser.newPage();

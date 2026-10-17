@@ -34,6 +34,10 @@
     if (node.kind === "assign") {
       return `${node.groups.map((group) => group.name).join(" or ")} · ${node.method}`;
     }
+    if (node.kind === "counterbalance") {
+      const order = node.method === "random" ? "random" : "Latin-square";
+      return `${node.tasks.map((task) => task.name).join(", ")} · ${order} order`;
+    }
     if (node.kind === "branch") return `if accuracy ${describeAccuracy(node.when)}`;
     return `repeat while accuracy ${describeAccuracy(node.repeat_while)}`;
   }

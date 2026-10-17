@@ -1,8 +1,15 @@
 import { conditionColumns as columnsOfTable } from "@jspsych-studio/compiler";
 import { slotsOf } from "@jspsych-studio/compiler";
-import { SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
+import { NODE_KINDS, SPEC_SCHEMA_ID } from "@jspsych-studio/compiler";
 import { unique } from "./lists.ts";
-import type { AssignNode, BranchNode, Spec, SpecNode, TrialNode } from "@jspsych-studio/compiler";
+import type {
+  AssignNode,
+  BranchNode,
+  CounterbalanceNode,
+  Spec,
+  SpecNode,
+  TrialNode,
+} from "@jspsych-studio/compiler";
 
 export type NodePath = number[];
 
@@ -126,6 +133,17 @@ export function newAssign(first: SpecNode, second: SpecNode): AssignNode {
   };
 }
 
+export function newCounterbalance(first: SpecNode, second: SpecNode): CounterbalanceNode {
+  return {
+    kind: "counterbalance",
+    method: "random",
+    tasks: [
+      { name: "task 1", children: [first] },
+      { name: "task 2", children: [second] },
+    ],
+  };
+}
+
 export function newBranch(first: SpecNode): BranchNode {
   // A branch judges trials that already happened, so it starts on one the experiment has.
   const [existing] = tagsInUse();
@@ -185,19 +203,25 @@ export function allConditionColumns() {
   return unique(conditionTableNames().flatMap(conditionColumns));
 }
 
-const NODE_KINDS = new Set(["trial", "block", "loop"]);
+const KNOWN_KINDS = new Set<string>(NODE_KINDS);
 
 function assertNodes(nodes: unknown, where: string): asserts nodes is SpecNode[] {
   if (!Array.isArray(nodes)) throw new Error(`${where} must be a list of steps`);
-  for (const node of nodes) {
-    const kind = (node as SpecNode)?.kind;
-    if (!NODE_KINDS.has(kind)) throw new Error(`${where} holds a step of unknown kind "${kind}"`);
+  for (const node of nodes as SpecNode[]) {
+    const kind = node?.kind;
+    if (!KNOWN_KINDS.has(kind)) throw new Error(`${where} holds a step of unknown kind "${kind}"`);
     if (kind === "trial") {
       if (typeof (node as { plugin?: unknown }).plugin !== "string") {
         throw new Error(`${where} holds a trial with no plugin`);
       }
-    } else {
+    } else if (kind === "block" || kind === "loop") {
       assertNodes((node as { children?: unknown }).children, `${where} › ${kind}`);
+    } else if (kind !== "checkpoint") {
+      const slots: unknown = slotsOf(node);
+      if (!Array.isArray(slots)) throw new Error(`${where} › ${kind} holds no list of paths`);
+      for (const slot of slots as { name?: unknown; children?: unknown }[]) {
+        assertNodes(slot?.children, `${where} › ${kind} › ${String(slot?.name)}`);
+      }
     }
   }
 }

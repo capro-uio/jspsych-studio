@@ -1,6 +1,15 @@
 import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/schemas";
-import type { AssignNode, BranchNode, ParameterValue, Spec, SpecNode, TrialNode } from "./types.ts";
+import type {
+  AssignNode,
+  BranchNode,
+  CounterbalanceNode,
+  ParameterValue,
+  Spec,
+  SpecNode,
+  TrialNode,
+} from "./types.ts";
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
+import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison } from "./conditions.ts";
 import { recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
@@ -253,6 +262,58 @@ function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: nu
   }
 }
 
+function collectOrderColumns(nodes: SpecNode[]): string[] {
+  return nodes.flatMap((node) => {
+    const own = node.kind === "counterbalance" ? [orderColumn(node)] : [];
+    if (node.kind === "block" || node.kind === "loop") return collectOrderColumns(node.children);
+    const slots = slotsOf(node) ?? [];
+    return [...own, ...slots.flatMap((slot) => collectOrderColumns(slot.children))];
+  });
+}
+
+function checkCounterbalance(
+  node: CounterbalanceNode,
+  spec: Spec,
+  columns: Set<string>,
+  problems: Problem[],
+  path: number[],
+) {
+  const report = (message: string) => problems.push({ message, path });
+  if (node.tasks.length < 2) report("counterbalancing needs at least two tasks");
+  const names = node.tasks.map((task) => task.name);
+  if (names.some((name) => !name)) report("every task needs a name");
+  if (new Set(names).size !== names.length) report("task names must be different");
+  // The order is recorded as the names joined by the separator, so a name holding it would make
+  // the recorded order impossible to read back.
+  for (const name of names.filter((name) => name.includes(ORDER_SEPARATOR))) {
+    report(
+      `task "${name}" contains "${ORDER_SEPARATOR}", which the recorded order uses between tasks`,
+    );
+  }
+  if (columns.has(TASK_VARIABLE)) {
+    report(
+      `an enclosing conditions table has a column named "${TASK_VARIABLE}", which the ` +
+        "counterbalanced step uses itself: rename that column",
+    );
+  }
+  for (const task of node.tasks) {
+    if (task.children.length === 0) report(`task "${task.name}" has no steps inside it`);
+  }
+  if (node.method === "latin_square" && !(spec.data?.save === "post" && spec.data.experiment_id)) {
+    report(
+      "a Latin-square order needs data uploading to a service, which is what counts " +
+        "participants; when data is downloaded, only random order is available",
+    );
+  }
+  const column = orderColumn(node);
+  if (collectOrderColumns(spec.timeline).filter((other) => other === column).length > 1) {
+    report(
+      `another counterbalanced step also records its order as "${column}", so one would ` +
+        "overwrite the other: give each its own column name",
+    );
+  }
+}
+
 function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: number[]) {
   const report = (message: string) => problems.push({ message, path });
   if (node.then.length === 0 && (node.otherwise ?? []).length === 0) {
@@ -310,8 +371,10 @@ function checkNodes(
       if (!node.name) report("a checkpoint needs a name");
       return;
     }
-    if (node.kind === "assign" || node.kind === "branch") {
+    if (node.kind === "assign" || node.kind === "counterbalance" || node.kind === "branch") {
       if (node.kind === "assign") checkAssign(node, spec, problems, here);
+      else if (node.kind === "counterbalance")
+        checkCounterbalance(node, spec, columns, problems, here);
       else checkBranch(node, spec, problems, here);
       (slotsOf(node) ?? []).forEach((slot, slotIndex) => {
         checkNodes(slot.children, spec, schemas, columns, problems, [...here, slotIndex]);

@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { specSchema } from "@jspsych-studio/compiler";
+import { compileSpec, specSchema } from "@jspsych-studio/compiler";
 import {
   exportedSpec,
   isUntouched,
+  newCounterbalance,
+  newTrial,
   parseSpec,
   project,
   startNewProject,
@@ -42,6 +44,45 @@ describe("parseSpec", () => {
       timeline: [{ kind: "loop", repeat_while: {}, children: [{ kind: "nope" }] }],
     };
     expect(() => parseSpec(JSON.stringify(spec))).toThrow(/timeline › loop/);
+  });
+
+  // A file the builder saved has to open again, whatever kinds of step it holds.
+  it("accepts every kind of step the builder can make", () => {
+    const step = { kind: "trial", plugin: "html-keyboard-response" };
+    const timeline = [
+      { kind: "block", conditions: "rows", children: [step] },
+      { kind: "loop", repeat_while: { scope: "x" }, children: [step] },
+      { kind: "assign", method: "random", groups: [{ name: "a", children: [step] }] },
+      { kind: "counterbalance", method: "random", tasks: [{ name: "a", children: [step] }] },
+      { kind: "branch", when: { scope: "x" }, then: [step] },
+      { kind: "checkpoint", name: "here" },
+    ];
+    expect(parseSpec(JSON.stringify({ name: "x", timeline })).timeline).toHaveLength(6);
+  });
+
+  it("rejects malformed steps inside a counterbalanced task, naming the task", () => {
+    const spec = {
+      name: "x",
+      timeline: [
+        { kind: "counterbalance", method: "random", tasks: [{ name: "stroop", children: [{}] }] },
+      ],
+    };
+    expect(() => parseSpec(JSON.stringify(spec))).toThrow(/timeline › counterbalance › stroop/);
+  });
+
+  it("rejects a counterbalance with no tasks to order", () => {
+    const spec = { name: "x", timeline: [{ kind: "counterbalance", method: "random" }] };
+    expect(() => parseSpec(JSON.stringify(spec))).toThrow(/counterbalance holds no list of paths/);
+  });
+});
+
+describe("newCounterbalance", () => {
+  it("arrives with two named tasks, each ready to run", () => {
+    const step = (stimulus: string) => newTrial("html-keyboard-response", { stimulus });
+    const node = newCounterbalance(step("a"), step("b"));
+    expect(node.method).toBe("random");
+    expect(node.tasks.map((task) => task.name)).toEqual(["task 1", "task 2"]);
+    expect(() => compileSpec({ name: "x", timeline: [node] }, schemas)).not.toThrow();
   });
 });
 

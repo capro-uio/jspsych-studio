@@ -1,4 +1,5 @@
 export { compileSpec } from "./compile.ts";
+export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
 export { DATAPIPE_URL } from "./data.ts";
 export {
   DEFAULT_ID_PARAM,
@@ -21,7 +22,7 @@ export {
 } from "./metadata.ts";
 export type { ProjectFile } from "./targets/project.ts";
 export type { HtmlOutput, HtmlTargetOptions } from "./targets/html.ts";
-export { SPEC_SCHEMA_ID, specSchema } from "./spec-schema.ts";
+export { NODE_KINDS, SPEC_SCHEMA_ID, specSchema } from "./spec-schema.ts";
 export { SpecError, validateSpec } from "./validate.ts";
 export type { Problem } from "./validate.ts";
 export { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
