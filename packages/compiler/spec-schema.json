@@ -257,6 +257,14 @@
         "record": {
           "title": "Extra columns written to the data file for this trial.",
           "type": "object",
+          "propertyNames": {
+            "not": {
+              "enum": [
+                "ending",
+                "checkpoint"
+              ]
+            }
+          },
           "additionalProperties": {
             "$ref": "#/definitions/parameterValue"
           }
@@ -3397,7 +3405,13 @@
         },
         "record_as": {
           "title": "Column name the chosen group is recorded under.",
-          "type": "string"
+          "type": "string",
+          "not": {
+            "enum": [
+              "ending",
+              "checkpoint"
+            ]
+          }
         },
         "groups": {
           "title": "The groups participants are split between.",
@@ -3786,6 +3800,23 @@
           "propertyNames": {
             "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
           },
+          "properties": {
+            "complete": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/ending"
+                },
+                {
+                  "title": "A completed study keeps all its data.",
+                  "properties": {
+                    "keep": {
+                      "const": "all"
+                    }
+                  }
+                }
+              ]
+            }
+          },
           "additionalProperties": {
             "$ref": "#/definitions/ending"
           }
@@ -3806,6 +3837,16 @@
           "title": "Shown to the participant, who stays on the page, instead of a return URL.",
           "type": "string",
           "pattern": "\\S"
+        },
+        "keep": {
+          "title": "What is saved on reaching this ending.",
+          "description": "`all` saves every row, `checkpoint` only the row saying which ending was reached, and `nothing` saves and sends nothing at all. Only an early ending can keep less than `all`.",
+          "enum": [
+            "all",
+            "checkpoint",
+            "nothing"
+          ],
+          "default": "all"
         }
       },
       "additionalProperties": false,

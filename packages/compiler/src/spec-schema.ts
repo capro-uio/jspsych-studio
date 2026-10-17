@@ -2,9 +2,11 @@ import type { ParameterSchema, PluginSchema, PluginSchemas } from "@jspsych-stud
 import {
   ENDING_NAME_PATTERN,
   RECRUITMENT_PLATFORMS,
+  RETENTIONS,
   SECURE_URL_PATTERN,
   VISIBLE_TEXT_PATTERN,
 } from "./recruitment.ts";
+import { STUDY_COLUMNS } from "./data.ts";
 import type { SpecNode } from "./types.ts";
 
 /** Where the schema is published, so a spec can name it in `$schema` and editors can fetch it. */
@@ -110,6 +112,7 @@ const NODE_DEFINITIONS = {
       record: {
         title: "Extra columns written to the data file for this trial.",
         type: "object",
+        propertyNames: { not: { enum: STUDY_COLUMNS } },
         additionalProperties: reference("parameterValue"),
       },
       score: reference("scoringRule"),
@@ -152,7 +155,11 @@ const NODE_DEFINITIONS = {
           "which requires uploading data with an experiment id.",
         enum: ["random", "balanced"],
       },
-      record_as: { title: "Column name the chosen group is recorded under.", type: "string" },
+      record_as: {
+        title: "Column name the chosen group is recorded under.",
+        type: "string",
+        not: { enum: STUDY_COLUMNS },
+      },
       groups: {
         title: "The groups participants are split between.",
         type: "array",
@@ -478,6 +485,17 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
               "reached through an `end` step, such as `no_consent` for a participant who declines.",
             type: "object",
             propertyNames: { pattern: ENDING_NAME_PATTERN },
+            properties: {
+              complete: {
+                allOf: [
+                  reference("ending"),
+                  {
+                    title: "A completed study keeps all its data.",
+                    properties: { keep: { const: "all" } },
+                  },
+                ],
+              },
+            },
             additionalProperties: reference("ending"),
           },
         },
@@ -496,6 +514,15 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             title: "Shown to the participant, who stays on the page, instead of a return URL.",
             type: "string",
             pattern: VISIBLE_TEXT_PATTERN,
+          },
+          keep: {
+            title: "What is saved on reaching this ending.",
+            description:
+              "`all` saves every row, `checkpoint` only the row saying which ending was reached, " +
+              "and `nothing` saves and sends nothing at all. Only an early ending can keep less " +
+              "than `all`.",
+            enum: [...RETENTIONS],
+            default: "all",
           },
         },
         additionalProperties: false,

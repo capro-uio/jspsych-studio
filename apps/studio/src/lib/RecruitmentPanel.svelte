@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { idParamOf } from "@jspsych-studio/compiler";
+  import { idParamOf, retentionOf } from "@jspsych-studio/compiler";
+  import type { Retention } from "@jspsych-studio/compiler";
   import { project } from "./project.svelte.ts";
   import {
     addEnding,
@@ -10,6 +11,8 @@
     platformChoice,
     PLATFORMS,
     removeEnding,
+    RETENTION_CHOICES,
+    setRetention,
     setCompletionUrl,
     setEndingKind,
     setEndingTarget,
@@ -107,8 +110,24 @@
           value={ending.message}
           onchange={(e) => setEndingTarget(project.spec, name, e.currentTarget.value)}></textarea>
       {/if}
+      <select
+        aria-label={`what is kept when the study ends as ${name}`}
+        data-testid={`ending-keep-${name}`}
+        value={retentionOf(ending)}
+        onchange={(e) => setRetention(project.spec, name, e.currentTarget.value as Retention)}
+      >
+        {#each RETENTION_CHOICES as choice (choice.id)}
+          <option value={choice.id}>{choice.label}</option>
+        {/each}
+      </select>
     </div>
   {/each}
+  {#if endings.length > 0}
+    <p class="muted">
+      Ethics boards often ask for a declined participant's data to be discarded. Keeping nothing
+      means nothing is uploaded or downloaded for them, not even a row saying they declined.
+    </p>
+  {/if}
   <form
     class="add-ending"
     onsubmit={(e) => {

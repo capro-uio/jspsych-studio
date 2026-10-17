@@ -65,7 +65,12 @@ function uploadEnding(ending: Ending | undefined) {
 
 // Losing a participant's data because an upload failed is unrecoverable, so a failed upload falls
 // back to a download rather than ending the experiment as if the data had been stored.
-function uploadStep(settings: DataSettings, filename: string, studyEnding: Ending | undefined) {
+function uploadStep(
+  settings: DataSettings,
+  filename: string,
+  studyEnding: Ending | undefined,
+  rows: string,
+) {
   const endpoint = `${(settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "")}/api/data/`;
   const ending = uploadEnding(studyEnding);
   // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
@@ -80,13 +85,13 @@ function uploadStep(settings: DataSettings, filename: string, studyEnding: Endin
         body: JSON.stringify({
           experimentID: ${literal(settings.experiment_id ?? "")},
           filename,
-          data: jsPsych.data.get().csv(),
+          data: ${rows}.csv(),
         }),
       });
       if (!response.ok) throw new Error("the server responded with " + response.status);
       ${ending.saved}
     } catch (error) {
-      jsPsych.data.get().localSave("csv", filename);
+      ${rows}.localSave("csv", filename);
       // abortExperiment leaves the message on screen; ending the trial normally would clear it
       // before the participant could read why they are holding a file.
       jsPsych.abortExperiment(${ending.failed});
@@ -96,26 +101,32 @@ function uploadStep(settings: DataSettings, filename: string, studyEnding: Endin
   }`;
 }
 
-function downloadStep(filename: string, ending: Ending | undefined) {
+function downloadStep(filename: string, ending: Ending | undefined, rows: string) {
   return `() => {
     ${savingScreen("Downloading your data.")}
-    jsPsych.data.get().localSave("csv", ${filename});
+    ${rows}.localSave("csv", ${filename});
     ${ending?.message ? showMessage(ending.message) : ""}
   }`;
 }
 
-/** The step that saves the data and then ends the study the way `ending` says. */
+export const ALL_ROWS = "jsPsych.data.get()";
+
+/**
+ * The step that saves the data and then ends the study the way `ending` says. `rows` is the
+ * expression for the rows that are kept, every row unless the ending keeps less.
+ */
 export function compileDataStep(
   settings: DataSettings,
   experimentName: string,
   ending: Ending | undefined,
+  rows = ALL_ROWS,
 ) {
   const prefix = settings.filename_prefix ?? experimentName;
   const filename = `${literal(prefix)} + "_" + ${PARTICIPANT_ID} + ".csv"`;
   const func =
     settings.save === "post"
-      ? uploadStep(settings, filename, ending)
-      : downloadStep(filename, ending);
+      ? uploadStep(settings, filename, ending, rows)
+      : downloadStep(filename, ending, rows);
   return {
     plugin: CALL_FUNCTION_PLUGIN,
     source: `{\n  type: jsPsychCallFunction,\n  async: ${settings.save === "post"},\n  func: ${func},\n}`,
@@ -130,12 +141,25 @@ export function compileMessageStep(message: string) {
   };
 }
 
+/** Sends the participant to `url` without saving anything first. */
+export function compileRedirectStep(url: string) {
+  // The page is leaving, so the trial is never ended: the steps after it must not start.
+  return {
+    plugin: CALL_FUNCTION_PLUGIN,
+    source:
+      `{\n  type: jsPsychCallFunction,\n  async: true,\n  func: () => {\n` +
+      `    ${savingScreen("Taking you back to finish the study.")}\n` +
+      `    window.location.assign(${urlExpression(url)});\n  },\n}`,
+  };
+}
+
 /** The column the row written on reaching an early ending names that ending in. */
 export const ENDING_COLUMN = "ending";
 
 // jsPsych writes added properties over a trial's own data, so a link carrying ?ending=… would
-// otherwise relabel every row, and the rows an ending keeps are picked out by that column.
-const STUDY_COLUMNS = [ENDING_COLUMN, "checkpoint"];
+// otherwise relabel every row, and the rows an ending keeps are picked out by that column. The
+// validator keeps the spec's own recorded columns off them too.
+export const STUDY_COLUMNS = [ENDING_COLUMN, "checkpoint"];
 
 export function compileParticipantProperties(experimentName: string, idParam: string) {
   return (

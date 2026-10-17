@@ -139,6 +139,19 @@ Reaching the end step writes a row naming the ending in an `ending` column, save
 way the study does, then shows the message or sends the participant to the address. Every `end`
 step must name an ending the study has.
 
+Each early ending also says what is kept with `keep`. Ethics boards often ask for a declined
+participant's data to be discarded:
+
+- `"all"`, the default, saves every row.
+- `"checkpoint"` saves only the row naming the ending, which carries the participant's id and the
+  link's parameters, so a platform can still be told who left.
+- `"nothing"` saves none of their data: no upload, no download, not even that row. The participant
+  is shown the message or sent back straight away, with their id in the return address if it asks
+  for one. A balanced split that runs before the end step has still asked the data service for a
+  group, which sends the experiment id and nothing about the participant.
+
+`complete` always keeps everything.
+
 ## Editing a spec by hand
 
 Every spec names a JSON Schema in `$schema`, so a spec file opened in VS Code, Positron or any

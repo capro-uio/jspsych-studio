@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { earlyEndingNames, idParamOf } from "@jspsych-studio/compiler";
+import { earlyEndingNames, idParamOf, retentionOf } from "@jspsych-studio/compiler";
 import type { Spec } from "@jspsych-studio/compiler";
 import {
   addEnding,
@@ -9,10 +9,12 @@ import {
   platformChoice,
   PLATFORMS,
   removeEnding,
+  RETENTION_CHOICES,
   setCompletionUrl,
   setEndingKind,
   setEndingTarget,
   setIdParam,
+  setRetention,
 } from "../src/lib/recruitment.ts";
 
 const blank = (): Spec => ({ name: "study", timeline: [] });
@@ -166,5 +168,45 @@ describe("ending the study early", () => {
     const spec = blankWithEnding();
     removeEnding(spec, "no_consent");
     expect(spec.recruitment).toBeUndefined();
+  });
+});
+
+describe("what an early ending keeps", () => {
+  it("keeps everything unless told otherwise, and stores that as no setting", () => {
+    const spec = blank();
+    addEnding(spec, "no_consent");
+    const ending = () => spec.recruitment!.endings!.no_consent;
+    expect(retentionOf(ending())).toBe("all");
+    setRetention(spec, "no_consent", "nothing");
+    expect(ending().keep).toBe("nothing");
+    setRetention(spec, "no_consent", "all");
+    expect(ending()).not.toHaveProperty("keep");
+  });
+
+  it("remembers what is kept when the ending switches to a return address", () => {
+    const spec = blank();
+    addEnding(spec, "no_consent");
+    setRetention(spec, "no_consent", "checkpoint");
+    setEndingKind(spec, "no_consent", "url");
+    expect(spec.recruitment?.endings?.no_consent).toEqual({ url: "", keep: "checkpoint" });
+  });
+
+  it("offers every choice the compiler knows, each described", () => {
+    expect(RETENTION_CHOICES.map((choice) => choice.id)).toEqual(["all", "checkpoint", "nothing"]);
+    for (const choice of RETENTION_CHOICES) expect(choice.label).toMatch(/^keep /);
+  });
+
+  it("ignores an ending that does not exist", () => {
+    const spec = blank();
+    setRetention(spec, "missing", "nothing");
+    expect(spec.recruitment).toBeUndefined();
+  });
+
+  it("leaves a completed study keeping everything", () => {
+    const spec = blank();
+    choosePlatform(spec, "prolific");
+    setCompletionUrl(spec, PROLIFIC);
+    setRetention(spec, "complete", "nothing");
+    expect(spec.recruitment?.endings?.complete).toEqual({ url: PROLIFIC });
   });
 });

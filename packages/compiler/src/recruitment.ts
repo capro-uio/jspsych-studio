@@ -1,5 +1,8 @@
 import type { Problem } from "./validate.ts";
-import type { RecruitmentPlatform, RecruitmentSettings, Spec } from "./types.ts";
+import type { Ending, RecruitmentPlatform, RecruitmentSettings, Retention, Spec } from "./types.ts";
+
+/** What an ending can keep, from everything down to nothing. */
+export const RETENTIONS: Retention[] = ["all", "checkpoint", "nothing"];
 
 export const PARTICIPANT_PLACEHOLDER = "{participant_id}";
 export const DEFAULT_ID_PARAM = "participant_id";
@@ -55,6 +58,19 @@ export function endingNames(recruitment: RecruitmentSettings | undefined) {
   return isEndingSet(endings) ? Object.keys(endings) : [];
 }
 
+/** Whether the experiment reads the participant's id: to file their data, or to send them back. */
+export function needsParticipantId(spec: Spec) {
+  const endings: unknown[] = Object.values(spec.recruitment?.endings ?? {});
+  return (
+    spec.data !== undefined || endings.some((ending) => isEndingSet(ending) && "url" in ending)
+  );
+}
+
+/** What an ending keeps; everything unless it says otherwise. */
+export function retentionOf(ending: Ending | undefined): Retention {
+  return ending?.keep ?? "all";
+}
+
 /** The endings an end step can reach before the study is complete. */
 export function earlyEndingNames(recruitment: RecruitmentSettings | undefined) {
   return endingNames(recruitment).filter((name) => name !== COMPLETE_ENDING);
@@ -97,14 +113,17 @@ export function recruitmentProblems(spec: Spec): Problem[] {
   if (!isEndingSet(endings)) {
     return [...problems, { message: "recruitment endings must be a set of named endings" }];
   }
-  let redirects = false;
+  let redirectsAfterSaving = false;
   for (const [name, ending] of Object.entries(endings)) {
     const problem = endingProblem(name, ending);
     if (problem) problems.push({ message: problem });
-    if (isEndingSet(ending) && ending.url !== undefined) redirects = true;
+    if (isEndingSet(ending) && ending.url !== undefined && ending.keep !== "nothing") {
+      redirectsAfterSaving = true;
+    }
   }
-  // A download stays on the participant's computer, and leaving the page can cut it off.
-  if (redirects && spec.data?.save !== "post") {
+  // A download stays on the participant's computer, and leaving the page can cut it off. An
+  // ending that keeps nothing has nothing to lose.
+  if (redirectsAfterSaving && spec.data?.save !== "post") {
     problems.push({
       message: "sending participants back to a recruitment platform needs data uploaded first",
     });
@@ -119,6 +138,12 @@ function endingProblem(name: string, ending: unknown) {
   }
   if (!isEndingSet(ending) || (ending.url === undefined && ending.message === undefined)) {
     return `${where} needs a web address starting https:// or a message`;
+  }
+  if (ending.keep !== undefined && !RETENTIONS.includes(ending.keep as Retention)) {
+    return `${where} keeps ${RETENTIONS.map((keep) => `"${keep}"`).join(", ")}, not ${JSON.stringify(ending.keep)}`;
+  }
+  if (name === COMPLETE_ENDING && (ending.keep ?? "all") !== "all") {
+    return `${where} keeps all the data; only an early ending can keep less`;
   }
   if (ending.url !== undefined && ending.message !== undefined) {
     return `${where} sends the participant away or shows a message, not both`;

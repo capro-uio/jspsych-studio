@@ -6,8 +6,9 @@ import {
   isEndingName,
   PARTICIPANT_PLACEHOLDER,
   RECRUITMENT_PLATFORMS,
+  RETENTIONS,
 } from "@jspsych-studio/compiler";
-import type { Ending, RecruitmentPlatform, Spec } from "@jspsych-studio/compiler";
+import type { Ending, RecruitmentPlatform, Retention, Spec } from "@jspsych-studio/compiler";
 
 interface PlatformGuide {
   label: string;
@@ -154,7 +155,8 @@ export function setEndingKind(spec: Spec, name: string, kind: EndingKind) {
   const endings = spec.recruitment?.endings;
   const ending = endingOf(spec.recruitment, name);
   if (!endings || !ending || endingKind(ending) === kind) return;
-  endings[name] = kind === "url" ? { url: "" } : { message: "" };
+  const { url: _url, message: _message, ...kept } = ending;
+  endings[name] = kind === "url" ? { ...kept, url: "" } : { ...kept, message: "" };
 }
 
 /** Sets the message or the address, whichever the ending has. */
@@ -163,4 +165,20 @@ export function setEndingTarget(spec: Spec, name: string, value: string) {
   if (!ending) return;
   if (endingKind(ending) === "url") ending.url = value.trim();
   else ending.message = value;
+}
+
+const RETENTION_LABELS: Record<Retention, string> = {
+  all: "keep all their data",
+  checkpoint: "keep only a row saying they ended here",
+  nothing: "keep nothing: save and upload none of their data",
+};
+
+export const RETENTION_CHOICES = RETENTIONS.map((id) => ({ id, label: RETENTION_LABELS[id] }));
+
+/** Keeping everything is the default, so it is stored as no setting at all. */
+export function setRetention(spec: Spec, name: string, keep: Retention) {
+  const ending = endingOf(spec.recruitment, name);
+  if (!ending || name === COMPLETE_ENDING) return;
+  if (keep === "all") delete ending.keep;
+  else ending.keep = keep;
 }

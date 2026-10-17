@@ -9,6 +9,7 @@ import type {
   SpecNode,
   TrialNode,
 } from "./types.ts";
+import { STUDY_COLUMNS } from "./data.ts";
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, isResponseRule } from "./conditions.ts";
@@ -31,6 +32,8 @@ export class SpecError extends Error {
     this.problems = problems;
   }
 }
+
+const STUDY_COLUMN = "which is a column the study writes itself";
 
 const RECIPE_SUPPLIED_PARAMETERS = new Set(["data", "on_finish"]);
 
@@ -138,6 +141,7 @@ function checkTrial(
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);
   }
   for (const [field, value] of Object.entries(trial.record ?? {})) {
+    if (STUDY_COLUMNS.includes(field)) report(`${where} records "${field}", ${STUDY_COLUMN}`);
     if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, recorded field "${field}"`, problems, path);
     }
@@ -249,6 +253,9 @@ function checkObjectEntries(
 
 function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: number[]) {
   const report = (message: string) => problems.push({ message, path });
+  if (node.record_as && STUDY_COLUMNS.includes(node.record_as)) {
+    report(`a split cannot record its group as "${node.record_as}", ${STUDY_COLUMN}`);
+  }
   if (node.groups.length < 2) {
     report("splitting participants needs at least two groups");
   }

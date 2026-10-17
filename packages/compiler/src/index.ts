@@ -12,6 +12,8 @@ export {
   isEndingName,
   PARTICIPANT_PLACEHOLDER,
   RECRUITMENT_PLATFORMS,
+  RETENTIONS,
+  retentionOf,
 } from "./recruitment.ts";
 export { DEFAULT_BACKGROUND, DEFAULT_TEXT, backgroundColor, textColor } from "./appearance.ts";
 export type { CompileOptions } from "./compile.ts";

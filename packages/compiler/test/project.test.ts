@@ -173,6 +173,23 @@ describe("downloading the whole project", () => {
 
     const plain = await projectFiles(spec, schemas);
     expect(plain["README.md"]).not.toContain("## Recruiting");
+    expect(plain["README.md"]).not.toContain("end early");
+  });
+
+  it("says in its readme what each early ending keeps", async () => {
+    const message = "<p>Thank you.</p>";
+    const recruitment = {
+      endings: {
+        no_consent: { message, keep: "nothing" as const },
+        screened_out: { message, keep: "checkpoint" as const },
+        dropped: { message },
+      },
+    };
+    const readme = (await projectFiles({ ...spec, recruitment }, schemas))["README.md"];
+    expect(readme).toContain("`ending` column");
+    expect(readme).toContain("- `no_consent`: nothing is kept or sent");
+    expect(readme).toContain("- `screened_out`: only that row is kept");
+    expect(readme).toContain("- `dropped`: all their data is kept");
   });
 
   it("names the experiment on every row of the data", async () => {
