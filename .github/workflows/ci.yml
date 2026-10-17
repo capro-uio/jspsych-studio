@@ -22,7 +22,9 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run coverage
-      - uses: codecov/codecov-action@v7
+      # Dependabot's runs get no Actions secrets, and a dependency bump changes no lines to cover.
+      - if: github.event.pull_request.user.login != 'dependabot[bot]'
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: packages/compiler/coverage/lcov.info,packages/schemas/coverage/lcov.info,apps/studio/coverage/lcov.info
