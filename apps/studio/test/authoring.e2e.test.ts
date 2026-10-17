@@ -199,7 +199,7 @@ describe("recruiting from a platform", () => {
     await page.getByTestId("view-code").click();
     await expect
       .poll(() => page.getByTestId("generated-code").innerText(), { timeout: 5_000 })
-      .toContain('urlParameters["PROLIFIC_PID"]');
+      .toContain('linkParameters.get("PROLIFIC_PID")');
 
     await page.getByTestId("recruitment-platform").selectOption("none");
     await page.getByTestId("view-spec").click();

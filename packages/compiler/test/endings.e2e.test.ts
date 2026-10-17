@@ -7,6 +7,7 @@ import { compileSpec } from "../src/compile.ts";
 import { emitHtml } from "../src/targets/html.ts";
 import type { Ending, Spec } from "../src/types.ts";
 import { serveDirectory, type StaticServer } from "./server.ts";
+import { recordsOf } from "./csv.ts";
 import { schemas } from "./schemas.ts";
 
 const PAGE_NAME = "endings.e2e.html";
@@ -144,8 +145,10 @@ describe("a participant who declines consent", () => {
     const { page } = await answerConsent({ noConsent: THANKS }, "n", "participant_id=p1&ending=x");
 
     await shownMessage(page);
-    expect(server.uploads[0].data).toContain("no_consent");
-    expect(server.uploads[0].data).not.toMatch(/"x"/);
+    const records = recordsOf(server.uploads[0].data);
+    expect(records.filter((record) => record.ending === "no_consent")).toHaveLength(1);
+    expect(records.every((record) => ["", "no_consent"].includes(record.ending))).toBe(true);
+    expect(records.every((record) => record.url_ending === "x")).toBe(true);
     await page.close();
   }, 120_000);
 });
@@ -163,11 +166,6 @@ describe("a participant who agrees", () => {
   }, 120_000);
 });
 
-/** The rows of a CSV after its header. */
-function rowsOf(csv: string) {
-  return csv.trim().split("\n").slice(1);
-}
-
 async function contentsOf(download: Download) {
   return readFileSync(await download.path(), "utf8");
 }
@@ -180,11 +178,10 @@ describe("an ending that keeps only a checkpoint", () => {
 
     await shownMessage(page);
     expect(server.uploads).toHaveLength(1);
-    const rows = rowsOf(server.uploads[0].data);
-    expect(rows).toHaveLength(1);
-    const [row] = rows;
-    expect(row).toContain("no_consent");
-    expect(row).toContain("p1");
+    const records = recordsOf(server.uploads[0].data);
+    expect(records).toHaveLength(1);
+    const [record] = records;
+    expect(record).toMatchObject({ ending: "no_consent", participant_id: "p1" });
     expect(server.uploads[0].data).not.toContain("press y");
     await page.close();
   }, 120_000);
@@ -195,7 +192,7 @@ describe("an ending that keeps only a checkpoint", () => {
 
     await expect.poll(() => downloads.length, { timeout: 15_000 }).toBe(1);
     const saved = await contentsOf(downloads[0]);
-    expect(rowsOf(saved)).toHaveLength(1);
+    expect(recordsOf(saved)).toHaveLength(1);
     expect(saved).toContain("no_consent");
     expect(saved).not.toContain("press y");
     await page.close();

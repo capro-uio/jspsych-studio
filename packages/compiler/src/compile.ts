@@ -4,6 +4,7 @@ import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } fr
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
 import { compileParticipantProperties } from "./data.ts";
 import { compileCompletion, compileEndStep } from "./endings.ts";
+import { reservedLinkColumns } from "./metadata.ts";
 import { idParamOf, needsParticipantId } from "./recruitment.ts";
 import {
   GROUP_VARIABLE,
@@ -290,7 +291,12 @@ export function compileSpec(
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
     (needsParticipantId(spec)
-      ? `${compileParticipantProperties(spec.name, idParamOf(spec.recruitment))}\n`
+      ? `${compileParticipantProperties({
+          experimentName: spec.name,
+          idParam: idParamOf(spec.recruitment),
+          reserved: reservedLinkColumns(spec),
+          pluginIdentifiers: [...plugins].map(pluginIdentifier),
+        })}\n`
       : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
   return {

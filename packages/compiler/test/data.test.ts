@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { DATAPIPE_URL } from "../src/data.ts";
+import { reservedLinkColumns } from "../src/metadata.ts";
 import type { Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
@@ -76,17 +77,17 @@ const PROLIFIC = "https://app.prolific.com/submissions/complete?cc=C1A2B3";
 describe("recruiting from a platform", () => {
   it("takes the participant id from the platform's parameter", () => {
     const { source } = compileSpec(recruited({ id_param: "PROLIFIC_PID" }), schemas);
-    expect(source).toContain('const participantId = urlParameters["PROLIFIC_PID"]');
+    expect(source).toContain('const participantId = linkParameters.get("PROLIFIC_PID")');
   });
 
   it("takes the id from the parameter the platform is known to use", () => {
     const { source } = compileSpec(recruited({ platform: "sona" }), schemas);
-    expect(source).toContain('const participantId = urlParameters["id"]');
+    expect(source).toContain('const participantId = linkParameters.get("id")');
   });
 
   it("takes the id from participant_id when no parameter is named", () => {
     const { source } = compileSpec(recruited({}), schemas);
-    expect(source).toContain('const participantId = urlParameters["participant_id"]');
+    expect(source).toContain('const participantId = linkParameters.get("participant_id")');
   });
 
   // A link reused from before the platform was set up may still carry participant_id=test.
@@ -94,6 +95,12 @@ describe("recruiting from a platform", () => {
     const { source } = compileSpec(recruited({ id_param: "PROLIFIC_PID" }), schemas);
     expect(source.indexOf("...urlParameters")).toBeLessThan(
       source.indexOf("participant_id: participantId"),
+    );
+  });
+
+  it("keeps the platform's id parameter under its own name", () => {
+    expect(reservedLinkColumns(recruited({ id_param: "PROLIFIC_PID" }))).not.toContain(
+      "PROLIFIC_PID",
     );
   });
 
@@ -210,5 +217,59 @@ describe("checking a recruitment setup", () => {
         "needs data uploaded first",
       );
     }
+  });
+});
+
+describe("link parameters named like the study's own columns", () => {
+  const scored: Spec = {
+    name: "scored",
+    data: { save: "download" },
+    timeline: [
+      {
+        kind: "assign",
+        method: "random",
+        record_as: "arm",
+        groups: [
+          {
+            name: "a",
+            children: [
+              {
+                kind: "trial",
+                plugin: "html-keyboard-response",
+                tag: "practice",
+                params: { stimulus: "hi" },
+                record: { congruency: "same" },
+                score: { correct_if_response_equals: "f" },
+              },
+            ],
+          },
+          {
+            name: "b",
+            children: [
+              { kind: "trial", plugin: "html-keyboard-response", params: { stimulus: "hi" } },
+            ],
+          },
+        ],
+      },
+      { kind: "checkpoint", name: "done" },
+    ],
+  };
+
+  it("moves every column the spec writes out of the way", () => {
+    expect(reservedLinkColumns(scored)).toEqual(
+      expect.arrayContaining([
+        ...["correct", "tag", "response", "rt", "congruency", "arm", "checkpoint"],
+        ...["experiment", "trial_index"],
+      ]),
+    );
+    expect(compileSpec(scored, schemas).source).toContain('"congruency"');
+  });
+
+  it("reads the data fields of every plugin the study runs when it starts", () => {
+    const { source } = compileSpec(scored, schemas);
+    expect(source).toMatch(
+      /\.\.\.\[[^\]]*jsPsychHtmlKeyboardResponse[^\]]*\]\.flatMap\(\(plugin\) => Object\.keys\(plugin\.info\.data \?\? \{\}\)\)/,
+    );
+    expect(source).toContain('reservedColumns.has(name) ? unreserved("url_" + name) : name');
   });
 });
