@@ -53,6 +53,7 @@ describe("the spec JSON Schema", () => {
       "counterbalance",
       "branch",
       "checkpoint",
+      "end",
     ]);
   });
 });
@@ -120,6 +121,27 @@ describe("what the schema catches before anything runs", () => {
       ],
     };
     expect(problems(spec)).toContain("must NOT be valid");
+  });
+
+  it("an ending that both redirects and shows a message", () => {
+    const spec = flanker();
+    spec.recruitment = {
+      endings: { no_consent: { url: "https://app.prolific.com/x", message: "<p>bye</p>" } },
+    };
+    expect(problems(spec)).toContain("must match exactly one schema in oneOf");
+  });
+
+  it("an end step that names no ending", () => {
+    const spec = flanker();
+    spec.timeline.push({ kind: "end" } as never);
+    expect(problems(spec)).toContain("must have required property 'ending'");
+  });
+
+  it("but accepts an end step and a message ending", () => {
+    const spec = flanker();
+    spec.recruitment = { endings: { no_consent: { message: "<p>Thank you anyway.</p>" } } };
+    spec.timeline.push({ kind: "end", ending: "no_consent" });
+    expect(problems(spec)).toEqual([]);
   });
 
   it("a branch rule that mixes accuracy with an answer", () => {

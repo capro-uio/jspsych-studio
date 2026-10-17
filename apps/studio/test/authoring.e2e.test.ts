@@ -637,6 +637,56 @@ describe("routing on performance", () => {
   }, 180_000);
 });
 
+describe("ending the study early", () => {
+  it("ends a declined consent with the ending's message, in the preview too", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+
+    await addTrial(page, "html-keyboard-response", "slot-0");
+    await setText(page, "trial-tag", "consent");
+    await setFixed(page, "stimulus", "<p>press y to agree, n to decline</p>");
+    await addTrial(page, "html-keyboard-response", "slot-1");
+    await setFixed(page, "stimulus", "<p>the task</p>");
+
+    await openTab(page, "study");
+    await setText(page, "new-ending-name", "no_consent");
+    await page.getByTestId("add-ending").click();
+    await setText(page, "ending-message-no_consent", "<p>Thank you anyway.</p>");
+    await openTab(page, "timeline");
+
+    await addStep(page, "slot-1", "branch");
+    await page.getByTestId("branch-basis").selectOption("response");
+    await setText(page, "branch-scope", "consent");
+    await setText(page, "branch-answer", "n");
+    await page.getByTestId("delete-1-0-0").click();
+    await addStep(page, "slot-1-0-0", "end");
+    expect(await page.getByTestId("end-ending").inputValue()).toBe("no_consent");
+    expect(await page.getByTestId("node-1-0-0").innerText()).toContain("finish as “no_consent”");
+
+    await page.getByTestId("view-spec").click();
+    const spec = await authoredSpec(page);
+    expect(stepOfKind(spec.timeline[1], "branch").then).toEqual([
+      { kind: "end", ending: "no_consent" },
+    ]);
+    expect(spec.recruitment).toEqual({
+      endings: { no_consent: { message: "<p>Thank you anyway.</p>" } },
+    });
+
+    await page.getByTestId("view-experiment").click();
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("press y to agree");
+    await preview.locator("#jspsych-content").click();
+    await page.keyboard.press("n");
+    await expect
+      .poll(() => preview.locator("body").innerText(), { timeout: 10_000 })
+      .toContain("Thank you anyway.");
+    expect(await preview.locator("body").innerText()).not.toContain("the task");
+    await page.close();
+  }, 180_000);
+});
+
 describe("opening an example", () => {
   it("fills the timeline and runs it straight away", async () => {
     const page = await browser.newPage();

@@ -4,6 +4,7 @@ import {
   exportedSpec,
   isUntouched,
   newCounterbalance,
+  newEnd,
   newTrial,
   parseSpec,
   project,
@@ -56,8 +57,9 @@ describe("parseSpec", () => {
       { kind: "counterbalance", method: "random", tasks: [{ name: "a", children: [step] }] },
       { kind: "branch", when: { scope: "x" }, then: [step] },
       { kind: "checkpoint", name: "here" },
+      { kind: "end", ending: "ended_early" },
     ];
-    expect(parseSpec(JSON.stringify({ name: "x", timeline })).timeline).toHaveLength(6);
+    expect(parseSpec(JSON.stringify({ name: "x", timeline })).timeline).toHaveLength(7);
   });
 
   it("rejects malformed steps inside a counterbalanced task, naming the task", () => {
@@ -117,5 +119,19 @@ describe("exportedSpec", () => {
       (specSchema(schemas.plugins) as { properties: Record<string, unknown> }).properties,
     );
     expect(Object.keys(exportedSpec()).sort()).toEqual(properties.sort());
+  });
+});
+
+describe("newEnd", () => {
+  beforeEach(() => startNewProject());
+
+  it("reaches an ending the study already has", () => {
+    project.spec.recruitment = { endings: { no_consent: { message: "<p>bye</p>" } } };
+    expect(newEnd()).toEqual({ kind: "end", ending: "no_consent" });
+  });
+
+  it("adds an ending to reach when there is none, so the step is ready to run", () => {
+    expect(newEnd()).toEqual({ kind: "end", ending: "ended_early" });
+    expect(project.spec.recruitment?.endings?.ended_early?.message).toMatch(/Thank you/);
   });
 });

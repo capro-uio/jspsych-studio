@@ -169,9 +169,33 @@ describe("checking a recruitment setup", () => {
     expect(compileWith({ endings: "https://x.com" })).toThrow("must be a set of named endings");
   });
 
-  it("refuses endings the study cannot reach yet", () => {
-    expect(compileWith({ endings: { no_consent: { url: PROLIFIC } } })).toThrow(
-      '"no_consent" is not an ending the study has',
+  it("accepts an ending shown as a message, with or without uploading", () => {
+    for (const data of [null, { save: "download" } as const]) {
+      expect(
+        compileWith({ endings: { complete: { message: "<p>Thanks!</p>" } } }, data),
+      ).not.toThrow();
+    }
+  });
+
+  it.each([
+    [{ url: PROLIFIC, message: "<p>bye</p>" }, "sends the participant away or shows a message"],
+    [{ message: " " }, "needs a message to show"],
+    [{}, "needs a web address starting https:// or a message"],
+  ])("refuses the ending %j", (ending, problem) => {
+    expect(compileWith({ endings: { no_consent: ending } })).toThrow(
+      `the "no_consent" ending ${problem}`,
+    );
+  });
+
+  it.each([" ", "no consent", "__proto__", "1st"])("refuses an ending called %j", (name) => {
+    expect(compileWith({ endings: { [name]: { message: "<p>bye</p>" } } })).toThrow(
+      "needs a name that starts with a letter",
+    );
+  });
+
+  it("refuses to redirect from an early ending when the data is not uploaded", () => {
+    expect(compileWith({ endings: { no_consent: { url: PROLIFIC } } }, null)).toThrow(
+      "needs data uploaded first",
     );
   });
 

@@ -2,6 +2,7 @@
   import { isResponseRule, latinSquareOrders } from "@jspsych-studio/compiler";
   import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
+  import { earlyEndingNames } from "@jspsych-studio/compiler";
   import {
     accuracyComparisonOf,
     branchBasis,
@@ -36,6 +37,8 @@
   const counterbalance = $derived(node?.kind === "counterbalance" ? node : null);
   const checkpoint = $derived(node?.kind === "checkpoint" ? node : null);
   const branch = $derived(node?.kind === "branch" ? node : null);
+  const end = $derived(node?.kind === "end" ? node : null);
+  const endingChoices = $derived(earlyEndingNames(project.spec.recruitment));
 
   const accuracyRule = $derived(branch && !isResponseRule(branch.when) ? branch.when : null);
   const responseRule = $derived(branch && isResponseRule(branch.when) ? branch.when : null);
@@ -430,6 +433,28 @@
       button is 1.
     </p>
   {/if}
+{:else if end}
+  <h2>End</h2>
+  <p class="help">
+    Finishes the study here: the data is saved, then the participant sees the ending's message or is
+    sent where it says. Endings are set in the Study tab.
+  </p>
+  <div class="field">
+    <label for="end-ending"><span class="name">ending</span></label>
+    <select
+      id="end-ending"
+      data-testid="end-ending"
+      value={end.ending}
+      onchange={(event) => (end.ending = event.currentTarget.value)}
+    >
+      {#if !endingChoices.includes(end.ending)}
+        <option value={end.ending}>{end.ending || "choose an ending"}</option>
+      {/if}
+      {#each endingChoices as name (name)}
+        <option value={name}>{name}</option>
+      {/each}
+    </select>
+  </div>
 {:else if checkpoint}
   <h2>Checkpoint</h2>
   <p class="help">Records that the participant got this far, for drop-out analysis.</p>

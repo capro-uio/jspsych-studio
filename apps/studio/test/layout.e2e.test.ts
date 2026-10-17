@@ -31,14 +31,18 @@ function reach(page: Page, testId: string) {
     if (!target) return "missing";
     // Start from the top, or a previous lookup may have left the page scrolled past this one.
     window.scrollTo(0, 0);
-    for (const panel of document.querySelectorAll("aside, .form, .preview")) panel.scrollTop = 0;
+    for (const panel of document.querySelectorAll("aside, aside .panel, .form, .preview"))
+      panel.scrollTop = 0;
     const inView = () => {
       const box = target.getBoundingClientRect();
       return box.top >= 0 && box.bottom <= window.innerHeight;
     };
     if (inView()) return "already visible";
     const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-    const containers = [window, ...document.querySelectorAll("aside, .form, .preview")];
+    const containers = [
+      window,
+      ...document.querySelectorAll("aside, aside .panel, .form, .preview"),
+    ];
     for (const container of containers) {
       for (let step = 0; step < 40; step += 1) {
         container.scrollBy(0, 200);

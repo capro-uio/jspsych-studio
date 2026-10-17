@@ -7,6 +7,7 @@
     newBranch,
     newCheckpoint,
     newCounterbalance,
+    newEnd,
     newLoop,
     newTrial,
     setInsertion,
@@ -69,6 +70,12 @@
       label: "Checkpoint",
       hint: "record that they got this far",
       make: newCheckpoint,
+    },
+    {
+      id: "end",
+      label: "End",
+      hint: "finish the study here, e.g. when consent is declined",
+      make: newEnd,
     },
   ]);
 
