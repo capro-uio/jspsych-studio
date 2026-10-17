@@ -42,6 +42,7 @@ maintainable by a small team.
 npm install
 npm run dev              # the builder at http://localhost:5180
 npm test                 # unit tests plus two real-browser end-to-end runs
+npm run coverage         # the same, reporting coverage of the compiler, schemas and builder logic
 npm run typecheck
 npm run schemas          # regenerate packages/schemas/plugin-schemas.json, print coverage
 npm run spec-schema      # regenerate packages/compiler/spec-schema.json

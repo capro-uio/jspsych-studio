@@ -6,5 +6,15 @@ export default defineConfig({
   plugins: [svelte()],
   base: "./",
   server: { port: 5180 },
-  test: { fileParallelism: false, testTimeout: 180_000 },
+  test: {
+    fileParallelism: false,
+    testTimeout: 180_000,
+    // Components run only inside the browser in the end-to-end suites, where V8 coverage in Node
+    // cannot see them; what is measured here is the logic in plain modules.
+    coverage: {
+      provider: "v8",
+      include: ["src/lib/**/*.ts"],
+      reporter: ["text-summary", "lcov"],
+    },
+  },
 });

@@ -25,6 +25,7 @@
   ],
   "scripts": {
     "test": "npm run test --workspaces --if-present",
+    "coverage": "npm run test --workspaces --if-present -- --coverage",
     "schemas": "npm run build --workspace @jspsych-studio/schemas",
     "spec-schema": "npm run spec-schema --workspace @jspsych-studio/compiler",
     "codemeta": "npm run codemeta --workspace @jspsych-studio/compiler",
@@ -37,6 +38,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^5.0.4",
     "eslint": "^10.11.0",
     "eslint-plugin-svelte": "^3.23.0",
     "globals": "^17.13.0",

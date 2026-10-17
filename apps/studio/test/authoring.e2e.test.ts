@@ -564,7 +564,7 @@ describe("opening an example", () => {
     await expect
       .poll(() => page.getByTestId("node-0").innerText(), { timeout: 5_000 })
       .toContain("instructions");
-    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
 
     const preview = page.frameLocator('[data-testid="preview"]');
     await expect
@@ -871,11 +871,13 @@ describe("deciding where a step goes", () => {
     await page.goto(appUrl);
 
     await addStep(page, "slot-0", "trial");
-    // Nothing is half-built: a new step has text in it and the preview runs.
-    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    // Nothing is half-built: a new step has text in it and the preview runs. The preview rebuilds
+    // once an edit settles, so the empty project's own error takes a moment to clear.
+    const settled = () => page.getByTestId("compile-error").count();
+    await expect.poll(settled, { timeout: 5_000 }).toBe(0);
 
     await addStep(page, "slot-1", "loop");
-    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    await expect.poll(settled, { timeout: 5_000 }).toBe(0);
     expect(await page.getByTestId("node-1-0").count()).toBe(1);
 
     const preview = page.frameLocator('[data-testid="preview"]');

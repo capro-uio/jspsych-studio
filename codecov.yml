@@ -1,0 +1,15 @@
+coverage:
+  status:
+    # New and changed lines are what a pull request is responsible for.
+    patch:
+      default:
+        target: 80%
+    # The overall figure is reported, not enforced: the builder's components run only in the
+    # browser end-to-end suites, which this coverage cannot see.
+    project:
+      default:
+        informational: true
+
+comment:
+  layout: "diff, files"
+  require_changes: true
