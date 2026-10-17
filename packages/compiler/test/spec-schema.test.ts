@@ -50,6 +50,7 @@ describe("the spec JSON Schema", () => {
       "block",
       "loop",
       "assign",
+      "counterbalance",
       "branch",
       "checkpoint",
     ]);
@@ -133,6 +134,38 @@ describe("what the schema catches before anything runs", () => {
       ],
     };
     expect(problems(spec)).toContain("must NOT have fewer than 2 items");
+  });
+
+  const counterbalanced = (method: string, names: string[]) =>
+    ({
+      name: "task order",
+      timeline: [
+        {
+          kind: "counterbalance",
+          method,
+          tasks: names.map((name) => ({
+            name,
+            children: [{ kind: "trial", plugin: "preload" }],
+          })),
+        },
+      ],
+    }) as Spec;
+
+  it("a counterbalance with only one task", () => {
+    expect(problems(counterbalanced("random", ["only"]))).toContain(
+      "must NOT have fewer than 2 items",
+    );
+  });
+
+  it("a counterbalance ordered some other way", () => {
+    expect(problems(counterbalanced("alphabetical", ["a", "b"]))).toContain(
+      "must be equal to one of the allowed values",
+    );
+  });
+
+  it("but accepts tasks in random or Latin-square order", () => {
+    expect(problems(counterbalanced("random", ["a", "b"]))).toEqual([]);
+    expect(problems(counterbalanced("latin_square", ["a", "b"]))).toEqual([]);
   });
 
   // Any parameter can read a conditions column instead of holding a literal, so the schema has to

@@ -11,6 +11,11 @@ import {
   compileGroupGate,
 } from "./groups.ts";
 import { literal } from "./emit.ts";
+import {
+  ORDERS_VARIABLE,
+  compileCounterbalancedTasks,
+  compileOrderStep,
+} from "./counterbalance.ts";
 import { isVariableReference } from "./variables.ts";
 import { SpecError, validateSpec } from "./validate.ts";
 import type {
@@ -18,6 +23,7 @@ import type {
   BlockNode,
   BranchNode,
   CompileResult,
+  CounterbalanceNode,
   LoopNode,
   ParameterValue,
   Spec,
@@ -151,6 +157,11 @@ interface CompileContext {
   plugins: Set<string>;
   hasAssets: boolean;
   usesGroups: boolean;
+  usesCounterbalance: boolean;
+}
+
+function callFunctionStep(step: { async: boolean; body: string }) {
+  return `{\n  type: jsPsychCallFunction,\n  async: ${step.async},\n  func: ${step.body},\n}`;
 }
 
 function compileAssign(node: AssignNode, context: CompileContext) {
@@ -163,10 +174,19 @@ function compileAssign(node: AssignNode, context: CompileContext) {
     return compileGroupGate(node, group.name, timeline);
   });
 
-  return [
-    `{\n  type: jsPsychCallFunction,\n  async: ${step.async},\n  func: ${step.body},\n}`,
-    ...gates,
-  ].join(",\n");
+  return [callFunctionStep(step), ...gates].join(",\n");
+}
+
+function compileCounterbalance(node: CounterbalanceNode, context: CompileContext) {
+  context.plugins.add("call-function");
+  context.usesCounterbalance = true;
+
+  const step = compileOrderStep(node, context.spec.data);
+  const timelines = node.tasks.map((task) =>
+    task.children.map((child) => compileNode(child, context)).join(", "),
+  );
+
+  return [callFunctionStep(step), compileCounterbalancedTasks(node, timelines)].join(",\n");
 }
 
 function compileBranch(node: BranchNode, context: CompileContext) {
@@ -188,6 +208,7 @@ function compileNode(node: SpecNode, context: CompileContext): string {
   if (node.kind === "block") return compileBlock(node, context);
   if (node.kind === "loop") return compileLoop(node, context);
   if (node.kind === "branch") return compileBranch(node, context);
+  if (node.kind === "counterbalance") return compileCounterbalance(node, context);
   if (node.kind === "checkpoint") {
     context.plugins.add("call-function");
     return compileCheckpointStep(node);
@@ -231,6 +252,7 @@ export function compileSpec(
     plugins,
     hasAssets: assets.length > 0,
     usesGroups: false,
+    usesCounterbalance: false,
   };
   const steps = spec.timeline.map((node) => compileNode(node, context));
 
@@ -259,6 +281,7 @@ export function compileSpec(
   const source =
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
+    (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
     (spec.data ? `${compileParticipantProperties(spec.name, idParamOf(spec.recruitment))}\n` : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;

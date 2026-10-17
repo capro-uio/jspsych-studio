@@ -88,6 +88,7 @@
             "block",
             "loop",
             "assign",
+            "counterbalance",
             "branch",
             "checkpoint"
           ]
@@ -152,6 +153,21 @@
           },
           "then": {
             "$ref": "#/definitions/assign"
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "counterbalance"
+              }
+            },
+            "required": [
+              "kind"
+            ]
+          },
+          "then": {
+            "$ref": "#/definitions/counterbalance"
           }
         },
         {
@@ -3384,6 +3400,59 @@
               },
               "children": {
                 "title": "The group's steps.",
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/node"
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "counterbalance": {
+      "title": "Runs every task for every participant, in an order that varies between participants.",
+      "type": "object",
+      "required": [
+        "kind",
+        "method",
+        "tasks"
+      ],
+      "properties": {
+        "kind": {
+          "const": "counterbalance"
+        },
+        "method": {
+          "title": "How each participant's order is chosen.",
+          "description": "`random` shuffles the tasks in the browser; `latin_square` asks the data service for the participant's row of a balanced Latin square, which requires uploading data with an experiment id. With data downloaded, only `random` is available.",
+          "enum": [
+            "random",
+            "latin_square"
+          ]
+        },
+        "record_as": {
+          "title": "Column name the order used is recorded under, as \"first > second\".",
+          "type": "string"
+        },
+        "tasks": {
+          "title": "The tasks whose order is counterbalanced.",
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "name",
+              "children"
+            ],
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1
+              },
+              "children": {
+                "title": "The task's steps.",
                 "type": "array",
                 "items": {
                   "$ref": "#/definitions/node"

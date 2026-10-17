@@ -6,6 +6,7 @@
     newBlock,
     newBranch,
     newCheckpoint,
+    newCounterbalance,
     newLoop,
     newTrial,
     setInsertion,
@@ -50,6 +51,12 @@
       label: "Split",
       hint: "send each participant down one of several paths",
       make: () => newAssign(trial(), trial()),
+    },
+    {
+      id: "counterbalance",
+      label: "Counterbalance",
+      hint: "run several tasks in an order that differs between participants",
+      make: () => newCounterbalance(trial(), trial()),
     },
     {
       id: "branch",

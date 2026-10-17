@@ -164,6 +164,38 @@ const NODE_DEFINITIONS = {
       },
     },
   },
+  counterbalance: {
+    title: "Runs every task for every participant, in an order that varies between participants.",
+    required: ["method", "tasks"],
+    properties: {
+      method: {
+        title: "How each participant's order is chosen.",
+        description:
+          "`random` shuffles the tasks in the browser; `latin_square` asks the data service for " +
+          "the participant's row of a balanced Latin square, which requires uploading data with " +
+          "an experiment id. With data downloaded, only `random` is available.",
+        enum: ["random", "latin_square"],
+      },
+      record_as: {
+        title: 'Column name the order used is recorded under, as "first > second".',
+        type: "string",
+      },
+      tasks: {
+        title: "The tasks whose order is counterbalanced.",
+        type: "array",
+        minItems: 2,
+        items: {
+          type: "object",
+          required: ["name", "children"],
+          properties: {
+            name: { type: "string", minLength: 1 },
+            children: nodeList("The task's steps."),
+          },
+          additionalProperties: false,
+        },
+      },
+    },
+  },
   branch: {
     title: "Sends a participant down one of two paths depending on how they did.",
     required: ["when", "then"],
@@ -182,7 +214,8 @@ const NODE_DEFINITIONS = {
 
 type NodeKind = keyof typeof NODE_DEFINITIONS;
 
-const NODE_KINDS = Object.keys(NODE_DEFINITIONS) as NodeKind[];
+/** Every kind of step a spec can hold. */
+export const NODE_KINDS = Object.keys(NODE_DEFINITIONS) as NodeKind[];
 
 function nodeDefinition(kind: NodeKind, extra: JsonSchema = {}): JsonSchema {
   const definition = NODE_DEFINITIONS[kind] as JsonSchema;
@@ -287,6 +320,7 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
       block: nodeDefinition("block"),
       loop: nodeDefinition("loop"),
       assign: nodeDefinition("assign"),
+      counterbalance: nodeDefinition("counterbalance"),
       branch: nodeDefinition("branch"),
       checkpoint: nodeDefinition("checkpoint"),
       variableReference: {

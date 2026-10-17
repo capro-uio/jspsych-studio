@@ -18,15 +18,29 @@ export interface StaticServer {
   failUploads: boolean;
   /** The group number /api/condition/ hands out next. */
   nextCondition: number;
+  /** Set to make the condition route fail, exercising the local fallback. */
+  failConditions: boolean;
+  /** How many times /api/condition/ has been asked, so a test can see a participant counted once. */
+  conditionRequests: number;
 }
 
 export async function serveDirectory(root: string): Promise<StaticServer> {
   const uploads: StaticServer["uploads"] = [];
-  const state = { failUploads: false, nextCondition: 0 };
+  const state = {
+    failUploads: false,
+    nextCondition: 0,
+    failConditions: false,
+    conditionRequests: 0,
+  };
 
   const server: Server = createServer((request, response) => {
     if (request.url?.startsWith("/api/condition")) {
+      state.conditionRequests += 1;
       response.setHeader("access-control-allow-origin", "*");
+      if (state.failConditions) {
+        response.writeHead(500).end("nope");
+        return;
+      }
       response
         .writeHead(200, { "content-type": "application/json" })
         .end(JSON.stringify({ condition: state.nextCondition }));
@@ -81,6 +95,15 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
     },
     set nextCondition(value: number) {
       state.nextCondition = value;
+    },
+    get failConditions() {
+      return state.failConditions;
+    },
+    set failConditions(value: boolean) {
+      state.failConditions = value;
+    },
+    get conditionRequests() {
+      return state.conditionRequests;
     },
   };
 }

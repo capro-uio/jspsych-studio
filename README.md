@@ -10,7 +10,7 @@ performance, a psychophysics canvas step whose objects you drag into place, live
 whole experiment or a single step, a choice of where results go, a guided tour of the builder,
 and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
-There is no hosting or study-level flow (consent, counterbalanced task order) yet. 0.0.1 is the
+Tasks can run in a counterbalanced order. There is no hosting or consent flow yet. 0.0.1 is the
 first release, and every export names the version that built it.
 
 **Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
@@ -64,6 +64,36 @@ colour is recorded but irrelevant.
 each word, congruency and ink colour recorded on every trial, and a checkpoint after the
 instructions.
 
+## Counterbalancing the order of tasks
+
+A `counterbalance` step runs every one of its tasks for every participant, in an order that
+differs between participants, and records the order used on every row (as `"stroop > flanker"`,
+in the column `order` unless `record_as` names another). A task holds any steps, such as
+instructions and a block over its own conditions table:
+
+```json
+{
+  "kind": "counterbalance",
+  "method": "latin_square",
+  "tasks": [
+    {
+      "name": "flanker",
+      "children": [{ "kind": "block", "conditions": "flanker", "children": [] }]
+    },
+    { "name": "stroop", "children": [{ "kind": "block", "conditions": "stroop", "children": [] }] }
+  ]
+}
+```
+
+The blocks' own steps are left out here for brevity.
+
+`"random"` shuffles the tasks in the browser. `"latin_square"` uses a balanced Latin square, where
+every task takes every position equally often and follows every other task equally often. It needs
+a participant count, so it asks the data service for the next condition the way balanced groups
+do, and only works with `"save": "post"`. With data downloaded, only random order is available.
+Set the experiment's number of conditions on DataPipe to the number of orders the builder shows:
+as many as there are tasks, or twice that for an odd number of tasks.
+
 ## Recruiting from a platform
 
 Prolific, SONA and CloudResearch Connect all pass the participant's id in the study URL and expect
@@ -110,7 +140,8 @@ compiler's validator; the schema narrows what reaches it rather than replacing i
 - **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
 - **No backend.** Static tool. Results go to DataPipe or any compatible service, and a failed
   upload falls back to a download so a participant's data is never lost silently. Balanced group
-  assignment asks that same service for the next group, since only it can count participants.
+  assignment and Latin-square task order ask that same service for the next participant's
+  condition, since only it can count participants.
 - **Self-contained exports.** Media is embedded in the project and in the exported file, so an
   experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB each).
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a

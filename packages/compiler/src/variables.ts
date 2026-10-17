@@ -9,9 +9,13 @@ export function conditionColumns(spec: Spec, table: string) {
   return [...new Set(rows.flatMap((row) => Object.keys(row)))];
 }
 
-/** The child lists a node holds, when it holds more than one: a split's groups, a branch's paths. */
+/**
+ * The child lists a node holds, when it holds more than one: a split's groups, a counterbalance's
+ * tasks, a branch's paths.
+ */
 export function slotsOf(node: SpecNode): Slot[] | null {
   if (node.kind === "assign") return node.groups;
+  if (node.kind === "counterbalance") return node.tasks;
   if (node.kind === "branch") {
     return [
       { name: "if so", children: node.then },

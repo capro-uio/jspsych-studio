@@ -1,5 +1,6 @@
 <script lang="ts">
-  import type { AssignNode, ParameterValue } from "@jspsych-studio/compiler";
+  import { latinSquareOrders } from "@jspsych-studio/compiler";
+  import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
   import {
     allConditionColumns,
@@ -20,6 +21,7 @@
   const block = $derived(node?.kind === "block" ? node : null);
   const loop = $derived(node?.kind === "loop" ? node : null);
   const assign = $derived(node?.kind === "assign" ? node : null);
+  const counterbalance = $derived(node?.kind === "counterbalance" ? node : null);
   const checkpoint = $derived(node?.kind === "checkpoint" ? node : null);
   const branch = $derived(node?.kind === "branch" ? node : null);
 
@@ -287,6 +289,71 @@
     onclick={() => assign.groups.push({ name: `group ${assign.groups.length + 1}`, children: [] })}
   >
     add a group
+  </button>
+{:else if counterbalance}
+  <h2>Counterbalance</h2>
+  <p class="help">
+    Every participant runs every task, in an order that differs between participants. The order used
+    is recorded on every row of their data.
+  </p>
+  <div class="field">
+    <label for="counterbalance-method"><span class="name">how to order</span></label>
+    <select
+      id="counterbalance-method"
+      data-testid="counterbalance-method"
+      value={counterbalance.method}
+      onchange={(event) =>
+        (counterbalance.method = event.currentTarget.value as CounterbalanceNode["method"])}
+    >
+      <option value="random">at random, in the browser</option>
+      <option value="latin_square">Latin square, counted by the data service</option>
+    </select>
+  </div>
+  {#if counterbalance.method === "latin_square"}
+    <p class="help" data-testid="counterbalance-orders">
+      The square has {latinSquareOrders(counterbalance.tasks).length} orders. Set the number of conditions
+      for this experiment on the data service to match, so each order is handed out in turn.
+    </p>
+  {/if}
+  <div class="field">
+    <label for="counterbalance-column"><span class="name">record order as</span></label>
+    <input
+      id="counterbalance-column"
+      data-testid="counterbalance-column"
+      placeholder="order"
+      value={counterbalance.record_as ?? ""}
+      onchange={(event) => {
+        const value = event.currentTarget.value;
+        if (value) counterbalance.record_as = value;
+        else delete counterbalance.record_as;
+      }}
+    />
+  </div>
+  {#each counterbalance.tasks as task, index (index)}
+    <div class="field">
+      <label for={`task-${index}`}><span class="name">task {index + 1}</span></label>
+      <span class="group-row">
+        <input
+          id={`task-${index}`}
+          data-testid={`task-name-${index}`}
+          value={task.name}
+          onchange={(event) => (task.name = event.currentTarget.value)}
+        />
+        <button
+          data-testid={`remove-task-${index}`}
+          disabled={counterbalance.tasks.length <= 2}
+          onclick={() => counterbalance.tasks.splice(index, 1)}>✕</button
+        >
+      </span>
+    </div>
+  {/each}
+  <button
+    class="toggle"
+    data-testid="add-task"
+    onclick={() =>
+      counterbalance.tasks.push({ name: `task ${counterbalance.tasks.length + 1}`, children: [] })}
+  >
+    add a task
   </button>
 {:else if branch}
   <h2>Branch</h2>

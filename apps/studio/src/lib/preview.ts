@@ -23,6 +23,18 @@ function trim(nodes: SpecNode[], path: number[]): SpecNode[] {
   return [node];
 }
 
+/**
+ * A preview is not a participant, so it must not take a place in the data service's count: groups
+ * and orders the service would hand out are drawn in the browser instead.
+ */
+function drawLocally(nodes: SpecNode[]) {
+  for (const node of nodes) {
+    if (node.kind === "assign" || node.kind === "counterbalance") node.method = "random";
+    if (node.kind === "block" || node.kind === "loop") drawLocally(node.children);
+    for (const slot of slotsOf(node) ?? []) drawLocally(slot.children);
+  }
+}
+
 export interface PreviewOptions {
   /** Start from this step rather than the beginning. */
   from?: number[] | null;
@@ -34,7 +46,10 @@ export interface PreviewOptions {
  */
 export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
   const { data: _data, recruitment: _recruitment, ...rest } = spec;
-  const timeline = options.from?.length ? trim(spec.timeline, options.from) : spec.timeline;
+  const timeline = structuredClone(
+    options.from?.length ? trim(spec.timeline, options.from) : spec.timeline,
+  );
+  drawLocally(timeline);
   return { ...rest, timeline };
 }
 

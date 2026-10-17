@@ -1,4 +1,5 @@
 import manifest from "../package.json" with { type: "json" };
+import { orderColumn } from "./counterbalance.ts";
 import { idParamOf } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
@@ -54,6 +55,7 @@ export function dataColumns(spec: Spec): string[] {
         continue;
       }
       if (node.kind === "assign") columns.add(node.record_as ?? "group");
+      if (node.kind === "counterbalance") columns.add(orderColumn(node));
       const slots = slotsOf(node);
       if (slots) slots.forEach((slot) => walk(slot.children));
       else if (node.kind === "block" || node.kind === "loop") walk(node.children);
