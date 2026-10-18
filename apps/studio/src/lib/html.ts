@@ -1,31 +1,66 @@
-// Elements that run or load code of their own when they are put into the page.
-const ACTIVE_ELEMENTS = new Set(["script", "iframe", "frame", "object", "embed", "base", "meta"]);
+// What the formatted editor offers, and the text formatting a stimulus commonly carries. Anything
+// else is edited as HTML instead, where it is text and never put into the builder's page.
+const FORMATTING_ELEMENTS = new Set([
+  "b",
+  "strong",
+  "i",
+  "em",
+  "u",
+  "s",
+  "sub",
+  "sup",
+  "small",
+  "mark",
+  "br",
+  "hr",
+  "p",
+  "div",
+  "span",
+  "font",
+  "center",
+  "blockquote",
+  "ul",
+  "ol",
+  "li",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+]);
 
-// Attributes that can hold a URL, where a `javascript:` URL runs when it is followed or loaded.
-const URL_ATTRIBUTES = new Set(["href", "src", "action", "formaction", "xlink:href", "data"]);
+// `name` and `id` are left out on purpose: a named element shadows the page's own `document`
+// methods, which the editor and the rest of the builder call. `class` would borrow the builder's
+// own styles.
+const FORMATTING_ATTRIBUTES = new Set(["style", "align", "color", "size", "face", "title"]);
 
-function isScriptUrl(value: string) {
-  // Browsers ignore spaces and control characters inside the scheme.
-  const visible = [...value].filter((character) => character.charCodeAt(0) > 0x20).join("");
-  return /^javascript:/i.test(visible);
+// Inline styles cannot run script, but they can fetch from elsewhere or lay the text over the
+// builder itself.
+const UNSAFE_STYLE = /url\s*\(|@import|expression\s*\(|position\s*:/i;
+
+function isFormatting(element: Element) {
+  return (
+    FORMATTING_ELEMENTS.has(element.localName) &&
+    element.namespaceURI === "http://www.w3.org/1999/xhtml" &&
+    [...element.attributes].every(
+      (attribute) =>
+        FORMATTING_ATTRIBUTES.has(attribute.name) &&
+        !(attribute.name === "style" && UNSAFE_STYLE.test(attribute.value)),
+    )
+  );
 }
 
 /**
- * Whether markup would run script once it is put into a live page, such as the editor's editable
- * surface. A participant's page runs it on purpose; the builder's own page must not. The markup is
- * read with DOMParser, whose documents never run scripts or load anything.
+ * The markup as nodes the formatted editor can show, or null when it holds anything else. It is
+ * parsed into a template, which runs nothing and loads nothing, by the same parser and with the
+ * same scripting setting as the live page, and the editor inserts these very nodes rather than
+ * parsing the text a second time. Checking one parse and inserting another is how markup such as
+ * `<noscript>` slips past a check.
  */
-export function runsScript(html: string) {
-  const document = new DOMParser().parseFromString(html, "text/html");
-  return [...document.querySelectorAll("*")].some(
-    (element) =>
-      ACTIVE_ELEMENTS.has(element.localName) ||
-      element.localName === "svg" ||
-      [...element.attributes].some(
-        (attribute) =>
-          attribute.name.startsWith("on") ||
-          attribute.name === "srcdoc" ||
-          (URL_ATTRIBUTES.has(attribute.name) && isScriptUrl(attribute.value)),
-      ),
-  );
+export function formattedFragment(html: string): DocumentFragment | null {
+  const template = document.createElement("template");
+  template.innerHTML = html;
+  const elements = template.content.querySelectorAll("*");
+  return [...elements].every(isFormatting) ? template.content : null;
 }

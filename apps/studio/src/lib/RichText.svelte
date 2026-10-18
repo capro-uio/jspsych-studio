@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { runsScript } from "./html.ts";
+  import { formattedFragment } from "./html.ts";
 
   interface Props {
     value: string;
@@ -9,9 +9,9 @@
 
   const { value, testId, onchange }: Props = $props();
 
-  // Markup that would run script, from a project someone else made say, is never put into the
+  // Markup beyond plain formatting, from a project someone else made say, is never put into the
   // editable surface, which is part of the builder's own page. It is edited as HTML instead.
-  const holdsScript = $derived(runsScript(value ?? ""));
+  const editsAsHtml = $derived(formattedFragment(value ?? "") === null);
 
   let editor: HTMLDivElement | undefined = $state();
   let editingMarkup = $state(false);
@@ -49,8 +49,9 @@
   // The editable surface holds the document; rewriting it from `value` on every keystroke would
   // move the caret, so it is only seeded when the step being edited changes underneath it.
   function seedFromValue(surface: HTMLDivElement) {
-    if (runsScript(value ?? "")) return;
-    if (surface.innerHTML !== value) surface.innerHTML = value ?? "";
+    if (surface.innerHTML === value) return;
+    const fragment = formattedFragment(value ?? "");
+    if (fragment) surface.replaceChildren(fragment);
   }
 
   function publish() {
@@ -84,9 +85,10 @@
 </script>
 
 <div class="rich">
-  {#if holdsScript}
-    <p class="script-note" data-testid={`${testId}-script-note`}>
-      This text holds script, so it is shown as HTML. It runs for participants, but not here.
+  {#if editsAsHtml}
+    <p class="html-note" data-testid={`${testId}-html-note`}>
+      This text uses HTML the formatted editor does not handle, so it is edited as HTML.
+      Participants see it as written.
     </p>
     <textarea
       class="markup-area"
@@ -128,12 +130,14 @@
               // Keep whatever else was applied to this run of text; only the size is being changed.
               span.setAttribute("style", node.getAttribute("style") ?? "");
               span.style.fontSize = size;
-              span.innerHTML = node.innerHTML;
-              node.replaceWith(
-                span.style.cssText
-                  ? span
-                  : document.createRange().createContextualFragment(node.innerHTML),
-              );
+              // The text is moved rather than reparsed, so nothing in it is parsed into the page.
+              const children = [...node.childNodes];
+              if (span.style.cssText) {
+                span.append(...children);
+                node.replaceWith(span);
+              } else {
+                node.replaceWith(...children);
+              }
             });
           rememberSelection();
           publish();
@@ -207,7 +211,7 @@
     border-radius: 4px;
     overflow: hidden;
   }
-  .script-note {
+  .html-note {
     margin: 0;
     padding: 0.3rem 0.4rem;
     font-size: 0.78rem;

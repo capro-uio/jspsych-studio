@@ -36,11 +36,37 @@ const ran = (page: Page) =>
   page.evaluate(() => (window as unknown as { scriptRan?: boolean }).scriptRan === true);
 
 describe("text from a project someone else made", () => {
+  // A named element shadows the page's own document methods, which the editor calls.
+  it("keeps named elements from replacing the builder's own functions", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    await openProjectWithStimulus(page, '<p name="createRange">a</p><p id="getSelection">b</p>');
+
+    await expect
+      .poll(() => page.getByTestId("value-stimulus-html-note").count(), { timeout: 5_000 })
+      .toBe(1);
+    expect(await page.evaluate(() => typeof document.createRange)).toBe("function");
+    await page.close();
+  }, 120_000);
+
+  it("edits a style that fetches from elsewhere as HTML", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    await openProjectWithStimulus(page, '<p style="background: url(https://example.com/x)">a</p>');
+
+    await expect
+      .poll(() => page.getByTestId("value-stimulus-html-note").count(), { timeout: 5_000 })
+      .toBe(1);
+    await page.close();
+  }, 120_000);
+
   it.each([
     '<img src="x" onerror="window.scriptRan = true">',
     '<p>hi</p><svg onload="window.scriptRan = true"></svg>',
     '<iframe srcdoc="<script>parent.scriptRan = true</script>"></iframe>',
     '<a href=" java\tscript:window.scriptRan = true">link</a>',
+    '<noscript><p title="</noscript><img src=x onerror=window.scriptRan=true>"></noscript>',
+    '<b>x</b><noscript><p title="</noscript><img src=x onerror=window.scriptRan=true>"></noscript>',
   ])(
     "is shown as HTML, without running in the builder: %s",
     async (stimulus) => {
@@ -51,7 +77,7 @@ describe("text from a project someone else made", () => {
       // Long enough for an image's error handler to have fired, had the markup been put live.
       await page.waitForTimeout(1_000);
       expect(await ran(page)).toBe(false);
-      expect(await page.getByTestId("value-stimulus-script-note").count()).toBe(1);
+      expect(await page.getByTestId("value-stimulus-html-note").count()).toBe(1);
       expect(await page.getByTestId("value-stimulus-html").inputValue()).toBe(stimulus);
       expect(await page.getByTestId("value-stimulus").count()).toBe(0);
       await page.close();
@@ -67,7 +93,7 @@ describe("text from a project someone else made", () => {
     await expect
       .poll(() => page.getByTestId("value-stimulus").innerText(), { timeout: 5_000 })
       .toBe("Press any key");
-    expect(await page.getByTestId("value-stimulus-script-note").count()).toBe(0);
+    expect(await page.getByTestId("value-stimulus-html-note").count()).toBe(0);
     await page.close();
   }, 120_000);
 });
