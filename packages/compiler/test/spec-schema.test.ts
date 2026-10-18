@@ -268,4 +268,40 @@ describe("what the schema catches before anything runs", () => {
     };
     expect(problems(spec)).toEqual([]);
   });
+
+  it("and allows code in place of any value", () => {
+    const spec = flanker();
+    const trial = spec.timeline[0] as { params: Record<string, unknown> };
+    trial.params.trial_duration = { code: "500 + 100" };
+    expect(problems(spec)).toEqual([]);
+  });
+});
+
+describe("parameters that take a function", () => {
+  const buttons = (button_html: unknown): Spec => ({
+    name: "buttons",
+    timeline: [
+      {
+        kind: "trial",
+        plugin: "html-button-response",
+        params: { stimulus: "<p>pick</p>", choices: ["a"], button_html } as never,
+      },
+    ],
+  });
+
+  it("accept code", () => {
+    expect(problems(buttons({ code: "(choice) => `<button>${choice}</button>`" }))).toEqual([]);
+  });
+
+  it("reject text, which the plugin would try to call", () => {
+    expect(problems(buttons("<button>%choice%</button>"))).toContain(
+      "must match a schema in anyOf",
+    );
+  });
+
+  it("reject code with stray fields", () => {
+    expect(problems(buttons({ code: "() => ''", lang: "js" }))).toContain(
+      "must NOT have additional properties",
+    );
+  });
 });

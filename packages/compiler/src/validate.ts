@@ -1,5 +1,6 @@
 import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/schemas";
 import type {
+  AccuracyRule,
   AssignNode,
   BranchNode,
   CounterbalanceNode,
@@ -15,6 +16,8 @@ import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts
 import { accuracyComparison, isResponseRule } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
+import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
+import { appearanceProblems } from "./appearance.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
 export interface Problem {
@@ -72,6 +75,32 @@ function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
   return null;
 }
 
+// Code is compiled only where it stands for a whole parameter or a whole field of a list entry;
+// anywhere deeper it would reach the plugin as an object holding text.
+function isCodeSlot(value: ParameterValue, parameter: ParameterSchema) {
+  return (
+    isCode(value) ||
+    (takesFunction(parameter.jspsychType) && value !== null) ||
+    (!parameter.items?.properties && containsCode(value))
+  );
+}
+
+// A function parameter compiled from a plain string would hand the plugin text where it calls a
+// function, which fails only once a participant reaches the trial.
+function codeSlotProblem(value: ParameterValue): string | null {
+  if (!isCode(value)) {
+    return containsCode(value)
+      ? "holds code inside it, but only a whole parameter or a whole field of a list entry can be code"
+      : `takes a function, written as code ({ "code": "..." }), but the spec holds ${JSON.stringify(value)}`;
+  }
+  const extra = Object.keys(value).filter((key) => key !== "code");
+  if (extra.length > 0) {
+    return `holds code alongside ${extra.map((key) => `"${key}"`).join(", ")}, which code does not take`;
+  }
+  const problem = codeProblem(value.code);
+  return problem ? `holds code that ${problem}` : null;
+}
+
 function looksLikePath(value: string) {
   return value.includes("/") || value.includes(":");
 }
@@ -101,8 +130,16 @@ function checkTrial(
       report(`${where} has no parameter "${name}"`);
       continue;
     }
-    if (!parameter) continue;
-    if (isVariableReference(value)) {
+    if (!parameter) {
+      if (containsCode(value)) {
+        report(`${where}, parameter "${name}" holds code, but the study sets "${name}" itself`);
+      }
+      continue;
+    }
+    if (isCodeSlot(value, parameter)) {
+      const problem = codeSlotProblem(value);
+      if (problem) report(`${where}, parameter "${name}" ${problem}`);
+    } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
     } else if (isMediaParameter(trial.plugin, name, parameter.jspsychType)) {
       checkFiles(value, assets, `${where}, parameter "${name}"`, report);
@@ -142,7 +179,9 @@ function checkTrial(
   }
   for (const [field, value] of Object.entries(trial.record ?? {})) {
     if (STUDY_COLUMNS.includes(field)) report(`${where} records "${field}", ${STUDY_COLUMN}`);
-    if (isVariableReference(value)) {
+    if (isCode(value)) {
+      report(`${where}, recorded field "${field}" holds code, but a recorded field takes a value`);
+    } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, recorded field "${field}"`, problems, path);
     }
   }
@@ -225,6 +264,9 @@ function checkObjectEntries(
       const schema = fields[name];
       if (!schema) {
         report(`${position} has no field "${name}"`);
+      } else if (isCodeSlot(field, schema)) {
+        const problem = codeSlotProblem(field);
+        if (problem) report(`${position}, field "${name}" ${problem}`);
       } else if (isVariableReference(field)) {
         checkColumn(
           field.var,
@@ -325,11 +367,20 @@ function checkCounterbalance(
 const ANSWER_TYPES = new Set(["string", "number", "boolean"]);
 
 // The compiler never runs the JSON Schema, so a hand-edited rule reaches this unfiltered.
+// Every value the compiler writes into the experiment is escaped, but a threshold that is not a
+// number would still compare as text, so it is caught here with a message rather than at run time.
+function thresholdProblem(rule: AccuracyRule, step: string) {
+  const { threshold } = accuracyComparison(rule);
+  return typeof threshold === "number" && threshold >= 0 && threshold <= 1
+    ? null
+    : `${step} compares accuracy with ${JSON.stringify(threshold)}, which is not between 0 and 1`;
+}
+
 function branchRuleProblem(rule: BranchNode["when"]) {
   if (!isResponseRule(rule)) {
     return rule.accuracy_below !== undefined && rule.accuracy_at_least !== undefined
       ? "a branch compares accuracy one way, not both at once"
-      : null;
+      : thresholdProblem(rule, "a branch");
   }
   if ("accuracy_below" in rule || "accuracy_at_least" in rule) {
     return "a branch decides on accuracy or on an answer, not both at once";
@@ -434,6 +485,12 @@ function checkNodes(
 
     let inner = columns;
     if (node.kind === "block") {
+      const repetitions = node.repetitions;
+      if (repetitions !== undefined && !(Number.isInteger(repetitions) && repetitions >= 1)) {
+        report(
+          `a block repeats ${JSON.stringify(repetitions)} times, but it needs a whole number of at least 1`,
+        );
+      }
       if (!spec.conditions?.[node.conditions]) {
         report(
           `block refers to conditions table "${node.conditions}", which the spec does not define`,
@@ -443,7 +500,8 @@ function checkNodes(
       }
     }
     if (node.kind === "loop") {
-      accuracyComparison(node.repeat_while);
+      const problem = thresholdProblem(node.repeat_while, "a loop");
+      if (problem) report(problem);
       const tags = collectTags(node.children);
       if (!tags.includes(node.repeat_while.scope)) {
         report(
@@ -467,6 +525,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
     });
   }
   problems.push(...recruitmentProblems(spec));
+  problems.push(...appearanceProblems(spec.settings));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
   if (problems.length > 0) throw new SpecError(spec.name, problems);

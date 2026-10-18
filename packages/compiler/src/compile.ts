@@ -18,7 +18,8 @@ import {
   compileCounterbalancedTasks,
   compileOrderStep,
 } from "./counterbalance.ts";
-import { isVariableReference } from "./variables.ts";
+import { isPlainObject, isVariableReference } from "./variables.ts";
+import { codeExpression, isCode, takesFunction } from "./code.ts";
 import { SpecError, validateSpec } from "./validate.ts";
 import type {
   AssignNode,
@@ -50,7 +51,10 @@ function variableInsideFunction(reference: VariableReference) {
 
 // Media parameters resolve through the asset map, so a spec can name a file rather than carry a
 // data URL in every parameter and every conditions cell.
-function parameterExpression(value: ParameterValue, media = false): string {
+function parameterExpression(value: ParameterValue, media = false, isFunction = false): string {
+  if (isCode(value)) {
+    return isFunction ? codeExpression(value.code) : `() => ${valueInsideFunction(value, media)}`;
+  }
   if (!isVariableReference(value)) {
     if (!media) return literal(value);
     if (Array.isArray(value)) {
@@ -63,6 +67,9 @@ function parameterExpression(value: ParameterValue, media = false): string {
 }
 
 function valueInsideFunction(value: ParameterValue, media: boolean): string {
+  if (isCode(value)) {
+    return media ? `asset(${codeExpression(value.code)})` : codeExpression(value.code);
+  }
   if (!isVariableReference(value)) return media ? `asset(${literal(value)})` : literal(value);
   const read = variableInsideFunction(value);
   if (value.wrap) return `${literal(value.wrap)}.replace("{}", () => ${read})`;
@@ -70,19 +77,24 @@ function valueInsideFunction(value: ParameterValue, media: boolean): string {
 }
 
 function isFieldSet(entry: unknown): entry is Record<string, ParameterValue> {
-  return typeof entry === "object" && entry !== null && !Array.isArray(entry);
+  return isPlainObject(entry);
 }
 
-// jsPsych resolves timeline variables inside a list's entries only for the fields a plugin
-// declares, and the psychophysics plugin declares few of an object's fields. A list holding any
-// bound field is therefore built by a function when the trial starts, reading each column itself.
+// jsPsych resolves timeline variables and computed values inside a list's entries only for the
+// fields a plugin declares, and the psychophysics plugin declares few of an object's fields. A list
+// holding any bound or computed field is therefore built by a function when the trial starts. A
+// field that takes a function holds its code as the function, so it needs no such building.
 function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets: boolean) {
   const isMediaField = (name: string) =>
     hasAssets && isMediaType(item.properties?.[name]?.jspsychType);
-  const fieldSets = entries.filter(isFieldSet);
-  const bound = fieldSets.some((entry) => Object.values(entry).some(isVariableReference));
-  const named = fieldSets.some((entry) => Object.keys(entry).some(isMediaField));
-  if (!bound && !named) return literal(entries);
+  const isFunctionField = (name: string) => takesFunction(item.properties?.[name]?.jspsychType);
+  const fields = entries.filter(isFieldSet).flatMap((entry) => Object.entries(entry));
+  const bound = fields.some(
+    ([name, value]) => isVariableReference(value) || (isCode(value) && !isFunctionField(name)),
+  );
+  if (!bound && !fields.some(([name, value]) => isMediaField(name) || isCode(value))) {
+    return literal(entries);
+  }
 
   const compiled = entries.map((entry) => {
     if (!isFieldSet(entry)) return literal(entry);
@@ -99,7 +111,7 @@ function dataExpression(trial: TrialNode) {
   const entries = [
     ...(trial.tag ? [`tag: ${literal(trial.tag)}`] : []),
     ...Object.entries(trial.record ?? {}).map(
-      ([key, value]) => `${key}: ${parameterExpression(value)}`,
+      ([key, value]) => `${literal(key)}: ${parameterExpression(value)}`,
     ),
   ];
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : null;
@@ -125,7 +137,8 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
     }
     const media =
       context.hasAssets && isMediaParameter(trial.plugin, name, properties[name]?.jspsychType);
-    entries.push(`${name}: ${parameterExpression(value, media)}`);
+    const isFunction = takesFunction(properties[name]?.jspsychType);
+    entries.push(`${name}: ${parameterExpression(value, media, isFunction)}`);
   }
   const data = dataExpression(trial);
   if (data) entries.push(`data: ${data}`);
@@ -140,7 +153,7 @@ function compileBlock(block: BlockNode, context: CompileContext) {
     `timeline_variables: ${literal(context.spec.conditions?.[block.conditions] ?? [])}`,
   ];
   if (block.randomize_order) entries.push("randomize_order: true");
-  if (block.repetitions) entries.push(`repetitions: ${block.repetitions}`);
+  if (block.repetitions) entries.push(`repetitions: ${literal(block.repetitions)}`);
   return `{\n${entries.map((entry) => `  ${entry},`).join("\n")}\n}`;
 }
 

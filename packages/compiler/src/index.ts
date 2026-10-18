@@ -1,4 +1,5 @@
 export { compileSpec } from "./compile.ts";
+export { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 export { assetsOfType, isMediaType } from "./assets.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
 export { accuracyComparison, isResponseRule } from "./conditions.ts";

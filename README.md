@@ -166,14 +166,22 @@ everything it exports, so a downloaded spec is ready to edit before anything is 
 serves alongside the builder.
 
 The schema encodes the structural rules — which step kinds exist, what each one requires, that a
-parameter may hold a `{ "var": "column" }` reference anywhere a literal is allowed, that uploading
-data needs an experiment id. The rules that need the whole spec at once, such as whether a
+parameter may hold a `{ "var": "column" }` reference anywhere a literal is allowed, that a
+parameter may instead hold `{ "code": "..." }`, that uploading data needs an experiment id.
+
+Code is optional, except where a plugin's parameter takes a function. A parameter that takes a
+function (such as a button's `button_html`) holds the function itself, and accepts only code;
+any other parameter's code is a single expression worked out when the trial starts, with `jsPsych`
+in scope. The compiler checks that each piece of code is exactly one JavaScript expression before
+emitting it. The rules that need the whole spec at once, such as whether a
 referenced conditions column actually exists upstream of the step reading it, stay in the
 compiler's validator; the schema narrows what reaches it rather than replacing it.
 
 ## Design rules
 
 - **One-way compile.** The spec compiles to JavaScript; JavaScript is never parsed back.
+- **Code is an option, not the route.** Authors may write code for any parameter, and must for the
+  few that take a function, until a form can build that function for them.
 - **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
 - **No backend.** Static tool. Results go to DataPipe or any compatible service, and a failed
   upload falls back to a download so a participant's data is never lost silently. Balanced group

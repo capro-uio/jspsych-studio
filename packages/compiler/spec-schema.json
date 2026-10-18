@@ -301,6 +301,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -318,6 +321,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       },
                       {
                         "enum": [
@@ -338,6 +344,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -351,6 +360,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -364,6 +376,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -377,6 +392,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -390,6 +408,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -403,6 +424,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -438,11 +462,10 @@
                     "description": "The function to call.",
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -456,6 +479,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -496,6 +522,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -510,6 +539,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -523,6 +555,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -536,6 +571,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -574,6 +612,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -589,19 +630,26 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
                   "button_html": {
                     "title": "button html",
                     "description": "A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -616,6 +664,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -629,6 +680,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -642,6 +696,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -655,6 +712,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -668,6 +728,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -681,6 +744,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -694,6 +760,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -707,6 +776,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -748,6 +820,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -765,6 +840,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       },
                       {
                         "enum": [
@@ -785,6 +863,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -798,6 +879,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -811,6 +895,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -824,6 +911,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -837,6 +927,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -877,6 +970,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -890,6 +986,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -903,6 +1002,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -916,6 +1018,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -931,19 +1036,26 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
                   "button_html": {
                     "title": "button html",
                     "description": "``(choice: string, choice_index: number)=>`<button class=\"jspsych-btn\">${choice}</button>``; | A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -958,6 +1070,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -971,6 +1086,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -984,6 +1102,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -997,6 +1118,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1010,6 +1134,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1023,6 +1150,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1036,6 +1166,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1049,6 +1182,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1062,6 +1198,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1103,6 +1242,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1116,6 +1258,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1129,6 +1274,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1142,6 +1290,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1159,6 +1310,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       },
                       {
                         "enum": [
@@ -1179,6 +1333,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1192,6 +1349,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1205,6 +1365,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1218,6 +1381,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1231,6 +1397,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1244,6 +1413,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1287,6 +1459,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1301,6 +1476,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1315,6 +1493,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1328,6 +1509,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1341,6 +1525,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1354,6 +1541,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1367,6 +1557,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1380,6 +1573,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1393,6 +1589,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1406,19 +1605,26 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
                   "on_page_change": {
                     "title": "Page change callback",
                     "description": "The callback function when page changes",
+                    "examples": [
+                      {
+                        "code": "function(current_page) {\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -1459,6 +1665,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1473,6 +1682,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1489,6 +1701,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1505,6 +1720,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1521,6 +1739,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1535,6 +1756,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1548,6 +1772,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1561,6 +1788,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1575,6 +1805,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1588,6 +1821,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1601,6 +1837,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -1610,11 +1849,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -1624,11 +1862,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -1683,6 +1920,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1696,6 +1936,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1709,6 +1952,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1722,6 +1968,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1735,6 +1984,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1748,6 +2000,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1761,6 +2016,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1774,6 +2032,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1787,6 +2048,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1800,6 +2064,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1813,6 +2080,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1822,11 +2092,10 @@
                               "default": null,
                               "anyOf": [
                                 {
-                                  "format": "expression",
-                                  "type": "string"
+                                  "$ref": "#/definitions/code"
                                 },
                                 {
-                                  "$ref": "#/definitions/variableReference"
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -1836,11 +2105,10 @@
                               "default": null,
                               "anyOf": [
                                 {
-                                  "format": "expression",
-                                  "type": "string"
+                                  "$ref": "#/definitions/code"
                                 },
                                 {
-                                  "$ref": "#/definitions/variableReference"
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -1854,6 +2122,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1867,6 +2138,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1880,6 +2154,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1893,6 +2170,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1906,6 +2186,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1927,6 +2210,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1948,6 +2234,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1961,6 +2250,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1974,6 +2266,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -1987,6 +2282,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2000,6 +2298,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2013,6 +2314,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2026,6 +2330,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2039,6 +2346,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2052,6 +2362,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2065,6 +2378,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2078,6 +2394,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2091,6 +2410,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2104,6 +2426,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2113,11 +2438,10 @@
                               "default": null,
                               "anyOf": [
                                 {
-                                  "format": "expression",
-                                  "type": "string"
+                                  "$ref": "#/definitions/code"
                                 },
                                 {
-                                  "$ref": "#/definitions/variableReference"
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2131,6 +2455,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2144,6 +2471,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2157,6 +2487,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2170,6 +2503,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2183,6 +2519,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2196,6 +2535,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2209,6 +2551,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2218,11 +2563,10 @@
                               "default": null,
                               "anyOf": [
                                 {
-                                  "format": "expression",
-                                  "type": "string"
+                                  "$ref": "#/definitions/code"
                                 },
                                 {
-                                  "$ref": "#/definitions/variableReference"
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2232,11 +2576,10 @@
                               "default": null,
                               "anyOf": [
                                 {
-                                  "format": "expression",
-                                  "type": "string"
+                                  "$ref": "#/definitions/code"
                                 },
                                 {
-                                  "$ref": "#/definitions/variableReference"
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2250,6 +2593,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2263,6 +2609,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2276,6 +2625,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2289,6 +2641,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2302,6 +2657,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2315,6 +2673,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2328,6 +2689,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2348,6 +2712,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2360,6 +2727,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2372,6 +2742,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2384,6 +2757,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2396,6 +2772,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2408,6 +2787,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2420,6 +2802,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2432,6 +2817,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2444,6 +2832,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2457,6 +2848,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2469,6 +2863,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2481,6 +2878,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -2493,6 +2893,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             }
@@ -2504,6 +2907,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2512,11 +2918,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2534,6 +2939,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       },
                       {
                         "enum": [
@@ -2554,6 +2962,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2568,6 +2979,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2582,6 +2996,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2595,6 +3012,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2608,6 +3028,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2621,6 +3044,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2634,6 +3060,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2647,6 +3076,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2660,6 +3092,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2673,6 +3108,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2686,6 +3124,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2699,6 +3140,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2708,11 +3152,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2722,11 +3165,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2736,11 +3178,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2750,11 +3191,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2764,11 +3204,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2778,11 +3217,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2792,11 +3230,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2806,11 +3243,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2820,11 +3256,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2834,11 +3269,10 @@
                     "default": null,
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2857,18 +3291,25 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
                   "button_html": {
                     "title": "button html",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
-                        "format": "expression",
-                        "type": "string"
+                        "$ref": "#/definitions/code"
                       },
                       {
-                        "$ref": "#/definitions/variableReference"
+                        "type": "null"
                       }
                     ]
                   },
@@ -2882,6 +3323,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2895,6 +3339,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2908,6 +3355,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2921,6 +3371,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2934,6 +3387,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2947,6 +3403,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -2995,6 +3454,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3010,6 +3472,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3023,6 +3488,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3036,6 +3504,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3049,6 +3520,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             }
@@ -3061,6 +3535,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3074,6 +3551,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3088,6 +3568,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3101,6 +3584,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3114,6 +3600,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3127,6 +3616,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3175,6 +3667,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3188,6 +3683,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3201,6 +3699,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3214,6 +3715,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3227,6 +3731,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             },
@@ -3240,6 +3747,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
                                 }
                               ]
                             }
@@ -3251,6 +3761,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3264,6 +3777,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3278,6 +3794,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3291,6 +3810,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3304,6 +3826,9 @@
                       },
                       {
                         "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
                       }
                     ]
                   },
@@ -3589,6 +4114,21 @@
       },
       "additionalProperties": false
     },
+    "code": {
+      "title": "JavaScript the author wrote: the function itself for a parameter that takes one, or an expression worked out when the trial starts. `jsPsych` is in scope.",
+      "type": "object",
+      "required": [
+        "code"
+      ],
+      "properties": {
+        "code": {
+          "title": "A single JavaScript expression.",
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
     "parameterValue": {
       "anyOf": [
         {
@@ -3720,10 +4260,12 @@
         },
         "background_color": {
           "title": "What the participant's screen looks like behind the stimulus.",
-          "type": "string"
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg]+\\))$"
         },
         "text_color": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg]+\\))$"
         }
       },
       "additionalProperties": false
