@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Asset } from "@jspsych-studio/compiler";
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import CanvasStage from "./CanvasStage.svelte";
   import { stageFor } from "./canvas.ts";
@@ -8,7 +9,7 @@
   interface Props {
     name: string;
     parameter: ParameterSchema;
-    assets: string[];
+    assets: Asset[];
     value: unknown;
     params: Record<string, unknown> | undefined;
     onchange: (objects: unknown[]) => void;

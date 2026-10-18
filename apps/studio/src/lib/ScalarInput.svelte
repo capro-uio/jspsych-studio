@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { isMediaType } from "@jspsych-studio/compiler";
+  import type { Asset } from "@jspsych-studio/compiler";
   import type { ParameterSchema } from "@jspsych-studio/schemas";
+  import { fileChoices } from "./files.ts";
   import RichText from "./RichText.svelte";
   import { asText } from "./text.ts";
 
   interface Props {
     parameter: ParameterSchema;
-    assets: string[];
+    assets: Asset[];
     value: unknown;
     testId: string;
     onchange: (value: unknown) => void;
@@ -13,7 +16,8 @@
 
   const { parameter, assets, value, testId, onchange }: Props = $props();
 
-  const media = $derived(["IMAGE", "AUDIO", "VIDEO"].includes(parameter.jspsychType));
+  const media = $derived(isMediaType(parameter.jspsychType));
+  const files = $derived(media ? fileChoices(assets, parameter.jspsychType, value) : []);
   const placeholder = $derived(
     typeof parameter.default === "string" || typeof parameter.default === "number"
       ? String(parameter.default)
@@ -49,14 +53,14 @@
         Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
       )}
   />
-{:else if media && assets.length > 0}
+{:else if files.length > 0}
   <select
     data-testid={testId}
     value={value as string}
     onchange={(event) => onchange(event.currentTarget.value)}
   >
     <option value="">choose a file</option>
-    {#each assets as file (file)}
+    {#each files as file (file)}
       <option value={file}>{file}</option>
     {/each}
   </select>

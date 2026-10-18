@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { Asset } from "@jspsych-studio/compiler";
   import type { ParameterSchema } from "@jspsych-studio/schemas";
   import ObjectField from "./ObjectField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
@@ -6,7 +7,7 @@
   interface Props {
     testId: string;
     parameter: ParameterSchema;
-    assets: string[];
+    assets: Asset[];
     values: unknown[];
     onchange: (values: unknown[]) => void;
     selected?: number | null;

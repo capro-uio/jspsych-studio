@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { preloadListOf } from "../src/assets.ts";
+import { assetsOfType, preloadListOf } from "../src/assets.ts";
 import type { Asset, Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
@@ -134,5 +134,32 @@ describe("preloading files", () => {
     expect(preloadListOf(hosted("clip.mp4"))).toBe("video");
     expect(preloadListOf(hosted("words.txt"))).toBeNull();
     expect(preloadListOf(hosted("README"))).toBeNull();
+  });
+
+  it("goes by the extension when the browser did not know the file's type", () => {
+    const unknown = (name: string): Asset => ({
+      name,
+      url: "data:application/octet-stream;base64,AAAA",
+    });
+    expect(preloadListOf(unknown("voice.opus"))).toBe("audio");
+    expect(preloadListOf(unknown("data.bin"))).toBeNull();
+  });
+});
+
+describe("assetsOfType", () => {
+  const assets: Asset[] = [
+    { name: "face.png", url: PIXEL },
+    { name: "tone.wav", url: "data:audio/wav;base64,UklGRg==" },
+    { name: "notes.txt", url: "data:text/plain;base64,aGk=" },
+  ];
+
+  it("keeps the files a media parameter of that type can use", () => {
+    expect(assetsOfType(assets, "IMAGE").map((asset) => asset.name)).toEqual(["face.png"]);
+    expect(assetsOfType(assets, "AUDIO").map((asset) => asset.name)).toEqual(["tone.wav"]);
+    expect(assetsOfType(assets, "VIDEO")).toEqual([]);
+  });
+
+  it("keeps none for a parameter that is not media", () => {
+    expect(assetsOfType(assets, "STRING")).toEqual([]);
   });
 });
