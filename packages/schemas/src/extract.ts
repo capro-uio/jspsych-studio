@@ -113,7 +113,10 @@ export function toParameterSchema(
   if (typeof raw.default === "function") {
     schema.examples = [{ code: functionSource(raw.default as () => unknown) }];
   } else if ("default" in raw) {
-    schema.default = raw.default;
+    // A number parameter defaulting to empty text, as video-keyboard-response's width does, means
+    // none; null says so in a way the schema and the forms understand.
+    const numeric = jspsychType === "INT" || jspsychType === "FLOAT";
+    schema.default = numeric && raw.default === "" ? null : raw.default;
   }
   if (raw.options) {
     // A list of choices holds several options, not one, so the options constrain each entry.

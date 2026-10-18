@@ -39,6 +39,21 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Shows an image and records which button is clicked, and how fast.",
     family: "show",
   },
+  "audio-button-response": {
+    title: "Sound, answered with buttons",
+    summary: "Plays a sound and records which button is clicked, and how fast.",
+    family: "show",
+  },
+  "video-keyboard-response": {
+    title: "Video, answered with a key",
+    summary: "Plays a video and records which key is pressed, and how fast.",
+    family: "show",
+  },
+  "video-button-response": {
+    title: "Video, answered with buttons",
+    summary: "Plays a video and records which button is clicked, and how fast.",
+    family: "show",
+  },
   "audio-keyboard-response": {
     title: "Sound, answered with a key",
     summary: "Plays a sound and records which key is pressed, and how fast.",
