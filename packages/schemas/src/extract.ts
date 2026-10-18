@@ -9,6 +9,7 @@ import type {
   PluginSchemas,
 } from "./types.ts";
 import { CURATED_PLUGINS } from "./curated.ts";
+import { PLUGIN_LABELS } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
   BOOL: { type: "boolean" },
@@ -144,9 +145,14 @@ async function extractOne(
     failures.push({ package: packageName, reason: "no dist/index.d.ts; forms lose help text" });
   }
 
+  const label = PLUGIN_LABELS[plugin.info.name];
+  if (!label) {
+    throw new Error(`plugin "${plugin.info.name}" has no title; add one to src/titles.ts`);
+  }
   const { properties, required } = toObjectSchema(plugin.info.parameters, typeNames, descriptions);
   const schema = {
     plugin: plugin.info.name,
+    ...label,
     package: packageName,
     version: plugin.info.version,
     properties,

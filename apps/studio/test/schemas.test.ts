@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { schemas, startingParams, switchVariant, visibleFields } from "../src/lib/schemas.ts";
+import {
+  pluginChoices,
+  pluginTitle,
+  schemas,
+  startingParams,
+  switchVariant,
+  visibleFields,
+} from "../src/lib/schemas.ts";
 
 const canvasObject = schemas.plugins.psychophysics.properties.stimuli.items!;
 const shown = (value: Record<string, unknown>) =>
@@ -75,5 +82,38 @@ describe("switchVariant", () => {
         "text",
       ),
     ).toEqual({ obj_type: "text", endX: 100 });
+  });
+});
+
+describe("pluginTitle", () => {
+  it("names a plugin the way an author would", () => {
+    expect(pluginTitle("survey-likert")).toBe("Rating scale questions");
+  });
+
+  it("falls back to the machine name for a plugin the schemas do not know", () => {
+    expect(pluginTitle("my-own-plugin")).toBe("my-own-plugin");
+  });
+});
+
+describe("pluginChoices", () => {
+  it("offers every plugin exactly once", () => {
+    const offered = pluginChoices.flatMap((group) => group.plugins.map(({ plugin }) => plugin));
+    expect(offered.sort()).toEqual(Object.keys(schemas.plugins).sort());
+  });
+
+  it("groups plugins by what the step is for, in a fixed order", () => {
+    expect(pluginChoices.map((group) => group.label)).toEqual([
+      "Show something and record the response",
+      "Ask questions",
+      "Draw on a canvas",
+      "Set up and run",
+    ]);
+  });
+
+  it("sorts each group by title", () => {
+    for (const group of pluginChoices) {
+      const titles = group.plugins.map(({ title }) => title);
+      expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
+    }
   });
 });

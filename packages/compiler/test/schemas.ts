@@ -1,4 +1,4 @@
-import { extractSchemas } from "@jspsych-studio/schemas";
+import { extractSchemas, PLUGIN_FAMILIES } from "@jspsych-studio/schemas";
 import type { SchemaBundle } from "@jspsych-studio/schemas";
 
 const report = await extractSchemas([
@@ -13,4 +13,8 @@ const report = await extractSchemas([
   "@kurokida/jspsych-psychophysics",
 ]);
 
-export const schemas: SchemaBundle = { jspsych: report.jspsych, plugins: report.schemas };
+export const schemas: SchemaBundle = {
+  jspsych: report.jspsych,
+  families: PLUGIN_FAMILIES,
+  plugins: report.schemas,
+};

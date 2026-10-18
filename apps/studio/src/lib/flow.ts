@@ -7,6 +7,7 @@ import {
 } from "@jspsych-studio/compiler";
 import type { Retention, Slot, Spec, SpecNode } from "@jspsych-studio/compiler";
 import { describeAccuracy, describeBranchRule } from "./rules.ts";
+import { pluginTitle } from "./schemas.ts";
 
 export type FlowPath = number[];
 
@@ -89,7 +90,7 @@ function scoreText(score: NonNullable<NodeOfKind<"trial">["score"]>) {
 const KIND_LAYOUTS: KindLayouts = {
   trial: {
     describe: (node) => ({
-      title: node.plugin,
+      title: pluginTitle(node.plugin),
       details: [
         ...(node.tag ? [`tagged ${node.tag}`] : []),
         ...(node.score ? [scoreText(node.score)] : []),

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
+import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
 import { extractSchemas, pluginPackages, toParameterSchema } from "../src/extract.ts";
 
 const packages = pluginPackages();
@@ -64,6 +65,25 @@ describe("extractSchemas", () => {
   it("falls back to the help text a plugin declares in its own info", () => {
     const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
     expect(canvasWidth.description).toMatch(/width/i);
+  });
+});
+
+describe("plugin titles", () => {
+  it("gives every plugin a title, a summary and a family", () => {
+    for (const schema of Object.values(report.schemas)) {
+      expect(schema.title, schema.plugin).not.toBe("");
+      expect(schema.summary, schema.plugin).not.toBe("");
+      expect(Object.keys(PLUGIN_FAMILIES), schema.plugin).toContain(schema.family);
+    }
+  });
+
+  it("names only plugins that are extracted, so none is left behind when one is removed", () => {
+    expect(Object.keys(PLUGIN_LABELS).sort()).toEqual(Object.keys(report.schemas).sort());
+  });
+
+  it("gives no two plugins the same title", () => {
+    const titles = Object.values(PLUGIN_LABELS).map((label) => label.title);
+    expect(new Set(titles).size).toBe(titles.length);
   });
 });
 

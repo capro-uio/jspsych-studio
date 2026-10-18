@@ -59,6 +59,9 @@ describe("lists of choices", () => {
     plugins: {
       pick: {
         plugin: "pick",
+        title: "Pick colours",
+        summary: "Picks colours.",
+        family: "ask" as const,
         package: "pick",
         version: "1.0.0",
         required: [],

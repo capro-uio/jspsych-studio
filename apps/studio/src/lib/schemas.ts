@@ -3,7 +3,21 @@ import type { ParameterSchema, SchemaBundle, Variants } from "@jspsych-studio/sc
 
 export const schemas = schemaFile as unknown as SchemaBundle;
 
-export const pluginNames = Object.keys(schemas.plugins).sort();
+/** What an author calls a plugin's step; the machine name for one the schemas do not know. */
+export function pluginTitle(plugin: string) {
+  return schemas.plugins[plugin]?.title ?? plugin;
+}
+
+/** The plugins an author can choose from, grouped by what the step is for and sorted by title. */
+export const pluginChoices = Object.entries(schemas.families)
+  .map(([family, label]) => ({
+    label,
+    plugins: Object.values(schemas.plugins)
+      .filter((schema) => schema.family === family)
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .map(({ plugin, title }) => ({ plugin, title })),
+  }))
+  .filter((group) => group.plugins.length > 0);
 
 const EDITABLE_TYPES = new Set([
   "BOOL",

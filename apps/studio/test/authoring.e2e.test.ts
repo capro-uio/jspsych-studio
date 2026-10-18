@@ -697,7 +697,7 @@ describe("opening an example", () => {
 
     await expect
       .poll(() => page.getByTestId("node-0").innerText(), { timeout: 5_000 })
-      .toContain("instructions");
+      .toContain("Instruction pages");
     await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
 
     const preview = page.frameLocator('[data-testid="preview"]');
