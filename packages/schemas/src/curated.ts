@@ -101,16 +101,23 @@ export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
   "categorize-image": { key_answer: "f" },
   "categorize-animation": { key_answer: "f" },
   "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"] },
+  // A word between percent signs is a gap to fill in.
+  cloze: { text: "<p>The cat sat on the %mat%.</p>" },
+  maxdiff: {
+    alternatives: ["Option 1", "Option 2", "Option 3"],
+    labels: ["Least important", "Most important"],
+  },
 };
 
 // The same/different plugins read exactly two stimuli: one fewer shows "undefined", and any more
-// are ignored without a word.
+// are ignored without a word. Most-and-least takes one label for each end of its scale.
 export const LIST_LENGTHS: Record<
   string,
   Record<string, { minItems: number; maxItems: number }>
 > = {
   "same-different-html": { stimuli: { minItems: 2, maxItems: 2 } },
   "same-different-image": { stimuli: { minItems: 2, maxItems: 2 } },
+  maxdiff: { labels: { minItems: 2, maxItems: 2 } },
 };
 
 // Columns a plugin writes without declaring them in its info: the same/different plugins record a

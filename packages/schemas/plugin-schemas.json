@@ -8,6 +8,81 @@
     "setup": "Set up and run"
   },
   "plugins": {
+    "animation": {
+      "plugin": "animation",
+      "title": "Images as an animation",
+      "summary": "Shows images one after another as an animation, and records any keys pressed.",
+      "family": "show",
+      "package": "@jspsych/plugin-animation",
+      "version": "2.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-image",
+            "jspsychType": "IMAGE"
+          },
+          "jspsychType": "IMAGE",
+          "title": "stimuli",
+          "description": "Each element of the array is a path to an image file."
+        },
+        "frame_time": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "frame time",
+          "description": "How long to display each image in milliseconds.",
+          "default": 250
+        },
+        "frame_isi": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "frame isi",
+          "description": "If greater than 0, then a gap will be shown between each image in the sequence. This parameter specifies the length of the gap in milliseconds.",
+          "default": 0
+        },
+        "sequence_reps": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "sequence reps",
+          "description": "How many times to show the entire sequence. There will be no gap (other than the gap specified by `frame_isi`) between repetitions.",
+          "default": 1
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "choices",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key(s) to press).",
+          "default": null
+        },
+        "render_on_canvas": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "render on canvas",
+          "description": "If true, the images will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive images in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych.",
+          "default": true
+        }
+      },
+      "required": [
+        "stimuli"
+      ],
+      "records": [
+        "animation_sequence",
+        "response"
+      ]
+    },
     "audio-button-response": {
       "plugin": "audio-button-response",
       "title": "Sound, answered with buttons",
@@ -732,6 +807,239 @@
         "correct"
       ]
     },
+    "cloze": {
+      "plugin": "cloze",
+      "title": "Fill in the blanks",
+      "summary": "Shows text with words left out, and records what the participant types into each gap.",
+      "family": "ask",
+      "package": "@jspsych/plugin-cloze",
+      "version": "2.2.0",
+      "properties": {
+        "text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "text",
+          "description": "The cloze text to be displayed. Blanks are indicated by %% signs and automatically replaced by input fields. If there is a correct answer you want the system to check against, it must be typed between the two percentage signs (i.e. % correct solution %). If you would like to input multiple solutions, type a slash between each responses (i.e. %1/2/3%).",
+          "examples": [
+            "<p>The cat sat on the %mat%.</p>"
+          ]
+        },
+        "button_text": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button text",
+          "description": "Text of the button participants have to press for finishing the cloze test.",
+          "default": "OK"
+        },
+        "check_answers": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "check answers",
+          "description": "Boolean value indicating if the answers given by participants should be compared against a correct solution given in `text` after the submit button was clicked. If ```true```, answers are checked and in case of differences, the ```mistake_fn``` is called. In this case, the trial does not automatically finish. If ```false```, no checks are performed and the trial ends when clicking the submit button.",
+          "default": false
+        },
+        "allow_blanks": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow blanks",
+          "description": "Boolean value indicating if the answers given by participants should be checked for completion after the button was clicked. If ```true```, answers are not checked for completion and blank answers are allowed. The trial will then automatically finish upon the clicking the button. If ```false```, answers are checked for completion, and in case there are some fields with missing answers, the ```mistake_fn``` is called. In this case, the trial does not automatically finish.",
+          "default": true
+        },
+        "case_sensitivity": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "Case sensitivity",
+          "description": "Boolean value indicating if the solutions checker must be case sensitive.",
+          "default": true
+        },
+        "mistake_fn": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "mistake fn",
+          "description": "Function called if either `check_answers` is `true` or `allow_blanks` is `false` and there is a discrepancy between the set answers and the answers provided, or if all input fields aren't filled out, respectively.",
+          "examples": [
+            {
+              "code": "() => {\n}"
+            }
+          ]
+        },
+        "autofocus": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "autofocus",
+          "description": "Boolean value indicating if the first input field should be focused when the trial starts. Enabled by default, but may be disabled especially if participants are using screen readers.",
+          "default": true
+        }
+      },
+      "required": [
+        "text"
+      ],
+      "records": [
+        "response"
+      ]
+    },
+    "free-sort": {
+      "plugin": "free-sort",
+      "title": "Images, sorted by dragging",
+      "summary": "Lets the participant drag images into place, and records where each one ends up.",
+      "family": "judge",
+      "package": "@jspsych/plugin-free-sort",
+      "version": "2.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-image",
+            "jspsychType": "IMAGE"
+          },
+          "jspsychType": "IMAGE",
+          "title": "stimuli",
+          "description": "Each element of this array is an image path."
+        },
+        "stim_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stim height",
+          "description": "The height of the images in pixels.",
+          "default": 100
+        },
+        "stim_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stim width",
+          "description": "The width of the images in pixels.",
+          "default": 100
+        },
+        "scale_factor": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "scale factor",
+          "description": "How much larger to make the stimulus while moving (1 = no scaling).",
+          "default": 1.5
+        },
+        "sort_area_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "sort area height",
+          "description": "The height of the container that participants can move the stimuli in. Stimuli will be constrained to this area.",
+          "default": 700
+        },
+        "sort_area_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "sort area width",
+          "description": "The width of the container that participants can move the stimuli in. Stimuli will be constrained to this area.",
+          "default": 700
+        },
+        "sort_area_shape": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "sort area shape",
+          "description": "The shape of the sorting area, can be \"ellipse\" or \"square\".",
+          "default": "ellipse",
+          "enum": [
+            "square",
+            "ellipse"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": ""
+        },
+        "prompt_location": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "prompt location",
+          "description": "Indicates whether to show the prompt `\"above\"` or `\"below\"` the sorting area.",
+          "default": "above",
+          "enum": [
+            "above",
+            "below"
+          ]
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "The text that appears on the button to continue to the next trial.",
+          "default": "Continue"
+        },
+        "change_border_background_color": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "change border background color",
+          "description": "If true, the sort area border color will change while items are being moved in and out of the sort area, and the background color will change once all items have been moved into the sort area. If false, the border will remain black and the background will remain white throughout the trial.",
+          "default": true
+        },
+        "border_color_in": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "border color in",
+          "description": "If change_border_background_color is true, the sort area border will change to this color when an item is being moved into the sort area, and the background will change to this color when all of the items have been moved into the sort area.",
+          "default": "#a1d99b"
+        },
+        "border_color_out": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "border color out",
+          "description": "If change_border_background_color is true, this will be the color of the sort area border when there are one or more items that still need to be moved into the sort area.",
+          "default": "#fc9272"
+        },
+        "border_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "border width",
+          "description": "The width in pixels of the border around the sort area. If null, the border width defaults to 3% of the sort area height.",
+          "default": null
+        },
+        "counter_text_unfinished": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "counter text unfinished",
+          "description": "Text to display when there are one or more items that still need to be placed in the sort area. If \"%n%\" is included in the string, it will be replaced with the number of items that still need to be moved inside. If \"%s%\" is included in the string, a \"s\" will be included when the number of items remaining is greater than one.",
+          "default": "You still need to place %n% item%s% inside the sort area."
+        },
+        "counter_text_finished": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "counter text finished",
+          "description": "Text that will take the place of the counter_text_unfinished text when all items have been moved inside the sort area.",
+          "default": "All items placed. Feel free to reposition items if necessary."
+        },
+        "stim_starts_inside": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "stim starts inside",
+          "description": "If false, the images will be positioned to the left and right of the sort area when the trial loads. If true, the images will be positioned at random locations inside the sort area when the trial loads.",
+          "default": false
+        },
+        "column_spread_factor": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "column spread factor",
+          "description": "When the images appear outside the sort area, this determines the x-axis spread of the image columns. Default value is 1. Values less than 1 will compress the image columns along the x-axis, and values greater than 1 will spread them farther apart.",
+          "default": 1
+        }
+      },
+      "required": [
+        "stimuli"
+      ],
+      "records": [
+        "init_locations",
+        "moves",
+        "final_locations",
+        "rt"
+      ]
+    },
     "fullscreen": {
       "plugin": "fullscreen",
       "title": "Switch to full screen",
@@ -1068,6 +1376,274 @@
         "response",
         "stimulus",
         "slider_start"
+      ]
+    },
+    "iat-html": {
+      "plugin": "iat-html",
+      "title": "Implicit association, with text",
+      "summary": "One trial of an implicit association test: text sorted left or right by a key.",
+      "family": "judge",
+      "package": "@jspsych/plugin-iat-html",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "stimulus",
+          "description": "The HTML string to be displayed."
+        },
+        "left_category_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "left category key",
+          "description": "Key press that is associated with the `left_category_label`.",
+          "default": "e"
+        },
+        "right_category_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "right category key",
+          "description": "Key press that is associated with the `right_category_label`.",
+          "default": "i"
+        },
+        "left_category_label": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "left category label",
+          "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
+          "default": [
+            "left"
+          ]
+        },
+        "right_category_label": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "right category label",
+          "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
+          "default": [
+            "right"
+          ]
+        },
+        "key_to_move_forward": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "key to move forward",
+          "description": "This array contains the characters the participant is allowed to press to move on to the next trial if their key press was incorrect and feedback was displayed. Can also have 'other key' as an option which will only allow the user to select the right key to move forward.",
+          "default": "ALL_KEYS"
+        },
+        "display_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "display feedback",
+          "description": "If `true`, then `html_when_wrong` and `wrong_image_name` is required. If `false`, `trial_duration` is needed and trial will continue automatically.",
+          "default": false
+        },
+        "html_when_wrong": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "html when wrong",
+          "description": "The content to display when a user presses the wrong key.",
+          "default": "<span style=\"color: red; font-size: 80px\">X</span>"
+        },
+        "bottom_instructions": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "bottom instructions",
+          "description": "Instructions about making a wrong key press and whether another key press is needed to continue.",
+          "default": "<p>If you press the wrong key, a red X will appear. Press any key to continue.</p>"
+        },
+        "force_correct_key_press": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "force correct key press",
+          "description": "If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used. If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used.",
+          "default": false
+        },
+        "stim_key_association": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "stim key association",
+          "description": "Either 'left' or 'right'. This indicates whether the stimulus is associated with the key press and category on the left or right side of the page (`left_category_key` or `right_category_key`).",
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use this parameter to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as `null` for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+          "default": null
+        }
+      },
+      "required": [
+        "stimulus",
+        "stim_key_association"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "correct",
+        "rt"
+      ]
+    },
+    "iat-image": {
+      "plugin": "iat-image",
+      "title": "Implicit association, with images",
+      "summary": "One trial of an implicit association test: an image sorted left or right by a key.",
+      "family": "judge",
+      "package": "@jspsych/plugin-iat-image",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "stimulus",
+          "description": "The stimulus to display. The path to an image."
+        },
+        "left_category_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "left category key",
+          "description": "Key press that is associated with the `left_category_label`.",
+          "default": "e"
+        },
+        "right_category_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "right category key",
+          "description": "Key press that is associated with the `right_category_label`.",
+          "default": "i"
+        },
+        "left_category_label": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "left category label",
+          "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
+          "default": [
+            "left"
+          ]
+        },
+        "right_category_label": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "right category label",
+          "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
+          "default": [
+            "right"
+          ]
+        },
+        "key_to_move_forward": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "key to move forward",
+          "description": "This array contains the characters the participant is allowed to press to move on to the next trial if their key press was incorrect and feedback was displayed. Can also have 'other key' as an option which will only allow the user to select the right key to move forward.",
+          "default": "ALL_KEYS"
+        },
+        "display_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "display feedback",
+          "description": "If `true`, then `html_when_wrong` and `wrong_image_name` is required. If `false`, `trial_duration` is needed and trial will continue automatically.",
+          "default": false
+        },
+        "html_when_wrong": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "html when wrong",
+          "description": "The content to display when a user presses the wrong key.",
+          "default": "<span style=\"color: red; font-size: 80px\">X</span>"
+        },
+        "bottom_instructions": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "bottom instructions",
+          "description": "Instructions about making a wrong key press and whether another key press is needed to continue.",
+          "default": "<p>If you press the wrong key, a red X will appear. Press any key to continue.</p>"
+        },
+        "force_correct_key_press": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "force correct key press",
+          "description": "If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used. If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used.",
+          "default": false
+        },
+        "stim_key_association": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "stim key association",
+          "description": "Either 'left' or 'right'. This indicates whether the stimulus is associated with the key press and category on the left or right side of the page (`left_category_key` or `right_category_key`).",
+          "enum": [
+            "left",
+            "right"
+          ]
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use this parameter to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as `null` for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+          "default": null
+        }
+      },
+      "required": [
+        "stimulus",
+        "stim_key_association"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "correct",
+        "rt"
       ]
     },
     "image-button-response": {
@@ -1552,6 +2128,89 @@
         "rt"
       ]
     },
+    "maxdiff": {
+      "plugin": "maxdiff",
+      "title": "Most and least",
+      "summary": "Asks which of several options is most and which is least, on one scale.",
+      "family": "ask",
+      "package": "@jspsych/plugin-maxdiff",
+      "version": "2.1.0",
+      "properties": {
+        "alternatives": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "alternatives",
+          "description": "An array of one or more alternatives of string type to fill the rows of the maxdiff table. If `required` is true, then the array must contain two or more alternatives, so that at least one can be selected for both the left and right columns.",
+          "examples": [
+            [
+              "Option 1",
+              "Option 2",
+              "Option 3"
+            ]
+          ]
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "labels",
+          "description": "An array with exactly two labels of string type to display as column headings (to the left and right of the alternatives) for responses on the criteria of interest.",
+          "examples": [
+            [
+              "Least important",
+              "Most important"
+            ]
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "randomize_alternative_order": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "randomize alternative order",
+          "description": "If true, the display order of `alternatives` is randomly determined at the start of the trial.",
+          "default": false
+        },
+        "preamble": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "preamble",
+          "description": "HTML formatted string to display at the top of the page above the maxdiff table.",
+          "default": ""
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label of the button to submit response.",
+          "default": "Continue"
+        },
+        "required": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "required",
+          "description": "If true, prevents the user from submitting the response and proceeding until a radio button in both the left and right response columns has been selected.",
+          "default": false
+        }
+      },
+      "required": [
+        "alternatives",
+        "labels"
+      ],
+      "records": [
+        "rt",
+        "labels",
+        "response"
+      ]
+    },
     "preload": {
       "plugin": "preload",
       "title": "Load files in advance",
@@ -1864,6 +2523,231 @@
         "answer",
         "rt_stim1",
         "response_stim1"
+      ]
+    },
+    "sketchpad": {
+      "plugin": "sketchpad",
+      "title": "Drawing",
+      "summary": "Gives the participant a canvas to draw on, and saves each drawing in the data as an image.",
+      "family": "ask",
+      "package": "@jspsych/plugin-sketchpad",
+      "version": "2.1.0",
+      "properties": {
+        "canvas_shape": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "canvas shape",
+          "description": "The shape of the canvas element. Accepts `'rectangle'` or `'circle'`",
+          "default": "rectangle"
+        },
+        "canvas_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "canvas width",
+          "description": "Width of the canvas in pixels when `canvas_shape` is a `\"rectangle\"`.",
+          "default": 500
+        },
+        "canvas_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "canvas height",
+          "description": "Height of the canvas in pixels when `canvas_shape` is a `\"rectangle\"`.",
+          "default": 500
+        },
+        "canvas_diameter": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "canvas diameter",
+          "description": "Diameter of the canvas (when `canvas_shape` is `'circle'`) in pixels.",
+          "default": 500
+        },
+        "canvas_border_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "canvas border width",
+          "description": "This width of the border around the canvas element",
+          "default": 0
+        },
+        "canvas_border_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "canvas border color",
+          "description": "The color of the border around the canvas element.",
+          "default": "#000"
+        },
+        "background_image": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "background image",
+          "description": "Path to an image to render as the background of the canvas.",
+          "default": null
+        },
+        "background_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "background color",
+          "description": "Color of the canvas background. Note that a `background_image` will render on top of the color.",
+          "default": "#ffffff"
+        },
+        "stroke_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stroke width",
+          "description": "The width of the strokes on the canvas.",
+          "default": 2
+        },
+        "stroke_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "stroke color",
+          "description": "The color of the stroke on the canvas.",
+          "default": "#000000"
+        },
+        "stroke_color_palette": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "stroke color palette",
+          "description": "Array of colors to render as a palette of choices for stroke color. Clicking on the corresponding color button will change the stroke color.",
+          "default": []
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "HTML content to render above or below the canvas (use `prompt_location` parameter to change location).",
+          "default": null
+        },
+        "prompt_location": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "prompt location",
+          "description": "Location of the `prompt` content. Can be 'abovecanvas' or 'belowcanvas' or 'belowbutton'.",
+          "default": "abovecanvas"
+        },
+        "save_final_image": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "save final image",
+          "description": "Whether to save the final image in the data as a base64 encoded data URL.",
+          "default": true
+        },
+        "save_strokes": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "save strokes",
+          "description": "Whether to save the individual stroke data that generated the final image.",
+          "default": true
+        },
+        "key_to_draw": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "key to draw",
+          "description": "If this key is held down then it is like the mouse button being held down. The \"ink\" will flow when the button is held and stop when it is lifted. Pass in the string representation of the key, e.g., `'a'` for the A key or `' '` for the spacebar.",
+          "default": null
+        },
+        "show_finished_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show finished button",
+          "description": "Whether to show the button that ends the trial.",
+          "default": true
+        },
+        "finished_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "finished button label",
+          "description": "The label for the button that ends the trial.",
+          "default": "Finished"
+        },
+        "show_clear_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show clear button",
+          "description": "Whether to show the button that clears the entire drawing.",
+          "default": true
+        },
+        "clear_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "clear button label",
+          "description": "The label for the button that clears the entire drawing.",
+          "default": "Clear"
+        },
+        "show_undo_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show undo button",
+          "description": "Whether to show the button that enables an undo action.",
+          "default": true
+        },
+        "undo_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "undo button label",
+          "description": "The label for the button that performs an undo action.",
+          "default": "Undo"
+        },
+        "show_redo_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show redo button",
+          "description": "Whether to show the button that enables an redo action. `show_undo_button` must also be `true` for the redo button to show.",
+          "default": true
+        },
+        "redo_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "redo button label",
+          "description": "The label for the button that performs an redo action.",
+          "default": "Redo"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "choices",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to end the trial. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"NO_KEYS\"` means that no keys will be accepted as valid responses. Specifying `\"ALL_KEYS\"` will mean that all responses are allowed.",
+          "default": "NO_KEYS"
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "Length of time before the trial ends. If `null` the trial will continue indefinitely (until another way of ending the trial occurs).",
+          "default": null
+        },
+        "show_countdown_trial_duration": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show countdown trial duration",
+          "description": "Whether to show a timer that counts down until the end of the trial when `trial_duration` is not `null`.",
+          "default": false
+        },
+        "countdown_timer_html": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "countdown timer html",
+          "description": "The HTML to use for rendering the countdown timer. The element with `id=\"sketchpad-timer\"` will have its content replaced by a countdown timer in the format `MM:SS`.",
+          "default": "<span id=\"sketchpad-timer\"></span> remaining"
+        }
+      },
+      "required": [],
+      "records": [
+        "rt",
+        "response",
+        "png",
+        "strokes"
       ]
     },
     "survey-likert": {
@@ -2753,6 +3637,162 @@
         "stimulus",
         "slider_start",
         "start"
+      ]
+    },
+    "visual-search-circle": {
+      "plugin": "visual-search-circle",
+      "title": "Visual search",
+      "summary": "Shows images in a circle and records whether the participant saw the target among them.",
+      "family": "judge",
+      "package": "@jspsych/plugin-visual-search-circle",
+      "version": "2.2.0",
+      "properties": {
+        "target": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "target",
+          "description": "Path to image file that is the search target. This parameter must specified when the stimuli set is defined using the `target`, `foil` and `set_size` parameters, but should NOT be specified when using the `stimuli` parameter.",
+          "default": null
+        },
+        "foil": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "foil",
+          "description": "Path to image file that is the foil/distractor. This image will be repeated for all distractors up to the `set_size` value. This parameter must specified when the stimuli set is defined using the `target`, `foil` and `set_size` parameters, but should NOT be specified when using the `stimuli` parameter.",
+          "default": null
+        },
+        "set_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "set size",
+          "description": "How many items should be displayed, including the target when `target_present` is `true`. The foil image will be repeated up to this value when `target_present` is `false`, or up to `set_size - 1` when `target_present` is `true`. This parameter must specified when using the `target`, `foil` and `set_size` parameters to define the stimuli set, but should NOT be specified when using the `stimuli` parameter.",
+          "default": null
+        },
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-image",
+            "jspsychType": "IMAGE"
+          },
+          "jspsychType": "IMAGE",
+          "title": "stimuli",
+          "description": "Array containing all of the image files to be displayed. This parameter must be specified when NOT using the `target`, `foil`, and `set_size` parameters to define the stimuli set.",
+          "default": []
+        },
+        "target_present": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "target present",
+          "description": "Is the target present? This parameter must always be specified. When using the `target`, `foil` and `set_size` parameters, `false` means that the foil image will be repeated up to the set_size, and `true` means that the target will be presented along with the foil image repeated up to set_size - 1. When using the `stimuli` parameter, this parameter is only used to determine the response accuracy."
+        },
+        "fixation_image": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "fixation image",
+          "description": "Path to image file that is a fixation target. This parameter must always be specified."
+        },
+        "target_size": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "jspsychType": "INT"
+          },
+          "jspsychType": "INT",
+          "title": "target size",
+          "description": "Two element array indicating the height and width of the search array element images.",
+          "default": [
+            50,
+            50
+          ]
+        },
+        "fixation_size": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "jspsychType": "INT"
+          },
+          "jspsychType": "INT",
+          "title": "fixation size",
+          "description": "Two element array indicating the height and width of the fixation image.",
+          "default": [
+            16,
+            16
+          ]
+        },
+        "circle_diameter": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "circle diameter",
+          "description": "The diameter of the search array circle in pixels.",
+          "default": 250
+        },
+        "target_present_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "target present key",
+          "description": "The key to press if the target is present in the search array.",
+          "default": "j"
+        },
+        "target_absent_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "target absent key",
+          "description": "The key to press if the target is not present in the search array.",
+          "default": "f"
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "The maximum amount of time the participant is allowed to search before the trial will continue. A value of null will allow the participant to search indefinitely.",
+          "default": null
+        },
+        "fixation_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "fixation duration",
+          "description": "How long to show the fixation image for before the search array (in milliseconds).",
+          "default": 1000
+        },
+        "randomize_item_locations": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "Randomize item locations",
+          "description": "Whether to use randomized locations on the circle for the items. If `false`, then the first item will always show at the location specified by `location_first_item`.",
+          "default": true
+        },
+        "location_first_item": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Location first item",
+          "description": "If `randomize_item_locations` is `false`, the location of the first item on the circle, in degrees. 0 degrees is above the fixation, and moving clockwise in the positive direction.",
+          "default": 0
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, the trial will end when the participant makes a response.",
+          "default": true
+        }
+      },
+      "required": [
+        "target_present",
+        "fixation_image"
+      ],
+      "records": [
+        "correct",
+        "response",
+        "rt",
+        "set_size",
+        "target_present",
+        "locations"
       ]
     },
     "psychophysics": {

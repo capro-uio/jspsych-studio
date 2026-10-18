@@ -143,6 +143,22 @@ describe("validateSpec", () => {
     },
   );
 
+  it("rejects most-and-least labels that are not one for each end", () => {
+    const ranking: Spec = {
+      name: "ranking",
+      timeline: [
+        {
+          kind: "trial",
+          plugin: "maxdiff",
+          params: { alternatives: ["a", "b", "c"], labels: ["least", "middle", "most"] },
+        },
+      ],
+    };
+    expect(() => compileSpec(ranking, schemas)).toThrow(
+      /parameter "labels" takes exactly 2 entries/,
+    );
+  });
+
   it("rejects a pair of images that is not a pair", () => {
     const pair: Spec = {
       name: "pair",
