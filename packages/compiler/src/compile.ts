@@ -4,7 +4,7 @@ import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } fr
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
 import { compileParticipantProperties } from "./data.ts";
 import { compileCompletion, compileEndStep } from "./endings.ts";
-import { reservedLinkColumns } from "./metadata.ts";
+import { dataColumns, reservedLinkColumns } from "./metadata.ts";
 import { idParamOf, needsParticipantId } from "./recruitment.ts";
 import {
   GROUP_VARIABLE,
@@ -325,6 +325,11 @@ export function compileSpec(
       return [plugin, { name: schema.package, version: schema.version }];
     }),
   );
+  const columns = dataColumns(
+    spec,
+    // Every plugin has a schema by now: one without stopped the compile above.
+    [...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
+  );
   const source =
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
@@ -334,8 +339,7 @@ export function compileSpec(
       ? `${compileParticipantProperties({
           experimentName: spec.name,
           idParam: idParamOf(spec.recruitment),
-          reserved: reservedLinkColumns(spec),
-          pluginIdentifiers: [...plugins].map(pluginIdentifier),
+          reserved: reservedLinkColumns(spec, columns),
         })}\n`
       : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;
@@ -343,6 +347,7 @@ export function compileSpec(
     source,
     styles: compileAppearance(spec.settings),
     plugins: [...plugins],
+    columns,
     jspsych: bundle.jspsych,
     packages,
   };

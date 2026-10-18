@@ -152,7 +152,14 @@ async function extractOne(
   const candidates = [module.default, ...Object.values(module)];
   const plugin = candidates.find((value: unknown) => {
     return typeof value === "function" && "info" in (value as object);
-  }) as { info: { name: string; version: string; parameters: Record<string, RawParameter> } };
+  }) as {
+    info: {
+      name: string;
+      version: string;
+      parameters: Record<string, RawParameter>;
+      data?: Record<string, unknown>;
+    };
+  };
   if (!plugin) throw new Error("no exported class with a static `info` property");
 
   let descriptions: Record<string, string> = {};
@@ -173,8 +180,14 @@ async function extractOne(
     version: plugin.info.version,
     properties,
     required,
+    records: recordedColumns(plugin.info),
   };
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
+}
+
+/** The columns a plugin writes into its data; an older plugin may declare none. */
+export function recordedColumns(info: { data?: Record<string, unknown> }) {
+  return Object.keys(info.data ?? {});
 }
 
 export async function extractSchemas(

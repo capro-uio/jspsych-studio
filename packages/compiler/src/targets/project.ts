@@ -122,7 +122,7 @@ export async function projectFiles(
     "index.html": html,
     [SOURCE_FILE]: sourceHeader(spec, metadata) + (await formatSource(compiled.source)),
     [PROJECT_FILE]: `${JSON.stringify(spec, null, 2)}\n`,
-    [METADATA_FILE]: `${JSON.stringify(datasetDescription(spec, metadata), null, 2)}\n`,
+    [METADATA_FILE]: `${JSON.stringify(datasetDescription(spec, compiled.columns, metadata), null, 2)}\n`,
     "README.md": readme(spec, spec.assets?.length ?? 0, metadata),
   };
 

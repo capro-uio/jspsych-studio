@@ -79,6 +79,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "stimulus",
+        "rt_key_duration"
       ]
     },
     "audio-slider-response": {
@@ -196,6 +202,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "stimulus",
+        "slider_start"
       ]
     },
     "call-function": {
@@ -223,6 +235,9 @@
       },
       "required": [
         "func"
+      ],
+      "records": [
+        "value"
       ]
     },
     "fullscreen": {
@@ -263,7 +278,11 @@
           "default": 1000
         }
       },
-      "required": []
+      "required": [],
+      "records": [
+        "success",
+        "rt"
+      ]
     },
     "html-button-response": {
       "plugin": "html-button-response",
@@ -363,6 +382,11 @@
       "required": [
         "stimulus",
         "choices"
+      ],
+      "records": [
+        "rt",
+        "response",
+        "stimulus"
       ]
     },
     "html-keyboard-response": {
@@ -430,6 +454,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "stimulus",
+        "rt_key_duration"
       ]
     },
     "html-slider-response": {
@@ -540,6 +570,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "rt",
+        "response",
+        "stimulus",
+        "slider_start"
       ]
     },
     "image-button-response": {
@@ -668,6 +704,11 @@
       "required": [
         "stimulus",
         "choices"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt"
       ]
     },
     "image-keyboard-response": {
@@ -763,6 +804,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "rt_key_duration"
       ]
     },
     "image-slider-response": {
@@ -900,6 +947,12 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "slider_start"
       ]
     },
     "instructions": {
@@ -1001,6 +1054,10 @@
       },
       "required": [
         "pages"
+      ],
+      "records": [
+        "view_history",
+        "rt"
       ]
     },
     "preload": {
@@ -1120,7 +1177,14 @@
           "default": null
         }
       },
-      "required": []
+      "required": [],
+      "records": [
+        "success",
+        "timeout",
+        "failed_images",
+        "failed_audio",
+        "failed_video"
+      ]
     },
     "survey-likert": {
       "plugin": "survey-likert",
@@ -1221,6 +1285,11 @@
       },
       "required": [
         "questions"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "question_order"
       ]
     },
     "survey-multi-choice": {
@@ -1315,6 +1384,12 @@
       },
       "required": [
         "questions"
+      ],
+      "records": [
+        "response",
+        "response_index",
+        "rt",
+        "question_order"
       ]
     },
     "survey-multi-select": {
@@ -1416,6 +1491,11 @@
       },
       "required": [
         "questions"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "question_order"
       ]
     },
     "survey-text": {
@@ -1513,6 +1593,11 @@
       },
       "required": [
         "questions"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "question_order"
       ]
     },
     "video-slider-response": {
@@ -1683,6 +1768,13 @@
       },
       "required": [
         "stimulus"
+      ],
+      "records": [
+        "response",
+        "rt",
+        "stimulus",
+        "slider_start",
+        "start"
       ]
     },
     "psychophysics": {
@@ -2523,6 +2615,18 @@
       },
       "required": [
         "stimuli"
+      ],
+      "records": [
+        "rt",
+        "response_type",
+        "key_press",
+        "response",
+        "avg_frame_time",
+        "click_x",
+        "click_y",
+        "center_x",
+        "center_y",
+        "button_pressed"
       ]
     }
   }

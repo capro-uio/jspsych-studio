@@ -95,6 +95,11 @@ describe("downloading the whole project", () => {
     expect(metadata.variableMeasured).toContain("participant_id");
     expect(metadata.variableMeasured).toContain("rt");
     expect(metadata.variableMeasured).toContain("trial_type");
+    // Each plugin's own columns, the preload step's among them, and none from plugins not run.
+    expect(metadata.variableMeasured).toEqual(
+      expect.arrayContaining(["stimulus", "rt_key_duration", "success", "failed_images"]),
+    );
+    expect(metadata.variableMeasured).not.toContain("slider_start");
   });
 
   it("says in the experiment file where it came from and how to keep editing", async () => {

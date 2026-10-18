@@ -30,11 +30,12 @@ export function generatorLabel(version = GENERATOR_VERSION) {
 const ALWAYS_RECORDED = ["trial_type", "trial_index", "time_elapsed", "plugin_version"];
 
 /**
- * The columns this experiment's data will have. Psych-DS asks for every variable in the dataset,
- * and the spec already says which ones the experiment creates.
+ * The columns this experiment's data will have. Psych-DS asks for every variable in the dataset:
+ * each plugin the experiment runs declares the columns it writes, and the spec says which ones the
+ * experiment adds of its own.
  */
-export function dataColumns(spec: Spec): string[] {
-  const columns = new Set(ALWAYS_RECORDED);
+export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
+  const columns = new Set([...ALWAYS_RECORDED, ...recorded]);
   if (needsParticipantId(spec)) {
     columns.add("participant_id");
     columns.add("experiment");
@@ -47,8 +48,6 @@ export function dataColumns(spec: Spec): string[] {
         if (node.tag) columns.add("tag");
         if (node.score) columns.add("correct");
         for (const field of Object.keys(node.record ?? {})) columns.add(field);
-        columns.add("rt");
-        columns.add("response");
         continue;
       }
       if (node.kind === "checkpoint") {
@@ -74,9 +73,9 @@ export function dataColumns(spec: Spec): string[] {
  * The columns a link parameter may not write, recorded under a prefix instead. The platform's id is
  * the one link parameter the study records under its own name.
  */
-export function reservedLinkColumns(spec: Spec) {
+export function reservedLinkColumns(spec: Spec, columns: string[]) {
   const idParam = idParamOf(spec.recruitment);
-  return dataColumns(spec).filter((column) => column !== idParam);
+  return columns.filter((column) => column !== idParam);
 }
 
 export interface MetadataOptions {
@@ -96,7 +95,7 @@ function person(author: Author) {
 }
 
 /** Psych-DS metadata, so the data arrives described rather than as a bare CSV. */
-export function datasetDescription(spec: Spec, options: MetadataOptions) {
+export function datasetDescription(spec: Spec, columns: string[], options: MetadataOptions) {
   const authors = (spec.authors ?? []).filter((author) => author.name.trim());
   const studio = options.studio ?? GENERATOR_VERSION;
   return {
@@ -104,7 +103,7 @@ export function datasetDescription(spec: Spec, options: MetadataOptions) {
     "@type": "Dataset",
     name: spec.name,
     description: `Behavioural data from "${spec.name}", an experiment built with ${GENERATOR}.`,
-    variableMeasured: dataColumns(spec),
+    variableMeasured: columns,
     dateCreated: options.generatedAt ?? new Date().toISOString().slice(0, 10),
     // The people who made the experiment. Software belongs under isBasedOn, not here: author and
     // producer mean a person or an organisation, and a tool is neither.

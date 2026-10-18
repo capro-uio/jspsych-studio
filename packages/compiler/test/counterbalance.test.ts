@@ -156,8 +156,10 @@ describe("counterbalancing the order of tasks", () => {
   });
 
   it("lists the order column among the data's variables", () => {
-    expect(dataColumns(study([counterbalance()]))).toContain("order");
-    expect(dataColumns(study([counterbalance({ record_as: "sequence" })]))).toContain("sequence");
+    expect(dataColumns(study([counterbalance()]), [])).toContain("order");
+    expect(dataColumns(study([counterbalance({ record_as: "sequence" })]), [])).toContain(
+      "sequence",
+    );
   });
 
   it("holds its tasks as child lists, so steps inside can be found and edited", () => {
