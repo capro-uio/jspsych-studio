@@ -278,7 +278,9 @@ describe("values that are not code cannot become code", () => {
         },
       ],
     } as unknown as Spec;
-    expect(() => compileSpec(spec, schemas)).toThrow(/a block repeats .* not a whole number/);
+    expect(() => compileSpec(spec, schemas)).toThrow(
+      /a block repeats .* needs a whole number of at least 1/,
+    );
   });
 
   it.each(["loop", "branch"])("rejects a %s threshold that is not a number", (kind) => {
@@ -291,7 +293,9 @@ describe("values that are not code cannot become code", () => {
       name: "coded",
       timeline: kind === "loop" ? [node] : [trial({}), node],
     } as unknown as Spec;
-    expect(() => compileSpec(spec, schemas)).toThrow(/compares accuracy with .* not a number/);
+    expect(() => compileSpec(spec, schemas)).toThrow(
+      /compares accuracy with .* not between 0 and 1/,
+    );
   });
 
   it.each(["data", "on_finish"])("rejects code in %s, which the study sets itself", (name) => {
