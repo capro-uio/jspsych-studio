@@ -169,13 +169,37 @@ The schema encodes the structural rules — which step kinds exist, what each on
 parameter may hold a `{ "var": "column" }` reference anywhere a literal is allowed, that a
 parameter may instead hold `{ "code": "..." }`, that uploading data needs an experiment id.
 
+The rules that need the whole spec at once, such as whether a referenced conditions column
+actually exists upstream of the step reading it, stay in the compiler's validator; the schema
+narrows what reaches it rather than replacing it. Where the validator restates one of the schema's
+rules in plainer words, a test holds the two to the same answers.
+
 Code is optional, except where a plugin's parameter takes a function. A parameter that takes a
 function (such as a button's `button_html`) holds the function itself, and accepts only code;
 any other parameter's code is a single expression worked out when the trial starts, with `jsPsych`
 in scope. The compiler checks that each piece of code is exactly one JavaScript expression before
-emitting it. The rules that need the whole spec at once, such as whether a
-referenced conditions column actually exists upstream of the step reading it, stay in the
-compiler's validator; the schema narrows what reaches it rather than replacing it.
+emitting it.
+
+## Code, and projects from other people
+
+A study is a web page, and the code and HTML in it run in that page for every participant, with
+everything the page can reach: their responses, the upload, where they are sent at the end. Open
+and run projects from people you trust. Steps that hold code carry a `code` badge in the timeline.
+
+Nothing from a project runs in the builder's own page:
+
+- **The preview** runs the study in a sandboxed frame (`allow-scripts`, without
+  `allow-same-origin`), so it cannot read the builder, the open project, or the browser's storage.
+  It saves no data, contacts no data service and sends no one to a platform: the preview drops
+  those settings and draws groups and task orders itself.
+- **Formatted text** is put into the editor only when it is plain formatting. Anything more, such
+  as an image, a link or an event handler, is edited as HTML text instead, and reaches
+  participants as written.
+
+The preview frame can still do what any web page can from inside it, such as load from or send to
+the internet. That is left open on purpose: jsPsych preloads sounds and videos given by URL over
+the network, and blocking it would break the preview of any study that uses them, while the
+frame has nothing of yours to send.
 
 ## Design rules
 
