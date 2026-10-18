@@ -1,7 +1,9 @@
 <script lang="ts">
   import type { ParameterSchema } from "@jspsych-studio/schemas";
-  import { isVariableReference } from "@jspsych-studio/compiler";
+  import { isCode, isVariableReference, takesFunction } from "@jspsych-studio/compiler";
   import CanvasField from "./CanvasField.svelte";
+  import CodeInput from "./CodeInput.svelte";
+  import { codeHint, codeSeed } from "./code.ts";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
   import type { Asset, ParameterValue } from "@jspsych-studio/compiler";
@@ -24,6 +26,9 @@
   const list = $derived(parameter.type === "array" && parameter.jspsychType !== "KEYS");
 
   const isBound = $derived(value !== undefined && isVariableReference(value));
+  // A parameter that takes a function can only be given one as code.
+  const isFunction = $derived(takesFunction(parameter.jspsychType));
+  const code = $derived(isCode(value) ? value.code : null);
   const boundValue = $derived(isBound ? (value as { var: string; wrap?: string }) : null);
   const multiline = $derived(parameter.jspsychType === "HTML_STRING");
 
@@ -40,11 +45,14 @@
 
   function setMode(mode: string) {
     if (mode === "column") onchange({ var: columns[0] ?? "" });
+    else if (mode === "code") onchange({ code: codeSeed(parameter, value) });
     else if (mode === "unset") onchange(undefined);
     else onchange(fixedSeed());
   }
 
-  const mode = $derived(value === undefined ? "unset" : isBound ? "column" : "fixed");
+  const mode = $derived(
+    value === undefined ? "unset" : code !== null ? "code" : isBound ? "column" : "fixed",
+  );
 </script>
 
 <div class="field">
@@ -60,11 +68,24 @@
     onchange={(event) => setMode(event.currentTarget.value)}
   >
     <option value="unset">default</option>
-    <option value="fixed">fixed value</option>
-    <option value="column" disabled={columns.length === 0}>from column</option>
+    {#if !isFunction}
+      <option value="fixed">fixed value</option>
+      <option value="column" disabled={columns.length === 0}>from column</option>
+    {/if}
+    <option value="code">code</option>
   </select>
 
-  {#if mode === "column" && boundValue}
+  {#if code !== null}
+    <div class="wide">
+      <CodeInput
+        {code}
+        label={`${name} code`}
+        hint={codeHint(parameter)}
+        testId={`code-${name}`}
+        onchange={(next: string) => onchange({ code: next })}
+      />
+    </div>
+  {:else if mode === "column" && boundValue}
     <select
       data-testid={`column-${name}`}
       value={boundValue.var}

@@ -81,6 +81,19 @@ export function readDescriptions(packageName: string) {
   return descriptions;
 }
 
+// A plugin's own default function is the most useful place for an author's code to start, but a
+// function cannot sit in JSON, so its source is kept as a code example instead, re-indented to
+// read on its own.
+export function functionSource(fn: (...args: never[]) => unknown) {
+  const [first, ...rest] = fn.toString().split("\n");
+  const indents = rest
+    .filter((line) => line.trim() !== "")
+    .map((line) => /^ */.exec(line)![0].length);
+  const closing = rest.length > 0 ? /^ */.exec(rest[rest.length - 1])![0].length : 0;
+  const strip = Math.min(closing, ...indents);
+  return [first, ...rest.map((line) => line.slice(strip))].join("\n");
+}
+
 export function toParameterSchema(
   name: string,
   raw: RawParameter,
@@ -97,7 +110,11 @@ export function toParameterSchema(
   schema.title = raw.pretty_name ?? name.replace(/_/g, " ");
   const description = descriptions[name] ?? raw.description;
   if (description) schema.description = description;
-  if ("default" in raw) schema.default = raw.default;
+  if (typeof raw.default === "function") {
+    schema.examples = [{ code: functionSource(raw.default as () => unknown) }];
+  } else if ("default" in raw) {
+    schema.default = raw.default;
+  }
   if (raw.options) {
     // A list of choices holds several options, not one, so the options constrain each entry.
     const chosen = schema.type === "array" && schema.items ? schema.items : schema;

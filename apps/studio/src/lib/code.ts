@@ -1,0 +1,40 @@
+import {
+  containsCode,
+  isCode,
+  isVariableReference,
+  slotsOf,
+  takesFunction,
+  type ParameterValue,
+  type SpecNode,
+} from "@jspsych-studio/compiler";
+import type { ParameterSchema } from "@jspsych-studio/schemas";
+
+const BLANK_FUNCTION = "() => {\n}";
+
+/**
+ * The code a parameter starts from when its author switches it to code: the plugin's own default
+ * function where it has one, otherwise whatever the parameter holds now, written as code.
+ */
+export function codeSeed(parameter: ParameterSchema, current: ParameterValue | undefined) {
+  const example = parameter.examples?.find(isCode);
+  if (example) return example.code;
+  if (takesFunction(parameter.jspsychType)) return BLANK_FUNCTION;
+  if (current !== undefined && isVariableReference(current)) {
+    return `jsPsych.evaluateTimelineVariable(${JSON.stringify(current.var)})`;
+  }
+  return JSON.stringify(current ?? parameter.default ?? "");
+}
+
+/** What an author is told about the code a parameter holds. */
+export function codeHint(parameter: ParameterSchema) {
+  return takesFunction(parameter.jspsychType)
+    ? "A JavaScript function the plugin calls. `jsPsych` is available."
+    : "A JavaScript expression worked out when the trial starts. `jsPsych` is available.";
+}
+
+/** Whether a step, or any step inside it, runs code its author wrote. */
+export function usesCode(node: SpecNode): boolean {
+  if (node.kind === "trial") return Object.values(node.params ?? {}).some(containsCode);
+  if (node.kind === "block" || node.kind === "loop") return node.children.some(usesCode);
+  return (slotsOf(node) ?? []).some((slot) => slot.children.some(usesCode));
+}

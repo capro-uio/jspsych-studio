@@ -1,6 +1,7 @@
 <script lang="ts">
   import { slotsOf } from "@jspsych-studio/compiler";
   import AddStep from "./AddStep.svelte";
+  import { usesCode } from "./code.ts";
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
@@ -52,6 +53,9 @@
         >
           <span class="kind">{node.kind}</span>
           {label(node)}
+          {#if usesCode(node)}
+            <span class="code-badge" title="Runs code written for this study">code</span>
+          {/if}
           {#if problemsAt(problems, childPath).length > 0}
             <span
               class="issue"
@@ -107,6 +111,14 @@
   }
   .row.selected {
     background: var(--selected);
+  }
+  .code-badge {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.68rem;
+    padding: 0 0.3rem;
+    border: 1px solid var(--rule);
+    border-radius: 3px;
+    color: var(--muted);
   }
   .issue {
     display: block;

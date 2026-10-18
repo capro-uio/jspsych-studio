@@ -1,6 +1,8 @@
 <script lang="ts">
-  import type { Asset } from "@jspsych-studio/compiler";
+  import { isCode, takesFunction, type Asset } from "@jspsych-studio/compiler";
   import type { ParameterSchema } from "@jspsych-studio/schemas";
+  import CodeInput from "./CodeInput.svelte";
+  import { codeHint } from "./code.ts";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
   import { switchVariant, visibleFields } from "./schemas.ts";
@@ -36,7 +38,16 @@
       {name}{#if isRequired(name)}<span class="required">*</span>{/if}
     </label>
     <div class="control">
-      {#if field.type === "array" && field.jspsychType !== "KEYS"}
+      {#if takesFunction(field.jspsychType) || isCode(value[name])}
+        {@const current = value[name]}
+        <CodeInput
+          code={isCode(current) ? current.code : ""}
+          label={`${name} code`}
+          hint={codeHint(field)}
+          testId={`${testId}-${name}`}
+          onchange={(next: string) => update(name, next.trim() ? { code: next } : "")}
+        />
+      {:else if field.type === "array" && field.jspsychType !== "KEYS"}
         <ListField
           testId={`${testId}-${name}`}
           parameter={field}

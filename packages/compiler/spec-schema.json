@@ -636,6 +636,11 @@
                   "button_html": {
                     "title": "button html",
                     "description": "A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
@@ -1034,6 +1039,11 @@
                   "button_html": {
                     "title": "button html",
                     "description": "``(choice: string, choice_index: number)=>`<button class=\"jspsych-btn\">${choice}</button>``; | A function that generates the HTML for each button in the `choices` array. The function gets the string and index of the item in the `choices` array and should return valid HTML. If you want to use different markup for each button, you can do that by using a conditional on either parameter. The default parameter returns a button element with the text label of the choice.",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
@@ -1595,6 +1605,11 @@
                   "on_page_change": {
                     "title": "Page change callback",
                     "description": "The callback function when page changes",
+                    "examples": [
+                      {
+                        "code": "function(current_page) {\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
@@ -3218,6 +3233,11 @@
                   },
                   "button_html": {
                     "title": "button html",
+                    "examples": [
+                      {
+                        "code": "function(choice, choice_index) {\n  return `<button class=\"jspsych-btn\">${choice}</button>`;\n}"
+                      }
+                    ],
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
