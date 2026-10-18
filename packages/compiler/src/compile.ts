@@ -327,7 +327,8 @@ export function compileSpec(
   );
   const columns = dataColumns(
     spec,
-    [...plugins].flatMap((plugin) => bundle.plugins[plugin]?.records ?? []),
+    // Every plugin has a schema by now: one without stopped the compile above.
+    [...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
   );
   const source =
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
@@ -339,7 +340,6 @@ export function compileSpec(
           experimentName: spec.name,
           idParam: idParamOf(spec.recruitment),
           reserved: reservedLinkColumns(spec, columns),
-          pluginIdentifiers: [...plugins].map(pluginIdentifier),
         })}\n`
       : "") +
     `jsPsych.run([\n${timeline},\n]);\n`;

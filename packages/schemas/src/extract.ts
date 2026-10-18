@@ -180,9 +180,14 @@ async function extractOne(
     version: plugin.info.version,
     properties,
     required,
-    records: Object.keys(plugin.info.data ?? {}),
+    records: recordedColumns(plugin.info),
   };
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
+}
+
+/** The columns a plugin writes into its data; an older plugin may declare none. */
+export function recordedColumns(info: { data?: Record<string, unknown> }) {
+  return Object.keys(info.data ?? {});
 }
 
 export async function extractSchemas(

@@ -168,19 +168,14 @@ export const URL_PARAMETER_PREFIX = "url_";
 export function compileParticipantProperties(options: {
   experimentName: string;
   idParam: string;
-  /** The columns the spec says the study writes, which a link parameter must not overwrite. */
+  /** Every column the study writes, its plugins' own included, which a link must not overwrite. */
   reserved: string[];
-  /** The globals of the plugins the study runs, whose own data fields are only known at run time. */
-  pluginIdentifiers: string[];
 }) {
-  const { experimentName, idParam, reserved, pluginIdentifiers } = options;
+  const { experimentName, idParam, reserved } = options;
   return (
     `const linkParameters = new URLSearchParams(window.location.search);\n` +
     `const ${PARTICIPANT_ID} = linkParameters.get(${literal(idParam)}) ?? jsPsych.randomization.randomID(10);\n` +
-    `const reservedColumns = new Set([\n` +
-    `  ...${literal(reserved)},\n` +
-    `  ...[${pluginIdentifiers.join(", ")}].flatMap((plugin) => Object.keys(plugin.info.data ?? {})),\n` +
-    `]);\n` +
+    `const reservedColumns = new Set(${literal(reserved)});\n` +
     `const unreserved = (name) =>\n` +
     `  reservedColumns.has(name) ? unreserved(${literal(URL_PARAMETER_PREFIX)} + name) : name;\n` +
     `const urlParameters = Object.fromEntries(\n` +

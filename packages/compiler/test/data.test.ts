@@ -266,11 +266,10 @@ describe("link parameters named like the study's own columns", () => {
     expect(compileSpec(scored, schemas).source).toContain('"congruency"');
   });
 
-  it("reads the data fields of every plugin the study runs when it starts", () => {
+  it("knows every plugin's data fields when it compiles, rather than looking them up later", () => {
     const { source } = compileSpec(scored, schemas);
-    expect(source).toMatch(
-      /\.\.\.\[[^\]]*jsPsychHtmlKeyboardResponse[^\]]*\]\.flatMap\(\(plugin\) => Object\.keys\(plugin\.info\.data \?\? \{\}\)\)/,
-    );
+    expect(source).toMatch(/const reservedColumns = new Set\(\[[^\]]*"rt_key_duration"/);
+    expect(source).not.toContain("plugin.info.data");
     expect(source).toContain('reservedColumns.has(name) ? unreserved("url_" + name) : name');
   });
 });

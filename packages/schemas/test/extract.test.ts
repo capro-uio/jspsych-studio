@@ -3,6 +3,7 @@ import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
 import {
   assertExtracted,
+  recordedColumns,
   extractSchemas,
   functionSource,
   pluginPackages,
@@ -86,6 +87,11 @@ describe("extractSchemas", () => {
     for (const schema of Object.values(report.schemas)) {
       expect(schema.records.length, schema.plugin).toBeGreaterThan(0);
     }
+  });
+
+  it("lists no columns for a plugin that declares no data", () => {
+    expect(recordedColumns({})).toEqual([]);
+    expect(recordedColumns({ data: { rt: {}, response: {} } })).toEqual(["rt", "response"]);
   });
 
   it("falls back to the help text a plugin declares in its own info", () => {
