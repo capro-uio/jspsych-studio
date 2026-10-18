@@ -5,7 +5,7 @@ export const schemas = schemaFile as unknown as SchemaBundle;
 
 /** What an author calls a plugin's step; the machine name for one the schemas do not know. */
 export function pluginTitle(plugin: string) {
-  return schemas.plugins[plugin]?.title ?? plugin;
+  return Object.hasOwn(schemas.plugins, plugin) ? schemas.plugins[plugin].title : plugin;
 }
 
 /** The plugins an author can choose from, grouped by what the step is for and sorted by title. */
@@ -14,7 +14,7 @@ export const pluginChoices = Object.entries(schemas.families)
     label,
     plugins: Object.values(schemas.plugins)
       .filter((schema) => schema.family === family)
-      .sort((a, b) => a.title.localeCompare(b.title))
+      .sort((a, b) => a.title.localeCompare(b.title, "en"))
       .map(({ plugin, title }) => ({ plugin, title })),
   }))
   .filter((group) => group.plugins.length > 0);

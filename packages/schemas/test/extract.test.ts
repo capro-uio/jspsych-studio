@@ -9,6 +9,7 @@ const report = await extractSchemas(packages);
 describe("extractSchemas", () => {
   it("covers every plugin package listed in the manifest", () => {
     expect(report.failures).toEqual([]);
+    expect(report.warnings).toEqual([]);
     expect(Object.keys(report.schemas).length).toBe(packages.length);
   });
 
@@ -79,6 +80,24 @@ describe("plugin titles", () => {
 
   it("names only plugins that are extracted, so none is left behind when one is removed", () => {
     expect(Object.keys(PLUGIN_LABELS).sort()).toEqual(Object.keys(report.schemas).sort());
+  });
+
+  it("leaves out a plugin with no title, and says why", async () => {
+    const { schemas, failures } = await extractSchemas(["@jspsych/plugin-fullscreen"], {});
+    expect(schemas).toEqual({});
+    expect(failures).toEqual([
+      {
+        package: "@jspsych/plugin-fullscreen",
+        reason: 'plugin "fullscreen" has no title; add one to src/titles.ts',
+      },
+    ]);
+  });
+
+  it("does not take an inherited property for a title", async () => {
+    const { failures } = await extractSchemas(["@jspsych/plugin-fullscreen"], {
+      __proto__: { fullscreen: PLUGIN_LABELS.fullscreen },
+    } as never);
+    expect(failures).toHaveLength(1);
   });
 
   it("gives no two plugins the same title", () => {

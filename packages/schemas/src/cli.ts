@@ -23,12 +23,13 @@ console.log(
   `jsPsych ${report.jspsych}: ${Object.keys(report.schemas).length} plugins, ${parameters} parameters, ` +
     `${described} described (${percentage}%)`,
 );
+for (const warning of report.warnings) console.warn(`  ? ${warning.package}: ${warning.reason}`);
 for (const failure of report.failures) console.warn(`  ! ${failure.package}: ${failure.reason}`);
 console.log(`wrote ${outputPath.pathname}`);
 
 // A plugin that fails is left out of the bundle, which would quietly drop it from the builder.
 if (report.failures.length > 0) {
-  console.error(`${report.failures.length} plugin(s) could not be extracted`);
+  console.error(`${report.failures.length} plugin(s) could not be extracted, and are left out`);
   process.exit(1);
 }
 

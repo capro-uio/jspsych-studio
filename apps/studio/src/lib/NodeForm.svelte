@@ -114,7 +114,7 @@
         </optgroup>
       {/each}
     </select>
-    {#if schemas.plugins[trial.plugin]}
+    {#if Object.hasOwn(schemas.plugins, trial.plugin)}
       <p class="help plugin-summary" data-testid="plugin-summary">
         {schemas.plugins[trial.plugin].summary}
         <span class="plugin-name" title="The jsPsych plugin that runs this step"

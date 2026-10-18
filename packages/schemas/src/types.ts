@@ -80,5 +80,8 @@ export interface ExtractionReport {
   jspsych: string;
   schemas: PluginSchemas;
   coverage: { parameters: number; described: number; ratio: number };
+  /** Packages left out of the schemas, and why. */
   failures: { package: string; reason: string }[];
+  /** Packages extracted with something missing, such as their help text. */
+  warnings: { package: string; reason: string }[];
 }

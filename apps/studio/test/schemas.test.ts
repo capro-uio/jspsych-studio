@@ -92,6 +92,7 @@ describe("pluginTitle", () => {
 
   it("falls back to the machine name for a plugin the schemas do not know", () => {
     expect(pluginTitle("my-own-plugin")).toBe("my-own-plugin");
+    expect(pluginTitle("constructor")).toBe("constructor");
   });
 });
 
@@ -111,9 +112,11 @@ describe("pluginChoices", () => {
   });
 
   it("sorts each group by title", () => {
-    for (const group of pluginChoices) {
-      const titles = group.plugins.map(({ title }) => title);
-      expect(titles).toEqual([...titles].sort((a, b) => a.localeCompare(b)));
-    }
+    const setup = pluginChoices.find((group) => group.label === "Set up and run");
+    expect(setup?.plugins.map(({ plugin }) => plugin)).toEqual([
+      "preload",
+      "call-function",
+      "fullscreen",
+    ]);
   });
 });

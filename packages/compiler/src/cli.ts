@@ -29,6 +29,12 @@ if (!["compile", "schema", "codemeta"].includes(command) || (command === "compil
 }
 
 const report = await extractSchemas(pluginPackages());
+// A plugin that could not be extracted would be missing from the schema and from compiled specs.
+if (report.failures.length > 0) {
+  for (const failure of report.failures) console.error(`  ! ${failure.package}: ${failure.reason}`);
+  console.error(`${report.failures.length} plugin(s) could not be extracted`);
+  process.exit(1);
+}
 const schemas = { jspsych: report.jspsych, families: PLUGIN_FAMILIES, plugins: report.schemas };
 
 if (command === "schema") {

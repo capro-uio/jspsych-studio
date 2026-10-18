@@ -9,7 +9,7 @@ import type {
   PluginSchemas,
 } from "./types.ts";
 import { CURATED_PLUGINS } from "./curated.ts";
-import { PLUGIN_LABELS } from "./titles.ts";
+import { PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
   BOOL: { type: "boolean" },
@@ -129,7 +129,8 @@ function toObjectSchema(
 async function extractOne(
   packageName: string,
   typeNames: Map<number, ParameterTypeName>,
-  failures: ExtractionReport["failures"],
+  labels: Record<string, PluginLabel>,
+  warnings: ExtractionReport["warnings"],
 ): Promise<PluginSchema> {
   const module = await importWithWindowShim(packageName);
   const candidates = [module.default, ...Object.values(module)];
@@ -142,17 +143,16 @@ async function extractOne(
   try {
     descriptions = readDescriptions(packageName);
   } catch {
-    failures.push({ package: packageName, reason: "no dist/index.d.ts; forms lose help text" });
+    warnings.push({ package: packageName, reason: "no dist/index.d.ts; forms lose help text" });
   }
 
-  const label = PLUGIN_LABELS[plugin.info.name];
-  if (!label) {
+  if (!Object.hasOwn(labels, plugin.info.name)) {
     throw new Error(`plugin "${plugin.info.name}" has no title; add one to src/titles.ts`);
   }
   const { properties, required } = toObjectSchema(plugin.info.parameters, typeNames, descriptions);
   const schema = {
     plugin: plugin.info.name,
-    ...label,
+    ...labels[plugin.info.name],
     package: packageName,
     version: plugin.info.version,
     properties,
@@ -161,19 +161,23 @@ async function extractOne(
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
 }
 
-export async function extractSchemas(packageNames: string[]): Promise<ExtractionReport> {
+export async function extractSchemas(
+  packageNames: string[],
+  labels: Record<string, PluginLabel> = PLUGIN_LABELS,
+): Promise<ExtractionReport> {
   const { ParameterType } = await importWithWindowShim("jspsych");
   const typeNames = parameterTypeNames(ParameterType as Record<string, unknown>);
 
   const schemas: PluginSchemas = {};
   const failures: ExtractionReport["failures"] = [];
+  const warnings: ExtractionReport["warnings"] = [];
   let parameters = 0;
   let described = 0;
 
   const extracted = await Promise.all(
     packageNames.map(async (packageName) => {
       try {
-        return { packageName, schema: await extractOne(packageName, typeNames, failures) };
+        return { packageName, schema: await extractOne(packageName, typeNames, labels, warnings) };
       } catch (error) {
         failures.push({ package: packageName, reason: (error as Error).message });
         return null;
@@ -193,6 +197,7 @@ export async function extractSchemas(packageNames: string[]): Promise<Extraction
     schemas,
     coverage: { parameters, described, ratio: parameters === 0 ? 0 : described / parameters },
     failures,
+    warnings,
   };
 }
 
