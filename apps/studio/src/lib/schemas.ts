@@ -95,7 +95,7 @@ export function startingParams(plugin: string): Record<string, unknown> {
     const parameter = schema.properties[name];
     if (parameter?.examples?.length) {
       params[name] = structuredClone(parameter.examples[0]);
-    } else if (parameter?.jspsychType === "HTML_STRING") {
+    } else if (parameter && placeholderFor(parameter) !== undefined) {
       params[name] = placeholderFor(parameter);
     } else if (parameter && takesFunction(parameter.jspsychType)) {
       params[name] = { code: codeSeed(parameter, undefined) };
