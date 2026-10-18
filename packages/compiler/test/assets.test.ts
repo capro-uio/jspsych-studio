@@ -39,6 +39,39 @@ describe("media assets", () => {
     expect(source.indexOf("jsPsychPreload")).toBeLessThan(source.indexOf("jsPsychImageKeyboard"));
   });
 
+  it("preloads audio, video, and images through their own lists", () => {
+    const spec: Spec = {
+      name: "media",
+      assets: [
+        { name: "face.png", url: PIXEL },
+        { name: "beep.mp3", url: "data:audio/mpeg;base64,AAAA" },
+        { name: "clip.mp4", url: "data:video/mp4;base64,AAAA" },
+      ],
+      timeline: [
+        { kind: "trial", plugin: "image-keyboard-response", params: { stimulus: "face.png" } },
+      ],
+    };
+    const { source } = compileSpec(spec, schemas);
+    expect(source).toContain('images: [assets["face.png"]]');
+    expect(source).toContain('audio: [assets["beep.mp3"]]');
+    expect(source).toContain('video: [assets["clip.mp4"]]');
+    expect(source).not.toContain("Object.values(assets)");
+  });
+
+  it("falls back to the file extension when the URL does not name a media type", () => {
+    const spec: Spec = {
+      name: "media",
+      assets: [
+        { name: "face.png", url: PIXEL },
+        { name: "beep.wav", url: "data:application/octet-stream;base64,AAAA" },
+      ],
+      timeline: [
+        { kind: "trial", plugin: "image-keyboard-response", params: { stimulus: "face.png" } },
+      ],
+    };
+    expect(compileSpec(spec, schemas).source).toContain('audio: [assets["beep.wav"]]');
+  });
+
   it("resolves a file named by a conditions column at run time", () => {
     const spec: Spec = {
       name: "pictures",
