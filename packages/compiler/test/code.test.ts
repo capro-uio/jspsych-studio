@@ -233,8 +233,15 @@ describe("checking a piece of code", () => {
     expect(codeProblem("(a), (b)")).toBeNull();
   });
 
-  it("rejects a line starting with -->, which the formatter cannot read", () => {
-    expect(codeProblem("x\n--> note")).toMatch(/starts a line with "-->"/);
+  it.each(["x\n--> note", "x /*\n*/ --> note"])(
+    "rejects an HTML-style comment, which the formatter cannot read: %j",
+    (code) => {
+      expect(codeProblem(code)).toMatch(/HTML-style "-->" comment/);
+    },
+  );
+
+  it("accepts ordinary comments of both kinds", () => {
+    expect(codeProblem("x // note\n/* and\nmore */")).toBeNull();
   });
 
   it.each(["'</script>'", "'</SCRIPT >'", "'<!--'"])(
