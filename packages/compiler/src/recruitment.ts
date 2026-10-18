@@ -29,6 +29,24 @@ export const PLATFORM_ID_PARAMS: Record<RecruitmentPlatform, string> = {
 
 export const RECRUITMENT_PLATFORMS = Object.keys(PLATFORM_ID_PARAMS) as RecruitmentPlatform[];
 
+// What else each platform adds to the study link by default, which the study records with every
+// row. Prolific documents STUDY_ID and SESSION_ID; Connect sends assignmentId and projectId; SONA
+// sends only the code its researcher names.
+const PLATFORM_EXTRA_PARAMS: Record<RecruitmentPlatform, string[]> = {
+  prolific: ["STUDY_ID", "SESSION_ID"],
+  sona: [],
+  connect: ["assignmentId", "projectId"],
+  custom: [],
+};
+
+/** The link parameters the study expects from its platform: the participant's id, and the rest. */
+export function linkParamsOf(recruitment: RecruitmentSettings | undefined) {
+  const extra = isPlatform(recruitment?.platform)
+    ? PLATFORM_EXTRA_PARAMS[recruitment.platform]
+    : [];
+  return [idParamOf(recruitment), ...extra];
+}
+
 function isPlatform(value: unknown): value is RecruitmentPlatform {
   return typeof value === "string" && Object.hasOwn(PLATFORM_ID_PARAMS, value);
 }

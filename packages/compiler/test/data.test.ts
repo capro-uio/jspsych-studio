@@ -105,6 +105,22 @@ describe("recruiting from a platform", () => {
     );
   });
 
+  it.each([
+    ["prolific", ["PROLIFIC_PID", "STUDY_ID", "SESSION_ID"]],
+    ["connect", ["participantId", "assignmentId", "projectId"]],
+    ["sona", ["id"]],
+  ] as const)("describes and keeps the link parameters %s sends", (platform, params) => {
+    const spec = recruited({ platform });
+    const { columns } = compileSpec(spec, schemas);
+    expect(columns).toEqual(expect.arrayContaining([...params]));
+    for (const param of params) expect(reservedLinkColumns(spec, columns)).not.toContain(param);
+  });
+
+  it("does not describe another platform's parameters", () => {
+    const { columns } = compileSpec(recruited({ platform: "sona" }), schemas);
+    expect(columns).not.toContain("STUDY_ID");
+  });
+
   it("names the file after the id bound before any trial runs", () => {
     const { source } = compileSpec(recruited({ id_param: "PROLIFIC_PID" }), schemas);
     expect(source).toContain('const filename = "saving" + "_" + participantId + ".csv";');
