@@ -28,10 +28,10 @@
   const isBound = $derived(value !== undefined && isVariableReference(value));
   // A parameter that takes a function can only be given one as code.
   const isFunction = $derived(takesFunction(parameter.jspsychType));
+  // Null is how jsPsych leaves a function parameter without one.
+  const unset = $derived(value === undefined || (isFunction && value === null));
   // A function parameter holding anything but code is shown as code to be written, not as a value.
-  const code = $derived(
-    isCode(value) ? value.code : isFunction && value !== undefined && value !== null ? "" : null,
-  );
+  const code = $derived(isCode(value) ? value.code : isFunction && !unset ? "" : null);
   const boundValue = $derived(isBound ? (value as { var: string; wrap?: string }) : null);
   const multiline = $derived(parameter.jspsychType === "HTML_STRING");
 
@@ -53,15 +53,7 @@
     else onchange(fixedSeed());
   }
 
-  const mode = $derived(
-    value === undefined || (isFunction && value === null)
-      ? "unset"
-      : code !== null
-        ? "code"
-        : isBound
-          ? "column"
-          : "fixed",
-  );
+  const mode = $derived(unset ? "unset" : code !== null ? "code" : isBound ? "column" : "fixed");
 </script>
 
 <div class="field">
@@ -92,7 +84,7 @@
         hint={codeHint(parameter)}
         id={`param-${name}`}
         testId={`code-${name}`}
-        onchange={(next: string) => onchange(next.trim() ? { code: next } : undefined)}
+        onchange={(next: string | null) => onchange(next === null ? undefined : { code: next })}
       />
     </div>
   {:else if mode === "column" && boundValue}

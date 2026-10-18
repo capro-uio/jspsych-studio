@@ -46,7 +46,7 @@
           hint={codeHint(field)}
           id={`${testId}-${name}`}
           testId={`${testId}-${name}`}
-          onchange={(next: string) => update(name, next.trim() ? { code: next } : "")}
+          onchange={(next: string | null) => update(name, next === null ? "" : { code: next })}
         />
       {:else if field.type === "array" && field.jspsychType !== "KEYS"}
         <ListField

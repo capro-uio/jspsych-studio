@@ -85,11 +85,10 @@ export function readDescriptions(packageName: string) {
 // function cannot sit in JSON, so its source is kept as a code example instead, re-indented to
 // read on its own.
 export function functionSource(fn: (...args: never[]) => unknown) {
+  const indentOf = (line: string) => /^[ \t]*/.exec(line)![0].length;
   const [first, ...rest] = fn.toString().split("\n");
-  const indents = rest
-    .filter((line) => line.trim() !== "")
-    .map((line) => /^[ \t]*/.exec(line)![0].length);
-  const closing = rest.length > 0 ? /^[ \t]*/.exec(rest[rest.length - 1])![0].length : 0;
+  const indents = rest.filter((line) => line.trim() !== "").map(indentOf);
+  const closing = rest.length > 0 ? indentOf(rest[rest.length - 1]) : 0;
   const strip = Math.min(closing, ...indents);
   return [first, ...rest.map((line) => line.slice(strip))].join("\n");
 }

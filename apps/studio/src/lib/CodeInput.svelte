@@ -7,7 +7,8 @@
     label: string;
     hint: string;
     testId: string;
-    onchange: (code: string) => void;
+    /** Called with the code when the box is left, or with null when it was emptied. */
+    onchange: (code: string | null) => void;
   }
 
   const { code, id, label, hint, testId, onchange }: Props = $props();
@@ -32,7 +33,7 @@
     {rows}
     value={draft}
     oninput={(event) => (draft = event.currentTarget.value)}
-    onchange={() => onchange(draft)}></textarea>
+    onchange={() => onchange(draft.trim() ? draft : null)}></textarea>
   <p id={`${testId}-note`} class:problem data-testid={`${testId}-note`}>
     {problem ? `This code ${problem}.` : hint}
   </p>
