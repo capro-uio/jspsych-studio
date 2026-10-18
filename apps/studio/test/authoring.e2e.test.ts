@@ -516,6 +516,19 @@ describe("a slider step", () => {
   }, 180_000);
 });
 
+describe("a step that scores itself", () => {
+  it("arrives ready to run and says it needs no scoring rule", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "categorize-html", "slot-0");
+
+    expect(await page.getByTestId("scores-itself").count()).toBe(1);
+    expect(await page.getByTestId("score-column").count()).toBe(0);
+    expect(await page.getByTestId("step-problems").count()).toBe(0);
+    await page.close();
+  }, 180_000);
+});
+
 describe("a canvas step", () => {
   it("offers each shape its own fields and draws it in the preview", async () => {
     const page = await browser.newPage();

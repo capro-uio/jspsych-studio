@@ -8,7 +8,7 @@ import type {
   PluginSchema,
   PluginSchemas,
 } from "./types.ts";
-import { CURATED_PLUGINS } from "./curated.ts";
+import { CURATED_PLUGINS, STARTING_EXAMPLES } from "./curated.ts";
 import { PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
@@ -185,6 +185,11 @@ async function extractOne(
     required,
     records: recordedColumns(plugin.info),
   };
+  for (const [name, example] of Object.entries(STARTING_EXAMPLES[schema.plugin] ?? {})) {
+    if (!properties[name])
+      throw new Error(`a starting example names "${name}", which ${schema.plugin} does not take`);
+    properties[name].examples = [example];
+  }
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
 }
 

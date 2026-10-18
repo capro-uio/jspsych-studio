@@ -190,6 +190,11 @@ function checkTrial(
     }
   }
 
+  // A plugin that writes its own correct column, from its key_answer say, would have it written
+  // over by a second rule.
+  if (trial.score && schema.records.includes("correct")) {
+    report(`${where} scores its answers itself, so it takes no scoring rule`);
+  }
   const expected = trial.score?.correct_if_response_equals;
   if (expected !== undefined && typeof expected === "object") {
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);

@@ -94,6 +94,11 @@ describe("extractSchemas", () => {
     expect(report.schemas["video-keyboard-response"].properties.width.default).toBeNull();
   });
 
+  it("gives a plugin its starting examples where no form could guess the value", () => {
+    expect(report.schemas["categorize-html"].properties.key_answer.examples).toEqual(["f"]);
+    expect(report.schemas["same-different-html"].properties.answer.examples).toEqual(["same"]);
+  });
+
   it("lists the columns each plugin writes into its data", () => {
     expect(report.schemas["html-slider-response"].records).toEqual(
       expect.arrayContaining(["response", "rt", "stimulus", "slider_start"]),

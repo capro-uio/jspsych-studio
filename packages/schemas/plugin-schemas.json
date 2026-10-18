@@ -3,6 +3,7 @@
   "families": {
     "show": "Show something and record the response",
     "ask": "Ask questions",
+    "judge": "Categorise or compare",
     "canvas": "Draw on a canvas",
     "setup": "Set up and run"
   },
@@ -350,6 +351,385 @@
       ],
       "records": [
         "value"
+      ]
+    },
+    "categorize-animation": {
+      "plugin": "categorize-animation",
+      "title": "Animation, sorted into a category",
+      "summary": "Plays images as an animation, records the key pressed, and gives feedback.",
+      "family": "judge",
+      "package": "@jspsych/plugin-categorize-animation",
+      "version": "2.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-image",
+            "jspsychType": "IMAGE"
+          },
+          "jspsychType": "IMAGE",
+          "title": "stimuli",
+          "description": "Each element of the array is a path to an image file."
+        },
+        "key_answer": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "key answer",
+          "description": "The key character indicating the correct response.",
+          "examples": [
+            "f"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "choices",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "text_answer": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "text answer",
+          "description": "A text label that describes the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+          "default": null
+        },
+        "correct_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "correct text",
+          "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+          "default": "Correct."
+        },
+        "incorrect_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "incorrect text",
+          "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+          "default": "Wrong."
+        },
+        "frame_time": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "frame time",
+          "description": "How long to display each image (in milliseconds).",
+          "default": 500
+        },
+        "sequence_reps": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "sequence reps",
+          "description": "How many times to show the entire sequence.",
+          "default": 1
+        },
+        "allow_response_before_complete": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow response before complete",
+          "description": "If true, the participant can respond before the animation sequence finishes.",
+          "default": false
+        },
+        "feedback_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "feedback duration",
+          "description": "How long to show the feedback (milliseconds).",
+          "default": 2000
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus or the end of the animation depending on the allow_response_before_complete parameter. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "render_on_canvas": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "render on canvas",
+          "description": "If true, the images will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive images in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych.",
+          "default": true
+        }
+      },
+      "required": [
+        "stimuli",
+        "key_answer"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "correct"
+      ]
+    },
+    "categorize-html": {
+      "plugin": "categorize-html",
+      "title": "Text, sorted into a category",
+      "summary": "Shows text, records the key pressed, and tells the participant if it was right.",
+      "family": "judge",
+      "package": "@jspsych/plugin-categorize-html",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "stimulus",
+          "description": "The HTML stimulus to display."
+        },
+        "key_answer": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "key answer",
+          "description": "The key character indicating the correct response.",
+          "examples": [
+            "f"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "choices",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "text_answer": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "text answer",
+          "description": "A label that is associated with the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+          "default": null
+        },
+        "correct_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "correct text",
+          "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the `%ANS%` string (see example below).",
+          "default": "<p class='feedback'>Correct</p>"
+        },
+        "incorrect_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "incorrect text",
+          "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the `%ANS%` string (see example below).",
+          "default": "<p class='feedback'>Incorrect</p>"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "force_correct_button_press": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "force correct button press",
+          "description": "If set to true, then the participant must press the correct response key after feedback is given in order to advance to the next trial.",
+          "default": false
+        },
+        "show_stim_with_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show stim with feedback",
+          "description": "If set to true, then the stimulus will be shown during feedback. If false, then only the text feedback will display during feedback.",
+          "default": false
+        },
+        "show_feedback_on_timeout": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show feedback on timeout",
+          "description": "If true, then category feedback will be displayed for an incorrect response after a timeout (trial_duration is exceeded). If false, then a timeout message will be shown.",
+          "default": false
+        },
+        "timeout_message": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "timeout message",
+          "description": "The message to show on a timeout non-response.",
+          "default": "<p>Please respond faster.</p>"
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to show the stimulus for (milliseconds). If null, then the stimulus is shown until a response is given.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "The maximum time allowed for a response. If null, then the experiment will wait indefinitely for a response.",
+          "default": null
+        },
+        "feedback_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "feedback duration",
+          "description": "How long to show the feedback for (milliseconds).",
+          "default": 2000
+        }
+      },
+      "required": [
+        "stimulus",
+        "key_answer"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "correct"
+      ]
+    },
+    "categorize-image": {
+      "plugin": "categorize-image",
+      "title": "Image, sorted into a category",
+      "summary": "Shows an image, records the key pressed, and tells the participant if it was right.",
+      "family": "judge",
+      "package": "@jspsych/plugin-categorize-image",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "stimulus",
+          "description": "The path to the image file."
+        },
+        "key_answer": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "key answer",
+          "description": "The key character indicating the correct response.",
+          "examples": [
+            "f"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "keyboard-key"
+          },
+          "jspsychType": "KEYS",
+          "title": "choices",
+          "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+          "default": "ALL_KEYS"
+        },
+        "text_answer": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "text answer",
+          "description": "A label that is associated with the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+          "default": null
+        },
+        "correct_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "correct text",
+          "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+          "default": "<p class='feedback'>Correct</p>"
+        },
+        "incorrect_text": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "incorrect text",
+          "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+          "default": "<p class='feedback'>Wrong</p>"
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "force_correct_button_press": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "force correct button press",
+          "description": "If set to true, then the participant must press the correct response key after feedback is given in order to advance to the next trial.",
+          "default": false
+        },
+        "show_stim_with_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show stim with feedback",
+          "description": "If set to true, then the stimulus will be shown during feedback. If false, then only the text feedback will display during feedback.",
+          "default": true
+        },
+        "show_feedback_on_timeout": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show feedback on timeout",
+          "description": "If true, then category feedback will be displayed for an incorrect response after a timeout (trial_duration is exceeded). If false, then a timeout message will be shown.",
+          "default": false
+        },
+        "timeout_message": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "timeout message",
+          "description": "The message to show on a timeout non-response.",
+          "default": "<p>Please respond faster.</p>"
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to show the stimulus for (milliseconds). If null, then the stimulus is shown until a response is given.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "The maximum time allowed for a response. If null, then the experiment will wait indefinitely for a response.",
+          "default": null
+        },
+        "feedback_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "feedback duration",
+          "description": "How long to show the feedback for (milliseconds).",
+          "default": 2000
+        }
+      },
+      "required": [
+        "stimulus",
+        "key_answer"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "correct"
       ]
     },
     "fullscreen": {
@@ -1296,6 +1676,189 @@
         "failed_images",
         "failed_audio",
         "failed_video"
+      ]
+    },
+    "same-different-html": {
+      "plugin": "same-different-html",
+      "title": "Two texts, same or different",
+      "summary": "Shows two texts one after the other and records whether they were judged the same.",
+      "family": "judge",
+      "package": "@jspsych/plugin-same-different-html",
+      "version": "2.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "html",
+            "jspsychType": "HTML_STRING"
+          },
+          "jspsychType": "HTML_STRING",
+          "title": "stimuli",
+          "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. A stimulus is a string containing valid HTML markup. Stimuli will be shown in the order that they are defined in the array.",
+          "examples": [
+            [
+              "<p>A</p>",
+              "<p>A</p>"
+            ]
+          ]
+        },
+        "answer": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "answer",
+          "description": "Correct answer: either \"same\" or \"different\".",
+          "enum": [
+            "same",
+            "different"
+          ],
+          "examples": [
+            "same"
+          ]
+        },
+        "same_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "same key",
+          "description": "The key that subjects should press to indicate that the two stimuli are the same.",
+          "default": "q"
+        },
+        "different_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "different key",
+          "description": "The key that subjects should press to indicate that the two stimuli are different.",
+          "default": "p"
+        },
+        "first_stim_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "first stim duration",
+          "description": "How long to show the first stimulus for in milliseconds. If the value of this parameter is null then the stimulus will be shown until the participant presses any key.",
+          "default": 1000
+        },
+        "gap_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "gap duration",
+          "description": "How long to show a blank screen in between the two stimuli.",
+          "default": 500
+        },
+        "second_stim_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "Second stimulus duration",
+          "description": "How long to show the second stimulus for in milliseconds. If null, then the stimulus will remain on the screen until a valid response is made.",
+          "default": 1000
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        }
+      },
+      "required": [
+        "stimuli",
+        "answer"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "correct",
+        "answer"
+      ]
+    },
+    "same-different-image": {
+      "plugin": "same-different-image",
+      "title": "Two images, same or different",
+      "summary": "Shows two images one after the other and records whether they were judged the same.",
+      "family": "judge",
+      "package": "@jspsych/plugin-same-different-image",
+      "version": "2.1.0",
+      "properties": {
+        "stimuli": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-image",
+            "jspsychType": "IMAGE"
+          },
+          "jspsychType": "IMAGE",
+          "title": "stimuli",
+          "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. The stimulus is a path to an image file. Stimuli will be shown in the order that they are defined in the array."
+        },
+        "answer": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "answer",
+          "description": "Either `'same'` or `'different'`.",
+          "enum": [
+            "same",
+            "different"
+          ]
+        },
+        "same_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "same key",
+          "description": "The key that subjects should press to indicate that the two stimuli are the same.",
+          "default": "q"
+        },
+        "different_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "different key",
+          "description": "The key that subjects should press to indicate that the two stimuli are different.",
+          "default": "p"
+        },
+        "first_stim_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "first stim duration",
+          "description": "How long to show the first stimulus for in milliseconds. If the value of this parameter is null then the stimulus will be shown until the participant presses any key.",
+          "default": 1000
+        },
+        "gap_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "gap duration",
+          "description": "How long to show a blank screen in between the two stimuli",
+          "default": 500
+        },
+        "second_stim_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "second stim duration",
+          "description": "How long to show the second stimulus for in milliseconds. If null, then the stimulus will remain on the screen until a valid response is made.",
+          "default": 1000
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        }
+      },
+      "required": [
+        "stimuli",
+        "answer"
+      ],
+      "records": [
+        "stimulus",
+        "response",
+        "rt",
+        "correct",
+        "answer"
       ]
     },
     "survey-likert": {

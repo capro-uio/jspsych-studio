@@ -76,6 +76,23 @@ describe("validateSpec", () => {
     );
   });
 
+  it("rejects a scoring rule on a step that scores its answers itself", () => {
+    const sorting: Spec = {
+      name: "sorting",
+      timeline: [
+        {
+          kind: "trial",
+          plugin: "categorize-html",
+          params: { stimulus: "<p>a</p>", key_answer: "f" },
+          score: { correct_if_response_equals: "f" },
+        },
+      ],
+    };
+    expect(() => compileSpec(sorting, schemas)).toThrow(
+      /scores its answers itself, so it takes no scoring rule/,
+    );
+  });
+
   it("rejects a parameter the plugin does not have", () => {
     expect(() => compileSpec(trial({ stimulus: "hi", stimulsu: 1 }), schemas)).toThrow(
       /no parameter "stimulsu"/,

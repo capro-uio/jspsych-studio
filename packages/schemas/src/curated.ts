@@ -94,6 +94,15 @@ function curatePsychophysics(schema: PluginSchema): PluginSchema {
   return schema;
 }
 
+// Where a plugin requires a value no form can sensibly guess, such as the key that counts as the
+// right category, a new step starts from these, so it can run before it is edited.
+export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
+  "categorize-html": { key_answer: "f" },
+  "categorize-image": { key_answer: "f" },
+  "categorize-animation": { key_answer: "f" },
+  "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"], answer: "same" },
+};
+
 /** Plugins from outside jsPsych's own set, each with what its declared parameters leave out. */
 export const CURATED_PLUGINS: Record<string, (schema: PluginSchema) => PluginSchema> = {
   "@kurokida/jspsych-psychophysics": curatePsychophysics,

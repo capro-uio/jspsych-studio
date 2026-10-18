@@ -62,6 +62,17 @@ describe("startingParams", () => {
     });
   });
 
+  it.each([
+    ["categorize-html", { stimulus: "<p>Your text here</p>", key_answer: "f" }],
+    ["same-different-html", { stimuli: ["<p>A</p>", "<p>A</p>"], answer: "same" }],
+  ])("starts %s from its starting example, ready to run", (plugin, params) => {
+    expect(startingParams(plugin)).toEqual(params);
+  });
+
+  it("starts a required choice from a fixed list on its first option", () => {
+    expect(startingParams("same-different-image")).toEqual({ answer: "same" });
+  });
+
   it("still fills required text with a placeholder", () => {
     expect(startingParams("html-keyboard-response")).toEqual({
       stimulus: "<p>Your text here</p>",
@@ -141,6 +152,7 @@ describe("pluginChoices", () => {
     expect(pluginChoices.map((group) => group.label)).toEqual([
       "Show something and record the response",
       "Ask questions",
+      "Categorise or compare",
       "Draw on a canvas",
       "Set up and run",
     ]);

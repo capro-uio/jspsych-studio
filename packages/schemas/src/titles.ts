@@ -2,6 +2,7 @@
 export const PLUGIN_FAMILIES = {
   show: "Show something and record the response",
   ask: "Ask questions",
+  judge: "Categorise or compare",
   canvas: "Draw on a canvas",
   setup: "Set up and run",
 } as const;
@@ -83,6 +84,31 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     title: "Instruction pages",
     summary: "Pages the participant reads, moving back and forth with keys or buttons.",
     family: "show",
+  },
+  "categorize-html": {
+    title: "Text, sorted into a category",
+    summary: "Shows text, records the key pressed, and tells the participant if it was right.",
+    family: "judge",
+  },
+  "categorize-image": {
+    title: "Image, sorted into a category",
+    summary: "Shows an image, records the key pressed, and tells the participant if it was right.",
+    family: "judge",
+  },
+  "categorize-animation": {
+    title: "Animation, sorted into a category",
+    summary: "Plays images as an animation, records the key pressed, and gives feedback.",
+    family: "judge",
+  },
+  "same-different-html": {
+    title: "Two texts, same or different",
+    summary: "Shows two texts one after the other and records whether they were judged the same.",
+    family: "judge",
+  },
+  "same-different-image": {
+    title: "Two images, same or different",
+    summary: "Shows two images one after the other and records whether they were judged the same.",
+    family: "judge",
   },
   "survey-likert": {
     title: "Rating scale questions",
