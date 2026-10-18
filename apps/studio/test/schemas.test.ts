@@ -46,12 +46,14 @@ describe("startingParams", () => {
     expect(second[0].options).toEqual(["Option 1", "Option 2"]);
   });
 
-  it.each(["html-button-response", "image-button-response", "video-button-response"])(
-    "starts %s with two buttons to rename",
-    (plugin) => {
-      expect(startingParams(plugin).choices).toEqual(["Option 1", "Option 2"]);
-    },
-  );
+  it.each([
+    "html-button-response",
+    "image-button-response",
+    "video-button-response",
+    "audio-button-response",
+  ])("starts %s with two buttons to rename", (plugin) => {
+    expect(startingParams(plugin).choices).toEqual(["Option 1", "Option 2"]);
+  });
 
   it("starts a text step answered with buttons ready to run", () => {
     expect(startingParams("html-button-response")).toEqual({

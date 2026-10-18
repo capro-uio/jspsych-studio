@@ -80,6 +80,20 @@ describe("extractSchemas", () => {
     ]);
   });
 
+  it("gives every number parameter a number, or null for none, as its default", () => {
+    for (const schema of Object.values(report.schemas)) {
+      for (const [name, parameter] of Object.entries(schema.properties)) {
+        if (parameter.jspsychType !== "INT" && parameter.jspsychType !== "FLOAT") continue;
+        if (!("default" in parameter) || parameter.type === "array") continue;
+        expect(
+          parameter.default === null || typeof parameter.default === "number",
+          `${schema.plugin}.${name}`,
+        ).toBe(true);
+      }
+    }
+    expect(report.schemas["video-keyboard-response"].properties.width.default).toBeNull();
+  });
+
   it("lists the columns each plugin writes into its data", () => {
     expect(report.schemas["html-slider-response"].records).toEqual(
       expect.arrayContaining(["response", "rt", "stimulus", "slider_start"]),
