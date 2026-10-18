@@ -14,18 +14,22 @@
   },
   "devDependencies": {
     "@jspsych/plugin-audio-keyboard-response": "^2.0.0",
+    "@jspsych/plugin-audio-slider-response": "^2.1.1",
     "@jspsych/plugin-call-function": "^2.0.0",
     "@jspsych/plugin-fullscreen": "^2.0.0",
     "@jspsych/plugin-html-button-response": "^2.0.0",
     "@jspsych/plugin-html-keyboard-response": "^2.0.0",
+    "@jspsych/plugin-html-slider-response": "^2.1.0",
     "@jspsych/plugin-image-button-response": "^2.0.0",
     "@jspsych/plugin-image-keyboard-response": "^2.0.0",
+    "@jspsych/plugin-image-slider-response": "^2.1.0",
     "@jspsych/plugin-instructions": "^2.0.0",
     "@jspsych/plugin-preload": "^2.0.0",
     "@jspsych/plugin-survey-likert": "^2.0.0",
     "@jspsych/plugin-survey-multi-choice": "^2.2.1",
     "@jspsych/plugin-survey-multi-select": "^2.1.1",
     "@jspsych/plugin-survey-text": "^2.0.0",
+    "@jspsych/plugin-video-slider-response": "^2.1.1",
     "@kurokida/jspsych-psychophysics": "5.1.0",
     "jspsych": "^8.3.0"
   }

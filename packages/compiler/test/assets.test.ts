@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { assetsOfType, preloadListOf } from "../src/assets.ts";
-import type { Asset, Spec } from "../src/types.ts";
+import type { Asset, Spec, TrialNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUg==";
@@ -161,5 +161,109 @@ describe("assetsOfType", () => {
 
   it("keeps none for a parameter that is not media", () => {
     expect(assetsOfType(assets, "STRING")).toEqual([]);
+  });
+});
+
+describe("lists of files", () => {
+  const video = { name: "clip.webm", url: "data:video/webm;base64,AAAA" };
+  const image = { name: "square.png", url: "data:image/png;base64,AAAA" };
+  const slider = (stimulus: unknown, extra: Partial<Spec> = {}): Spec => ({
+    name: "videos",
+    assets: [video, image],
+    timeline: [
+      {
+        kind: "trial",
+        plugin: "video-slider-response",
+        params: { stimulus } as TrialNode["params"],
+      },
+    ],
+    ...extra,
+  });
+
+  it("makes a list of the one file a column names", () => {
+    const spec: Spec = {
+      ...slider({ var: "video" }),
+      conditions: { videos: [{ video: "clip.webm" }] },
+    };
+    spec.timeline = [{ kind: "block", conditions: "videos", children: spec.timeline }];
+    const { source } = compileSpec(spec, schemas);
+    expect(source).toContain(
+      'stimulus: () => asset([].concat(jsPsych.evaluateTimelineVariable("video")))',
+    );
+  });
+
+  it("rejects a single file where a list of them belongs", () => {
+    expect(() => compileSpec(slider("clip.webm"), schemas)).toThrow(
+      /parameter "stimulus" expects a list of files/,
+    );
+  });
+
+  it("rejects a file of the wrong kind", () => {
+    expect(() => compileSpec(slider(["square.png"]), schemas)).toThrow(
+      /names "square.png", which is an image, where a video belongs/,
+    );
+  });
+
+  it.each([[[""]], [[]]])("rejects a required list with no file chosen: %j", (stimulus) => {
+    expect(() => compileSpec(slider(stimulus), schemas)).toThrow(
+      /requires a file for parameter "stimulus"/,
+    );
+  });
+
+  it("turns an embedded video into a blob URL when the page starts", () => {
+    const { source } = compileSpec(slider(["clip.webm"]), schemas);
+    expect(source).toContain("URL.createObjectURL(");
+    const { source: files } = compileSpec(slider(["clip.webm"]), schemas, { assets: "files" });
+    expect(files).not.toContain("URL.createObjectURL(");
+  });
+});
+
+describe("lists that are not files", () => {
+  it("makes a list of the one label a column holds", () => {
+    const { source } = compileSpec(
+      {
+        name: "labels",
+        conditions: { rows: [{ label: "sure" }] },
+        timeline: [
+          {
+            kind: "block",
+            conditions: "rows",
+            children: [
+              {
+                kind: "trial",
+                plugin: "html-slider-response",
+                params: { stimulus: "<p>hi</p>", labels: { var: "label" } },
+              },
+            ],
+          },
+        ],
+      },
+      schemas,
+    );
+    expect(source).toContain('labels: () => [].concat(jsPsych.evaluateTimelineVariable("label"))');
+  });
+
+  it("leaves a key list read from a column alone, since it may be ALL_KEYS", () => {
+    const { source } = compileSpec(
+      {
+        name: "keys",
+        conditions: { rows: [{ keys: "ALL_KEYS" }] },
+        timeline: [
+          {
+            kind: "block",
+            conditions: "rows",
+            children: [
+              {
+                kind: "trial",
+                plugin: "html-keyboard-response",
+                params: { stimulus: "<p>hi</p>", choices: { var: "keys" } },
+              },
+            ],
+          },
+        ],
+      },
+      schemas,
+    );
+    expect(source).toContain('choices: jsPsych.timelineVariable("keys")');
   });
 });

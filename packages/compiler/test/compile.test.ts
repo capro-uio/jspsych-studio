@@ -29,7 +29,7 @@ describe("compileSpec", () => {
   it("scores responses against a timeline variable", () => {
     const { source } = compileSpec(flanker, schemas);
     expect(source).toContain(
-      'data.correct = data.response === jsPsych.evaluateTimelineVariable("correct_key")',
+      'data.correct = String(data.response) === String(jsPsych.evaluateTimelineVariable("correct_key"))',
     );
   });
 

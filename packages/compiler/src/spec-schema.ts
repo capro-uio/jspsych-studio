@@ -73,6 +73,7 @@ function parameterValueSchema(parameter: ParameterSchema): JsonSchema {
   }
   const literal = parameterSchema(parameter);
   const alternatives: JsonSchema[] = [literal, reference("variableReference"), reference("code")];
+  if (parameter.default === null) alternatives.push({ type: "null" });
   if (parameter.jspsychType === "KEYS") alternatives.push({ enum: KEY_LIST_KEYWORDS });
   return { ...carry(parameter, DOCUMENTED_KEYS), anyOf: alternatives.map(stripDocumentation) };
 }

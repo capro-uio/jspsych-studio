@@ -26,7 +26,7 @@
       return;
     }
     const merged = { ...value };
-    if (next === "" && !isRequired(name)) delete merged[name];
+    if ((next === "" || next === undefined) && !isRequired(name)) delete merged[name];
     else merged[name] = next;
     onchange(merged);
   }

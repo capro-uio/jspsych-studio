@@ -165,7 +165,7 @@ describe("code as a parameter value", () => {
       schemas,
     );
     expect(source).toContain("Array.isArray(name) ? name.map(asset)");
-    expect(source).toContain('images: () => asset((["a.png", "b.png"]\n))');
+    expect(source).toContain('images: () => asset([].concat((["a.png", "b.png"]\n)))');
   });
 
   it("looks up a file computed inside a list entry", () => {

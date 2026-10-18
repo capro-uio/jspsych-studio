@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { ParameterSchema } from "@jspsych-studio/schemas";
 import {
   paramsForPlugin,
+  placeholderFor,
   pluginChoices,
   pluginTitle,
   schemas,
@@ -162,5 +164,27 @@ describe("paramsForPlugin", () => {
     expect(paramsForPlugin(bound, "survey-multi-choice", "survey-multi-select")).toEqual(
       startingParams("survey-multi-select"),
     );
+  });
+});
+
+describe("placeholderFor", () => {
+  const list = (items: Partial<ParameterSchema>) =>
+    ({ title: "list", type: "array", jspsychType: "STRING", items }) as ParameterSchema;
+
+  it("starts a list of plain text with two options", () => {
+    expect(placeholderFor(list({ type: "string", jspsychType: "STRING" }))).toEqual([
+      "Option 1",
+      "Option 2",
+    ]);
+  });
+
+  it("leaves a list of files to be chosen", () => {
+    expect(placeholderFor(list({ type: "string", jspsychType: "VIDEO" }))).toBeUndefined();
+  });
+
+  it("leaves a list of fixed choices to be chosen", () => {
+    expect(
+      placeholderFor(list({ type: "string", jspsychType: "STRING", enum: ["a", "b"] })),
+    ).toBeUndefined();
   });
 });

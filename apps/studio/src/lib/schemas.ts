@@ -60,11 +60,11 @@ const PLACEHOLDER_TEXT = "<p>Your text here</p>";
 const PLACEHOLDER_OPTIONS = ["Option 1", "Option 2"];
 
 /** What a required field starts as, or undefined when there is no sensible start for it. */
-function placeholderFor(field: ParameterSchema): unknown {
+export function placeholderFor(field: ParameterSchema): unknown {
   if (field.jspsychType === "HTML_STRING") {
     return field.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
   }
-  if (field.type === "array" && field.items?.type === "string" && !field.items.enum) {
+  if (field.type === "array" && field.items?.jspsychType === "STRING" && !field.items.enum) {
     return [...PLACEHOLDER_OPTIONS];
   }
   return undefined;

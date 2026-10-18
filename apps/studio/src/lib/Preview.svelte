@@ -160,6 +160,7 @@
           title="experiment preview"
           data-testid="preview"
           sandbox="allow-scripts allow-forms allow-modals"
+          allow="autoplay"
           srcdoc={html}
         ></iframe>
       {/key}

@@ -155,6 +155,26 @@ describe("the validator and the spec schema agree", () => {
     );
   });
 
+  it.each([
+    ["slider_width", null, true],
+    ["slider_width", 400, true],
+    ["min", null, false],
+    ["min", 0, true],
+  ])(
+    "on %s holding %j, null being jsPsych's none only where it is the default",
+    (name, value, valid) => {
+      agreeOn([[value, valid]], (held) =>
+        study([
+          {
+            kind: "trial",
+            plugin: "html-slider-response",
+            params: { stimulus: "<p>how sure?</p>", [name]: held },
+          } as never,
+        ]),
+      );
+    },
+  );
+
   it("on the columns a study writes itself", () => {
     agreeOn(
       [["word_shown", true], ...STUDY_COLUMNS.map((column): [string, boolean] => [column, false])],

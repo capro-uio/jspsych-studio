@@ -233,19 +233,23 @@
           "title": "The jsPsych plugin that runs this step.",
           "enum": [
             "audio-keyboard-response",
+            "audio-slider-response",
             "call-function",
             "fullscreen",
             "html-button-response",
             "html-keyboard-response",
+            "html-slider-response",
             "image-button-response",
             "image-keyboard-response",
+            "image-slider-response",
             "instructions",
             "preload",
             "psychophysics",
             "survey-likert",
             "survey-multi-choice",
             "survey-multi-select",
-            "survey-text"
+            "survey-text",
+            "video-slider-response"
           ]
         },
         "tag": {
@@ -349,6 +353,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -365,6 +372,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -420,6 +430,271 @@
                     "title": "wait for key release",
                     "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
                     "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "audio-slider-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "Audio file to be played.",
+                    "anyOf": [
+                      {
+                        "format": "asset-audio",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "min": {
+                    "title": "min",
+                    "description": "Sets the minimum value of the slider.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "max": {
+                    "title": "max",
+                    "description": "Sets the maximum value of the slider",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_start": {
+                    "title": "slider start",
+                    "description": "Sets the starting value of the slider",
+                    "default": 50,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "step": {
+                    "title": "step",
+                    "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "labels": {
+                    "title": "labels",
+                    "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "html",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_width": {
+                    "title": "slider width",
+                    "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to end the trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "require_movement": {
+                    "title": "require movement",
+                    "description": "If true, the participant must move the slider before clicking the continue button.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to listen to the stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_ends_after_audio": {
+                    "title": "trial ends after audio",
+                    "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_allowed_while_playing": {
+                    "title": "response allowed while playing",
+                    "description": "If true, then responses are allowed while the audio is playing. If false, then the audio must finish playing before the slider is enabled and the trial can end via the next button click. Once the audio has played all the way through, the slider is enabled and a response is allowed (including while the audio is being re-played via on-screen playback controls).",
+                    "default": true,
                     "anyOf": [
                       {
                         "type": "boolean"
@@ -669,6 +944,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -685,6 +963,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -701,6 +982,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -749,6 +1033,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -868,6 +1155,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -884,6 +1174,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -900,6 +1193,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -923,6 +1219,258 @@
                     "title": "wait for key release",
                     "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
                     "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "html-slider-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML string to be displayed",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "min": {
+                    "title": "min",
+                    "description": "Sets the minimum value of the slider.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "max": {
+                    "title": "max",
+                    "description": "Sets the maximum value of the slider",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_start": {
+                    "title": "slider start",
+                    "description": "Sets the starting value of the slider",
+                    "default": 50,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "step": {
+                    "title": "step",
+                    "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "labels": {
+                    "title": "labels",
+                    "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "html",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_width": {
+                    "title": "slider width",
+                    "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to end the trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "require_movement": {
+                    "title": "require movement",
+                    "description": "If true, the participant must move the slider before clicking the continue button.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
                     "anyOf": [
                       {
                         "type": "boolean"
@@ -991,6 +1539,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1007,6 +1558,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1075,6 +1629,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1091,6 +1648,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1107,6 +1667,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1155,6 +1718,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1263,6 +1829,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1279,6 +1848,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1338,6 +1910,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1354,6 +1929,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1370,6 +1948,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1409,6 +1990,327 @@
                     "title": "wait for key release",
                     "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
                     "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "image-slider-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The path to the image file to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stimulus_height": {
+                    "title": "stimulus height",
+                    "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "stimulus_width": {
+                    "title": "stimulus width",
+                    "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "maintain_aspect_ratio": {
+                    "title": "maintain aspect ratio",
+                    "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "min": {
+                    "title": "min",
+                    "description": "Sets the minimum value of the slider.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "max": {
+                    "title": "max",
+                    "description": "Sets the maximum value of the slider.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_start": {
+                    "title": "slider start",
+                    "description": "Sets the starting value of the slider.",
+                    "default": 50,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "step": {
+                    "title": "step",
+                    "description": "Sets the step of the slider.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "labels": {
+                    "title": "labels",
+                    "description": "abels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_width": {
+                    "title": "slider width",
+                    "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to advance/submit.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "require_movement": {
+                    "title": "require movement",
+                    "description": "If true, the participant must move the slider before clicking the continue button.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to show the stimulus for in milliseconds. If the value is null, then the stimulus will be shown until the participant makes a response.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "render_on_canvas": {
+                    "title": "render on canvas",
+                    "description": "If true, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+                    "default": true,
                     "anyOf": [
                       {
                         "type": "boolean"
@@ -1761,6 +2663,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1842,6 +2747,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1957,6 +2865,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -1973,6 +2884,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2005,6 +2919,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2037,6 +2954,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2540,6 +3460,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2556,6 +3479,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2598,6 +3524,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2967,6 +3896,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -2984,6 +3916,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3001,6 +3936,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3017,6 +3955,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3033,6 +3974,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3081,6 +4025,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3360,6 +4307,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3525,6 +4475,9 @@
                                 },
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             }
@@ -3573,6 +4526,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3589,6 +4545,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3786,6 +4745,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3983,6 +4945,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -4209,6 +5174,9 @@
                       },
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -4249,6 +5217,398 @@
                 },
                 "required": [
                   "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "video-slider-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "An array of file paths to the video. You can specify multiple formats of the same video (e.g., .mp4, .ogg, .webm) to maximize the [cross-browser compatibility](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats). Usually .mp4 is a safe cross-browser option. The plugin does not reliably support .mov files. The player will use the first source file in the array that is compatible with the browser, so specify the files in order of preference.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "asset-video",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "width": {
+                    "title": "width",
+                    "description": "The width of the video display in pixels. If `null`, the video will take the original video's dimensions, or properly scaled with the aspect ratio if the height is also specified.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "title": "height",
+                    "description": "The height of the video display in pixels. If `null`, the video will take the original video's dimensions, or properly scaled with the aspect ratio if the width is also specified.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "autoplay": {
+                    "title": "autoplay",
+                    "description": "If true, the video will begin playing as soon as it has loaded.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "controls": {
+                    "title": "controls",
+                    "description": "If true, controls for the video player will be available to the participant. They will be able to pause the video or move the playback to any point in the video.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "start": {
+                    "title": "start",
+                    "description": "Time to start the clip. If null (default), video will start at the beginning of the file.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "stop": {
+                    "title": "stop",
+                    "description": "Time to stop the clip. If null (default), video will stop at the end of the file.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "rate": {
+                    "title": "rate",
+                    "description": "The playback rate of the video. 1 is normal, <1 is slower, >1 is faster.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "min": {
+                    "title": "min",
+                    "description": "Sets the minimum value of the slider.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "max": {
+                    "title": "max",
+                    "description": "Sets the maximum value of the slider.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_start": {
+                    "title": "slider start",
+                    "description": "Sets the starting value of the slider.",
+                    "default": 50,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "step": {
+                    "title": "step",
+                    "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "labels": {
+                    "title": "labels",
+                    "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "html",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "slider_width": {
+                    "title": "slider width",
+                    "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to end the trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "require_movement": {
+                    "title": "require movement",
+                    "description": "If true, the participant must move the slider before clicking the continue button.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_ends_after_video": {
+                    "title": "trial ends after video",
+                    "description": "If true, the trial will end immediately after the video finishes playing.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_allowed_while_playing": {
+                    "title": "response allowed while playing",
+                    "description": "If true, then responses are allowed while the video is playing. If false, then the video must finish playing before the slider is enabled and the trial can end via the next button click. Once the video has played all the way through, the slider is enabled and a response is allowed (including while the video is being re-played via on-screen playback controls).",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
                 ],
                 "additionalProperties": false
               }
