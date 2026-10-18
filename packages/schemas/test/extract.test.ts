@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
-import { extractSchemas, pluginPackages, toParameterSchema } from "../src/extract.ts";
+import {
+  extractSchemas,
+  functionSource,
+  pluginPackages,
+  toParameterSchema,
+} from "../src/extract.ts";
 
 const packages = pluginPackages();
 const report = await extractSchemas(packages);
@@ -61,6 +66,16 @@ describe("extractSchemas", () => {
     expect(questions.items?.properties).toHaveProperty("labels");
   });
 
+  it("keeps a default function's source as a code example", () => {
+    const buttonHtml = report.schemas["html-button-response"].properties.button_html;
+    expect(buttonHtml.default).toBeUndefined();
+    expect(buttonHtml.examples).toEqual([
+      {
+        code: 'function(choice, choice_index) {\n  return `<button class="jspsych-btn">${choice}</button>`;\n}',
+      },
+    ]);
+  });
+
   it("falls back to the help text a plugin declares in its own info", () => {
     const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
     expect(canvasWidth.description).toMatch(/width/i);
@@ -106,5 +121,21 @@ describe("curated third-party plugins", () => {
       },
     };
     expect(() => curate(changed)).toThrow(/curation in curated.ts needs updating/);
+  });
+});
+
+describe("functionSource", () => {
+  it("keeps a one-line function as it is", () => {
+    expect(functionSource(() => true)).toBe("() => true");
+  });
+
+  it("re-indents a body indented with tabs", () => {
+    const fn = { toString: () => "function(a) {\n\t\treturn a;\n\t}" };
+    expect(functionSource(fn as unknown as () => unknown)).toBe("function(a) {\n\treturn a;\n}");
+  });
+
+  it("re-indents a body written deeper in its file", () => {
+    const fn = { toString: () => "function(a) {\n        return a;\n      }" };
+    expect(functionSource(fn as unknown as () => unknown)).toBe("function(a) {\n  return a;\n}");
   });
 });

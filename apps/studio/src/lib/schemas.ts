@@ -1,5 +1,7 @@
 import schemaFile from "@jspsych-studio/schemas/plugin-schemas.json";
 import type { ParameterSchema, SchemaBundle, Variants } from "@jspsych-studio/schemas";
+import { takesFunction } from "@jspsych-studio/compiler";
+import { codeSeed } from "./code.ts";
 
 export const schemas = schemaFile as unknown as SchemaBundle;
 
@@ -17,6 +19,7 @@ const EDITABLE_TYPES = new Set([
   "IMAGE",
   "AUDIO",
   "VIDEO",
+  "FUNCTION",
 ]);
 
 export function editableParameters(plugin: string) {
@@ -50,6 +53,8 @@ export function startingParams(plugin: string): Record<string, unknown> {
       params[name] = structuredClone(parameter.examples[0]);
     } else if (parameter?.jspsychType === "HTML_STRING") {
       params[name] = parameter.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+    } else if (parameter && takesFunction(parameter.jspsychType)) {
+      params[name] = { code: codeSeed(parameter, undefined) };
     }
   }
   return params;
