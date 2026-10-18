@@ -100,7 +100,24 @@ export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
   "categorize-html": { key_answer: "f" },
   "categorize-image": { key_answer: "f" },
   "categorize-animation": { key_answer: "f" },
-  "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"], answer: "same" },
+  "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"] },
+};
+
+// The same/different plugins read exactly two stimuli: one fewer shows "undefined", and any more
+// are ignored without a word.
+export const LIST_LENGTHS: Record<
+  string,
+  Record<string, { minItems: number; maxItems: number }>
+> = {
+  "same-different-html": { stimuli: { minItems: 2, maxItems: 2 } },
+  "same-different-image": { stimuli: { minItems: 2, maxItems: 2 } },
+};
+
+// Columns a plugin writes without declaring them in its info: the same/different plugins record a
+// response to the first stimulus when it stays up until one is given.
+export const UNDECLARED_RECORDS: Record<string, string[]> = {
+  "same-different-html": ["rt_stim1", "response_stim1"],
+  "same-different-image": ["rt_stim1", "response_stim1"],
 };
 
 /** Plugins from outside jsPsych's own set, each with what its declared parameters leave out. */

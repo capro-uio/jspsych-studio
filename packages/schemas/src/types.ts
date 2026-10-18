@@ -29,6 +29,9 @@ export interface ParameterSchema {
   default?: unknown;
   /** Values a new step can start from, so it is not born invalid. */
   examples?: unknown[];
+  /** How many entries a list takes, where its plugin reads a fixed number of them. */
+  minItems?: number;
+  maxItems?: number;
   /** For a set of fields whose meaning depends on one of them, such as a canvas object's shape. */
   variants?: Variants;
   /** A purpose-built editor the builder offers in place of the generic form. */

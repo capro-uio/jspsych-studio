@@ -1257,6 +1257,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -1539,6 +1545,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -1821,6 +1833,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -5450,6 +5468,8 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 2,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "format": "html",
@@ -5467,9 +5487,6 @@
                   "answer": {
                     "title": "answer",
                     "description": "Correct answer: either \"same\" or \"different\".",
-                    "examples": [
-                      "same"
-                    ],
                     "anyOf": [
                       {
                         "enum": [
@@ -5597,6 +5614,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -5621,6 +5644,8 @@
                     "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. The stimulus is a path to an image file. Stimuli will be shown in the order that they are defined in the array.",
                     "anyOf": [
                       {
+                        "minItems": 2,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "format": "asset-image",
@@ -5765,6 +5790,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },

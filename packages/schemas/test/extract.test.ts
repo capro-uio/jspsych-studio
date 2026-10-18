@@ -3,6 +3,7 @@ import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
 import {
   assertExtracted,
+  curateParameters,
   recordedColumns,
   extractSchemas,
   functionSource,
@@ -96,7 +97,25 @@ describe("extractSchemas", () => {
 
   it("gives a plugin its starting examples where no form could guess the value", () => {
     expect(report.schemas["categorize-html"].properties.key_answer.examples).toEqual(["f"]);
-    expect(report.schemas["same-different-html"].properties.answer.examples).toEqual(["same"]);
+    expect(report.schemas["same-different-html"].properties.stimuli.examples).toEqual([
+      ["<p>A</p>", "<p>A</p>"],
+    ]);
+  });
+
+  it("holds a same/different pair to two stimuli, and lists the columns it does not declare", () => {
+    const pair = report.schemas["same-different-image"];
+    expect(pair.properties.stimuli).toMatchObject({ minItems: 2, maxItems: 2 });
+    expect(pair.records).toEqual(expect.arrayContaining(["rt_stim1", "response_stim1"]));
+  });
+
+  it("refuses curation naming a parameter the plugin does not take", () => {
+    const schema = structuredClone(report.schemas["categorize-html"]);
+    expect(() =>
+      curateParameters(schema, {
+        examples: { "categorize-html": { key_anwser: "f" } },
+        lengths: {},
+      }),
+    ).toThrow(/names "key_anwser", which categorize-html does not take/);
   });
 
   it("lists the columns each plugin writes into its data", () => {

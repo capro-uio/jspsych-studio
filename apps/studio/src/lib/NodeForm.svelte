@@ -109,6 +109,8 @@
         if (chosen === trial.plugin) return;
         trial.params = paramsForPlugin(trial.params, trial.plugin, chosen) as typeof trial.params;
         trial.plugin = chosen;
+        // A step that scores itself takes no scoring rule over its own.
+        if (pluginSchema(chosen)?.records.includes("correct")) delete trial.score;
       }}
     >
       {#each pluginChoices as group (group.label)}
@@ -172,6 +174,11 @@
         This step scores its answers itself, from the right answer set above, into its own
         <code>correct</code> column, which a loop or branch on accuracy reads.
       </p>
+      {#if trial.score}
+        <button class="toggle" data-testid="remove-score" onclick={() => delete trial.score}>
+          remove the scoring rule this step was given
+        </button>
+      {/if}
     {:else}
       <div class="field">
         <label for="score-column"><span class="name">correct when response equals</span></label>

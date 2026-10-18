@@ -9,6 +9,7 @@ const report = await extractSchemas([
   "@jspsych/plugin-call-function",
   "@jspsych/plugin-categorize-html",
   "@jspsych/plugin-same-different-html",
+  "@jspsych/plugin-same-different-image",
   "@jspsych/plugin-html-button-response",
   "@jspsych/plugin-html-keyboard-response",
   "@jspsych/plugin-html-slider-response",

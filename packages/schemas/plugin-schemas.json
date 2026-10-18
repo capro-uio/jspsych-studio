@@ -1701,7 +1701,9 @@
               "<p>A</p>",
               "<p>A</p>"
             ]
-          ]
+          ],
+          "minItems": 2,
+          "maxItems": 2
         },
         "answer": {
           "type": "string",
@@ -1711,9 +1713,6 @@
           "enum": [
             "same",
             "different"
-          ],
-          "examples": [
-            "same"
           ]
         },
         "same_key": {
@@ -1771,7 +1770,9 @@
         "response",
         "rt",
         "correct",
-        "answer"
+        "answer",
+        "rt_stim1",
+        "response_stim1"
       ]
     },
     "same-different-image": {
@@ -1791,7 +1792,9 @@
           },
           "jspsychType": "IMAGE",
           "title": "stimuli",
-          "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. The stimulus is a path to an image file. Stimuli will be shown in the order that they are defined in the array."
+          "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. The stimulus is a path to an image file. Stimuli will be shown in the order that they are defined in the array.",
+          "minItems": 2,
+          "maxItems": 2
         },
         "answer": {
           "type": "string",
@@ -1858,7 +1861,9 @@
         "response",
         "rt",
         "correct",
-        "answer"
+        "answer",
+        "rt_stim1",
+        "response_stim1"
       ]
     },
     "survey-likert": {

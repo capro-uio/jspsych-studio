@@ -8,7 +8,7 @@ import type {
   PluginSchema,
   PluginSchemas,
 } from "./types.ts";
-import { CURATED_PLUGINS, STARTING_EXAMPLES } from "./curated.ts";
+import { CURATED_PLUGINS, LIST_LENGTHS, STARTING_EXAMPLES, UNDECLARED_RECORDS } from "./curated.ts";
 import { PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
@@ -183,14 +183,32 @@ async function extractOne(
     version: plugin.info.version,
     properties,
     required,
-    records: recordedColumns(plugin.info),
+    records: [...recordedColumns(plugin.info), ...(UNDECLARED_RECORDS[plugin.info.name] ?? [])],
   };
-  for (const [name, example] of Object.entries(STARTING_EXAMPLES[schema.plugin] ?? {})) {
-    if (!properties[name])
-      throw new Error(`a starting example names "${name}", which ${schema.plugin} does not take`);
-    properties[name].examples = [example];
-  }
+  curateParameters(schema);
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
+}
+
+export interface ParameterCuration {
+  examples: Record<string, Record<string, unknown>>;
+  lengths: Record<string, Record<string, { minItems: number; maxItems: number }>>;
+}
+
+/** Fills in what a plugin's declarations leave out for some of its parameters, named by plugin. */
+export function curateParameters(
+  schema: PluginSchema,
+  curation: ParameterCuration = { examples: STARTING_EXAMPLES, lengths: LIST_LENGTHS },
+) {
+  const named = <T>(table: Record<string, Record<string, T>>) =>
+    Object.entries(table[schema.plugin] ?? {}).map(([name, value]) => {
+      const parameter = schema.properties[name];
+      if (!parameter) {
+        throw new Error(`curated.ts names "${name}", which ${schema.plugin} does not take`);
+      }
+      return [parameter, value] as const;
+    });
+  for (const [parameter, example] of named(curation.examples)) parameter.examples = [example];
+  for (const [parameter, length] of named(curation.lengths)) Object.assign(parameter, length);
 }
 
 /** The columns a plugin writes into its data; an older plugin may declare none. */
