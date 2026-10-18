@@ -73,4 +73,25 @@ describe("a study with image, audio and video files", () => {
     });
     await page.close();
   }, 120_000);
+
+  // An embedded file is shown from its data URL, which a plugin would otherwise record in full.
+  it("records the file a trial played by its name, not by its contents", async () => {
+    const page = await browser.newPage();
+    await page.goto(`${server.url}/${PAGE_NAME}`);
+    await page.locator("#jspsych-content").getByText("listening").waitFor({ timeout: 15_000 });
+    await page.keyboard.press("a");
+
+    await expect
+      .poll(() =>
+        page.evaluate(
+          "jsPsych.data.get().filter({ trial_type: 'audio-keyboard-response' }).count()",
+        ),
+      )
+      .toBe(1);
+    const row = await page.evaluate<{ stimulus: string }>(
+      "jsPsych.data.get().filter({ trial_type: 'audio-keyboard-response' }).values()[0]",
+    );
+    expect(row.stimulus).toBe("tone.wav");
+    await page.close();
+  }, 120_000);
 });

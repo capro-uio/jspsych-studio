@@ -1,6 +1,12 @@
 import type { ParameterSchema, SchemaBundle } from "@jspsych-studio/schemas";
 import { compileAppearance } from "./appearance.ts";
-import { compileAssetMap, compilePreloadStep, isMediaParameter, isMediaType } from "./assets.ts";
+import {
+  NAME_FILES_IN_DATA,
+  compileAssetMap,
+  compilePreloadStep,
+  isMediaParameter,
+  isMediaType,
+} from "./assets.ts";
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
 import { compileParticipantProperties } from "./data.ts";
 import { compileCompletion, compileEndStep } from "./endings.ts";
@@ -281,6 +287,7 @@ function initOptions(spec: Spec, extra: string | undefined) {
   const entries = SETTING_KEYS.filter((key) => spec.settings?.[key] !== undefined).map(
     (key) => `${key}: ${literal(spec.settings![key])}`,
   );
+  if ((spec.assets ?? []).length > 0) entries.push(NAME_FILES_IN_DATA);
   if (extra) entries.push(extra);
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : "";
 }

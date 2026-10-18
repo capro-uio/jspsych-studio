@@ -267,3 +267,31 @@ describe("lists that are not files", () => {
     expect(source).toContain('choices: jsPsych.timelineVariable("keys")');
   });
 });
+
+describe("files in the data", () => {
+  const showing = (assets: Asset[]): Spec => ({
+    name: "files",
+    assets,
+    timeline: [
+      {
+        kind: "trial",
+        plugin: "image-keyboard-response",
+        params: { stimulus: assets.length > 0 ? "face.png" : "https://example.com/face.png" },
+      },
+    ],
+  });
+
+  it("puts back each file's name in every row of a study with files", () => {
+    const { source } = compileSpec(
+      showing([{ name: "face.png", url: "data:image/png;base64,AA==" }]),
+      schemas,
+    );
+    expect(source).toContain("on_data_update: (row) =>");
+    expect(source).toContain("const fileNames = new Map(");
+  });
+
+  it("leaves the data of a study without files alone", () => {
+    const { source } = compileSpec(showing([]), schemas);
+    expect(source).not.toContain("on_data_update");
+  });
+});
