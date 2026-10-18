@@ -1,7 +1,7 @@
 import manifest from "../package.json" with { type: "json" };
 import { orderColumn } from "./counterbalance.ts";
 import { ENDING_COLUMN } from "./data.ts";
-import { idParamOf, needsParticipantId } from "./recruitment.ts";
+import { linkParamsOf, needsParticipantId } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
 
@@ -39,7 +39,7 @@ export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
   if (needsParticipantId(spec)) {
     columns.add("participant_id");
     columns.add("experiment");
-    columns.add(idParamOf(spec.recruitment));
+    for (const param of linkParamsOf(spec.recruitment)) columns.add(param);
   }
 
   const walk = (nodes: SpecNode[]) => {
@@ -70,12 +70,12 @@ export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
 }
 
 /**
- * The columns a link parameter may not write, recorded under a prefix instead. The platform's id is
- * the one link parameter the study records under its own name.
+ * The columns a link parameter may not write, recorded under a prefix instead. The parameters the
+ * platform sends, its participant's id among them, keep their own names.
  */
 export function reservedLinkColumns(spec: Spec, columns: string[]) {
-  const idParam = idParamOf(spec.recruitment);
-  return columns.filter((column) => column !== idParam);
+  const linkParams = new Set(linkParamsOf(spec.recruitment));
+  return columns.filter((column) => !linkParams.has(column));
 }
 
 export interface MetadataOptions {
