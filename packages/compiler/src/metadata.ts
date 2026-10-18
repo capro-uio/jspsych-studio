@@ -130,12 +130,17 @@ export function datasetDescription(spec: Spec, options: MetadataOptions) {
 
 export type DatasetDescription = ReturnType<typeof datasetDescription>;
 
+// The name sits inside a block comment, which a `*/` in it would end early.
+function commentSafe(text: string) {
+  return text.replace(/\*\//g, "* /").replace(/\s+/g, " ");
+}
+
 /** A note at the top of the generated experiment saying where it came from. */
 export function sourceHeader(spec: Spec, options: MetadataOptions) {
   const date = options.generatedAt ?? new Date().toISOString().slice(0, 10);
   return (
     `/*\n` +
-    ` * ${spec.name}\n` +
+    ` * ${commentSafe(spec.name)}\n` +
     ` *\n` +
     ` * Built with ${generatorLabel(options.studio)} on ${date}, for jsPsych ${options.jspsych}.\n` +
     ` * ${GENERATOR_URL}\n` +
