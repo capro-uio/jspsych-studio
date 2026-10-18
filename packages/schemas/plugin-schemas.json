@@ -1420,7 +1420,9 @@
           "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
           "default": [
             "left"
-          ]
+          ],
+          "minItems": 1,
+          "maxItems": 2
         },
         "right_category_label": {
           "type": "array",
@@ -1433,7 +1435,9 @@
           "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
           "default": [
             "right"
-          ]
+          ],
+          "minItems": 1,
+          "maxItems": 2
         },
         "key_to_move_forward": {
           "type": "array",
@@ -1510,6 +1514,12 @@
         "response",
         "correct",
         "rt"
+      ],
+      "distinctKeys": [
+        [
+          "left_category_key",
+          "right_category_key"
+        ]
       ]
     },
     "iat-image": {
@@ -1554,7 +1564,9 @@
           "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
           "default": [
             "left"
-          ]
+          ],
+          "minItems": 1,
+          "maxItems": 2
         },
         "right_category_label": {
           "type": "array",
@@ -1567,7 +1579,9 @@
           "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
           "default": [
             "right"
-          ]
+          ],
+          "minItems": 1,
+          "maxItems": 2
         },
         "key_to_move_forward": {
           "type": "array",
@@ -1644,6 +1658,12 @@
         "response",
         "correct",
         "rt"
+      ],
+      "distinctKeys": [
+        [
+          "left_category_key",
+          "right_category_key"
+        ]
       ]
     },
     "image-button-response": {
@@ -2151,7 +2171,8 @@
               "Option 2",
               "Option 3"
             ]
-          ]
+          ],
+          "minItems": 2
         },
         "labels": {
           "type": "array",
@@ -2432,6 +2453,12 @@
         "answer",
         "rt_stim1",
         "response_stim1"
+      ],
+      "distinctKeys": [
+        [
+          "same_key",
+          "different_key"
+        ]
       ]
     },
     "same-different-image": {
@@ -2523,6 +2550,12 @@
         "answer",
         "rt_stim1",
         "response_stim1"
+      ],
+      "distinctKeys": [
+        [
+          "same_key",
+          "different_key"
+        ]
       ]
     },
     "sketchpad": {
@@ -2538,7 +2571,11 @@
           "jspsychType": "STRING",
           "title": "canvas shape",
           "description": "The shape of the canvas element. Accepts `'rectangle'` or `'circle'`",
-          "default": "rectangle"
+          "default": "rectangle",
+          "enum": [
+            "rectangle",
+            "circle"
+          ]
         },
         "canvas_width": {
           "type": "integer",
@@ -2628,7 +2665,12 @@
           "jspsychType": "STRING",
           "title": "prompt location",
           "description": "Location of the `prompt` content. Can be 'abovecanvas' or 'belowcanvas' or 'belowbutton'.",
-          "default": "abovecanvas"
+          "default": "abovecanvas",
+          "enum": [
+            "abovecanvas",
+            "belowcanvas",
+            "belowbutton"
+          ]
         },
         "save_final_image": {
           "type": "boolean",
@@ -3793,6 +3835,12 @@
         "set_size",
         "target_present",
         "locations"
+      ],
+      "distinctKeys": [
+        [
+          "target_present_key",
+          "target_absent_key"
+        ]
       ]
     },
     "psychophysics": {

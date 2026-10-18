@@ -69,6 +69,8 @@ export interface PluginSchema {
   required: string[];
   /** The columns the plugin writes into each row of data it records, as its info declares. */
   records: string[];
+  /** Pairs of key parameters that must differ, as same and different do, or its answers mean nothing. */
+  distinctKeys?: [string, string][];
 }
 
 export type PluginSchemas = Record<string, PluginSchema>;

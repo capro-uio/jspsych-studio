@@ -11,6 +11,7 @@ const report = await extractSchemas([
   "@jspsych/plugin-cloze",
   "@jspsych/plugin-free-sort",
   "@jspsych/plugin-iat-html",
+  "@jspsych/plugin-iat-image",
   "@jspsych/plugin-maxdiff",
   "@jspsych/plugin-sketchpad",
   "@jspsych/plugin-visual-search-circle",

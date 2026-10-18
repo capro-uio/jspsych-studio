@@ -3276,6 +3276,8 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 1,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -3297,6 +3299,8 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 1,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -3548,6 +3552,8 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 1,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -3569,6 +3575,8 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 1,
+                        "maxItems": 2,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -4823,6 +4831,7 @@
                     ],
                     "anyOf": [
                       {
+                        "minItems": 2,
                         "type": "array",
                         "items": {
                           "type": "string"
@@ -7148,6 +7157,10 @@
                     "default": "rectangle",
                     "anyOf": [
                       {
+                        "enum": [
+                          "rectangle",
+                          "circle"
+                        ],
                         "type": "string"
                       },
                       {
@@ -7351,6 +7364,11 @@
                     "default": "abovecanvas",
                     "anyOf": [
                       {
+                        "enum": [
+                          "abovecanvas",
+                          "belowcanvas",
+                          "belowbutton"
+                        ],
                         "type": "string"
                       },
                       {

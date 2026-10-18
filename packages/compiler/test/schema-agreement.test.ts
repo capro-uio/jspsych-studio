@@ -216,6 +216,35 @@ describe("the validator and the spec schema agree", () => {
     );
   });
 
+  it("on a setting the plugin reads as one of a few words", () => {
+    agreeOn(
+      [
+        ["circle", true],
+        ["triangle", false],
+      ],
+      (canvas_shape) =>
+        study([{ kind: "trial", plugin: "sketchpad", params: { canvas_shape } } as never]),
+    );
+  });
+
+  it("on how many categories name a side of an implicit association test", () => {
+    agreeOn(
+      [
+        [["flowers"], true],
+        [["flowers", "good"], true],
+        [[], false],
+      ],
+      (left_category_label) =>
+        study([
+          {
+            kind: "trial",
+            plugin: "iat-html",
+            params: { stimulus: "<p>tulip</p>", stim_key_association: "left", left_category_label },
+          } as never,
+        ]),
+    );
+  });
+
   it("on the columns a study writes itself", () => {
     agreeOn(
       [["word_shown", true], ...STUDY_COLUMNS.map((column): [string, boolean] => [column, false])],

@@ -123,7 +123,7 @@ describe("validateSpec", () => {
       ],
     });
     expect(() => compileSpec(pair({ different_key: "Q" }), schemas)).toThrow(
-      /uses "q" for both same and different/,
+      /uses "q" for both same_key and different_key/,
     );
     expect(() => compileSpec(pair({}), schemas)).not.toThrow();
   });

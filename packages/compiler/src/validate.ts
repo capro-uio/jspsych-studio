@@ -24,6 +24,7 @@ import { accuracyComparison, isResponseRule, questionNames } from "./conditions.
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
+import { pluginRuleProblems } from "./plugin-rules.ts";
 import { appearanceProblems } from "./appearance.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
@@ -126,9 +127,11 @@ function answerKeyProblems(trial: TrialNode, schema: PluginSchema) {
       );
     }
   }
-  const same = key(valueOf("same_key"));
-  if (same && same === key(valueOf("different_key"))) {
-    problems.push(`uses "${String(valueOf("same_key"))}" for both same and different`);
+  for (const [first, second] of schema.distinctKeys ?? []) {
+    const shared = key(valueOf(first));
+    if (shared && shared === key(valueOf(second))) {
+      problems.push(`uses "${String(valueOf(first))}" for both ${first} and ${second}`);
+    }
   }
   return problems;
 }
@@ -139,9 +142,13 @@ function listLengthProblem(value: ParameterValue, parameter: ParameterSchema) {
   if (!Array.isArray(value)) return null;
   const { minItems = 0, maxItems = Infinity } = parameter;
   if (value.length >= minItems && value.length <= maxItems) return null;
-  return minItems === maxItems
-    ? `takes exactly ${minItems} entries, but the spec holds ${value.length}`
-    : `takes ${minItems} to ${maxItems} entries, but the spec holds ${value.length}`;
+  const wanted =
+    minItems === maxItems
+      ? `exactly ${minItems}`
+      : maxItems === Infinity
+        ? `at least ${minItems}`
+        : `${minItems} to ${maxItems}`;
+  return `takes ${wanted} entries, but the spec holds ${value.length}`;
 }
 
 function looksLikePath(value: string) {
@@ -239,6 +246,7 @@ function checkTrial(
     report(`${where} scores its answers itself, so it takes no scoring rule`);
   }
   for (const problem of answerKeyProblems(trial, schema)) report(`${where} ${problem}`);
+  for (const problem of pluginRuleProblems(trial)) report(`${where} ${problem}`);
   const expected = trial.score?.correct_if_response_equals;
   if (expected !== undefined && typeof expected === "object") {
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);
