@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SpecNode } from "@jspsych-studio/compiler";
+import { codeProblem, type SpecNode } from "@jspsych-studio/compiler";
 import { codeHint, codeSeed, usesCode } from "../src/lib/code.ts";
 import { editableParameters, schemas, startingParams } from "../src/lib/schemas.ts";
 
@@ -22,6 +22,27 @@ describe("codeSeed", () => {
     expect(codeSeed(parameterOf("html-keyboard-response", "stimulus"), "<p>hi</p>")).toBe(
       '"<p>hi</p>"',
     );
+  });
+
+  it("keeps the markup a bound column was wrapped in", () => {
+    const stimulus = parameterOf("html-keyboard-response", "stimulus");
+    expect(codeSeed(stimulus, { var: "word", wrap: "<p class='big'>{}</p>" })).toBe(
+      `"<p class='big'>{}</p>".replace("{}", () => jsPsych.evaluateTimelineVariable("word"))`,
+    );
+  });
+
+  it("does not write a value holding code of its own as text", () => {
+    const stimuli = parameterOf("psychophysics", "stimuli");
+    const value = [{ obj_type: "circle", change_attr: { code: "() => {}" } }];
+    expect(codeSeed(stimuli, value)).not.toContain("change_attr");
+  });
+
+  it("starts every function from code that the compiler accepts", () => {
+    for (const schema of Object.values(schemas.plugins)) {
+      for (const [name, parameter] of Object.entries(schema.properties)) {
+        expect(codeProblem(codeSeed(parameter, undefined)), `${schema.plugin}.${name}`).toBeNull();
+      }
+    }
   });
 
   it("reads the column a parameter was bound to", () => {

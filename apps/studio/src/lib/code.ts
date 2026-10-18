@@ -20,9 +20,12 @@ export function codeSeed(parameter: ParameterSchema, current: ParameterValue | u
   if (example) return example.code;
   if (takesFunction(parameter.jspsychType)) return BLANK_FUNCTION;
   if (current !== undefined && isVariableReference(current)) {
-    return `jsPsych.evaluateTimelineVariable(${JSON.stringify(current.var)})`;
+    const read = `jsPsych.evaluateTimelineVariable(${JSON.stringify(current.var)})`;
+    return current.wrap ? `${JSON.stringify(current.wrap)}.replace("{}", () => ${read})` : read;
   }
-  return JSON.stringify(current ?? parameter.default ?? "");
+  // A value holding code of its own, such as a canvas object's motion, would lose it as text.
+  const start = containsCode(current) ? undefined : current;
+  return JSON.stringify(start ?? parameter.default ?? "");
 }
 
 /** What an author is told about the code a parameter holds. */

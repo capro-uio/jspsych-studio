@@ -44,6 +44,7 @@
           code={isCode(current) ? current.code : ""}
           label={`${name} code`}
           hint={codeHint(field)}
+          id={`${testId}-${name}`}
           testId={`${testId}-${name}`}
           onchange={(next: string) => update(name, next.trim() ? { code: next } : "")}
         />

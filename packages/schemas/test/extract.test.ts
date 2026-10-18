@@ -129,6 +129,11 @@ describe("functionSource", () => {
     expect(functionSource(() => true)).toBe("() => true");
   });
 
+  it("re-indents a body indented with tabs", () => {
+    const fn = { toString: () => "function(a) {\n\t\treturn a;\n\t}" };
+    expect(functionSource(fn as unknown as () => unknown)).toBe("function(a) {\n\treturn a;\n}");
+  });
+
   it("re-indents a body written deeper in its file", () => {
     const fn = { toString: () => "function(a) {\n        return a;\n      }" };
     expect(functionSource(fn as unknown as () => unknown)).toBe("function(a) {\n  return a;\n}");

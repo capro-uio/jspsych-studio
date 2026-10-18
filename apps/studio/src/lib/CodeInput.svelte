@@ -3,13 +3,14 @@
 
   interface Props {
     code: string;
+    id: string;
     label: string;
     hint: string;
     testId: string;
     onchange: (code: string) => void;
   }
 
-  const { code, label, hint, testId, onchange }: Props = $props();
+  const { code, id, label, hint, testId, onchange }: Props = $props();
 
   // The draft follows the saved code, and is saved when the author leaves the box, so a half-typed
   // expression does not rebuild the preview on every key.
@@ -20,6 +21,7 @@
 
 <div class="code">
   <textarea
+    {id}
     data-testid={testId}
     aria-label={label}
     aria-invalid={problem !== null}

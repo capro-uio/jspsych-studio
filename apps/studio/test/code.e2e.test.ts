@@ -53,4 +53,30 @@ describe("writing code for a parameter", () => {
     expect(await page.getByTestId("code-stimulus").getAttribute("aria-invalid")).toBe("true");
     await page.close();
   }, 120_000);
+
+  it("offers a function parameter as code only, starting from the plugin's own", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+    await page.getByTestId("node-0").click();
+    await page.getByTestId("trial-plugin").selectOption("html-button-response");
+    await page.getByTestId("toggle-parameters").click();
+
+    const mode = page.getByTestId("mode-button_html");
+    const offered = await mode
+      .locator("option")
+      .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value));
+    expect(offered).toEqual(["unset", "code"]);
+
+    await mode.selectOption("code");
+    expect(await page.getByTestId("code-button_html").inputValue()).toMatch(
+      /^function\(choice, choice_index\) \{\n {2}return `<button class="jspsych-btn">/,
+    );
+
+    await page.locator(`label[for="param-button_html"]`).click();
+    expect(
+      await page.getByTestId("code-button_html").evaluate((el) => el === document.activeElement),
+    ).toBe(true);
+    await page.close();
+  }, 120_000);
 });

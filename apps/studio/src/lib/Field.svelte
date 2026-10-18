@@ -28,7 +28,10 @@
   const isBound = $derived(value !== undefined && isVariableReference(value));
   // A parameter that takes a function can only be given one as code.
   const isFunction = $derived(takesFunction(parameter.jspsychType));
-  const code = $derived(isCode(value) ? value.code : null);
+  // A function parameter holding anything but code is shown as code to be written, not as a value.
+  const code = $derived(
+    isCode(value) ? value.code : isFunction && value !== undefined && value !== null ? "" : null,
+  );
   const boundValue = $derived(isBound ? (value as { var: string; wrap?: string }) : null);
   const multiline = $derived(parameter.jspsychType === "HTML_STRING");
 
@@ -51,7 +54,13 @@
   }
 
   const mode = $derived(
-    value === undefined ? "unset" : code !== null ? "code" : isBound ? "column" : "fixed",
+    value === undefined || (isFunction && value === null)
+      ? "unset"
+      : code !== null
+        ? "code"
+        : isBound
+          ? "column"
+          : "fixed",
   );
 </script>
 
@@ -81,8 +90,9 @@
         {code}
         label={`${name} code`}
         hint={codeHint(parameter)}
+        id={`param-${name}`}
         testId={`code-${name}`}
-        onchange={(next: string) => onchange({ code: next })}
+        onchange={(next: string) => onchange(next.trim() ? { code: next } : undefined)}
       />
     </div>
   {:else if mode === "column" && boundValue}
