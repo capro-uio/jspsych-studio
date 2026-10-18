@@ -70,6 +70,12 @@ describe("validateSpec", () => {
     );
   });
 
+  it("names the step the way the builder does, and the plugin the way the spec does", () => {
+    expect(() => compileSpec(trial({ choices: ["f"] }), schemas)).toThrow(
+      'step "Text, answered with a key" (html-keyboard-response) requires parameter "stimulus"',
+    );
+  });
+
   it("rejects a parameter the plugin does not have", () => {
     expect(() => compileSpec(trial({ stimulus: "hi", stimulsu: 1 }), schemas)).toThrow(
       /no parameter "stimulsu"/,
