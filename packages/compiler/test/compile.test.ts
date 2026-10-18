@@ -76,6 +76,88 @@ describe("validateSpec", () => {
     );
   });
 
+  it("rejects a scoring rule on a step that scores its answers itself", () => {
+    const sorting: Spec = {
+      name: "sorting",
+      timeline: [
+        {
+          kind: "trial",
+          plugin: "categorize-html",
+          params: { stimulus: "<p>a</p>", key_answer: "f" },
+          score: { correct_if_response_equals: "f" },
+        },
+      ],
+    };
+    expect(() => compileSpec(sorting, schemas)).toThrow(
+      /scores its answers itself, so it takes no scoring rule/,
+    );
+  });
+
+  const sorting = (params: Record<string, unknown>, plugin = "categorize-html"): Spec => ({
+    name: "sorting",
+    timeline: [{ kind: "trial", plugin, params: { stimulus: "<p>a</p>", ...params } }],
+  });
+
+  it("rejects a right answer no participant can press", () => {
+    expect(() => compileSpec(sorting({ key_answer: "f", choices: ["a", "l"] }), schemas)).toThrow(
+      /takes "f" as the right answer, but only "a", "l" can be pressed/,
+    );
+  });
+
+  it("accepts a right answer among the keys, whatever its case, or with every key allowed", () => {
+    expect(() =>
+      compileSpec(sorting({ key_answer: "F", choices: ["f", "j"] }), schemas),
+    ).not.toThrow();
+    expect(() => compileSpec(sorting({ key_answer: "f" }), schemas)).not.toThrow();
+  });
+
+  it("rejects one key for both same and different, counting the plugin's own defaults", () => {
+    const pair = (params: Record<string, unknown>): Spec => ({
+      name: "pair",
+      timeline: [
+        {
+          kind: "trial",
+          plugin: "same-different-html",
+          params: { stimuli: ["<p>A</p>", "<p>A</p>"], answer: "same", ...params },
+        },
+      ],
+    });
+    expect(() => compileSpec(pair({ different_key: "Q" }), schemas)).toThrow(
+      /uses "q" for both same and different/,
+    );
+    expect(() => compileSpec(pair({}), schemas)).not.toThrow();
+  });
+
+  it.each([[["<p>A</p>"]], [["<p>A</p>", "<p>B</p>", "<p>C</p>"]]])(
+    "rejects a same/different pair that is not a pair: %j",
+    (stimuli) => {
+      const pair: Spec = {
+        name: "pair",
+        timeline: [
+          { kind: "trial", plugin: "same-different-html", params: { stimuli, answer: "same" } },
+        ],
+      };
+      expect(() => compileSpec(pair, schemas)).toThrow(
+        /parameter "stimuli" takes exactly 2 entries/,
+      );
+    },
+  );
+
+  it("rejects a pair of images that is not a pair", () => {
+    const pair: Spec = {
+      name: "pair",
+      assets: [{ name: "a.png", url: "data:image/png;base64,AA==" }],
+      timeline: [
+        {
+          kind: "trial",
+          plugin: "same-different-image",
+          params: { stimuli: ["a.png"], answer: "same" },
+        },
+      ],
+    };
+    expect(() => compileSpec(pair, schemas)).toThrow(/parameter "stimuli" takes exactly 2 entries/);
+  });
+
   it("rejects a parameter the plugin does not have", () => {
     expect(() => compileSpec(trial({ stimulus: "hi", stimulsu: 1 }), schemas)).toThrow(
       /no parameter "stimulsu"/,

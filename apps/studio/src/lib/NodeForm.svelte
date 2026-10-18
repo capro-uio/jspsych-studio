@@ -52,6 +52,8 @@
   let showAllParameters = $state(false);
 
   const trialSchema = $derived(trial ? pluginSchema(trial.plugin) : undefined);
+  // A plugin that writes its own correct column takes no scoring rule; the validator says so too.
+  const scoresItself = $derived(trialSchema?.records.includes("correct") ?? false);
   const parameters = $derived(trial ? editableParameters(trial.plugin) : []);
   const visibleParameters = $derived(
     showAllParameters
@@ -107,6 +109,8 @@
         if (chosen === trial.plugin) return;
         trial.params = paramsForPlugin(trial.params, trial.plugin, chosen) as typeof trial.params;
         trial.plugin = chosen;
+        // A step that scores itself takes no scoring rule over its own.
+        if (pluginSchema(chosen)?.records.includes("correct")) delete trial.score;
       }}
     >
       {#each pluginChoices as group (group.label)}
@@ -163,40 +167,54 @@
     {showAllParameters ? "show only what is set" : `show all ${parameters.length} parameters`}
   </button>
 
-  {#if columns.length > 0}
+  {#if scoresItself || columns.length > 0}
     <h3>Scoring and data</h3>
-    <div class="field">
-      <label for="score-column"><span class="name">correct when response equals</span></label>
-      <select
-        id="score-column"
-        data-testid="score-column"
-        value={typeof trial.score?.correct_if_response_equals === "object"
-          ? trial.score.correct_if_response_equals.var
-          : ""}
-        onchange={(event) => setScoreColumn(event.currentTarget.value)}
-      >
-        <option value="">not scored</option>
-        {#each columns as column (column)}
-          <option value={column}>{column}</option>
-        {/each}
-      </select>
-    </div>
-    <div class="field">
-      <span class="name">record columns in the data</span>
-      <div class="checks">
-        {#each columns as column (column)}
-          <label class="check">
-            <input
-              type="checkbox"
-              data-testid={`record-${column}`}
-              checked={Boolean(trial.record?.[column])}
-              onchange={(event) => toggleRecordedColumn(column, event.currentTarget.checked)}
-            />
-            {column}
-          </label>
-        {/each}
+    {#if scoresItself}
+      <p class="help" data-testid="scores-itself">
+        This step scores its answers itself, from the right answer set above, into its own
+        <code>correct</code> column, which a loop or branch on accuracy reads.
+      </p>
+      {#if trial.score}
+        <button class="toggle" data-testid="remove-score" onclick={() => delete trial.score}>
+          remove the scoring rule this step was given
+        </button>
+      {/if}
+    {:else}
+      <div class="field">
+        <label for="score-column"><span class="name">correct when response equals</span></label>
+        <select
+          id="score-column"
+          data-testid="score-column"
+          value={typeof trial.score?.correct_if_response_equals === "object"
+            ? trial.score.correct_if_response_equals.var
+            : ""}
+          onchange={(event) => setScoreColumn(event.currentTarget.value)}
+        >
+          <option value="">not scored</option>
+          {#each columns as column (column)}
+            <option value={column}>{column}</option>
+          {/each}
+        </select>
       </div>
-    </div>
+    {/if}
+    {#if columns.length > 0}
+      <div class="field">
+        <span class="name">record columns in the data</span>
+        <div class="checks">
+          {#each columns as column (column)}
+            <label class="check">
+              <input
+                type="checkbox"
+                data-testid={`record-${column}`}
+                checked={Boolean(trial.record?.[column])}
+                onchange={(event) => toggleRecordedColumn(column, event.currentTarget.checked)}
+              />
+              {column}
+            </label>
+          {/each}
+        </div>
+      </div>
+    {/if}
   {/if}
 {:else if block}
   <h2>Block</h2>

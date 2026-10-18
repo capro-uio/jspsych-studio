@@ -1,4 +1,9 @@
-import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/schemas";
+import type {
+  ParameterSchema,
+  PluginSchema,
+  PluginSchemas,
+  Variants,
+} from "@jspsych-studio/schemas";
 import type {
   Asset,
   AccuracyRule,
@@ -105,6 +110,40 @@ function codeSlotProblem(value: ParameterValue): string | null {
   return problem ? `holds code that ${problem}` : null;
 }
 
+// A step that scores itself compares the key pressed with its right answer, so an answer no
+// participant can press makes every trial wrong, and a loop on accuracy repeat for ever. Only
+// keys written out are checked; one read from a column or computed is known only at run time.
+function answerKeyProblems(trial: TrialNode, schema: PluginSchema) {
+  const valueOf = (name: string) => trial.params?.[name] ?? schema.properties[name]?.default;
+  const key = (value: unknown) => (typeof value === "string" ? value.toLowerCase() : null);
+  const problems: string[] = [];
+  const answer = key(valueOf("key_answer"));
+  const choices = valueOf("choices");
+  if (answer && Array.isArray(choices) && choices.every((choice) => typeof choice === "string")) {
+    if (!choices.some((choice) => key(choice) === answer)) {
+      problems.push(
+        `takes "${String(valueOf("key_answer"))}" as the right answer, but only ${choices.map((choice) => `"${choice}"`).join(", ")} can be pressed`,
+      );
+    }
+  }
+  const same = key(valueOf("same_key"));
+  if (same && same === key(valueOf("different_key"))) {
+    problems.push(`uses "${String(valueOf("same_key"))}" for both same and different`);
+  }
+  return problems;
+}
+
+// A plugin that reads a fixed number of entries, such as a same/different pair, shows nothing
+// useful for one fewer and ignores the rest.
+function listLengthProblem(value: ParameterValue, parameter: ParameterSchema) {
+  if (!Array.isArray(value)) return null;
+  const { minItems = 0, maxItems = Infinity } = parameter;
+  if (value.length >= minItems && value.length <= maxItems) return null;
+  return minItems === maxItems
+    ? `takes exactly ${minItems} entries, but the spec holds ${value.length}`
+    : `takes ${minItems} to ${maxItems} entries, but the spec holds ${value.length}`;
+}
+
 function looksLikePath(value: string) {
   return value.includes("/") || value.includes(":");
 }
@@ -148,6 +187,8 @@ function checkTrial(
     } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
     } else if (kind) {
+      const lengthProblem = listLengthProblem(value, parameter);
+      if (lengthProblem) report(`${where}, parameter "${name}" ${lengthProblem}`);
       if (parameter.type === "array" && !Array.isArray(value)) {
         report(
           `${where}, parameter "${name}" expects a list of files, but the spec holds ${JSON.stringify(value)}`,
@@ -175,6 +216,8 @@ function checkTrial(
           `${where}, parameter "${name}" ${problem} but the spec holds ${JSON.stringify(value)}`,
         );
       }
+      const lengthProblem = listLengthProblem(value, parameter);
+      if (lengthProblem) report(`${where}, parameter "${name}" ${lengthProblem}`);
     }
   }
 
@@ -190,6 +233,12 @@ function checkTrial(
     }
   }
 
+  // A plugin that writes its own correct column, from its key_answer say, would have it written
+  // over by a second rule.
+  if (trial.score && schema.records.includes("correct")) {
+    report(`${where} scores its answers itself, so it takes no scoring rule`);
+  }
+  for (const problem of answerKeyProblems(trial, schema)) report(`${where} ${problem}`);
   const expected = trial.score?.correct_if_response_equals;
   if (expected !== undefined && typeof expected === "object") {
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);

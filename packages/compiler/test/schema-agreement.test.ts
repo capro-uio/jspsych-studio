@@ -175,6 +175,47 @@ describe("the validator and the spec schema agree", () => {
     },
   );
 
+  it("on a scoring rule, which a step that scores itself does not take", () => {
+    const scored = (plugin: string) =>
+      study([
+        {
+          kind: "trial",
+          plugin,
+          params: {
+            stimulus: "<p>a</p>",
+            ...(plugin === "categorize-html" && { key_answer: "f" }),
+          },
+          score: { correct_if_response_equals: "f" },
+        } as never,
+      ]);
+    expect([
+      schemaAccepts(scored("categorize-html")),
+      validatorAccepts(scored("categorize-html")),
+    ]).toEqual([false, false]);
+    expect([
+      schemaAccepts(scored("html-keyboard-response")),
+      validatorAccepts(scored("html-keyboard-response")),
+    ]).toEqual([true, true]);
+  });
+
+  it("on how many stimuli a same/different pair takes", () => {
+    agreeOn(
+      [
+        [["<p>A</p>", "<p>A</p>"], true],
+        [["<p>A</p>"], false],
+        [["<p>A</p>", "<p>A</p>", "<p>A</p>"], false],
+      ],
+      (stimuli) =>
+        study([
+          {
+            kind: "trial",
+            plugin: "same-different-html",
+            params: { stimuli, answer: "same" },
+          } as never,
+        ]),
+    );
+  });
+
   it("on the columns a study writes itself", () => {
     agreeOn(
       [["word_shown", true], ...STUDY_COLUMNS.map((column): [string, boolean] => [column, false])],

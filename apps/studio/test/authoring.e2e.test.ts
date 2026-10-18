@@ -516,6 +516,39 @@ describe("a slider step", () => {
   }, 180_000);
 });
 
+describe("a step that scores itself", () => {
+  it("arrives ready to run and says it needs no scoring rule", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "categorize-html", "slot-0");
+
+    expect(await page.getByTestId("scores-itself").count()).toBe(1);
+    expect(await page.getByTestId("score-column").count()).toBe(0);
+    expect(await page.getByTestId("step-problems").count()).toBe(0);
+    await page.close();
+  }, 180_000);
+
+  it("drops the scoring rule a step had when it becomes one that scores itself", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-flanker").click();
+    const practice = async () => {
+      const loop = stepOfKind((await authoredSpec(page)).timeline[1], "loop");
+      const block = stepOfKind(loop.children[0], "block");
+      return stepOfKind(block.children[1], "trial");
+    };
+    await page.getByTestId("view-spec").click();
+    expect((await practice()).score).toBeDefined();
+
+    await page.getByTestId("node-1-0-1").click();
+    await page.getByTestId("trial-plugin").selectOption("categorize-html");
+    expect(await page.getByTestId("scores-itself").count()).toBe(1);
+    await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
+    expect((await practice()).score).toBeUndefined();
+    await page.close();
+  }, 180_000);
+});
+
 describe("a canvas step", () => {
   it("offers each shape its own fields and draws it in the preview", async () => {
     const page = await browser.newPage();

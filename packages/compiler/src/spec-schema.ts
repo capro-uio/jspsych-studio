@@ -26,7 +26,16 @@ const KEY_LIST_KEYWORDS = ["ALL_KEYS", "NO_KEYS"];
 
 const RECIPE_SUPPLIED_PARAMETERS = ["data", "on_finish"];
 
-const CARRIED_KEYS = ["title", "description", "default", "examples", "enum", "format"] as const;
+const CARRIED_KEYS = [
+  "title",
+  "description",
+  "default",
+  "examples",
+  "enum",
+  "format",
+  "minItems",
+  "maxItems",
+] as const;
 
 // Documentation only. `enum` and `format` stay on the literal branch, because a parameter fed
 // from a conditions column holds a `{ var }` object that no enum of literals admits.
@@ -292,7 +301,13 @@ function trialDefinition(schemas: PluginSchemas): JsonSchema {
     ...trial,
     allOf: plugins.map((plugin) => ({
       if: { properties: { plugin: { const: plugin } }, required: ["plugin"] },
-      then: { properties: { params: pluginParameters(schemas[plugin]) } },
+      then: {
+        properties: { params: pluginParameters(schemas[plugin]) },
+        // A plugin that writes its own correct column takes no scoring rule over it.
+        ...(schemas[plugin].records.includes("correct") && {
+          not: { title: "This step scores its answers itself.", required: ["score"] },
+        }),
+      },
     })),
   };
 }

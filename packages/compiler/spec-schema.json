@@ -236,6 +236,9 @@
             "audio-keyboard-response",
             "audio-slider-response",
             "call-function",
+            "categorize-animation",
+            "categorize-html",
+            "categorize-image",
             "fullscreen",
             "html-button-response",
             "html-keyboard-response",
@@ -246,6 +249,8 @@
             "instructions",
             "preload",
             "psychophysics",
+            "same-different-html",
+            "same-different-image",
             "survey-likert",
             "survey-multi-choice",
             "survey-multi-select",
@@ -1006,6 +1011,834 @@
                 ],
                 "additionalProperties": false
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "categorize-animation"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "Each element of the array is a path to an image file.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "asset-image",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_answer": {
+                    "title": "key answer",
+                    "description": "The key character indicating the correct response.",
+                    "examples": [
+                      "f"
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "text_answer": {
+                    "title": "text answer",
+                    "description": "A text label that describes the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correct_text": {
+                    "title": "correct text",
+                    "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+                    "default": "Correct.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "incorrect_text": {
+                    "title": "incorrect text",
+                    "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+                    "default": "Wrong.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "frame_time": {
+                    "title": "frame time",
+                    "description": "How long to display each image (in milliseconds).",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "sequence_reps": {
+                    "title": "sequence reps",
+                    "description": "How many times to show the entire sequence.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "allow_response_before_complete": {
+                    "title": "allow response before complete",
+                    "description": "If true, the participant can respond before the animation sequence finishes.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "feedback_duration": {
+                    "title": "feedback duration",
+                    "description": "How long to show the feedback (milliseconds).",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus or the end of the animation depending on the allow_response_before_complete parameter. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "render_on_canvas": {
+                    "title": "render on canvas",
+                    "description": "If true, the images will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive images in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli",
+                  "key_answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "categorize-html"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML stimulus to display.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_answer": {
+                    "title": "key answer",
+                    "description": "The key character indicating the correct response.",
+                    "examples": [
+                      "f"
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "text_answer": {
+                    "title": "text answer",
+                    "description": "A label that is associated with the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correct_text": {
+                    "title": "correct text",
+                    "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the `%ANS%` string (see example below).",
+                    "default": "<p class='feedback'>Correct</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "incorrect_text": {
+                    "title": "incorrect text",
+                    "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the `%ANS%` string (see example below).",
+                    "default": "<p class='feedback'>Incorrect</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "force_correct_button_press": {
+                    "title": "force correct button press",
+                    "description": "If set to true, then the participant must press the correct response key after feedback is given in order to advance to the next trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_stim_with_feedback": {
+                    "title": "show stim with feedback",
+                    "description": "If set to true, then the stimulus will be shown during feedback. If false, then only the text feedback will display during feedback.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_feedback_on_timeout": {
+                    "title": "show feedback on timeout",
+                    "description": "If true, then category feedback will be displayed for an incorrect response after a timeout (trial_duration is exceeded). If false, then a timeout message will be shown.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "timeout_message": {
+                    "title": "timeout message",
+                    "description": "The message to show on a timeout non-response.",
+                    "default": "<p>Please respond faster.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to show the stimulus for (milliseconds). If null, then the stimulus is shown until a response is given.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "The maximum time allowed for a response. If null, then the experiment will wait indefinitely for a response.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "feedback_duration": {
+                    "title": "feedback duration",
+                    "description": "How long to show the feedback for (milliseconds).",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "key_answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "categorize-image"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The path to the image file.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_answer": {
+                    "title": "key answer",
+                    "description": "The key character indicating the correct response.",
+                    "examples": [
+                      "f"
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "text_answer": {
+                    "title": "text answer",
+                    "description": "A label that is associated with the correct answer. Used in conjunction with the `correct_text` and `incorrect_text` parameters.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "correct_text": {
+                    "title": "correct text",
+                    "description": "String to show when the correct answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+                    "default": "<p class='feedback'>Correct</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "incorrect_text": {
+                    "title": "incorrect text",
+                    "description": "String to show when the wrong answer is given. Can contain HTML formatting. The special string `%ANS%` can be used within the string. If present, the plugin will put the `text_answer` for the trial in place of the %ANS% string (see example below).",
+                    "default": "<p class='feedback'>Wrong</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "force_correct_button_press": {
+                    "title": "force correct button press",
+                    "description": "If set to true, then the participant must press the correct response key after feedback is given in order to advance to the next trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_stim_with_feedback": {
+                    "title": "show stim with feedback",
+                    "description": "If set to true, then the stimulus will be shown during feedback. If false, then only the text feedback will display during feedback.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_feedback_on_timeout": {
+                    "title": "show feedback on timeout",
+                    "description": "If true, then category feedback will be displayed for an incorrect response after a timeout (trial_duration is exceeded). If false, then a timeout message will be shown.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "timeout_message": {
+                    "title": "timeout message",
+                    "description": "The message to show on a timeout non-response.",
+                    "default": "<p>Please respond faster.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to show the stimulus for (milliseconds). If null, then the stimulus is shown until a response is given.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "The maximum time allowed for a response. If null, then the experiment will wait indefinitely for a response.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "feedback_duration": {
+                    "title": "feedback duration",
+                    "description": "How long to show the feedback for (milliseconds).",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "key_answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -4605,6 +5438,364 @@
                 ],
                 "additionalProperties": false
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "same-different-html"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. A stimulus is a string containing valid HTML markup. Stimuli will be shown in the order that they are defined in the array.",
+                    "examples": [
+                      [
+                        "<p>A</p>",
+                        "<p>A</p>"
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "format": "html",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "answer": {
+                    "title": "answer",
+                    "description": "Correct answer: either \"same\" or \"different\".",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "same",
+                          "different"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "same_key": {
+                    "title": "same key",
+                    "description": "The key that subjects should press to indicate that the two stimuli are the same.",
+                    "default": "q",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "different_key": {
+                    "title": "different key",
+                    "description": "The key that subjects should press to indicate that the two stimuli are different.",
+                    "default": "p",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "first_stim_duration": {
+                    "title": "first stim duration",
+                    "description": "How long to show the first stimulus for in milliseconds. If the value of this parameter is null then the stimulus will be shown until the participant presses any key.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "gap_duration": {
+                    "title": "gap duration",
+                    "description": "How long to show a blank screen in between the two stimuli.",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "second_stim_duration": {
+                    "title": "Second stimulus duration",
+                    "description": "How long to show the second stimulus for in milliseconds. If null, then the stimulus will remain on the screen until a valid response is made.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli",
+                  "answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "same-different-image"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "A pair of stimuli, represented as an array with two entries, one for each stimulus. The stimulus is a path to an image file. Stimuli will be shown in the order that they are defined in the array.",
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "format": "asset-image",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "answer": {
+                    "title": "answer",
+                    "description": "Either `'same'` or `'different'`.",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "same",
+                          "different"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "same_key": {
+                    "title": "same key",
+                    "description": "The key that subjects should press to indicate that the two stimuli are the same.",
+                    "default": "q",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "different_key": {
+                    "title": "different key",
+                    "description": "The key that subjects should press to indicate that the two stimuli are different.",
+                    "default": "p",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "first_stim_duration": {
+                    "title": "first stim duration",
+                    "description": "How long to show the first stimulus for in milliseconds. If the value of this parameter is null then the stimulus will be shown until the participant presses any key.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "gap_duration": {
+                    "title": "gap duration",
+                    "description": "How long to show a blank screen in between the two stimuli",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "second_stim_duration": {
+                    "title": "second stim duration",
+                    "description": "How long to show the second stimulus for in milliseconds. If null, then the stimulus will remain on the screen until a valid response is made.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli",
+                  "answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
