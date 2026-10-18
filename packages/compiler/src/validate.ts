@@ -15,6 +15,7 @@ import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts
 import { accuracyComparison, isResponseRule } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
+import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
 export interface Problem {
@@ -72,6 +73,32 @@ function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
   return null;
 }
 
+// Code is compiled only where it stands for a whole parameter or a whole field of a list entry;
+// anywhere deeper it would reach the plugin as an object holding text.
+function isCodeSlot(value: ParameterValue, parameter: ParameterSchema) {
+  return (
+    isCode(value) ||
+    takesFunction(parameter.jspsychType) ||
+    (!parameter.items?.properties && containsCode(value))
+  );
+}
+
+// A function parameter compiled from a plain string would hand the plugin text where it calls a
+// function, which fails only once a participant reaches the trial.
+function codeSlotProblem(value: ParameterValue): string | null {
+  if (!isCode(value)) {
+    return containsCode(value)
+      ? "holds code inside it, but only a whole parameter or a whole field of a list entry can be code"
+      : `takes a function, written as code ({ "code": "..." }), but the spec holds ${JSON.stringify(value)}`;
+  }
+  const extra = Object.keys(value).filter((key) => key !== "code");
+  if (extra.length > 0) {
+    return `holds code alongside ${extra.map((key) => `"${key}"`).join(", ")}, which code does not take`;
+  }
+  const problem = codeProblem(value.code);
+  return problem ? `holds code that ${problem}` : null;
+}
+
 function looksLikePath(value: string) {
   return value.includes("/") || value.includes(":");
 }
@@ -102,7 +129,10 @@ function checkTrial(
       continue;
     }
     if (!parameter) continue;
-    if (isVariableReference(value)) {
+    if (isCodeSlot(value, parameter)) {
+      const problem = codeSlotProblem(value);
+      if (problem) report(`${where}, parameter "${name}" ${problem}`);
+    } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
     } else if (isMediaParameter(trial.plugin, name, parameter.jspsychType)) {
       checkFiles(value, assets, `${where}, parameter "${name}"`, report);
@@ -142,7 +172,9 @@ function checkTrial(
   }
   for (const [field, value] of Object.entries(trial.record ?? {})) {
     if (STUDY_COLUMNS.includes(field)) report(`${where} records "${field}", ${STUDY_COLUMN}`);
-    if (isVariableReference(value)) {
+    if (isCode(value)) {
+      report(`${where}, recorded field "${field}" holds code, but a recorded field takes a value`);
+    } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, recorded field "${field}"`, problems, path);
     }
   }
@@ -225,6 +257,9 @@ function checkObjectEntries(
       const schema = fields[name];
       if (!schema) {
         report(`${position} has no field "${name}"`);
+      } else if (isCodeSlot(field, schema)) {
+        const problem = codeSlotProblem(field);
+        if (problem) report(`${position}, field "${name}" ${problem}`);
       } else if (isVariableReference(field)) {
         checkColumn(
           field.var,

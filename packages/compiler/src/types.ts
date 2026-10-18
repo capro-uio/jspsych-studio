@@ -3,7 +3,18 @@ export interface VariableReference {
   wrap?: string;
 }
 
-export type ParameterValue = VariableReference | string | number | boolean | null | unknown[];
+/**
+ * A JavaScript expression written by the author. For a parameter that takes a function it is the
+ * function itself; for any other it is worked out when the trial starts.
+ */
+export interface CodeValue {
+  code: string;
+}
+
+/** A value written into the data file: fixed, or read from a conditions column. */
+export type RecordedValue = VariableReference | string | number | boolean | null | unknown[];
+
+export type ParameterValue = RecordedValue | CodeValue;
 
 export interface CorrectIfRule {
   correct_if_response_equals: VariableReference | string | number;
@@ -31,7 +42,7 @@ export interface TrialNode {
   plugin: string;
   tag?: string;
   params?: Record<string, ParameterValue>;
-  record?: Record<string, ParameterValue>;
+  record?: Record<string, RecordedValue>;
   score?: CorrectIfRule;
 }
 
