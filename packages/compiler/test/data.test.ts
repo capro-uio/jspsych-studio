@@ -99,7 +99,8 @@ describe("recruiting from a platform", () => {
   });
 
   it("keeps the platform's id parameter under its own name", () => {
-    expect(reservedLinkColumns(recruited({ id_param: "PROLIFIC_PID" }))).not.toContain(
+    const spec = recruited({ id_param: "PROLIFIC_PID" });
+    expect(reservedLinkColumns(spec, compileSpec(spec, schemas).columns)).not.toContain(
       "PROLIFIC_PID",
     );
   });
@@ -256,10 +257,10 @@ describe("link parameters named like the study's own columns", () => {
   };
 
   it("moves every column the spec writes out of the way", () => {
-    expect(reservedLinkColumns(scored)).toEqual(
+    expect(reservedLinkColumns(scored, compileSpec(scored, schemas).columns)).toEqual(
       expect.arrayContaining([
         ...["correct", "tag", "response", "rt", "congruency", "arm", "checkpoint"],
-        ...["experiment", "trial_index"],
+        ...["experiment", "trial_index", "stimulus", "rt_key_duration", "value"],
       ]),
     );
     expect(compileSpec(scored, schemas).source).toContain('"congruency"');

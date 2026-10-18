@@ -213,4 +213,6 @@ export interface CompileResult {
   /** jsPsych release and npm package name + version per plugin, so exports can pin exactly. */
   jspsych: string;
   packages: Record<string, { name: string; version: string }>;
+  /** Every column the experiment's data will have, from its plugins and its own additions. */
+  columns: string[];
 }

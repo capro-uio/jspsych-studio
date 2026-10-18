@@ -63,6 +63,7 @@ describe("lists of choices", () => {
         summary: "Picks colours.",
         family: "ask" as const,
         package: "pick",
+        records: ["response"],
         version: "1.0.0",
         required: [],
         properties: {

@@ -64,6 +64,8 @@ export interface PluginSchema {
   version: string;
   properties: Record<string, ParameterSchema>;
   required: string[];
+  /** The columns the plugin writes into each row of data it records, as its info declares. */
+  records: string[];
 }
 
 export type PluginSchemas = Record<string, PluginSchema>;

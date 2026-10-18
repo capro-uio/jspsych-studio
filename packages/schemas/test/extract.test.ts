@@ -79,6 +79,15 @@ describe("extractSchemas", () => {
     ]);
   });
 
+  it("lists the columns each plugin writes into its data", () => {
+    expect(report.schemas["html-slider-response"].records).toEqual(
+      expect.arrayContaining(["response", "rt", "stimulus", "slider_start"]),
+    );
+    for (const schema of Object.values(report.schemas)) {
+      expect(schema.records.length, schema.plugin).toBeGreaterThan(0);
+    }
+  });
+
   it("falls back to the help text a plugin declares in its own info", () => {
     const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
     expect(canvasWidth.description).toMatch(/width/i);
