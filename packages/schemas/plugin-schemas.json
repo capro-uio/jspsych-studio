@@ -81,6 +81,123 @@
         "stimulus"
       ]
     },
+    "audio-slider-response": {
+      "plugin": "audio-slider-response",
+      "title": "Sound, answered on a slider",
+      "summary": "Plays a sound and records where on a scale the participant sets a slider.",
+      "family": "show",
+      "package": "@jspsych/plugin-audio-slider-response",
+      "version": "2.1.1",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-audio",
+          "jspsychType": "AUDIO",
+          "title": "stimulus",
+          "description": "Audio file to be played."
+        },
+        "min": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "min",
+          "description": "Sets the minimum value of the slider.",
+          "default": 0
+        },
+        "max": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "max",
+          "description": "Sets the maximum value of the slider",
+          "default": 100
+        },
+        "slider_start": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider start",
+          "description": "Sets the starting value of the slider",
+          "default": 50
+        },
+        "step": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "step",
+          "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+          "default": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "html",
+            "jspsychType": "HTML_STRING"
+          },
+          "jspsychType": "HTML_STRING",
+          "title": "labels",
+          "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+          "default": []
+        },
+        "slider_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider width",
+          "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label of the button to end the trial.",
+          "default": "Continue"
+        },
+        "require_movement": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "require movement",
+          "description": "If true, the participant must move the slider before clicking the continue button.",
+          "default": false
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to listen to the stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "trial_ends_after_audio": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "trial ends after audio",
+          "description": "If true, then the trial will end as soon as the audio file finishes playing.",
+          "default": false
+        },
+        "response_allowed_while_playing": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response allowed while playing",
+          "description": "If true, then responses are allowed while the audio is playing. If false, then the audio must finish playing before the slider is enabled and the trial can end via the next button click. Once the audio has played all the way through, the slider is enabled and a response is allowed (including while the audio is being re-played via on-screen playback controls).",
+          "default": true
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
     "call-function": {
       "plugin": "call-function",
       "title": "Run a function",
@@ -315,6 +432,116 @@
         "stimulus"
       ]
     },
+    "html-slider-response": {
+      "plugin": "html-slider-response",
+      "title": "Text, answered on a slider",
+      "summary": "Shows text or HTML and records where on a scale the participant sets a slider.",
+      "family": "show",
+      "package": "@jspsych/plugin-html-slider-response",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "stimulus",
+          "description": "The HTML string to be displayed"
+        },
+        "min": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "min",
+          "description": "Sets the minimum value of the slider.",
+          "default": 0
+        },
+        "max": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "max",
+          "description": "Sets the maximum value of the slider",
+          "default": 100
+        },
+        "slider_start": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider start",
+          "description": "Sets the starting value of the slider",
+          "default": 50
+        },
+        "step": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "step",
+          "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+          "default": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "html",
+            "jspsychType": "HTML_STRING"
+          },
+          "jspsychType": "HTML_STRING",
+          "title": "labels",
+          "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+          "default": []
+        },
+        "slider_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider width",
+          "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label of the button to end the trial.",
+          "default": "Continue"
+        },
+        "require_movement": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "require movement",
+          "description": "If true, the participant must move the slider before clicking the continue button.",
+          "default": false
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
     "image-button-response": {
       "plugin": "image-button-response",
       "title": "Image, answered with buttons",
@@ -532,6 +759,143 @@
           "title": "wait for key release",
           "description": "If true, the response is not registered until the participant releases the key. The response time (`rt`) still reflects when the key was pressed, and the additional data field `rt_key_duration` records how long the key was held down. Note that when this is true, the trial cannot end until the key is released: with `response_ends_trial: true` the trial ends at the key release, and if the trial ends for another reason (e.g., `trial_duration`) while the key is still held, no response is recorded for the trial.",
           "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ]
+    },
+    "image-slider-response": {
+      "plugin": "image-slider-response",
+      "title": "Image, answered on a slider",
+      "summary": "Shows an image and records where on a scale the participant sets a slider.",
+      "family": "show",
+      "package": "@jspsych/plugin-image-slider-response",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "stimulus",
+          "description": "The path to the image file to be displayed."
+        },
+        "stimulus_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus height",
+          "description": "Set the height of the image in pixels. If left null (no value specified), then the image will display at its natural height.",
+          "default": null
+        },
+        "stimulus_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus width",
+          "description": "Set the width of the image in pixels. If left null (no value specified), then the image will display at its natural width.",
+          "default": null
+        },
+        "maintain_aspect_ratio": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "maintain aspect ratio",
+          "description": "If setting *only* the width or *only* the height and this parameter is true, then the other dimension will be scaled to maintain the image's aspect ratio.",
+          "default": true
+        },
+        "min": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "min",
+          "description": "Sets the minimum value of the slider.",
+          "default": 0
+        },
+        "max": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "max",
+          "description": "Sets the maximum value of the slider.",
+          "default": 100
+        },
+        "slider_start": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider start",
+          "description": "Sets the starting value of the slider.",
+          "default": 50
+        },
+        "step": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "step",
+          "description": "Sets the step of the slider.",
+          "default": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING"
+          },
+          "jspsychType": "STRING",
+          "title": "labels",
+          "description": "abels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+          "default": []
+        },
+        "slider_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider width",
+          "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label of the button to advance/submit.",
+          "default": "Continue"
+        },
+        "require_movement": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "require movement",
+          "description": "If true, the participant must move the slider before clicking the continue button.",
+          "default": false
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to show the stimulus for in milliseconds. If the value is null, then the stimulus will be shown until the participant makes a response.",
+          "default": null
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "render_on_canvas": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "render on canvas",
+          "description": "If true, the image will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive image trials in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych. If the stimulus is an **animated gif**, you must set this parameter to false, because the canvas rendering method will only present static images.",
+          "default": true
         }
       },
       "required": [
@@ -1149,6 +1513,176 @@
       },
       "required": [
         "questions"
+      ]
+    },
+    "video-slider-response": {
+      "plugin": "video-slider-response",
+      "title": "Video, answered on a slider",
+      "summary": "Plays a video and records where on a scale the participant sets a slider.",
+      "family": "show",
+      "package": "@jspsych/plugin-video-slider-response",
+      "version": "2.1.1",
+      "properties": {
+        "stimulus": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "asset-video",
+            "jspsychType": "VIDEO"
+          },
+          "jspsychType": "VIDEO",
+          "title": "stimulus",
+          "description": "An array of file paths to the video. You can specify multiple formats of the same video (e.g., .mp4, .ogg, .webm) to maximize the [cross-browser compatibility](https://developer.mozilla.org/en-US/docs/Web/HTML/Supported_media_formats). Usually .mp4 is a safe cross-browser option. The plugin does not reliably support .mov files. The player will use the first source file in the array that is compatible with the browser, so specify the files in order of preference."
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+          "default": null
+        },
+        "width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "width",
+          "description": "The width of the video display in pixels. If `null`, the video will take the original video's dimensions, or properly scaled with the aspect ratio if the height is also specified.",
+          "default": null
+        },
+        "height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "height",
+          "description": "The height of the video display in pixels. If `null`, the video will take the original video's dimensions, or properly scaled with the aspect ratio if the width is also specified.",
+          "default": null
+        },
+        "autoplay": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "autoplay",
+          "description": "If true, the video will begin playing as soon as it has loaded.",
+          "default": true
+        },
+        "controls": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "controls",
+          "description": "If true, controls for the video player will be available to the participant. They will be able to pause the video or move the playback to any point in the video.",
+          "default": false
+        },
+        "start": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "start",
+          "description": "Time to start the clip. If null (default), video will start at the beginning of the file.",
+          "default": null
+        },
+        "stop": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "stop",
+          "description": "Time to stop the clip. If null (default), video will stop at the end of the file.",
+          "default": null
+        },
+        "rate": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "rate",
+          "description": "The playback rate of the video. 1 is normal, <1 is slower, >1 is faster.",
+          "default": 1
+        },
+        "min": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "min",
+          "description": "Sets the minimum value of the slider.",
+          "default": 0
+        },
+        "max": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "max",
+          "description": "Sets the maximum value of the slider.",
+          "default": 100
+        },
+        "slider_start": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider start",
+          "description": "Sets the starting value of the slider.",
+          "default": 50
+        },
+        "step": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "step",
+          "description": "Sets the step of the slider. This is the smallest amount by which the slider can change.",
+          "default": 1
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "html",
+            "jspsychType": "HTML_STRING"
+          },
+          "jspsychType": "HTML_STRING",
+          "title": "labels",
+          "description": "Labels displayed at equidistant locations on the slider. For example, two labels will be placed at the ends of the slider. Three labels would place two at the ends and one in the middle. Four will place two at the ends, and the other two will be at 33% and 67% of the slider width.",
+          "default": []
+        },
+        "slider_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "slider width",
+          "description": "Set the width of the slider in pixels. If left null, then the width will be equal to the widest element in the display.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label of the button to end the trial.",
+          "default": "Continue"
+        },
+        "require_movement": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "require movement",
+          "description": "If true, the participant must move the slider before clicking the continue button.",
+          "default": false
+        },
+        "trial_ends_after_video": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "trial ends after video",
+          "description": "If true, the trial will end immediately after the video finishes playing.",
+          "default": false
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as null for the trial and the trial will end. If the value of this parameter is null, then the trial will wait for a response indefinitely.",
+          "default": null
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+          "default": true
+        },
+        "response_allowed_while_playing": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response allowed while playing",
+          "description": "If true, then responses are allowed while the video is playing. If false, then the video must finish playing before the slider is enabled and the trial can end via the next button click. Once the video has played all the way through, the slider is enabled and a response is allowed (including while the video is being re-played via on-screen playback controls).",
+          "default": true
+        }
+      },
+      "required": [
+        "stimulus"
       ]
     },
     "psychophysics": {

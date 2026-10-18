@@ -44,6 +44,26 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Plays a sound and records which key is pressed, and how fast.",
     family: "show",
   },
+  "html-slider-response": {
+    title: "Text, answered on a slider",
+    summary: "Shows text or HTML and records where on a scale the participant sets a slider.",
+    family: "show",
+  },
+  "image-slider-response": {
+    title: "Image, answered on a slider",
+    summary: "Shows an image and records where on a scale the participant sets a slider.",
+    family: "show",
+  },
+  "audio-slider-response": {
+    title: "Sound, answered on a slider",
+    summary: "Plays a sound and records where on a scale the participant sets a slider.",
+    family: "show",
+  },
+  "video-slider-response": {
+    title: "Video, answered on a slider",
+    summary: "Plays a video and records where on a scale the participant sets a slider.",
+    family: "show",
+  },
   instructions: {
     title: "Instruction pages",
     summary: "Pages the participant reads, moving back and forth with keys or buttons.",
