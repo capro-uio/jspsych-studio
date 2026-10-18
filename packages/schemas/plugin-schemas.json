@@ -1,8 +1,17 @@
 {
   "jspsych": "8.3.0",
+  "families": {
+    "show": "Show something and record the response",
+    "ask": "Ask questions",
+    "canvas": "Draw on a canvas",
+    "setup": "Set up and run"
+  },
   "plugins": {
     "audio-keyboard-response": {
       "plugin": "audio-keyboard-response",
+      "title": "Sound, answered with a key",
+      "summary": "Plays a sound and records which key is pressed, and how fast.",
+      "family": "show",
       "package": "@jspsych/plugin-audio-keyboard-response",
       "version": "2.2.0",
       "properties": {
@@ -74,6 +83,9 @@
     },
     "call-function": {
       "plugin": "call-function",
+      "title": "Run a function",
+      "summary": "Runs code written for this study, with nothing shown to the participant.",
+      "family": "setup",
       "package": "@jspsych/plugin-call-function",
       "version": "2.1.0",
       "properties": {
@@ -98,6 +110,9 @@
     },
     "fullscreen": {
       "plugin": "fullscreen",
+      "title": "Switch to full screen",
+      "summary": "Asks the participant to enter, or leave, full-screen mode.",
+      "family": "setup",
       "package": "@jspsych/plugin-fullscreen",
       "version": "2.1.0",
       "properties": {
@@ -135,6 +150,9 @@
     },
     "html-button-response": {
       "plugin": "html-button-response",
+      "title": "Text, answered with buttons",
+      "summary": "Shows text or HTML and records which button is clicked, and how fast.",
+      "family": "show",
       "package": "@jspsych/plugin-html-button-response",
       "version": "2.1.0",
       "properties": {
@@ -232,6 +250,9 @@
     },
     "html-keyboard-response": {
       "plugin": "html-keyboard-response",
+      "title": "Text, answered with a key",
+      "summary": "Shows text or HTML and records which key is pressed, and how fast.",
+      "family": "show",
       "package": "@jspsych/plugin-html-keyboard-response",
       "version": "2.2.0",
       "properties": {
@@ -296,6 +317,9 @@
     },
     "image-button-response": {
       "plugin": "image-button-response",
+      "title": "Image, answered with buttons",
+      "summary": "Shows an image and records which button is clicked, and how fast.",
+      "family": "show",
       "package": "@jspsych/plugin-image-button-response",
       "version": "2.2.0",
       "properties": {
@@ -421,6 +445,9 @@
     },
     "image-keyboard-response": {
       "plugin": "image-keyboard-response",
+      "title": "Image, answered with a key",
+      "summary": "Shows an image and records which key is pressed, and how fast.",
+      "family": "show",
       "package": "@jspsych/plugin-image-keyboard-response",
       "version": "2.2.0",
       "properties": {
@@ -513,6 +540,9 @@
     },
     "instructions": {
       "plugin": "instructions",
+      "title": "Instruction pages",
+      "summary": "Pages the participant reads, moving back and forth with keys or buttons.",
+      "family": "show",
       "package": "@jspsych/plugin-instructions",
       "version": "2.1.0",
       "properties": {
@@ -611,6 +641,9 @@
     },
     "preload": {
       "plugin": "preload",
+      "title": "Load files in advance",
+      "summary": "Loads images, sounds and videos before the trials that need them.",
+      "family": "setup",
       "package": "@jspsych/plugin-preload",
       "version": "2.1.0",
       "properties": {
@@ -727,6 +760,9 @@
     },
     "survey-likert": {
       "plugin": "survey-likert",
+      "title": "Rating scale questions",
+      "summary": "One or more questions answered on a labelled scale, such as disagree to agree.",
+      "family": "ask",
       "package": "@jspsych/plugin-survey-likert",
       "version": "2.2.0",
       "properties": {
@@ -825,6 +861,9 @@
     },
     "survey-text": {
       "plugin": "survey-text",
+      "title": "Written-answer questions",
+      "summary": "One or more questions answered by typing.",
+      "family": "ask",
       "package": "@jspsych/plugin-survey-text",
       "version": "2.1.1",
       "properties": {
@@ -919,6 +958,9 @@
     },
     "psychophysics": {
       "plugin": "psychophysics",
+      "title": "Shapes on a canvas",
+      "summary": "Places shapes, text and images on a canvas, and records a key press or click.",
+      "family": "canvas",
       "package": "@kurokida/jspsych-psychophysics",
       "version": "5.1.0",
       "properties": {

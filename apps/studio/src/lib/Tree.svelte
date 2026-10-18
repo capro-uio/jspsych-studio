@@ -2,6 +2,7 @@
   import { slotsOf } from "@jspsych-studio/compiler";
   import AddStep from "./AddStep.svelte";
   import { usesCode } from "./code.ts";
+  import { pluginTitle } from "./schemas.ts";
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
   import type { SpecNode } from "@jspsych-studio/compiler";
   import Tree from "./Tree.svelte";
@@ -16,7 +17,7 @@
   const { nodes, path = [] }: Props = $props();
 
   function label(node: SpecNode) {
-    if (node.kind === "trial") return node.plugin + (node.tag ? ` · ${node.tag}` : "");
+    if (node.kind === "trial") return pluginTitle(node.plugin) + (node.tag ? ` · ${node.tag}` : "");
     if (node.kind === "block") {
       const rows = (project.spec.conditions?.[node.conditions] ?? []).length;
       const repeats = node.repetitions && node.repetitions > 1 ? ` × ${node.repetitions}` : "";

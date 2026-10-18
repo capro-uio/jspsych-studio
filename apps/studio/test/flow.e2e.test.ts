@@ -81,7 +81,7 @@ describe("the flow diagram", () => {
       "4 rows × 2 repetitions, rows in random order",
     );
     expect(await page.getByTestId("flow-repeat").count()).toBe(1);
-    expect(await page.getByRole("button", { name: /^html-keyboard-response/ }).count()).toBe(3);
+    expect(await page.getByRole("button", { name: /^Text, answered with a key/ }).count()).toBe(3);
     await page.close();
   }, 120_000);
 

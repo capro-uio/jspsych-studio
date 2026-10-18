@@ -91,7 +91,7 @@ describe("layoutFlow", () => {
   });
 
   describe("trials", () => {
-    it("names the plugin, the tag and how the response is scored", () => {
+    it("names the step by its title, the tag and how the response is scored", () => {
       const layout = layoutFlow(
         specOf([
           trial("html-keyboard-response", {
@@ -105,9 +105,9 @@ describe("layoutFlow", () => {
       );
       const scored = boxAt(layout, "node-0");
       expect(scored.shape).toBe("step");
-      expect(scored.title).toEqual(["html-keyboard-response"]);
+      expect(scored.title).toEqual(["Text, answered with a key"]);
       expect(scored.label).toBe(
-        "html-keyboard-response, tagged practice, correct when the response matches column correct_key",
+        "Text, answered with a key, tagged practice, correct when the response matches column correct_key",
       );
       expect(boxAt(layout, "node-1").label).toContain("matches 1");
     });

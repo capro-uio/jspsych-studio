@@ -1,3 +1,5 @@
+import type { PluginFamily } from "./titles.ts";
+
 export type ParameterTypeName =
   | "BOOL"
   | "STRING"
@@ -54,6 +56,10 @@ export interface Variants {
 
 export interface PluginSchema {
   plugin: string;
+  /** What an author calls the step; `plugin` stays the name the spec and jsPsych use. */
+  title: string;
+  summary: string;
+  family: PluginFamily;
   package: string;
   version: string;
   properties: Record<string, ParameterSchema>;
@@ -65,6 +71,8 @@ export type PluginSchemas = Record<string, PluginSchema>;
 export interface SchemaBundle {
   /** The jsPsych release these schemas were extracted against. */
   jspsych: string;
+  /** What each family of plugins is for, in the order a builder lists them. */
+  families: Record<PluginFamily, string>;
   plugins: PluginSchemas;
 }
 
@@ -72,5 +80,8 @@ export interface ExtractionReport {
   jspsych: string;
   schemas: PluginSchemas;
   coverage: { parameters: number; described: number; ratio: number };
+  /** Packages left out of the schemas, and why. */
   failures: { package: string; reason: string }[];
+  /** Packages extracted with something missing, such as their help text. */
+  warnings: { package: string; reason: string }[];
 }

@@ -23,7 +23,7 @@
     project,
     selectedNode,
   } from "./project.svelte.ts";
-  import { editableParameters, pluginNames, startingParams } from "./schemas.ts";
+  import { editableParameters, pluginChoices, pluginSchema, startingParams } from "./schemas.ts";
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
 
   const node = $derived(selectedNode());
@@ -47,6 +47,7 @@
 
   let showAllParameters = $state(false);
 
+  const trialSchema = $derived(trial ? pluginSchema(trial.plugin) : undefined);
   const parameters = $derived(trial ? editableParameters(trial.plugin) : []);
   const visibleParameters = $derived(
     showAllParameters
@@ -92,7 +93,7 @@
 {:else if trial}
   <h2>Trial</h2>
   <div class="field">
-    <label for="trial-plugin"><span class="name">plugin</span></label>
+    <label for="trial-plugin"><span class="name">step type</span></label>
     <select
       id="trial-plugin"
       data-testid="trial-plugin"
@@ -106,10 +107,22 @@
         trial.params = startingParams(chosen) as typeof trial.params;
       }}
     >
-      {#each pluginNames as plugin (plugin)}
-        <option value={plugin}>{plugin}</option>
+      {#each pluginChoices as group (group.label)}
+        <optgroup label={group.label}>
+          {#each group.plugins as { plugin, title } (plugin)}
+            <option value={plugin}>{title}</option>
+          {/each}
+        </optgroup>
       {/each}
     </select>
+    {#if trialSchema}
+      <p class="help plugin-summary" data-testid="plugin-summary">
+        {trialSchema.summary}
+        <span class="plugin-name" title="The jsPsych plugin that runs this step"
+          >{trial.plugin}</span
+        >
+      </p>
+    {/if}
   </div>
 
   <div class="field">
@@ -567,5 +580,16 @@
   .empty,
   .help {
     color: var(--muted);
+  }
+  .plugin-summary {
+    grid-column: 2;
+    margin: 0;
+    font-size: 0.8rem;
+  }
+  .plugin-name {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.72rem;
+    margin-left: 0.3rem;
+    white-space: nowrap;
   }
 </style>

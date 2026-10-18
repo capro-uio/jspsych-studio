@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
+import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
 import {
+  assertExtracted,
   extractSchemas,
   functionSource,
   pluginPackages,
@@ -13,6 +15,7 @@ const report = await extractSchemas(packages);
 describe("extractSchemas", () => {
   it("covers every plugin package listed in the manifest", () => {
     expect(report.failures).toEqual([]);
+    expect(report.warnings).toEqual([]);
     expect(Object.keys(report.schemas).length).toBe(packages.length);
   });
 
@@ -79,6 +82,50 @@ describe("extractSchemas", () => {
   it("falls back to the help text a plugin declares in its own info", () => {
     const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
     expect(canvasWidth.description).toMatch(/width/i);
+  });
+});
+
+describe("plugin titles", () => {
+  it("gives every plugin a title, a summary and a family", () => {
+    for (const schema of Object.values(report.schemas)) {
+      expect(schema.title, schema.plugin).not.toBe("");
+      expect(schema.summary, schema.plugin).not.toBe("");
+      expect(Object.keys(PLUGIN_FAMILIES), schema.plugin).toContain(schema.family);
+    }
+  });
+
+  it("names only plugins that are extracted, so none is left behind when one is removed", () => {
+    expect(Object.keys(PLUGIN_LABELS).sort()).toEqual(Object.keys(report.schemas).sort());
+  });
+
+  it("leaves out a plugin with no title, and says why", async () => {
+    const { schemas, failures } = await extractSchemas(["@jspsych/plugin-fullscreen"], {});
+    expect(schemas).toEqual({});
+    expect(failures).toEqual([
+      {
+        package: "@jspsych/plugin-fullscreen",
+        reason: 'plugin "fullscreen" has no title; add one to src/titles.ts',
+      },
+    ]);
+  });
+
+  it("refuses a report that left a plugin out", async () => {
+    const report = await extractSchemas(["@jspsych/plugin-fullscreen"], {});
+    expect(() => assertExtracted(report)).toThrow(
+      /1 plugin\(s\) could not be extracted:\n {2}! @jspsych\/plugin-fullscreen: plugin "fullscreen" has no title/,
+    );
+  });
+
+  it("does not take an inherited property for a title", async () => {
+    const { failures } = await extractSchemas(["@jspsych/plugin-fullscreen"], {
+      __proto__: { fullscreen: PLUGIN_LABELS.fullscreen },
+    } as never);
+    expect(failures).toHaveLength(1);
+  });
+
+  it("gives no two plugins the same title", () => {
+    const titles = Object.values(PLUGIN_LABELS).map((label) => label.title);
+    expect(new Set(titles).size).toBe(titles.length);
   });
 });
 

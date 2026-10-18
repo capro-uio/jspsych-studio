@@ -3,7 +3,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
-import { extractSchemas, pluginPackages } from "@jspsych-studio/schemas";
+import {
+  assertExtracted,
+  extractSchemas,
+  pluginPackages,
+  PLUGIN_FAMILIES,
+} from "@jspsych-studio/schemas";
 import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
 import { compileSpec } from "./compile.ts";
@@ -29,7 +34,8 @@ if (!["compile", "schema", "codemeta"].includes(command) || (command === "compil
 }
 
 const report = await extractSchemas(pluginPackages());
-const schemas = { jspsych: report.jspsych, plugins: report.schemas };
+assertExtracted(report);
+const schemas = { jspsych: report.jspsych, families: PLUGIN_FAMILIES, plugins: report.schemas };
 
 if (command === "schema") {
   const outputPath = optionValue(
