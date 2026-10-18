@@ -57,10 +57,35 @@ export function editableParameters(plugin: string) {
 }
 
 const PLACEHOLDER_TEXT = "<p>Your text here</p>";
+const PLACEHOLDER_OPTIONS = ["Option 1", "Option 2"];
+
+/** What a required field starts as, or undefined when there is no sensible start for it. */
+function placeholderFor(field: ParameterSchema): unknown {
+  if (field.jspsychType === "HTML_STRING") {
+    return field.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+  }
+  if (field.type === "array" && field.items?.type === "string" && !field.items.enum) {
+    return [...PLACEHOLDER_OPTIONS];
+  }
+  return undefined;
+}
+
+// A list of questions starts with one, its required fields filled in, rather than empty: an empty
+// list is a step that cannot run.
+function starterEntry(item: ParameterSchema) {
+  const entry: Record<string, unknown> = {};
+  for (const name of item.required ?? []) {
+    const field = item.properties?.[name];
+    const value = field && placeholderFor(field);
+    if (value === undefined) return undefined;
+    entry[name] = value;
+  }
+  return entry;
+}
 
 /**
- * Required parameters start from the schema's example, or placeholder text for text parameters,
- * so a new step is not born invalid.
+ * Required parameters start from the schema's example, from placeholders, or with one entry when
+ * they are a list of objects, so a new step is not born invalid.
  */
 export function startingParams(plugin: string): Record<string, unknown> {
   const schema = pluginSchema(plugin);
@@ -71,9 +96,12 @@ export function startingParams(plugin: string): Record<string, unknown> {
     if (parameter?.examples?.length) {
       params[name] = structuredClone(parameter.examples[0]);
     } else if (parameter?.jspsychType === "HTML_STRING") {
-      params[name] = parameter.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+      params[name] = placeholderFor(parameter);
     } else if (parameter && takesFunction(parameter.jspsychType)) {
       params[name] = { code: codeSeed(parameter, undefined) };
+    } else if (parameter?.type === "array" && parameter.items?.properties) {
+      const entry = starterEntry(parameter.items);
+      if (entry) params[name] = [entry];
     }
   }
   return params;

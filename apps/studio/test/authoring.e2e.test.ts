@@ -351,17 +351,16 @@ describe("a list whose entries are objects", () => {
     await page.goto(appUrl);
     await addTrial(page, "survey-likert", "slot-0");
 
-    await page.getByTestId("mode-questions").selectOption("fixed");
+    // A new question step arrives with one question, ready to edit rather than empty.
+    expect(await page.getByTestId("mode-questions").inputValue()).toBe("fixed");
     await setText(page, "value-questions-0-prompt", "I enjoyed this task");
-    await page.getByTestId("add-value-questions-0-labels").click();
     await setText(page, "value-questions-0-labels-0", "disagree");
-    await page.getByTestId("add-value-questions-0-labels").click();
     await setText(page, "value-questions-0-labels-1", "agree");
 
     await page.getByTestId("view-spec").click();
     const spec = await authoredSpec(page);
     expect(trialParams(spec.timeline[0]).questions).toEqual([
-      { prompt: "I enjoyed this task", labels: ["disagree", "agree"] },
+      { prompt: "<p>I enjoyed this task</p>", labels: ["disagree", "agree"] },
     ]);
 
     await page.getByTestId("view-experiment").click();
@@ -370,6 +369,28 @@ describe("a list whose entries are objects", () => {
       .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
       .toContain("I enjoyed this task");
     expect(await preview.locator('input[type="radio"]').count()).toBe(2);
+
+    await page.close();
+  }, 180_000);
+});
+
+describe("a multiple-choice question", () => {
+  it("arrives ready to run and offers its options in the preview", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "survey-multi-choice", "slot-0");
+
+    await setText(page, "value-questions-0-prompt", "Which colour?");
+    await setText(page, "value-questions-0-options-0", "red");
+    await setText(page, "value-questions-0-options-1", "blue");
+    expect(await page.getByTestId("step-problems").count()).toBe(0);
+
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 20_000 })
+      .toContain("Which colour?");
+    expect(await preview.locator('input[type="radio"]').count()).toBe(2);
+    expect(await preview.getByLabel("blue").count()).toBe(1);
 
     await page.close();
   }, 180_000);

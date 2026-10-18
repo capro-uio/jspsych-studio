@@ -54,6 +54,16 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "One or more questions answered on a labelled scale, such as disagree to agree.",
     family: "ask",
   },
+  "survey-multi-choice": {
+    title: "Multiple-choice questions",
+    summary: "One or more questions, each answered by choosing one of its options.",
+    family: "ask",
+  },
+  "survey-multi-select": {
+    title: "Checkbox questions",
+    summary: "One or more questions, each answered by ticking any number of its options.",
+    family: "ask",
+  },
   "survey-text": {
     title: "Written-answer questions",
     summary: "One or more questions answered by typing.",

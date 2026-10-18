@@ -27,6 +27,22 @@ describe("startingParams", () => {
     ]);
   });
 
+  it.each([
+    ["survey-likert", { prompt: "<p>Your text here</p>", labels: ["Option 1", "Option 2"] }],
+    ["survey-multi-choice", { prompt: "<p>Your text here</p>", options: ["Option 1", "Option 2"] }],
+    ["survey-multi-select", { prompt: "<p>Your text here</p>", options: ["Option 1", "Option 2"] }],
+    ["survey-text", { prompt: "<p>Your text here</p>" }],
+  ])("starts %s with one question ready to run", (plugin, question) => {
+    expect(startingParams(plugin)).toEqual({ questions: [question] });
+  });
+
+  it("starts each question with its own placeholder options", () => {
+    const first = startingParams("survey-multi-choice").questions as { options: string[] }[];
+    first[0].options.push("Option 3");
+    const second = startingParams("survey-multi-choice").questions as { options: string[] }[];
+    expect(second[0].options).toEqual(["Option 1", "Option 2"]);
+  });
+
   it("still fills required text with a placeholder", () => {
     expect(startingParams("html-keyboard-response")).toEqual({
       stimulus: "<p>Your text here</p>",
