@@ -3,9 +3,14 @@ import type { ParameterSchema, SchemaBundle, Variants } from "@jspsych-studio/sc
 
 export const schemas = schemaFile as unknown as SchemaBundle;
 
+/** A plugin's schema, looked up as an own property: a spec's plugin name is not to be trusted. */
+export function pluginSchema(plugin: string) {
+  return Object.hasOwn(schemas.plugins, plugin) ? schemas.plugins[plugin] : undefined;
+}
+
 /** What an author calls a plugin's step; the machine name for one the schemas do not know. */
 export function pluginTitle(plugin: string) {
-  return Object.hasOwn(schemas.plugins, plugin) ? schemas.plugins[plugin].title : plugin;
+  return pluginSchema(plugin)?.title ?? plugin;
 }
 
 /** The plugins an author can choose from, grouped by what the step is for and sorted by title. */
@@ -34,7 +39,7 @@ const EDITABLE_TYPES = new Set([
 ]);
 
 export function editableParameters(plugin: string) {
-  const schema = schemas.plugins[plugin];
+  const schema = pluginSchema(plugin);
   if (!schema) return [];
   return Object.entries(schema.properties)
     .filter(
@@ -55,7 +60,7 @@ const PLACEHOLDER_TEXT = "<p>Your text here</p>";
  * so a new step is not born invalid.
  */
 export function startingParams(plugin: string): Record<string, unknown> {
-  const schema = schemas.plugins[plugin];
+  const schema = pluginSchema(plugin);
   if (!schema) return {};
   const params: Record<string, unknown> = {};
   for (const name of schema.required) {

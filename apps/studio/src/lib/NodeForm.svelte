@@ -23,7 +23,7 @@
     project,
     selectedNode,
   } from "./project.svelte.ts";
-  import { editableParameters, pluginChoices, schemas, startingParams } from "./schemas.ts";
+  import { editableParameters, pluginChoices, pluginSchema, startingParams } from "./schemas.ts";
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
 
   const node = $derived(selectedNode());
@@ -47,6 +47,7 @@
 
   let showAllParameters = $state(false);
 
+  const trialSchema = $derived(trial ? pluginSchema(trial.plugin) : undefined);
   const parameters = $derived(trial ? editableParameters(trial.plugin) : []);
   const visibleParameters = $derived(
     showAllParameters
@@ -114,9 +115,9 @@
         </optgroup>
       {/each}
     </select>
-    {#if Object.hasOwn(schemas.plugins, trial.plugin)}
+    {#if trialSchema}
       <p class="help plugin-summary" data-testid="plugin-summary">
-        {schemas.plugins[trial.plugin].summary}
+        {trialSchema.summary}
         <span class="plugin-name" title="The jsPsych plugin that runs this step"
           >{trial.plugin}</span
         >

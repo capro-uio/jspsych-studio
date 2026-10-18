@@ -201,6 +201,15 @@ export async function extractSchemas(
   };
 }
 
+/** Throws when any plugin was left out, which would quietly drop it from the builder and specs. */
+export function assertExtracted(report: ExtractionReport) {
+  if (report.failures.length === 0) return;
+  const reasons = report.failures.map((failure) => `  ! ${failure.package}: ${failure.reason}`);
+  throw new Error(
+    `${report.failures.length} plugin(s) could not be extracted:\n${reasons.join("\n")}`,
+  );
+}
+
 export function officialPluginPackages(): string[] {
   const manifest = JSON.parse(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),

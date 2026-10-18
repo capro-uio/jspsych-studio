@@ -3,7 +3,12 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
-import { extractSchemas, pluginPackages, PLUGIN_FAMILIES } from "@jspsych-studio/schemas";
+import {
+  assertExtracted,
+  extractSchemas,
+  pluginPackages,
+  PLUGIN_FAMILIES,
+} from "@jspsych-studio/schemas";
 import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
 import { compileSpec } from "./compile.ts";
@@ -29,12 +34,7 @@ if (!["compile", "schema", "codemeta"].includes(command) || (command === "compil
 }
 
 const report = await extractSchemas(pluginPackages());
-// A plugin that could not be extracted would be missing from the schema and from compiled specs.
-if (report.failures.length > 0) {
-  for (const failure of report.failures) console.error(`  ! ${failure.package}: ${failure.reason}`);
-  console.error(`${report.failures.length} plugin(s) could not be extracted`);
-  process.exit(1);
-}
+assertExtracted(report);
 const schemas = { jspsych: report.jspsych, families: PLUGIN_FAMILIES, plugins: report.schemas };
 
 if (command === "schema") {

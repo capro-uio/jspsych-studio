@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
-import { extractSchemas, pluginPackages, toParameterSchema } from "../src/extract.ts";
+import {
+  assertExtracted,
+  extractSchemas,
+  pluginPackages,
+  toParameterSchema,
+} from "../src/extract.ts";
 
 const packages = pluginPackages();
 const report = await extractSchemas(packages);
@@ -91,6 +96,13 @@ describe("plugin titles", () => {
         reason: 'plugin "fullscreen" has no title; add one to src/titles.ts',
       },
     ]);
+  });
+
+  it("refuses a report that left a plugin out", async () => {
+    const report = await extractSchemas(["@jspsych/plugin-fullscreen"], {});
+    expect(() => assertExtracted(report)).toThrow(
+      /1 plugin\(s\) could not be extracted:\n {2}! @jspsych\/plugin-fullscreen: plugin "fullscreen" has no title/,
+    );
   });
 
   it("does not take an inherited property for a title", async () => {
