@@ -47,8 +47,29 @@ const spec: Spec = {
     slider("image-slider-response", "square.png"),
     slider("audio-slider-response", "tone.wav"),
     slider("video-slider-response", ["clip.webm"]),
+    {
+      kind: "block",
+      conditions: "videos",
+      children: [{ ...slider("video-slider-response", { var: "video" }), tag: "from a column" }],
+    },
   ],
+  conditions: { videos: [{ video: "clip.webm" }] },
 };
+
+// A video that can play has its first frame decoded; one with no usable source never does.
+async function videoPlays(page: Page) {
+  await expect
+    .poll(
+      () =>
+        page
+          .locator("#jspsych-content video")
+          .evaluate((video) => (video as HTMLVideoElement).readyState),
+      {
+        timeout: 10_000,
+      },
+    )
+    .toBeGreaterThanOrEqual(2);
+}
 
 let browser: Browser;
 let server: StaticServer;
@@ -90,7 +111,12 @@ describe("slider questions", () => {
     await page.keyboard.press("a");
     await answer(page, "image-slider-response", "10");
     await answer(page, "audio-slider-response", "30");
+    await page.locator("#jspsych-content").getByText("video-slider-response").waitFor();
+    await videoPlays(page);
     await answer(page, "video-slider-response", "60");
+    await page.locator("#jspsych-content").getByText("video-slider-response").waitFor();
+    await videoPlays(page);
+    await answer(page, "video-slider-response", "40");
 
     // The generated script declares jsPsych as a constant, so it is read by name.
     const responses = await page.evaluate(
@@ -101,8 +127,40 @@ describe("slider questions", () => {
       ["image-slider-response", 10],
       ["audio-slider-response", 30],
       ["video-slider-response", 60],
+      ["from a column", 40],
     ]);
     expect(errors).toEqual([]);
     await page.close();
+  });
+});
+
+describe("a single-file experiment opened from disk", () => {
+  it("plays its embedded video", async () => {
+    const opened: Spec = {
+      name: "from disk",
+      assets: spec.assets,
+      timeline: [slider("video-slider-response", ["clip.webm"])],
+    };
+    const { html } = await emitHtml(compileSpec(opened, schemas), {
+      title: opened.name,
+      base: `file://${join(workspaceRoot, "node_modules")}`,
+    });
+    const file = join(workspaceRoot, "slider-from-disk.e2e.html");
+    writeFileSync(file, html);
+    try {
+      const page = await browser.newPage();
+      const errors: string[] = [];
+      page.on("pageerror", (error) => errors.push(error.message));
+      await page.goto(`file://${file}`);
+      await page
+        .locator("#jspsych-content")
+        .getByText("video-slider-response")
+        .waitFor({ timeout: 15_000 });
+      await videoPlays(page);
+      expect(errors).toEqual([]);
+      await page.close();
+    } finally {
+      rmSync(file, { force: true });
+    }
   });
 });

@@ -1,5 +1,6 @@
 import type { ParameterSchema, PluginSchemas, Variants } from "@jspsych-studio/schemas";
 import type {
+  Asset,
   AccuracyRule,
   AssignNode,
   BranchNode,
@@ -12,7 +13,7 @@ import type {
   TrialNode,
 } from "./types.ts";
 import { STUDY_COLUMNS } from "./data.ts";
-import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
+import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
@@ -55,6 +56,8 @@ const KEY_LIST_KEYWORDS = new Set(["ALL_KEYS", "NO_KEYS"]);
 // Only the types the extractor resolved unambiguously. A KEYS parameter is a list that also
 // accepts the strings "ALL_KEYS" and "NO_KEYS", so it is checked on its own terms.
 function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
+  // jsPsych's own null means none, such as no width set, wherever it is the default.
+  if (value === null && parameter.default === null) return null;
   if (parameter.enum && !parameter.enum.includes(value)) {
     return `expects one of ${parameter.enum.map((option) => JSON.stringify(option)).join(", ")}`;
   }
@@ -115,7 +118,7 @@ function checkTrial(
   path: number[],
 ) {
   const report = (message: string) => problems.push({ message, path });
-  const assets = assetNames(spec.assets);
+  const assets = spec.assets ?? [];
   const schema = schemas[trial.plugin];
   if (!schema) {
     report(`unknown plugin "${trial.plugin}"`);
@@ -138,13 +141,19 @@ function checkTrial(
       }
       continue;
     }
+    const kind = mediaListOf(trial.plugin, name, parameter.jspsychType);
     if (isCodeSlot(value, parameter)) {
       const problem = codeSlotProblem(value);
       if (problem) report(`${where}, parameter "${name}" ${problem}`);
     } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
-    } else if (isMediaParameter(trial.plugin, name, parameter.jspsychType)) {
-      checkFiles(value, assets, `${where}, parameter "${name}"`, report);
+    } else if (kind) {
+      if (parameter.type === "array" && !Array.isArray(value)) {
+        report(
+          `${where}, parameter "${name}" expects a list of files, but the spec holds ${JSON.stringify(value)}`,
+        );
+      }
+      checkFiles(value, assets, kind, `${where}, parameter "${name}"`, report);
     } else if (parameter.items?.properties) {
       const problem = literalTypeProblem(value, parameter);
       if (problem) {
@@ -170,8 +179,14 @@ function checkTrial(
   }
 
   for (const name of schema.required) {
-    if (!supplied.some(([supplied]) => supplied === name)) {
+    const value = trial.params?.[name];
+    if (value === undefined) {
       report(`${where} requires parameter "${name}"`);
+    } else if (
+      mediaListOf(trial.plugin, name, schema.properties[name]?.jspsychType) &&
+      namesNoFile(value)
+    ) {
+      report(`${where} requires a file for parameter "${name}"`);
     }
   }
 
@@ -189,9 +204,21 @@ function checkTrial(
   }
 }
 
+// A file picker left on its blank choice leaves an empty name, which plays nothing.
+function namesNoFile(value: ParameterValue) {
+  return value === "" || (Array.isArray(value) && value.every((entry) => entry === ""));
+}
+
+const KIND_OF_LIST: Record<PreloadList, string> = {
+  images: "an image",
+  audio: "a sound",
+  video: "a video",
+};
+
 function checkFiles(
   value: ParameterValue,
-  assets: Set<string>,
+  assets: Asset[],
+  kind: PreloadList | null,
   where: string,
   report: (message: string) => void,
 ) {
@@ -199,17 +226,29 @@ function checkFiles(
     (entry): entry is string => typeof entry === "string" && entry !== "",
   );
   for (const entry of named) {
-    if (assets.has(entry) || looksLikePath(entry)) continue;
-    report(
-      `${where} names "${entry}", which is neither an added file nor a path` +
-        (assets.size > 0 ? ` (files added: ${[...assets].join(", ")})` : ""),
-    );
+    const asset = assets.find((candidate) => candidate.name === entry);
+    if (!asset) {
+      if (looksLikePath(entry)) continue;
+      report(
+        `${where} names "${entry}", which is neither an added file nor a path` +
+          (assets.length > 0
+            ? ` (files added: ${assets.map((added) => added.name).join(", ")})`
+            : ""),
+      );
+      continue;
+    }
+    const actual = preloadListOf(asset);
+    if (kind && actual && actual !== kind) {
+      report(
+        `${where} names "${entry}", which is ${KIND_OF_LIST[actual]}, where ${KIND_OF_LIST[kind]} belongs`,
+      );
+    }
   }
 }
 
 interface EntryContext {
   columns: Set<string>;
-  assets: Set<string>;
+  assets: Asset[];
   problems: Problem[];
   path: number[];
 }
@@ -278,7 +317,13 @@ function checkObjectEntries(
           context.path,
         );
       } else if (isMediaType(schema.jspsychType)) {
-        checkFiles(field, context.assets, `${position}, field "${name}"`, report);
+        checkFiles(
+          field,
+          context.assets,
+          mediaListOf("", name, schema.jspsychType),
+          `${position}, field "${name}"`,
+          report,
+        );
       } else {
         const problem = literalTypeProblem(field, schema);
         if (problem) {

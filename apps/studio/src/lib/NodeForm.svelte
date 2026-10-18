@@ -462,8 +462,9 @@
     {/if}
     <p class="help">
       The latest answer on those trials is compared as text. Buttons count from 0, so the second
-      button is 1. Questions are read by name, Q0 being the first unnamed one; a checkbox question
-      takes the first path when the option was among those ticked.
+      button is 1, and a slider's answer is the number it was left at, so only that exact number
+      matches. Questions are read by name, Q0 being the first unnamed one; a checkbox question takes
+      the first path when the option was among those ticked.
     </p>
   {/if}
 {:else if end}

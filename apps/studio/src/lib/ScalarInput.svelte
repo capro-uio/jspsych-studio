@@ -50,7 +50,9 @@
     {placeholder}
     onchange={(event) =>
       onchange(
-        Number.isNaN(event.currentTarget.valueAsNumber) ? 0 : event.currentTarget.valueAsNumber,
+        Number.isNaN(event.currentTarget.valueAsNumber)
+          ? undefined
+          : event.currentTarget.valueAsNumber,
       )}
   />
 {:else if files.length > 0}

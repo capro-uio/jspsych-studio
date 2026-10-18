@@ -466,6 +466,7 @@ describe("a slider step", () => {
     await expect
       .poll(() => page.getByTestId("asset-message").innerText(), { timeout: 5_000 })
       .toContain("clip.webm");
+    expect(await page.locator(".asset video.thumb").count()).toBe(1);
 
     await openTab(page, "timeline");
     await addTrial(page, "video-slider-response", "slot-0");
@@ -491,6 +492,26 @@ describe("a slider step", () => {
       })
       .toBe(1);
     expect(await preview.locator("#jspsych-content video").count()).toBe(1);
+    await page.close();
+  }, 180_000);
+
+  it("leaves a width with no default blank, and a cleared number unset", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-slider-response", "slot-0");
+    await showAllParameters(page);
+
+    await page.getByTestId("mode-slider_width").selectOption("fixed");
+    expect(await page.getByTestId("value-slider_width").inputValue()).toBe("");
+    await page.getByTestId("view-spec").click();
+    expect(trialParams((await authoredSpec(page)).timeline[0]).slider_width).toBeNull();
+    await page.getByTestId("view-experiment").click();
+
+    await page.getByTestId("value-slider_width").fill("300");
+    await page.getByTestId("value-slider_width").blur();
+    await page.getByTestId("value-slider_width").fill("");
+    await page.getByTestId("value-slider_width").blur();
+    expect(await page.getByTestId("mode-slider_width").inputValue()).toBe("unset");
     await page.close();
   }, 180_000);
 });

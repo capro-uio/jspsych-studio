@@ -21,6 +21,14 @@ export function isMediaType(jspsychType?: string) {
   return jspsychType !== undefined && jspsychType in LIST_OF_JSPSYCH_TYPE;
 }
 
+/** The kind of file a media parameter takes: preload's lists are named for theirs. */
+export function mediaListOf(plugin: string, parameter: string, jspsychType?: string) {
+  if (jspsychType !== undefined && jspsychType in LIST_OF_JSPSYCH_TYPE) {
+    return LIST_OF_JSPSYCH_TYPE[jspsychType];
+  }
+  return MEDIA_PARAMETERS[plugin]?.has(parameter) ? (parameter as PreloadList) : null;
+}
+
 export function isMediaParameter(plugin: string, parameter: string, jspsychType?: string) {
   if (isMediaType(jspsychType)) return true;
   return MEDIA_PARAMETERS[plugin]?.has(parameter) ?? false;
@@ -34,13 +42,27 @@ export function assetPath(asset: Asset) {
   return `${ASSET_DIRECTORY}/${asset.name}`;
 }
 
+// jsPsych's video plugins read a video's type from the end of its address, which a data URL does
+// not have, and a page opened from disk does not preload videos into playable copies. So an
+// embedded video is turned into a blob URL, which plays from wherever the page was opened.
+const VIDEO_BLOBS = `for (const [name, url] of Object.entries(assets)) {
+  const [header, data] = url.split(",");
+  if (!header.startsWith("data:video/") || !header.endsWith(";base64")) continue;
+  const bytes = Uint8Array.from(atob(data), (character) => character.charCodeAt(0));
+  assets[name] = URL.createObjectURL(new Blob([bytes], { type: header.slice(5, -";base64".length) }));
+}
+`;
+
 export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inline") {
   const entries = assets.map(
     (asset) =>
       `  ${literal(asset.name)}: ${literal(mode === "files" ? assetPath(asset) : asset.url)}`,
   );
+  const embedsVideo =
+    mode === "inline" && assets.some((asset) => asset.url.startsWith("data:video/"));
   return (
     `const assets = {\n${entries.join(",\n")}\n};\n` +
+    (embedsVideo ? VIDEO_BLOBS : "") +
     `const asset = (name) => (Array.isArray(name) ? name.map(asset) : (assets[name] ?? name));\n`
   );
 }

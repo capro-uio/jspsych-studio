@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { preloadListOf } from "@jspsych-studio/compiler";
   import { project } from "./project.svelte.ts";
 
   const MAX_BYTES = 5 * 1024 * 1024;
@@ -49,7 +50,13 @@
 <section>
   {#each assets as asset (asset.name)}
     <div class="asset">
-      <img src={asset.url} alt="" />
+      {#if preloadListOf(asset) === "video"}
+        <video class="thumb" src={asset.url} muted preload="metadata"></video>
+      {:else if preloadListOf(asset) === "audio"}
+        <span class="thumb sound" aria-hidden="true">♪</span>
+      {:else}
+        <img class="thumb" src={asset.url} alt="" />
+      {/if}
       <span class="name">{asset.name}</span>
       <button data-testid={`remove-asset-${asset.name}`} onclick={() => remove(asset.name)}
         >✕</button
@@ -75,13 +82,19 @@
     gap: 0.4rem;
     align-items: center;
   }
-  .asset img {
+  .asset .thumb {
     width: 1.6rem;
     height: 1.6rem;
     object-fit: cover;
     border: 1px solid var(--rule);
     border-radius: 3px;
     background: var(--selected);
+  }
+  .asset .sound {
+    display: grid;
+    place-items: center;
+    box-sizing: border-box;
+    color: var(--muted);
   }
   .name {
     flex: 1;

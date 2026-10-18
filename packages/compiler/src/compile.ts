@@ -49,31 +49,56 @@ function variableInsideFunction(reference: VariableReference) {
   return `jsPsych.evaluateTimelineVariable(${literal(reference.var)})`;
 }
 
+/** What a parameter or field takes, as far as how its value is written out goes. */
+interface ValueShape {
+  /** Names a file, resolved through the asset map. */
+  media?: boolean;
+  /** Takes a list, so a single value read from a column or computed by code becomes one. */
+  list?: boolean;
+  /** Takes a function, which code is rather than computes. */
+  isFunction?: boolean;
+}
+
+function shapeOf(parameter: ParameterSchema | undefined, media: boolean): ValueShape {
+  return {
+    media,
+    // A KEYS list also takes the words "ALL_KEYS" and "NO_KEYS", which must stay words.
+    list: parameter?.type === "array" && parameter.jspsychType !== "KEYS",
+    isFunction: takesFunction(parameter?.jspsychType),
+  };
+}
+
 // Media parameters resolve through the asset map, so a spec can name a file rather than carry a
 // data URL in every parameter and every conditions cell.
-function parameterExpression(value: ParameterValue, media = false, isFunction = false): string {
+function parameterExpression(value: ParameterValue, shape: ValueShape = {}): string {
   if (isCode(value)) {
-    return isFunction ? codeExpression(value.code) : `() => ${valueInsideFunction(value, media)}`;
+    return shape.isFunction
+      ? codeExpression(value.code)
+      : `() => ${valueInsideFunction(value, shape)}`;
   }
   if (!isVariableReference(value)) {
-    if (!media) return literal(value);
+    if (!shape.media) return literal(value);
     if (Array.isArray(value)) {
       return `[${value.map((entry) => `asset(${literal(entry)})`).join(", ")}]`;
     }
     return `asset(${literal(value)})`;
   }
-  if (value.wrap || media) return `() => ${valueInsideFunction(value, media)}`;
+  if (value.wrap || shape.media || shape.list) return `() => ${valueInsideFunction(value, shape)}`;
   return `jsPsych.timelineVariable(${literal(value.var)})`;
 }
 
-function valueInsideFunction(value: ParameterValue, media: boolean): string {
-  if (isCode(value)) {
-    return media ? `asset(${codeExpression(value.code)})` : codeExpression(value.code);
+function valueInsideFunction(value: ParameterValue, shape: ValueShape): string {
+  if (!isCode(value) && !isVariableReference(value)) {
+    return shape.media ? `asset(${literal(value)})` : literal(value);
   }
-  if (!isVariableReference(value)) return media ? `asset(${literal(value)})` : literal(value);
-  const read = variableInsideFunction(value);
-  if (value.wrap) return `${literal(value.wrap)}.replace("{}", () => ${read})`;
-  return media ? `asset(${read})` : read;
+  let read = isCode(value) ? codeExpression(value.code) : variableInsideFunction(value);
+  if (isVariableReference(value) && value.wrap) {
+    read = `${literal(value.wrap)}.replace("{}", () => ${read})`;
+  }
+  // A conditions cell holds one value, and a plugin that takes a list would read a lone string
+  // one character at a time.
+  if (shape.list) read = `[].concat(${read})`;
+  return shape.media ? `asset(${read})` : read;
 }
 
 function isFieldSet(entry: unknown): entry is Record<string, ParameterValue> {
@@ -87,6 +112,7 @@ function isFieldSet(entry: unknown): entry is Record<string, ParameterValue> {
 function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets: boolean) {
   const isMediaField = (name: string) =>
     hasAssets && isMediaType(item.properties?.[name]?.jspsychType);
+  const fieldShape = (name: string) => shapeOf(item.properties?.[name], isMediaField(name));
   const isFunctionField = (name: string) => takesFunction(item.properties?.[name]?.jspsychType);
   const fields = entries.filter(isFieldSet).flatMap((entry) => Object.entries(entry));
   const bound = fields.some(
@@ -99,7 +125,7 @@ function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets:
   const compiled = entries.map((entry) => {
     if (!isFieldSet(entry)) return literal(entry);
     const fields = Object.entries(entry).map(
-      ([name, value]) => `${literal(name)}: ${valueInsideFunction(value, isMediaField(name))}`,
+      ([name, value]) => `${literal(name)}: ${valueInsideFunction(value, fieldShape(name))}`,
     );
     return `{ ${fields.join(", ")} }`;
   });
@@ -122,7 +148,9 @@ function scoreExpression(trial: TrialNode) {
   if (expected === undefined) return null;
   const comparison =
     typeof expected === "object" ? variableInsideFunction(expected) : literal(expected);
-  return `(data) => { data.correct = data.response === ${comparison}; }`;
+  // Conditions cells are text, while a button or a slider records a number, so both are compared
+  // as text, as a branch on an answer is.
+  return `(data) => { data.correct = String(data.response) === String(${comparison}); }`;
 }
 
 function compileTrial(trial: TrialNode, context: CompileContext) {
@@ -137,8 +165,7 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
     }
     const media =
       context.hasAssets && isMediaParameter(trial.plugin, name, properties[name]?.jspsychType);
-    const isFunction = takesFunction(properties[name]?.jspsychType);
-    entries.push(`${name}: ${parameterExpression(value, media, isFunction)}`);
+    entries.push(`${name}: ${parameterExpression(value, shapeOf(properties[name], media))}`);
   }
   const data = dataExpression(trial);
   if (data) entries.push(`data: ${data}`);

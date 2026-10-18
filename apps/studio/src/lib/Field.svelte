@@ -41,7 +41,11 @@
     if (list)
       return Array.isArray(parameter.default) ? [...(parameter.default as unknown[])] : [""];
     if (parameter.jspsychType === "BOOL") return Boolean(parameter.default);
-    if (numeric) return typeof parameter.default === "number" ? parameter.default : 0;
+    if (numeric) {
+      if (typeof parameter.default === "number") return parameter.default;
+      // jsPsych's null means none, such as no width set; a 0 would hide a slider or stop a video.
+      return parameter.default === null ? null : 0;
+    }
     if (parameter.enum) return parameter.enum[0] as string;
     return typeof parameter.default === "string" ? parameter.default : "";
   }
