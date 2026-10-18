@@ -17,7 +17,7 @@ import { accuracyComparison, isResponseRule } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
-import { isColor } from "./appearance.ts";
+import { appearanceProblems } from "./appearance.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
 export interface Problem {
@@ -371,9 +371,9 @@ const ANSWER_TYPES = new Set(["string", "number", "boolean"]);
 // number would still compare as text, so it is caught here with a message rather than at run time.
 function thresholdProblem(rule: AccuracyRule, step: string) {
   const { threshold } = accuracyComparison(rule);
-  return typeof threshold === "number" && Number.isFinite(threshold)
+  return typeof threshold === "number" && threshold >= 0 && threshold <= 1
     ? null
-    : `${step} compares accuracy with ${JSON.stringify(threshold)}, which is not a number`;
+    : `${step} compares accuracy with ${JSON.stringify(threshold)}, which is not between 0 and 1`;
 }
 
 function branchRuleProblem(rule: BranchNode["when"]) {
@@ -485,10 +485,10 @@ function checkNodes(
 
     let inner = columns;
     if (node.kind === "block") {
-      const { repetitions } = node;
+      const repetitions = node.repetitions;
       if (repetitions !== undefined && !(Number.isInteger(repetitions) && repetitions >= 1)) {
         report(
-          `a block repeats ${JSON.stringify(repetitions)} times, but that is not a whole number`,
+          `a block repeats ${JSON.stringify(repetitions)} times, but it needs a whole number of at least 1`,
         );
       }
       if (!spec.conditions?.[node.conditions]) {
@@ -525,12 +525,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
     });
   }
   problems.push(...recruitmentProblems(spec));
-  for (const key of ["background_color", "text_color"] as const) {
-    const color = spec.settings?.[key];
-    if (color !== undefined && (typeof color !== "string" || !isColor(color))) {
-      problems.push({ message: `${key} is ${JSON.stringify(color)}, which is not a colour` });
-    }
-  }
+  problems.push(...appearanceProblems(spec.settings));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
   if (problems.length > 0) throw new SpecError(spec.name, problems);
