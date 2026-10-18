@@ -121,7 +121,8 @@ function checkTrial(
     return;
   }
 
-  const where = `plugin "${trial.plugin}"`;
+  // The title is what the builder shows; the plugin's name is what a spec file holds.
+  const where = `step "${schema.title}" (${trial.plugin})`;
   const supplied = Object.entries(trial.params ?? {});
 
   for (const [name, value] of supplied) {
