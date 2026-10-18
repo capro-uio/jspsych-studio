@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import type { BranchNode, Spec } from "../src/types.ts";
+import { questionNames } from "../src/conditions.ts";
+import type { BranchNode, Spec, TrialNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const screening = {
@@ -86,20 +87,64 @@ describe("branching on what a participant answered", () => {
   const onAnswer = (when: Record<string, unknown>) =>
     study(branch({ when: { scope: "screening", ...when } as BranchNode["when"] }));
 
+  const survey = {
+    kind: "trial" as const,
+    plugin: "survey-multi-select",
+    tag: "consent",
+    params: {
+      questions: [
+        { prompt: "Agree?", name: "consent", options: ["Yes", "No"] },
+        { prompt: "And?", options: ["a", "b"] },
+      ],
+    },
+  };
+  const onSurvey = (when: Record<string, unknown>): Spec => ({
+    name: "routing",
+    timeline: [survey, branch({ when: { scope: "consent", ...when } as BranchNode["when"] })],
+  });
+
   it("compares the latest tagged answer as text", () => {
     const { source } = compileSpec(onAnswer({ response_equals: 1 }), schemas);
     expect(source).toContain('filter({ tag: "screening" })');
-    expect(source).toContain('String(latest.response ?? "") === "1"');
+    expect(source).toContain("const answer = latest === undefined ? undefined : latest.response;");
+    expect(source).toContain('String(answer ?? "") === "1"');
     expect(source).not.toContain('select("correct")');
     expect(source).toContain("conditional_function: () => !(");
   });
 
   it("reads one question of a survey", () => {
     const { source } = compileSpec(
-      onAnswer({ response_equals: "No", question: "consent" }),
+      onSurvey({ response_equals: "No", question: "consent" }),
       schemas,
     );
-    expect(source).toContain('.response?.["consent"] ?? "") === "No"');
+    expect(source).toContain('latest.response?.["consent"]');
+    expect(source).toContain('String(answer ?? "") === "No"');
+  });
+
+  it("matches a ticked option among a checkbox question's answers", () => {
+    const { source } = compileSpec(
+      onSurvey({ response_equals: "No", question: "consent" }),
+      schemas,
+    );
+    expect(source).toContain('Array.isArray(answer) ? answer.map(String).includes("No")');
+  });
+
+  it("needs the question a survey's answer is read from, even when it asks one", () => {
+    expect(() => compileSpec(onSurvey({ response_equals: "No" }), schemas)).toThrow(
+      /a branch on the answers to "consent" needs the question it reads \(questions: consent, Q1\)/,
+    );
+  });
+
+  it("rejects a question the survey does not ask", () => {
+    expect(() =>
+      compileSpec(onSurvey({ response_equals: "No", question: "agree" }), schemas),
+    ).toThrow(/reads question "agree", which the trials tagged "consent" do not ask/);
+  });
+
+  it("rejects a question on trials that ask none", () => {
+    expect(() =>
+      compileSpec(onAnswer({ response_equals: "no", question: "consent" }), schemas),
+    ).toThrow(/reads question "consent", but the trials tagged "screening" ask no questions/);
   });
 
   it("rejects a rule that also compares accuracy", () => {
@@ -124,5 +169,39 @@ describe("branching on what a participant answered", () => {
     expect(() =>
       compileSpec(study(branch({ when: { scope: "later", response_equals: "no" } })), schemas),
     ).toThrow(/no trial before it carries that tag/);
+  });
+});
+
+describe("questionNames", () => {
+  const asking = (tag: string, questions: unknown) => ({
+    kind: "trial" as const,
+    plugin: "survey-text",
+    tag,
+    params: { questions } as TrialNode["params"],
+  });
+
+  it("names each question, or numbers it from Q0", () => {
+    expect(questionNames([asking("q", [{ name: "age" }, {}, { name: "" }])], "q")).toEqual([
+      "age",
+      "Q1",
+      "Q2",
+    ]);
+  });
+
+  it("finds tagged question steps inside blocks and paths", () => {
+    const nested = {
+      kind: "branch" as const,
+      when: { scope: "x", accuracy_below: 0.5 },
+      then: [{ kind: "block" as const, conditions: "c", children: [asking("q", [{}])] }],
+    };
+    expect(questionNames([nested], "q")).toEqual(["Q0"]);
+  });
+
+  it("knows no names when the questions come from a column", () => {
+    expect(questionNames([asking("q", { var: "questions" })], "q")).toEqual([]);
+  });
+
+  it("says when the tagged trials ask no questions", () => {
+    expect(questionNames([screening], "screening")).toBeNull();
   });
 });

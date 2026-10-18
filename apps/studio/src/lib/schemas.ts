@@ -107,6 +107,31 @@ export function startingParams(plugin: string): Record<string, unknown> {
   return params;
 }
 
+/**
+ * The parameters a step takes when it changes type. Settings do not carry across step types, with
+ * one exception: going between kinds of question keeps the questions, and what each new kind
+ * needs is filled in. The new type should arrive ready to run where it can.
+ */
+export function paramsForPlugin(
+  params: Record<string, unknown> | undefined,
+  from: string,
+  to: string,
+): Record<string, unknown> {
+  const starting = startingParams(to);
+  const questions = params?.questions;
+  const before = pluginSchema(from)?.properties.questions?.items?.properties;
+  const after = pluginSchema(to)?.properties.questions?.items;
+  if (!before || !after?.properties || !Array.isArray(questions)) return starting;
+  const starter = starterEntry(after) ?? {};
+  return {
+    ...starting,
+    questions: questions.map((question: Record<string, unknown>) => ({
+      ...starter,
+      ...Object.fromEntries(Object.entries(question).filter(([name]) => name in after.properties!)),
+    })),
+  };
+}
+
 /** The fields an entry of a list shows: for one with variants, only those its variant reads. */
 export function visibleFields(schema: ParameterSchema, value: Record<string, unknown>) {
   const fields = Object.entries(schema.properties ?? {});

@@ -188,8 +188,9 @@ and run projects from people you trust. Steps that hold code carry a `code` badg
 
 Nothing from a project runs in the builder's own page:
 
-- **The preview** runs the study in a sandboxed frame (`allow-scripts`, without
-  `allow-same-origin`), so it cannot read the builder, the open project, or the browser's storage.
+- **The preview** runs the study in a sandboxed frame (`allow-scripts` and `allow-forms`, which
+  jsPsych's questionnaires submit through, but not `allow-same-origin`), so it cannot read the
+  builder, the open project, or the browser's storage.
   It saves no data, contacts no data service and sends no one to a platform: the preview drops
   those settings and draws groups and task orders itself.
 - **Formatted text** is put into the editor only when it is plain formatting. Anything more, such

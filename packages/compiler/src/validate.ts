@@ -8,12 +8,13 @@ import type {
   ParameterValue,
   Spec,
   SpecNode,
+  ResponseRule,
   TrialNode,
 } from "./types.ts";
 import { STUDY_COLUMNS } from "./data.ts";
 import { assetNames, isMediaParameter, isMediaType } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
-import { accuracyComparison, isResponseRule } from "./conditions.ts";
+import { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
@@ -395,6 +396,24 @@ function branchRuleProblem(rule: BranchNode["when"]) {
   return null;
 }
 
+// A question step records every answer under its question's name, even when it asks only one, so
+// a branch on it has to say which question it reads, and one that reads none of them never holds.
+function questionProblem(rule: ResponseRule, names: string[] | null) {
+  const listed = names?.length ? ` (questions: ${names.join(", ")})` : "";
+  if (names === null) {
+    return rule.question === undefined
+      ? null
+      : `a branch reads question "${rule.question}", but the trials tagged "${rule.scope}" ask no questions`;
+  }
+  if (rule.question === undefined) {
+    return `a branch on the answers to "${rule.scope}" needs the question it reads${listed}`;
+  }
+  if (names.length > 0 && !names.includes(rule.question)) {
+    return `a branch reads question "${rule.question}", which the trials tagged "${rule.scope}" do not ask${listed}`;
+  }
+  return null;
+}
+
 function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: number[]) {
   const report = (message: string) => problems.push({ message, path });
   if (node.then.length === 0 && (node.otherwise ?? []).length === 0) {
@@ -402,6 +421,10 @@ function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: nu
   }
   const ruleProblem = branchRuleProblem(node.when);
   if (ruleProblem) report(ruleProblem);
+  else if (isResponseRule(node.when)) {
+    const problem = questionProblem(node.when, questionNames(spec.timeline, node.when.scope));
+    if (problem) report(problem);
+  }
   // The trials being judged have to have happened already, so they cannot live inside the branch.
   const earlier = new Set(collectTags(spec.timeline).filter(Boolean));
   const inside = new Set(collectTags(slotsOf(node)?.flatMap((slot) => slot.children) ?? []));

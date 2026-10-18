@@ -394,6 +394,59 @@ describe("a multiple-choice question", () => {
 
     await page.close();
   }, 180_000);
+
+  it("offers its questions to a branch on the answer, and follows the one chosen", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "survey-multi-choice", "slot-0");
+    await setText(page, "trial-tag", "colour");
+    await setText(page, "value-questions-0-options-0", "red");
+    await setText(page, "value-questions-0-options-1", "blue");
+
+    await addStep(page, "slot-1", "branch");
+    await page.getByTestId("branch-basis").selectOption("response");
+    await setText(page, "branch-scope", "colour");
+    await setText(page, "branch-answer", "blue");
+    await expect
+      .poll(() => page.getByTestId("step-problems").innerText())
+      .toContain("needs the question it reads (questions: Q0)");
+
+    const question = page.getByTestId("branch-question");
+    expect(
+      await question
+        .locator("option:not([disabled])")
+        .evaluateAll((options) => options.map((option) => (option as HTMLOptionElement).value)),
+    ).toEqual(["Q0"]);
+    await question.selectOption("Q0");
+    await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
+
+    await page.getByTestId("node-1-0-0").click();
+    await setFixed(page, "stimulus", "<p>blue it is</p>");
+
+    const preview = page.frameLocator('[data-testid="preview"]');
+    await expect.poll(() => preview.getByLabel("blue").count(), { timeout: 20_000 }).toBe(1);
+    await preview.getByLabel("blue").check();
+    await preview.locator("#jspsych-survey-multi-choice-next").click();
+    await expect
+      .poll(() => preview.locator("#jspsych-content").innerText(), { timeout: 10_000 })
+      .toContain("blue it is");
+    await page.close();
+  }, 180_000);
+
+  it("keeps its question when it becomes a checkbox question", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "survey-multi-choice", "slot-0");
+    await setText(page, "value-questions-0-prompt", "Which colours?");
+    await page.getByTestId("trial-plugin").selectOption("survey-multi-select");
+
+    await page.getByTestId("view-spec").click();
+    const spec = await authoredSpec(page);
+    expect(trialParams(spec.timeline[0]).questions).toEqual([
+      { prompt: "<p>Which colours?</p>", options: ["Option 1", "Option 2"] },
+    ]);
+    await page.close();
+  }, 180_000);
 });
 
 describe("a canvas step", () => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  paramsForPlugin,
   pluginChoices,
   pluginTitle,
   schemas,
@@ -134,5 +135,32 @@ describe("pluginChoices", () => {
       "call-function",
       "fullscreen",
     ]);
+  });
+});
+
+describe("paramsForPlugin", () => {
+  it("keeps the questions going from one kind of question to another", () => {
+    const likert = {
+      questions: [{ prompt: "<p>Sure?</p>", name: "sure", labels: ["no", "yes"], required: true }],
+    };
+    expect(paramsForPlugin(likert, "survey-likert", "survey-multi-choice")).toEqual({
+      questions: [
+        { prompt: "<p>Sure?</p>", name: "sure", required: true, options: ["Option 1", "Option 2"] },
+      ],
+    });
+  });
+
+  it("starts afresh going to a step that asks no questions", () => {
+    const survey = { questions: [{ prompt: "<p>Sure?</p>", options: ["a"] }] };
+    expect(paramsForPlugin(survey, "survey-multi-choice", "html-keyboard-response")).toEqual({
+      stimulus: "<p>Your text here</p>",
+    });
+  });
+
+  it("starts afresh when the questions come from a column", () => {
+    const bound = { questions: { var: "questions" } };
+    expect(paramsForPlugin(bound, "survey-multi-choice", "survey-multi-select")).toEqual(
+      startingParams("survey-multi-select"),
+    );
   });
 });

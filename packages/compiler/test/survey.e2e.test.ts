@@ -61,6 +61,17 @@ const spec: Spec = {
         ],
       },
     },
+    {
+      kind: "branch",
+      when: { scope: "fruit", question: "fruit", response_equals: "plum" },
+      then: [
+        {
+          kind: "trial",
+          plugin: "html-keyboard-response",
+          params: { stimulus: '<p id="ticked">plum was ticked</p>' },
+        },
+      ],
+    },
   ],
 };
 
@@ -76,7 +87,7 @@ afterAll(async () => {
 });
 
 describe("choice questions", () => {
-  it("records one choice, branches on it, and records several ticks", async () => {
+  it("records one choice and several ticks, and branches on each", async () => {
     const { html } = await emitHtml(compileSpec(spec, schemas), {
       title: "choices",
       base: "/node_modules",
@@ -96,6 +107,7 @@ describe("choice questions", () => {
     await page.getByLabel("apple").check();
     await page.getByLabel("plum").check();
     await page.locator("#jspsych-survey-multi-select-next").click();
+    await expect.poll(() => page.locator("#ticked").innerText()).toBe("plum was ticked");
 
     const responses = await page.evaluate(() =>
       (
