@@ -4,10 +4,10 @@
   import CanvasField from "./CanvasField.svelte";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
-  import type { ParameterValue } from "@jspsych-studio/compiler";
+  import type { Asset, ParameterValue } from "@jspsych-studio/compiler";
 
   interface Props {
-    assets: string[];
+    assets: Asset[];
     name: string;
     parameter: ParameterSchema;
     required: boolean;

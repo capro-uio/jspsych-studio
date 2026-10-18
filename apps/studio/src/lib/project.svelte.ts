@@ -207,7 +207,7 @@ export function conditionColumns(table: string) {
 }
 
 export function assetOptions() {
-  return (project.spec.assets ?? []).map((asset) => asset.name);
+  return project.spec.assets ?? [];
 }
 
 export function allConditionColumns() {
