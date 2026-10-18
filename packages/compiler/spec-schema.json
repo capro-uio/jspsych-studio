@@ -463,6 +463,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -639,6 +642,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1037,6 +1043,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1598,6 +1607,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1823,6 +1835,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -1833,6 +1848,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -2060,6 +2078,9 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2070,6 +2091,9 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2400,6 +2424,9 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2522,6 +2549,9 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2532,6 +2562,9 @@
                               "anyOf": [
                                 {
                                   "$ref": "#/definitions/code"
+                                },
+                                {
+                                  "type": "null"
                                 }
                               ]
                             },
@@ -2871,6 +2904,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3102,6 +3138,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3112,6 +3151,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3122,6 +3164,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3132,6 +3177,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3142,6 +3190,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3152,6 +3203,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3162,6 +3216,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3172,6 +3229,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3182,6 +3242,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3192,6 +3255,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -3221,6 +3287,9 @@
                     "anyOf": [
                       {
                         "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
                       }
                     ]
                   },
@@ -4034,7 +4103,8 @@
       "properties": {
         "code": {
           "title": "A single JavaScript expression.",
-          "type": "string"
+          "type": "string",
+          "minLength": 1
         }
       },
       "additionalProperties": false
@@ -4170,10 +4240,12 @@
         },
         "background_color": {
           "title": "What the participant's screen looks like behind the stimulus.",
-          "type": "string"
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg]+\\))$"
         },
         "text_color": {
-          "type": "string"
+          "type": "string",
+          "pattern": "^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|(rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg]+\\))$"
         }
       },
       "additionalProperties": false

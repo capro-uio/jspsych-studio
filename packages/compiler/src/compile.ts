@@ -111,7 +111,7 @@ function dataExpression(trial: TrialNode) {
   const entries = [
     ...(trial.tag ? [`tag: ${literal(trial.tag)}`] : []),
     ...Object.entries(trial.record ?? {}).map(
-      ([key, value]) => `${key}: ${parameterExpression(value)}`,
+      ([key, value]) => `${literal(key)}: ${parameterExpression(value)}`,
     ),
   ];
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : null;
@@ -153,7 +153,7 @@ function compileBlock(block: BlockNode, context: CompileContext) {
     `timeline_variables: ${literal(context.spec.conditions?.[block.conditions] ?? [])}`,
   ];
   if (block.randomize_order) entries.push("randomize_order: true");
-  if (block.repetitions) entries.push(`repetitions: ${block.repetitions}`);
+  if (block.repetitions) entries.push(`repetitions: ${literal(block.repetitions)}`);
   return `{\n${entries.map((entry) => `  ${entry},`).join("\n")}\n}`;
 }
 

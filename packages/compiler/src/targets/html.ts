@@ -74,12 +74,10 @@ ${scripts}
 ${
   options.sourceFile
     ? `    <script src="${options.sourceFile}"></script>`
-    : `    <script>
-${body
-  .trimEnd()
-  .split("\n")
-  .map((line) => (line ? `      ${line}` : ""))
-  .join("\n")}
+    : // Left unindented: indenting each line would change the text of a multi-line template
+      // literal, which author code can hold.
+      `    <script>
+${body.trimEnd()}
     </script>`
 }
   </body>

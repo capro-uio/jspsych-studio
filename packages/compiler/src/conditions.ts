@@ -17,7 +17,7 @@ export function compileAccuracyPredicate(rule: AccuracyRule) {
   return (
     `() => {\n` +
     `    const scored = jsPsych.data.get().filter({ tag: ${literal(rule.scope)} });\n` +
-    `    return scored.count() > 0 && scored.select("correct").mean() ${operator} ${threshold};\n` +
+    `    return scored.count() > 0 && scored.select("correct").mean() ${operator} ${literal(threshold)};\n` +
     `  }`
   );
 }
