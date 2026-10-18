@@ -57,10 +57,35 @@ export function editableParameters(plugin: string) {
 }
 
 const PLACEHOLDER_TEXT = "<p>Your text here</p>";
+const PLACEHOLDER_OPTIONS = ["Option 1", "Option 2"];
+
+/** What a required field starts as, or undefined when there is no sensible start for it. */
+function placeholderFor(field: ParameterSchema): unknown {
+  if (field.jspsychType === "HTML_STRING") {
+    return field.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+  }
+  if (field.type === "array" && field.items?.type === "string" && !field.items.enum) {
+    return [...PLACEHOLDER_OPTIONS];
+  }
+  return undefined;
+}
+
+// A list of questions starts with one, its required fields filled in, rather than empty: an empty
+// list is a step that cannot run.
+function starterEntry(item: ParameterSchema) {
+  const entry: Record<string, unknown> = {};
+  for (const name of item.required ?? []) {
+    const field = item.properties?.[name];
+    const value = field && placeholderFor(field);
+    if (value === undefined) return undefined;
+    entry[name] = value;
+  }
+  return entry;
+}
 
 /**
- * Required parameters start from the schema's example, or placeholder text for text parameters,
- * so a new step is not born invalid.
+ * Required parameters start from the schema's example, from placeholders, or with one entry when
+ * they are a list of objects, so a new step is not born invalid.
  */
 export function startingParams(plugin: string): Record<string, unknown> {
   const schema = pluginSchema(plugin);
@@ -71,12 +96,40 @@ export function startingParams(plugin: string): Record<string, unknown> {
     if (parameter?.examples?.length) {
       params[name] = structuredClone(parameter.examples[0]);
     } else if (parameter?.jspsychType === "HTML_STRING") {
-      params[name] = parameter.type === "array" ? [PLACEHOLDER_TEXT] : PLACEHOLDER_TEXT;
+      params[name] = placeholderFor(parameter);
     } else if (parameter && takesFunction(parameter.jspsychType)) {
       params[name] = { code: codeSeed(parameter, undefined) };
+    } else if (parameter?.type === "array" && parameter.items?.properties) {
+      const entry = starterEntry(parameter.items);
+      if (entry) params[name] = [entry];
     }
   }
   return params;
+}
+
+/**
+ * The parameters a step takes when it changes type. Settings do not carry across step types, with
+ * one exception: going between kinds of question keeps the questions, and what each new kind
+ * needs is filled in. The new type should arrive ready to run where it can.
+ */
+export function paramsForPlugin(
+  params: Record<string, unknown> | undefined,
+  from: string,
+  to: string,
+): Record<string, unknown> {
+  const starting = startingParams(to);
+  const questions = params?.questions;
+  const before = pluginSchema(from)?.properties.questions?.items?.properties;
+  const after = pluginSchema(to)?.properties.questions?.items;
+  if (!before || !after?.properties || !Array.isArray(questions)) return starting;
+  const starter = starterEntry(after) ?? {};
+  return {
+    ...starting,
+    questions: questions.map((question: Record<string, unknown>) => ({
+      ...starter,
+      ...Object.fromEntries(Object.entries(question).filter(([name]) => name in after.properties!)),
+    })),
+  };
 }
 
 /** The fields an entry of a list shows: for one with variants, only those its variant reads. */

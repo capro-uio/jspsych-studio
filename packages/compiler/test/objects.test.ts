@@ -44,3 +44,21 @@ describe("list parameters whose entries are objects", () => {
     );
   });
 });
+
+describe.each(["survey-multi-choice", "survey-multi-select"])("%s questions", (plugin) => {
+  const choices = (questions: unknown[]): Spec => ({
+    name: "questionnaire",
+    timeline: [{ kind: "trial", plugin, params: { questions } }],
+  });
+
+  it("compiles a question with its options", () => {
+    const { source } = compileSpec(choices([{ prompt: "Pick", options: ["a", "b"] }]), schemas);
+    expect(source).toContain('"options":["a","b"]');
+  });
+
+  it("rejects a question with no options", () => {
+    expect(() => compileSpec(choices([{ prompt: "Pick" }]), schemas)).toThrow(
+      /entry 1 is missing "options"/,
+    );
+  });
+});

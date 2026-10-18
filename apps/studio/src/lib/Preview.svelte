@@ -159,7 +159,7 @@
         <iframe
           title="experiment preview"
           data-testid="preview"
-          sandbox="allow-scripts allow-modals"
+          sandbox="allow-scripts allow-forms allow-modals"
           srcdoc={html}
         ></iframe>
       {/key}

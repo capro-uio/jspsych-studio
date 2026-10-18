@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  paramsForPlugin,
   pluginChoices,
   pluginTitle,
   schemas,
@@ -25,6 +26,22 @@ describe("startingParams", () => {
     expect(startingParams("psychophysics").stimuli).toEqual([
       { obj_type: "cross", line_length: 40 },
     ]);
+  });
+
+  it.each([
+    ["survey-likert", { prompt: "<p>Your text here</p>", labels: ["Option 1", "Option 2"] }],
+    ["survey-multi-choice", { prompt: "<p>Your text here</p>", options: ["Option 1", "Option 2"] }],
+    ["survey-multi-select", { prompt: "<p>Your text here</p>", options: ["Option 1", "Option 2"] }],
+    ["survey-text", { prompt: "<p>Your text here</p>" }],
+  ])("starts %s with one question ready to run", (plugin, question) => {
+    expect(startingParams(plugin)).toEqual({ questions: [question] });
+  });
+
+  it("starts each question with its own placeholder options", () => {
+    const first = startingParams("survey-multi-choice").questions as { options: string[] }[];
+    first[0].options.push("Option 3");
+    const second = startingParams("survey-multi-choice").questions as { options: string[] }[];
+    expect(second[0].options).toEqual(["Option 1", "Option 2"]);
   });
 
   it("still fills required text with a placeholder", () => {
@@ -118,5 +135,32 @@ describe("pluginChoices", () => {
       "call-function",
       "fullscreen",
     ]);
+  });
+});
+
+describe("paramsForPlugin", () => {
+  it("keeps the questions going from one kind of question to another", () => {
+    const likert = {
+      questions: [{ prompt: "<p>Sure?</p>", name: "sure", labels: ["no", "yes"], required: true }],
+    };
+    expect(paramsForPlugin(likert, "survey-likert", "survey-multi-choice")).toEqual({
+      questions: [
+        { prompt: "<p>Sure?</p>", name: "sure", required: true, options: ["Option 1", "Option 2"] },
+      ],
+    });
+  });
+
+  it("starts afresh going to a step that asks no questions", () => {
+    const survey = { questions: [{ prompt: "<p>Sure?</p>", options: ["a"] }] };
+    expect(paramsForPlugin(survey, "survey-multi-choice", "html-keyboard-response")).toEqual({
+      stimulus: "<p>Your text here</p>",
+    });
+  });
+
+  it("starts afresh when the questions come from a column", () => {
+    const bound = { questions: { var: "questions" } };
+    expect(paramsForPlugin(bound, "survey-multi-choice", "survey-multi-select")).toEqual(
+      startingParams("survey-multi-select"),
+    );
   });
 });

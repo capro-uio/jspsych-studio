@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { isResponseRule, latinSquareOrders } from "@jspsych-studio/compiler";
+  import { isResponseRule, latinSquareOrders, questionNames } from "@jspsych-studio/compiler";
   import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
   import { earlyEndingNames } from "@jspsych-studio/compiler";
@@ -23,7 +23,7 @@
     project,
     selectedNode,
   } from "./project.svelte.ts";
-  import { editableParameters, pluginChoices, pluginSchema, startingParams } from "./schemas.ts";
+  import { editableParameters, paramsForPlugin, pluginChoices, pluginSchema } from "./schemas.ts";
   import { currentProblems, problemsAt } from "./problems.svelte.ts";
 
   const node = $derived(selectedNode());
@@ -42,6 +42,10 @@
 
   const accuracyRule = $derived(branch && !isResponseRule(branch.when) ? branch.when : null);
   const responseRule = $derived(branch && isResponseRule(branch.when) ? branch.when : null);
+  // The questions the judged trials ask: null when they ask none, empty when they are not known.
+  const askedQuestions = $derived(
+    responseRule ? questionNames(project.spec.timeline, responseRule.scope) : null,
+  );
   const columns = $derived(allConditionColumns());
   const assets = $derived(assetOptions());
 
@@ -101,10 +105,8 @@
       onchange={(event) => {
         const chosen = event.currentTarget.value;
         if (chosen === trial.plugin) return;
-        // Settings do not carry across step types, but the new type should still arrive ready to
-        // run where it can.
+        trial.params = paramsForPlugin(trial.params, trial.plugin, chosen) as typeof trial.params;
         trial.plugin = chosen;
-        trial.params = startingParams(chosen) as typeof trial.params;
       }}
     >
       {#each pluginChoices as group (group.label)}
@@ -431,19 +433,37 @@
         onchange={(event) => setAnswer(responseRule, event.currentTarget.value)}
       />
     </div>
-    <div class="field">
-      <label for="branch-question"><span class="name">survey question</span></label>
-      <input
-        id="branch-question"
-        data-testid="branch-question"
-        placeholder="only when the trial asks several"
-        value={responseRule.question ?? ""}
-        onchange={(event) => setQuestion(responseRule, event.currentTarget.value)}
-      />
-    </div>
+    {#if askedQuestions?.length}
+      <div class="field">
+        <label for="branch-question"><span class="name">question</span></label>
+        <select
+          id="branch-question"
+          data-testid="branch-question"
+          value={responseRule.question ?? ""}
+          onchange={(event) => setQuestion(responseRule, event.currentTarget.value)}
+        >
+          <option value="" disabled>choose the question to read</option>
+          {#each askedQuestions as name (name)}
+            <option value={name}>{name}</option>
+          {/each}
+        </select>
+      </div>
+    {:else if askedQuestions || responseRule.question !== undefined}
+      <div class="field">
+        <label for="branch-question"><span class="name">question</span></label>
+        <input
+          id="branch-question"
+          data-testid="branch-question"
+          placeholder="the question's name, or Q0 for the first"
+          value={responseRule.question ?? ""}
+          onchange={(event) => setQuestion(responseRule, event.currentTarget.value)}
+        />
+      </div>
+    {/if}
     <p class="help">
       The latest answer on those trials is compared as text. Buttons count from 0, so the second
-      button is 1.
+      button is 1. Questions are read by name, Q0 being the first unnamed one; a checkbox question
+      takes the first path when the option was among those ticked.
     </p>
   {/if}
 {:else if end}

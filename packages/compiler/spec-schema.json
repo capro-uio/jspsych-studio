@@ -243,6 +243,8 @@
             "preload",
             "psychophysics",
             "survey-likert",
+            "survey-multi-choice",
+            "survey-multi-select",
             "survey-text"
           ]
         },
@@ -3609,6 +3611,416 @@
                   "autocomplete": {
                     "title": "autocomplete",
                     "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "survey-multi-choice"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "title": "questions",
+                    "description": "An array of objects, each object represents a question that appears on the screen. Each object contains a prompt, options, required, and horizontal parameter that will be applied to the question. See examples below for further clarification.`prompt`: Type string, default value is *undefined*. The string is prompt/question that will be associated with a group of options (radio buttons). All questions will get presented on the same page (trial). `options`: Type array, defualt value is *undefined*. An array of strings. The array contains a set of options to display for an individual question.`required`: Type boolean, default value is null. The boolean value indicates if a question is required('true') or not ('false'), using the HTML5 `required` attribute. If this parameter is undefined, the question will be optional. `horizontal`:Type boolean, default value is false. If true, then the question is centered and the options are displayed horizontally. `name`: Name of the question. Used for storing data. If left undefined then default names (`Q0`, `Q1`, `...`) will be used for the questions.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "prompt": {
+                              "title": "prompt",
+                              "description": "Question prompt.",
+                              "anyOf": [
+                                {
+                                  "format": "html",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "options": {
+                              "title": "options",
+                              "description": "Array of multiple choice options for this question.",
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "required": {
+                              "title": "required",
+                              "description": "Whether or not a response to this question must be given in order to continue.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "horizontal": {
+                              "title": "horizontal",
+                              "description": "If true, then the question will be centered and options will be displayed horizontally.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "name": {
+                              "title": "name",
+                              "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                              "default": "",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "prompt",
+                            "options"
+                          ]
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_question_order": {
+                    "title": "randomize question order",
+                    "description": "If true, the display order of `questions` is randomly determined at the start of the trial. In the data object, `Q0` will still refer to the first question in the array, regardless of where it was presented visually.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "preamble": {
+                    "title": "preamble",
+                    "description": "HTML formatted string to display at the top of the page above all the questions.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "autocomplete": {
+                    "title": "autocomplete",
+                    "description": "This determines whether or not all of the input elements on the page should allow autocomplete. Setting this to true will enable autocomplete or auto-fill for the form.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "questions"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "survey-multi-select"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "questions": {
+                    "title": "questions",
+                    "description": "An array of objects, each object represents a question that appears on the screen. Each object contains a prompt, options, required, and horizontal parameter that will be applied to the question. See examples below for further clarification.`prompt`: Type string, default value is *undefined*. The string is prompt/question that will be associated with a group of options (radio buttons). All questions will get presented on the same page (trial). `options`: Type array, defualt value is *undefined*. An array of strings. The array contains a set of options to display for an individual question.`required`: Type boolean, default value is null. The boolean value indicates if a question is required('true') or not ('false'), using the HTML5 `required` attribute. If this parameter is undefined, the question will be optional. `horizontal`:Type boolean, default value is false. If true, then the question is centered and the options are displayed horizontally. `name`: Name of the question. Used for storing data. If left undefined then default names (`Q0`, `Q1`, `...`) will be used for the questions.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "properties": {
+                            "prompt": {
+                              "title": "prompt",
+                              "description": "Question prompt.",
+                              "anyOf": [
+                                {
+                                  "format": "html",
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "options": {
+                              "title": "options",
+                              "description": "Array of multiple select options for this question.",
+                              "anyOf": [
+                                {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "horizontal": {
+                              "title": "horizontal",
+                              "description": "If true, then the question will be centered and options will be displayed horizontally.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "required": {
+                              "title": "required",
+                              "description": "Whether or not a response to this question must be given in order to continue.",
+                              "default": false,
+                              "anyOf": [
+                                {
+                                  "type": "boolean"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            },
+                            "name": {
+                              "title": "name",
+                              "description": "Name of the question in the trial data. If no name is given, the questions are named Q0, Q1, etc.",
+                              "default": "",
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "$ref": "#/definitions/variableReference"
+                                },
+                                {
+                                  "$ref": "#/definitions/code"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "prompt",
+                            "options"
+                          ]
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_question_order": {
+                    "title": "randomize question order",
+                    "description": "If true, the display order of `questions` is randomly determined at the start of the trial. In the data object, `Q0` will still refer to the first question in the array, regardless of where it was presented visually.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "preamble": {
+                    "title": "preamble",
+                    "description": "HTML formatted string to display at the top of the page above all the questions.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to submit responses.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "required_message": {
+                    "title": "required message",
+                    "description": "'You must choose at least one response for this question' | Message to display if required response is not given.",
+                    "default": "You must choose at least one response for this question",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "autocomplete": {
+                    "title": "autocomplete",
+                    "description": "This determines whether or not all of the input elements on the page should allow autocomplete. Setting this to true will enable autocomplete or auto-fill for the form.",
                     "default": false,
                     "anyOf": [
                       {
