@@ -1,7 +1,11 @@
 import type { ParameterValue, Slot, Spec, SpecNode, VariableReference } from "./types.ts";
 
+export function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
 export function isVariableReference(value: ParameterValue): value is VariableReference {
-  return typeof value === "object" && value !== null && !Array.isArray(value) && "var" in value;
+  return isPlainObject(value) && "var" in value;
 }
 
 export function conditionColumns(spec: Spec, table: string) {

@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@jspsych-studio/schemas": "*",
+    "acorn": "^8.19.0",
     "prettier": "^3.9.10"
   },
   "devDependencies": {

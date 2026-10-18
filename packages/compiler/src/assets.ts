@@ -41,7 +41,7 @@ export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inl
   );
   return (
     `const assets = {\n${entries.join(",\n")}\n};\n` +
-    `const asset = (name) => assets[name] ?? name;\n`
+    `const asset = (name) => (Array.isArray(name) ? name.map(asset) : (assets[name] ?? name));\n`
   );
 }
 

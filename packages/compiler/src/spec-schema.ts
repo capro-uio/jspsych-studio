@@ -7,6 +7,8 @@ import {
   VISIBLE_TEXT_PATTERN,
 } from "./recruitment.ts";
 import { STUDY_COLUMNS } from "./data.ts";
+import { COLOR_PATTERN } from "./appearance.ts";
+import { takesFunction } from "./code.ts";
 import type { SpecNode } from "./types.ts";
 
 /** Where the schema is published, so a spec can name it in `$schema` and editors can fetch it. */
@@ -59,11 +61,18 @@ function parameterSchema(parameter: ParameterSchema): JsonSchema {
   return shape;
 }
 
-// Any parameter can be fed from a conditions column instead of a literal, and a KEYS parameter
-// also accepts the two keywords that stand for every key and for none.
+// Any parameter can be fed from a conditions column or computed by code instead of a literal, and
+// a KEYS parameter also accepts the two keywords that stand for every key and for none. A
+// parameter that takes a function takes only code, or null for none, as jsPsych's own defaults do.
 function parameterValueSchema(parameter: ParameterSchema): JsonSchema {
+  if (takesFunction(parameter.jspsychType)) {
+    return {
+      ...carry(parameter, DOCUMENTED_KEYS),
+      anyOf: [reference("code"), { type: "null" }],
+    };
+  }
   const literal = parameterSchema(parameter);
-  const alternatives: JsonSchema[] = [literal, reference("variableReference")];
+  const alternatives: JsonSchema[] = [literal, reference("variableReference"), reference("code")];
   if (parameter.jspsychType === "KEYS") alternatives.push({ enum: KEY_LIST_KEYWORDS });
   return { ...carry(parameter, DOCUMENTED_KEYS), anyOf: alternatives.map(stripDocumentation) };
 }
@@ -362,6 +371,16 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
         },
         additionalProperties: false,
       },
+      code: {
+        title:
+          "JavaScript the author wrote: the function itself for a parameter that takes one, or an expression worked out when the trial starts. `jsPsych` is in scope.",
+        type: "object",
+        required: ["code"],
+        properties: {
+          code: { title: "A single JavaScript expression.", type: "string", minLength: 1 },
+        },
+        additionalProperties: false,
+      },
       parameterValue: {
         anyOf: [
           reference("variableReference"),
@@ -436,8 +455,9 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
           background_color: {
             title: "What the participant's screen looks like behind the stimulus.",
             type: "string",
+            pattern: COLOR_PATTERN,
           },
-          text_color: { type: "string" },
+          text_color: { type: "string", pattern: COLOR_PATTERN },
         },
         additionalProperties: false,
       },
