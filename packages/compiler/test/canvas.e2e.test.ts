@@ -9,16 +9,17 @@ import type { Spec } from "../src/types.ts";
 import { serveDirectory, type StaticServer } from "./server.ts";
 import { schemas } from "./schemas.ts";
 
-const PAGE_NAME = "canvas.e2e.html";
+const PAGE_NAMES = { numbers: "canvas.e2e.html", text: "canvas-text.e2e.html" };
 const EMPTY = "rgba(0, 0, 0, 0)";
 const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 
-const spec: Spec = {
+// The builder's conditions table holds every cell as text, so the offsets arrive as "-120" too.
+const canvasSpec = (offsets: [unknown, unknown]): Spec => ({
   name: "canvas",
   conditions: {
     rows: [
-      { colour: "rgb(255, 0, 0)", offset: -120 },
-      { colour: "rgb(0, 0, 255)", offset: 120 },
+      { colour: "rgb(255, 0, 0)", offset: offsets[0] },
+      { colour: "rgb(0, 0, 255)", offset: offsets[1] },
     ],
   },
   timeline: [
@@ -47,7 +48,7 @@ const spec: Spec = {
       ],
     },
   ],
-};
+});
 
 let browser: Browser;
 let server: StaticServer;
@@ -69,11 +70,17 @@ async function colourAt(page: Page, x: number, y: number) {
 }
 
 beforeAll(async () => {
-  const compiled = compileSpec(spec, schemas, {
-    initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
-  });
-  const { html } = await emitHtml(compiled, { title: spec.name, base: "/node_modules" });
-  writeFileSync(join(workspaceRoot, PAGE_NAME), html);
+  const pages: [string, [unknown, unknown]][] = [
+    [PAGE_NAMES.numbers, [-120, 120]],
+    [PAGE_NAMES.text, ["-120", "120"]],
+  ];
+  for (const [name, offsets] of pages) {
+    const compiled = compileSpec(canvasSpec(offsets), schemas, {
+      initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
+    });
+    const { html } = await emitHtml(compiled, { title: "canvas", base: "/node_modules" });
+    writeFileSync(join(workspaceRoot, name), html);
+  }
   server = await serveDirectory(workspaceRoot);
   browser = await chromium.launch({ channel: process.env.PLAYWRIGHT_CHANNEL ?? "chrome" });
 }, 120_000);
@@ -81,38 +88,42 @@ beforeAll(async () => {
 afterAll(async () => {
   await browser?.close();
   await server?.close();
-  rmSync(join(workspaceRoot, PAGE_NAME), { force: true });
+  for (const name of Object.values(PAGE_NAMES)) rmSync(join(workspaceRoot, name), { force: true });
 });
 
 describe("a compiled canvas step", () => {
-  it("draws each row's objects where and how the row says", async () => {
-    const page = await browser.newPage();
-    const problems: string[] = [];
-    page.on("pageerror", (error) => problems.push(error.message));
-    page.on("console", (message) => {
-      if (message.type() === "error") problems.push(message.text());
-    });
-    // The plugin reports a broken object with a blocking alert, which would stall a participant.
-    page.on("dialog", async (dialog) => {
-      problems.push(`alert: ${dialog.message()}`);
-      await dialog.dismiss();
-    });
+  it.each(Object.entries(PAGE_NAMES))(
+    "draws each row's objects where and how the row says, with offsets as %s",
+    async (_, pageName) => {
+      const page = await browser.newPage();
+      const problems: string[] = [];
+      page.on("pageerror", (error) => problems.push(error.message));
+      page.on("console", (message) => {
+        if (message.type() === "error") problems.push(message.text());
+      });
+      // The plugin reports a broken object with a blocking alert, which would stall a participant.
+      page.on("dialog", async (dialog) => {
+        problems.push(`alert: ${dialog.message()}`);
+        await dialog.dismiss();
+      });
 
-    await page.goto(`${server.url}/${PAGE_NAME}`);
-    await page.locator("#myCanvas").waitFor();
-    await page.waitForTimeout(200);
-    expect(await colourAt(page, 200 - 120, 150)).toBe("rgba(255, 0, 0, 255)");
-    expect(await colourAt(page, 200 + 120, 150)).toBe(EMPTY);
-    expect(await colourAt(page, 200, 150)).toBe("rgba(0, 0, 0, 255)");
+      await page.goto(`${server.url}/${pageName}`);
+      await page.locator("#myCanvas").waitFor();
+      await page.waitForTimeout(200);
+      expect(await colourAt(page, 200 - 120, 150)).toBe("rgba(255, 0, 0, 255)");
+      expect(await colourAt(page, 200 + 120, 150)).toBe(EMPTY);
+      expect(await colourAt(page, 200, 150)).toBe("rgba(0, 0, 0, 255)");
 
-    await page.keyboard.press("Space");
-    await page.waitForTimeout(200);
-    expect(await colourAt(page, 200 + 120, 150)).toBe("rgba(0, 0, 255, 255)");
-    expect(await colourAt(page, 200 - 120, 150)).toBe(EMPTY);
+      await page.keyboard.press("Space");
+      await page.waitForTimeout(200);
+      expect(await colourAt(page, 200 + 120, 150)).toBe("rgba(0, 0, 255, 255)");
+      expect(await colourAt(page, 200 - 120, 150)).toBe(EMPTY);
 
-    await page.keyboard.press("Space");
-    await page.waitForFunction(() => Boolean(window.studioExperiment?.finished));
-    expect(problems).toEqual([]);
-    await page.close();
-  }, 120_000);
+      await page.keyboard.press("Space");
+      await page.waitForFunction(() => Boolean(window.studioExperiment?.finished));
+      expect(problems).toEqual([]);
+      await page.close();
+    },
+    120_000,
+  );
 });
