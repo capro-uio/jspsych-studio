@@ -63,6 +63,12 @@ function uploadEnding(ending: Ending | undefined) {
   };
 }
 
+function withoutTrailingSlashes(url: string) {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
 // Losing a participant's data because an upload failed is unrecoverable, so a failed upload falls
 // back to a download rather than ending the experiment as if the data had been stored.
 function uploadStep(
@@ -72,7 +78,7 @@ function uploadStep(
   rows: string,
   recordings: boolean,
 ) {
-  const base = (settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "");
+  const base = withoutTrailingSlashes(settings.endpoint ?? DATAPIPE_URL);
   const endpoint = `${base}/api/data/`;
   // DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
   const saveRecordings = recordings
@@ -108,15 +114,9 @@ function uploadStep(
   }`;
 }
 
-function downloadStep(
-  filename: string,
-  ending: Ending | undefined,
-  rows: string,
-  recordings: boolean,
-) {
+function downloadStep(filename: string, ending: Ending | undefined, rows: string) {
   return `() => {
     ${savingScreen("Downloading your data.")}
-    ${recordings ? `downloadRecordings(${rows}, ${filename});` : ""}
     ${rows}.localSave("csv", ${filename});
     ${ending?.message ? showMessage(ending.message) : ""}
   }`;
@@ -140,7 +140,7 @@ export function compileDataStep(
   const func =
     settings.save === "post"
       ? uploadStep(settings, filename, ending, rows, recordings)
-      : downloadStep(filename, ending, rows, recordings);
+      : downloadStep(filename, ending, rows);
   return {
     plugin: CALL_FUNCTION_PLUGIN,
     source: `{\n  type: jsPsychCallFunction,\n  async: ${settings.save === "post"},\n  func: ${func},\n}`,

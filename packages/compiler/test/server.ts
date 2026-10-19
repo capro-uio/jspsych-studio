@@ -18,6 +18,8 @@ export interface StaticServer {
   recordings: { experimentID: string; filename: string; data: string }[];
   /** Set to make the upload route fail, exercising the fallback path. */
   failUploads: boolean;
+  /** Set to make only /api/base64/ fail, as an experiment without base64 data switched on does. */
+  failRecordings: boolean;
   /** The group number /api/condition/ hands out next. */
   nextCondition: number;
   /** Set to make the condition route fail, exercising the local fallback. */
@@ -31,6 +33,7 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
   const recordings: StaticServer["recordings"] = [];
   const state = {
     failUploads: false,
+    failRecordings: false,
     nextCondition: 0,
     failConditions: false,
     conditionRequests: 0,
@@ -55,7 +58,7 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
       request.on("data", (chunk: Buffer) => chunks.push(chunk));
       request.on("end", () => {
         response.setHeader("access-control-allow-origin", "*");
-        if (state.failUploads) {
+        if (state.failUploads || (received === recordings && state.failRecordings)) {
           response.writeHead(500).end("nope");
           return;
         }
@@ -91,6 +94,12 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
     recordings,
     get failUploads() {
       return state.failUploads;
+    },
+    get failRecordings() {
+      return state.failRecordings;
+    },
+    set failRecordings(value: boolean) {
+      state.failRecordings = value;
     },
     set failUploads(value: boolean) {
       state.failUploads = value;

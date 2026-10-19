@@ -56,13 +56,13 @@
     {#if records}
       <p class="muted" data-testid="data-recordings">
         Each recording is uploaded as a sound or video file of its own, and the data names it. Turn
-        on base64 data for this experiment in DataPipe, or those uploads fail and the recordings
-        stay inside the downloaded file instead.
+        on base64 data for this experiment in DataPipe; a recording that cannot be uploaded stays
+        inside the data instead.
       </p>
     {/if}
   {:else if mode === "download" && records}
     <p class="muted" data-testid="data-recordings">
-      Each recording is downloaded as a sound or video file of its own, and the data names it.
+      Recordings stay inside the downloaded file, as text, so the participant sends you one file.
     </p>
   {/if}
 </section>

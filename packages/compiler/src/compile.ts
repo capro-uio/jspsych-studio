@@ -382,7 +382,7 @@ export function compileSpec(
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
-    (spec.data && usesRecordings(spec) ? `${RECORDING_HELPERS}\n` : "") +
+    (spec.data?.save === "post" && usesRecordings(spec) ? `${RECORDING_HELPERS}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({
           experimentName: spec.name,

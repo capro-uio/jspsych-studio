@@ -2,9 +2,10 @@ import { slotsOf } from "./variables.ts";
 import type { Spec, SpecNode, TrialNode } from "./types.ts";
 
 // jsPsych's recording plugins keep each recording as base64 text in the row's response: a few
-// seconds of video is megabytes in one cell of the CSV. A study that saves its data saves each
+// seconds of video is megabytes in one cell of the CSV. A study that uploads its data uploads each
 // recording as a file of its own instead, when it saves the rest, and the row names that file;
-// saving only then means an ending that keeps nothing sends no recording either.
+// saving only then means an ending that keeps nothing sends no recording either. A downloaded file
+// has no size limit, so a study that downloads keeps its recordings inside it, in one file.
 const RECORDING_PLUGINS = ["html-audio-response", "html-video-response"];
 
 // Each needs its device set up by a step that comes first, or the plugin finds no recorder.
@@ -38,20 +39,49 @@ export function usesRecordings(spec: Spec) {
   return trialsInOrder(spec.timeline).some(([trial]) => RECORDING_PLUGINS.includes(trial.plugin));
 }
 
-/** Steps that use a camera or microphone no earlier step has set up. */
-export function recordingOrderProblems(spec: Spec) {
-  const seen = new Set<string>();
-  const problems: { message: string; path: number[] }[] = [];
-  for (const [trial, path] of trialsInOrder(spec.timeline)) {
-    const needs = SET_UP_BY[trial.plugin];
-    if (needs && !seen.has(needs.plugin)) {
-      problems.push({
-        message: `plugin "${trial.plugin}" needs a "${needs.title}" step (${needs.plugin}) before it`,
-        path,
-      });
+type Problems = { message: string; path: number[] }[];
+
+function intersection(sets: Set<string>[]) {
+  return new Set([...sets[0]].filter((device) => sets.every((set) => set.has(device))));
+}
+
+// What is certainly set up after a list of steps, given what was before them. Only one path of a
+// branch runs, and only one group of a split, so after either only what every path set up counts;
+// counterbalanced tasks run in any order, so within one only what came before them counts.
+function setUpAfter(nodes: SpecNode[], before: Set<string>, path: number[], problems: Problems) {
+  let ready = new Set(before);
+  nodes.forEach((node, index) => {
+    const here = [...path, index];
+    if (node.kind === "trial") {
+      const needs = SET_UP_BY[node.plugin];
+      if (needs && !ready.has(needs.plugin)) {
+        problems.push({
+          message: `plugin "${node.plugin}" needs a "${needs.title}" step (${needs.plugin}) that every participant reaches before it`,
+          path: here,
+        });
+      }
+      ready.add(node.plugin);
+    } else if (node.kind === "block" || node.kind === "loop") {
+      ready = setUpAfter(node.children, ready, here, problems);
+    } else if (node.kind === "counterbalance") {
+      const tasks = node.tasks.map((task, slot) =>
+        setUpAfter(task.children, ready, [...here, slot], problems),
+      );
+      ready = new Set([ready, ...tasks].flatMap((set) => [...set]));
+    } else {
+      const paths = (slotsOf(node) ?? []).map((slot, slotIndex) =>
+        setUpAfter(slot.children, ready, [...here, slotIndex], problems),
+      );
+      if (paths.length > 0) ready = intersection(paths);
     }
-    seen.add(trial.plugin);
-  }
+  });
+  return ready;
+}
+
+/** Steps that use a camera or microphone that some participants reach without it set up. */
+export function recordingOrderProblems(spec: Spec) {
+  const problems: Problems = [];
+  setUpAfter(spec.timeline, new Set(), [], problems);
   return problems;
 }
 
@@ -70,30 +100,33 @@ const recordingRows = (rows) =>
     );
 const recordingName = (filename, row) => {
   const head = atob(row.response.slice(0, 16));
-  const extension = head.startsWith("\\x1aE\\xdf\\xa3") ? "webm" : head.includes("ftyp") ? "mp4" : "bin";
+  const extension = head.startsWith("\\x1aE\\xdf\\xa3")
+    ? "webm"
+    : head.includes("ftyp")
+      ? "mp4"
+      : head.startsWith("OggS")
+        ? "ogg"
+        : "bin";
   return filename.replace(/\\.csv$/, "") + "_trial" + row.trial_index + "." + extension;
 };
+// A recording that cannot be uploaded, as when the experiment has no base64 data switched on,
+// stays inside the data as it was, so the rest still goes up and nothing is lost.
 async function uploadRecordings(rows, filename, endpoint, experimentID) {
-  for (const row of recordingRows(rows)) {
+  const recordings = recordingRows(rows);
+  for (const [index, row] of recordings.entries()) {
+    jsPsych.getDisplayElement().innerHTML =
+      "<p>Saving recording " + (index + 1) + " of " + recordings.length + ", please do not close this window.</p>";
     const name = recordingName(filename, row);
-    const response = await fetch(endpoint, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ experimentID, filename: name, data: row.response }),
-    });
-    if (!response.ok) throw new Error("the server responded with " + response.status);
-    row.response = name;
-  }
-}
-function downloadRecordings(rows, filename) {
-  for (const row of recordingRows(rows)) {
-    const name = recordingName(filename, row);
-    const bytes = Uint8Array.from(atob(row.response), (character) => character.charCodeAt(0));
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([bytes]));
-    link.download = name;
-    link.click();
-    row.response = name;
+    try {
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ experimentID, filename: name, data: row.response }),
+      });
+      if (response.ok) row.response = name;
+    } catch {
+      continue;
+    }
   }
 }
 `;

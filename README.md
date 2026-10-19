@@ -129,9 +129,14 @@ microphone_ or _Set up the camera_ step before them, and the validator says so i
 jsPsych keeps a recording as base64 text in the row, megabytes of it for a few seconds of video, so
 a study that saves its data saves each recording as a file of its own instead, named after the
 participant and the trial, and the row's `response` holds that name. Uploads go to DataPipe's
-`/api/base64/`, which has to be switched on for the experiment in DataPipe; if it is not, the
-upload fails and the recordings stay inside the CSV the participant downloads, so none is lost.
-Recordings are only sent when the data is, so an ending that keeps nothing sends none.
+`/api/base64/`, which has to be switched on for the experiment in DataPipe; a recording that
+cannot be uploaded stays inside the data as text, and the rest is uploaded as usual. Recordings are
+only sent when the data is, so an ending that keeps nothing sends none. A study that downloads its
+data keeps the recordings inside the one file, since a download has no size limit and a browser
+may refuse several at once.
+
+A participant who refuses the camera or microphone stays on its set-up step: jsPsych's plugins
+wait for permission, so say in the study's instructions that it is needed.
 
 The preview cannot reach a camera or microphone: browsers give none to a sandboxed frame without an
 origin of its own, which is what keeps study code away from the builder. Download the experiment to

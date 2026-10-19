@@ -10,6 +10,12 @@ const speak: SpecNode = {
   params: { stimulus: "<p>say it</p>" },
 };
 const setUpMicrophone: SpecNode = { kind: "trial", plugin: "initialize-microphone" };
+const tagged: SpecNode = {
+  kind: "trial",
+  plugin: "html-keyboard-response",
+  tag: "x",
+  params: { stimulus: "<p>a</p>" },
+};
 
 const study = (timeline: SpecNode[], data?: DataSettings): Spec => ({
   name: "rec",
@@ -17,31 +23,66 @@ const study = (timeline: SpecNode[], data?: DataSettings): Spec => ({
   timeline,
 });
 const compiles = (spec: Spec) => () => compileSpec(spec, schemas);
+const NOT_SET_UP =
+  /needs a "Set up the microphone" step \(initialize-microphone\) that every participant reaches before it/;
 
 describe("steps that record", () => {
   it("need their device set up by an earlier step", () => {
-    expect(compiles(study([speak]))).toThrow(
-      /plugin "html-audio-response" needs a "Set up the microphone" step \(initialize-microphone\) before it/,
-    );
-    expect(compiles(study([speak, setUpMicrophone]))).toThrow(
-      /needs a "Set up the microphone" step/,
-    );
+    expect(compiles(study([speak]))).toThrow(NOT_SET_UP);
+    expect(compiles(study([speak, setUpMicrophone]))).toThrow(NOT_SET_UP);
     expect(compiles(study([setUpMicrophone, speak]))).not.toThrow();
   });
 
-  it("count a set-up step inside an earlier block or path", () => {
-    const branch: SpecNode = {
+  it("count a set-up step inside an earlier block", () => {
+    const block: SpecNode = { kind: "block", conditions: "rows", children: [setUpMicrophone] };
+    expect(compiles({ ...study([block, speak]), conditions: { rows: [{ a: 1 }] } })).not.toThrow();
+  });
+
+  it("count a set-up step on a path only if every path has one", () => {
+    const branch = (otherwise: SpecNode[]): SpecNode => ({
       kind: "branch",
       when: { scope: "x", accuracy_below: 0.5 },
       then: [setUpMicrophone],
+      otherwise,
+    });
+    expect(compiles(study([tagged, branch([]), speak]))).toThrow(NOT_SET_UP);
+    expect(compiles(study([tagged, branch([setUpMicrophone]), speak]))).not.toThrow();
+  });
+
+  it("do not count a set-up step in another group", () => {
+    const split: SpecNode = {
+      kind: "assign",
+      method: "random",
+      groups: [
+        { name: "a", children: [setUpMicrophone] },
+        { name: "b", children: [speak] },
+      ],
     };
-    const tagged: SpecNode = {
-      kind: "trial",
-      plugin: "html-keyboard-response",
-      tag: "x",
-      params: { stimulus: "<p>a</p>" },
+    expect(compiles(study([split]))).toThrow(NOT_SET_UP);
+  });
+
+  it("do not count a set-up step in a counterbalanced task that may come later", () => {
+    const tasks: SpecNode = {
+      kind: "counterbalance",
+      method: "random",
+      tasks: [
+        { name: "a", children: [setUpMicrophone] },
+        { name: "b", children: [speak] },
+      ],
     };
-    expect(compiles(study([tagged, branch, speak]))).not.toThrow();
+    expect(compiles(study([tasks]))).toThrow(NOT_SET_UP);
+  });
+
+  it("count a set-up step in any counterbalanced task for the steps after them all", () => {
+    const tasks: SpecNode = {
+      kind: "counterbalance",
+      method: "random",
+      tasks: [
+        { name: "a", children: [setUpMicrophone] },
+        { name: "b", children: [tagged] },
+      ],
+    };
+    expect(compiles(study([tasks, speak]))).not.toThrow();
   });
 
   it("need the camera set up to show it", () => {
@@ -61,20 +102,13 @@ describe("steps that record", () => {
     );
   });
 
-  it("download each recording as a file of its own", () => {
-    const { source } = compileSpec(study([setUpMicrophone, speak], { save: "download" }), schemas);
-    expect(source).toContain(
-      'downloadRecordings(jsPsych.data.get(), "rec" + "_" + participantId + ".csv");',
-    );
-  });
-
-  it("leave a study that saves nothing, or records nothing, without the helpers", () => {
+  it("keep recordings inside a downloaded file, or a study that saves nothing", () => {
+    expect(
+      compileSpec(study([setUpMicrophone, speak], { save: "download" }), schemas).source,
+    ).not.toContain("recordingRows");
     expect(compileSpec(study([setUpMicrophone, speak]), schemas).source).not.toContain(
       "recordingRows",
     );
-    expect(
-      compileSpec(study([setUpMicrophone], { save: "download" }), schemas).source,
-    ).not.toContain("recordingRows");
   });
 });
 
@@ -82,12 +116,6 @@ describe("usesDevices", () => {
   it("finds a step that uses or sets up a camera or microphone", () => {
     expect(usesDevices(study([setUpMicrophone]))).toBe(true);
     expect(usesDevices(study([{ kind: "trial", plugin: "mirror-camera" }]))).toBe(true);
-    expect(
-      usesDevices(
-        study([
-          { kind: "trial", plugin: "html-keyboard-response", params: { stimulus: "<p>a</p>" } },
-        ]),
-      ),
-    ).toBe(false);
+    expect(usesDevices(study([tagged]))).toBe(false);
   });
 });
