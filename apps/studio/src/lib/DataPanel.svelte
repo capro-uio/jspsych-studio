@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { DATAPIPE_URL } from "@jspsych-studio/compiler";
+  import { DATAPIPE_URL, usesRecordings } from "@jspsych-studio/compiler";
   import { project } from "./project.svelte.ts";
 
   const mode = $derived(project.spec.data?.save ?? "none");
+  const records = $derived(usesRecordings(project.spec));
 
   function setMode(value: string) {
     if (value === "none") delete project.spec.data;
@@ -51,6 +52,17 @@
     <p class="muted">
       If the upload fails, the participant is asked to download the file and send it to you, so
       nothing is lost.
+    </p>
+    {#if records}
+      <p class="muted" data-testid="data-recordings">
+        Each recording is uploaded as a sound or video file of its own, and the data names it. Turn
+        on base64 data for this experiment in DataPipe; a recording that cannot be uploaded stays
+        inside the data instead.
+      </p>
+    {/if}
+  {:else if mode === "download" && records}
+    <p class="muted" data-testid="data-recordings">
+      Recordings stay inside the downloaded file, as text, so the participant sends you one file.
     </p>
   {/if}
 </section>

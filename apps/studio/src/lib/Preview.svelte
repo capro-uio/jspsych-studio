@@ -1,5 +1,11 @@
 <script lang="ts">
-  import { compileSpec, emitHtml, formatSource, SpecError } from "@jspsych-studio/compiler";
+  import {
+    compileSpec,
+    emitHtml,
+    formatSource,
+    SpecError,
+    usesDevices,
+  } from "@jspsych-studio/compiler";
   import type { Spec } from "@jspsych-studio/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
   import { FOCUS_GUARD, previewSpec } from "./preview.ts";
@@ -26,6 +32,10 @@
   let fromSelected = $state(false);
 
   const REBUILD_DELAY_MS = 150;
+
+  // The preview's frame has no origin of its own, which keeps study code away from the builder,
+  // and browsers give such a frame no camera or microphone.
+  const needsDevices = $derived(usesDevices(project.spec));
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
   const selectionKey = $derived(project.selection?.join(".") ?? "");
@@ -132,6 +142,13 @@
         >Click into it to answer with keys. Nothing is saved from a preview</span
       >
     </div>
+  {/if}
+
+  {#if view === "experiment" && needsDevices}
+    <p class="device-note" data-testid="device-note">
+      The preview cannot reach a camera or microphone, so their steps wait there. Download the
+      experiment and open it to try them.
+    </p>
   {/if}
 
   {#if error}
@@ -249,6 +266,13 @@
     margin: 0 0 0.35rem;
     font-size: 0.78rem;
     color: var(--muted);
+  }
+  .device-note {
+    margin: 0 0 0.35rem;
+    padding: 0.3rem 0.5rem;
+    font-size: 0.8rem;
+    border: 1px solid var(--rule);
+    border-radius: 4px;
   }
   iframe {
     flex: 1;

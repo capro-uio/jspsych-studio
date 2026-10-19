@@ -35,12 +35,12 @@ describe("data collection", () => {
     expect(source).toContain("async: true");
   });
 
-  it("uses a custom endpoint without doubling the slash", () => {
+  it("uses a custom endpoint without doubling its slashes", () => {
     const { source } = compileSpec(
       specWithData({
         save: "post",
         experiment_id: "x",
-        endpoint: "https://example.org/pipe/",
+        endpoint: "https://example.org/pipe///",
       }),
       schemas,
     );

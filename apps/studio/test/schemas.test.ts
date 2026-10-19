@@ -192,6 +192,9 @@ describe("pluginChoices", () => {
       "Load files in advance",
       "Measure viewing distance",
       "Run a function",
+      "Set up the camera",
+      "Set up the microphone",
+      "Show the camera",
       "Switch to full screen",
     ]);
   });

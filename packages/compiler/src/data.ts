@@ -63,6 +63,12 @@ function uploadEnding(ending: Ending | undefined) {
   };
 }
 
+function withoutTrailingSlashes(url: string) {
+  let end = url.length;
+  while (end > 0 && url[end - 1] === "/") end--;
+  return url.slice(0, end);
+}
+
 // Losing a participant's data because an upload failed is unrecoverable, so a failed upload falls
 // back to a download rather than ending the experiment as if the data had been stored.
 function uploadStep(
@@ -70,8 +76,14 @@ function uploadStep(
   filename: string,
   studyEnding: Ending | undefined,
   rows: string,
+  recordings: boolean,
 ) {
-  const endpoint = `${(settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "")}/api/data/`;
+  const base = withoutTrailingSlashes(settings.endpoint ?? DATAPIPE_URL);
+  const endpoint = `${base}/api/data/`;
+  // DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
+  const saveRecordings = recordings
+    ? `await uploadRecordings(${rows}, filename, ${literal(`${base}/api/base64/`)}, ${literal(settings.experiment_id ?? "")});`
+    : "";
   const ending = uploadEnding(studyEnding);
   // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
   return `async (done) => {
@@ -79,6 +91,7 @@ function uploadStep(
     const filename = ${filename};
     ${ending.declaration}
     try {
+      ${saveRecordings}
       const response = await fetch(${literal(endpoint)}, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -120,12 +133,13 @@ export function compileDataStep(
   experimentName: string,
   ending: Ending | undefined,
   rows = ALL_ROWS,
+  recordings = false,
 ) {
   const prefix = settings.filename_prefix ?? experimentName;
   const filename = `${literal(prefix)} + "_" + ${PARTICIPANT_ID} + ".csv"`;
   const func =
     settings.save === "post"
-      ? uploadStep(settings, filename, ending, rows)
+      ? uploadStep(settings, filename, ending, rows, recordings)
       : downloadStep(filename, ending, rows);
   return {
     plugin: CALL_FUNCTION_PLUGIN,

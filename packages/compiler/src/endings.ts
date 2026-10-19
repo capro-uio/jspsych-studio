@@ -7,6 +7,7 @@ import {
   ENDING_COLUMN,
 } from "./data.ts";
 import { literal } from "./emit.ts";
+import { usesRecordings } from "./recordings.ts";
 import { COMPLETE_ENDING, endingOf, retentionOf } from "./recruitment.ts";
 import type { EndNode, Ending, Spec } from "./types.ts";
 
@@ -25,7 +26,7 @@ function finishingStep(spec: Spec, name: string, ending: Ending | undefined) {
   if (!spec.data || keep === "nothing") return finishWithoutSaving(ending);
   const rows =
     keep === "checkpoint" ? `${ALL_ROWS}.filter({ ${ENDING_COLUMN}: ${literal(name)} })` : ALL_ROWS;
-  return compileDataStep(spec.data, spec.name, ending, rows);
+  return compileDataStep(spec.data, spec.name, ending, rows, usesRecordings(spec));
 }
 
 /** What runs once every step has: the `complete` ending. */

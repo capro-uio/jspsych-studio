@@ -21,6 +21,7 @@ import {
 import { literal } from "./emit.ts";
 import { pluginIdentifier } from "./identifiers.ts";
 import { WAS_EXCLUDED, compileExcludingPlugin, excludingIdentifier } from "./exclusions.ts";
+import { RECORDING_HELPERS, usesRecordings } from "./recordings.ts";
 import {
   ORDERS_VARIABLE,
   compileCounterbalancedTasks,
@@ -381,6 +382,7 @@ export function compileSpec(
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
+    (spec.data?.save === "post" && usesRecordings(spec) ? `${RECORDING_HELPERS}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({
           experimentName: spec.name,
