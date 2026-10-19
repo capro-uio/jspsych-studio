@@ -122,6 +122,15 @@ describe("extractSchemas", () => {
     ).toThrow(/names "key_anwser", which categorize-html does not take/);
   });
 
+  it("reads a list whose default is a list of rows as a grid", () => {
+    const { grid, choices } = report.schemas["serial-reaction-time"].properties;
+    expect(grid).toMatchObject({
+      format: "grid",
+      items: { type: "array", items: { type: "integer" } },
+    });
+    expect(choices).toMatchObject({ format: "grid", items: { items: { type: "string" } } });
+  });
+
   it("takes decimal card sizes for calibrating the screen", () => {
     expect(report.schemas.resize.properties.item_width).toMatchObject({
       type: "number",

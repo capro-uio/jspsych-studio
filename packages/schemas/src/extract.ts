@@ -103,6 +103,39 @@ export function functionSource(fn: (...args: never[]) => unknown) {
   return [first, ...rest.map((line) => line.slice(strip))].join("\n");
 }
 
+// jsPsych declares a grid, such as serial-reaction-time's squares, as a list, and only its default
+// shows that each entry is itself a row.
+function isGrid(value: unknown): value is unknown[][] {
+  return Array.isArray(value) && value.length > 0 && value.every(Array.isArray);
+}
+
+const CELL_TYPES: Record<string, string> = {
+  number: "integer",
+  string: "string",
+  boolean: "boolean",
+};
+
+function gridOf(list: ParameterSchema, rows: unknown[][]): ParameterSchema {
+  const cell = rows.flat()[0];
+  const declared = list.items ?? list;
+  return {
+    ...list,
+    type: "array",
+    format: "grid",
+    items: {
+      title: "row",
+      type: "array",
+      jspsychType: list.jspsychType,
+      items: {
+        ...declared,
+        title: "cell",
+        type: CELL_TYPES[typeof cell] ?? declared.type,
+        jspsychType: list.jspsychType,
+      },
+    },
+  };
+}
+
 export function toParameterSchema(
   name: string,
   raw: RawParameter,
@@ -116,6 +149,7 @@ export function toParameterSchema(
     // to know that: a list of HTML strings is a list of HTML strings, not of anonymous values.
     schema = { type: "array", items: schema, jspsychType } as ParameterSchema;
   }
+  if (raw.array && isGrid(raw.default)) schema = gridOf(schema, raw.default);
   schema.title = raw.pretty_name ?? name.replace(/_/g, " ");
   const description = descriptions[name] ?? raw.description;
   if (description) schema.description = description;

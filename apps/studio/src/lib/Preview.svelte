@@ -146,8 +146,9 @@
       {/each}
       {#if problems.length > overall.length}
         <p data-testid="steps-need-attention">
-          {problems.length - overall.length} step{problems.length - overall.length === 1 ? "" : "s"}
-          need attention; each one says what it needs.
+          {problems.length - overall.length === 1
+            ? "1 step needs"
+            : `${problems.length - overall.length} steps need`} attention; each one says what it needs.
         </p>
       {/if}
     </div>

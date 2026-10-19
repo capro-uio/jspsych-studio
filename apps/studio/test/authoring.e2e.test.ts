@@ -597,6 +597,32 @@ describe("a browser check that turns people away", () => {
   }, 180_000);
 });
 
+describe("a grid of squares", () => {
+  it("is edited as a grid, and has to keep a key for every square", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "serial-reaction-time", "slot-0");
+    await showAllParameters(page);
+    await page.getByTestId("mode-grid").selectOption("fixed");
+    expect(await page.getByTestId("value-grid-0-3").isChecked()).toBe(true);
+
+    await page.getByTestId("value-grid-add-row").click();
+    await page.getByTestId("value-grid-1-2").uncheck();
+    await page.getByTestId("view-spec").click();
+    expect(trialParams((await authoredSpec(page)).timeline[0]).grid).toEqual([
+      [1, 1, 1, 1],
+      [1, 1, 0, 1],
+    ]);
+    await expect
+      .poll(() => page.getByTestId("step-problems").innerText())
+      .toContain("needs one key in its choices for each place in its grid");
+
+    await page.getByRole("button", { name: "− row" }).click();
+    await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
+    await page.close();
+  }, 180_000);
+});
+
 describe("a canvas step", () => {
   it("offers each shape its own fields and draws it in the preview", async () => {
     const page = await browser.newPage();

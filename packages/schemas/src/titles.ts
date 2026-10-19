@@ -115,6 +115,16 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Shows two images one after the other and records whether they were judged the same.",
     family: "judge",
   },
+  "serial-reaction-time": {
+    title: "Squares, answered with a key",
+    summary: "Lights up one square of a grid; the participant presses the key that goes with it.",
+    family: "show",
+  },
+  "serial-reaction-time-mouse": {
+    title: "Squares, answered by clicking",
+    summary: "Lights up one square of a grid; the participant clicks it.",
+    family: "show",
+  },
   "free-sort": {
     title: "Images, sorted by dragging",
     summary: "Lets the participant drag images into place, and records where each one ends up.",

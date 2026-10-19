@@ -163,3 +163,62 @@ describe("measuring viewing distance", () => {
     expect(compiles(study("virtual-chinrest", {}))).not.toThrow();
   });
 });
+
+describe("squares answered with a key", () => {
+  const squares = (params: Record<string, unknown>) =>
+    study("serial-reaction-time", { target: [0, 1], ...params });
+
+  it("takes a target on a square of the default grid", () => {
+    expect(compiles(squares({}))).not.toThrow();
+  });
+
+  it.each([
+    [{ target: [0, 4] }, /lights square \[0, 4\], which is not a square of its grid/],
+    [{ grid: [[1, 0]], choices: [["a", "b"]] }, /lights square \[0, 1\], which is not a square/],
+    [
+      {
+        grid: [
+          [1, 1],
+          [1, 1],
+        ],
+      },
+      /needs one key in its choices for each place in its grid/,
+    ],
+    [{ grid: [1, 1] }, /expects a grid: a list of rows/],
+  ])("rejects %j", (params, message) => {
+    expect(compiles(squares(params))).toThrow(message);
+  });
+
+  it("takes a grid of keys shaped like its squares", () => {
+    expect(
+      compiles(
+        squares({
+          grid: [
+            [1, 1],
+            [1, 1],
+          ],
+          choices: [
+            ["q", "w"],
+            ["a", "s"],
+          ],
+        }),
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("squares answered by clicking", () => {
+  it("needs no keys, only a target on a square", () => {
+    expect(
+      compiles(
+        study("serial-reaction-time-mouse", {
+          grid: [
+            [1, 1],
+            [1, 1],
+          ],
+          target: [1, 1],
+        }),
+      ),
+    ).not.toThrow();
+  });
+});

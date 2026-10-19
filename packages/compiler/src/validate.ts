@@ -68,6 +68,11 @@ function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
   if (parameter.enum && !parameter.enum.includes(value)) {
     return `expects one of ${parameter.enum.map((option) => JSON.stringify(option)).join(", ")}`;
   }
+  if (parameter.format === "grid" && Array.isArray(value)) {
+    return value.length > 0 && value.every(Array.isArray)
+      ? null
+      : "expects a grid: a list of rows, each a list of cells";
+  }
   if (parameter.type === "array") {
     if (Array.isArray(value)) {
       const options = parameter.items?.enum;

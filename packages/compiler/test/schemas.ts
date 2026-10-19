@@ -11,6 +11,8 @@ const report = await extractSchemas([
   "@jspsych/plugin-call-function",
   "@jspsych/plugin-external-html",
   "@jspsych/plugin-resize",
+  "@jspsych/plugin-serial-reaction-time",
+  "@jspsych/plugin-serial-reaction-time-mouse",
   "@jspsych/plugin-survey-html-form",
   "@jspsych/plugin-virtual-chinrest",
   "@jspsych/plugin-cloze",

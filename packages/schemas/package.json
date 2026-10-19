@@ -40,6 +40,8 @@
     "@jspsych/plugin-resize": "^2.1.0",
     "@jspsych/plugin-same-different-html": "^2.1.0",
     "@jspsych/plugin-same-different-image": "^2.1.0",
+    "@jspsych/plugin-serial-reaction-time": "^2.1.0",
+    "@jspsych/plugin-serial-reaction-time-mouse": "^2.2.0",
     "@jspsych/plugin-sketchpad": "^2.1.0",
     "@jspsych/plugin-survey-html-form": "^2.1.0",
     "@jspsych/plugin-survey-likert": "^2.0.0",

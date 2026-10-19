@@ -2831,6 +2831,293 @@
         ]
       ]
     },
+    "serial-reaction-time": {
+      "plugin": "serial-reaction-time",
+      "title": "Squares, answered with a key",
+      "summary": "Lights up one square of a grid; the participant presses the key that goes with it.",
+      "family": "show",
+      "package": "@jspsych/plugin-serial-reaction-time",
+      "version": "2.1.0",
+      "properties": {
+        "grid": {
+          "type": "array",
+          "items": {
+            "title": "row",
+            "type": "array",
+            "jspsychType": "BOOL",
+            "items": {
+              "type": "integer",
+              "jspsychType": "BOOL",
+              "title": "cell"
+            }
+          },
+          "jspsychType": "BOOL",
+          "format": "grid",
+          "title": "grid",
+          "description": "This array represents the grid of boxes shown on the screen. Each inner array represents a single row. The entries in the inner arrays represent the columns. If an entry is `1` then a square will be drawn at that location on the grid. If an entry is `0` then the corresponding location on the grid will be empty. Thus, by mixing `1`s and `0`s it is possible to create many different grid-based arrangements.",
+          "default": [
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "jspsychType": "INT"
+          },
+          "jspsychType": "INT",
+          "title": "target",
+          "description": "The location of the target. The array should be the [row, column] of the target.",
+          "examples": [
+            [
+              0,
+              0
+            ]
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "title": "row",
+            "type": "array",
+            "jspsychType": "KEYS",
+            "items": {
+              "type": "string",
+              "format": "keyboard-key",
+              "title": "cell",
+              "jspsychType": "KEYS"
+            }
+          },
+          "jspsychType": "KEYS",
+          "format": "grid",
+          "title": "choices",
+          "description": "The dimensions of this array must match the dimensions of `grid`. Each entry in this array is the key that should be pressed for that corresponding location in the grid. Entries can be left blank if there is no key associated with that location of the grid.",
+          "default": [
+            [
+              "3",
+              "5",
+              "7",
+              "9"
+            ]
+          ]
+        },
+        "grid_square_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "grid square size",
+          "description": "The width and height in pixels of each square in the grid.",
+          "default": 100
+        },
+        "target_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "target color",
+          "description": "The color of the target square.",
+          "default": "#999"
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, the trial ends after a key press. Feedback is displayed if `show_response_feedback` is true.",
+          "default": true
+        },
+        "pre_target_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "pre target duration",
+          "description": "The number of milliseconds to display the grid *before* the target changes color.",
+          "default": 0
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "The maximum length of time of the trial, not including feedback.",
+          "default": null
+        },
+        "show_response_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show response feedback",
+          "description": "If true, show feedback indicating where the user responded and whether it was correct.",
+          "default": false
+        },
+        "feedback_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "feedback duration",
+          "description": "The length of time in milliseconds to show the feedback.",
+          "default": 200
+        },
+        "fade_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "fade duration",
+          "description": "If a positive number, the target will progressively change color at the start of the trial, with the transition lasting this many milliseconds.",
+          "default": null
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which keys to press).",
+          "default": null
+        }
+      },
+      "required": [
+        "target"
+      ],
+      "records": [
+        "grid",
+        "target",
+        "response",
+        "rt",
+        "correct"
+      ]
+    },
+    "serial-reaction-time-mouse": {
+      "plugin": "serial-reaction-time-mouse",
+      "title": "Squares, answered by clicking",
+      "summary": "Lights up one square of a grid; the participant clicks it.",
+      "family": "show",
+      "package": "@jspsych/plugin-serial-reaction-time-mouse",
+      "version": "2.2.0",
+      "properties": {
+        "grid": {
+          "type": "array",
+          "items": {
+            "title": "row",
+            "type": "array",
+            "jspsychType": "BOOL",
+            "items": {
+              "type": "integer",
+              "jspsychType": "BOOL",
+              "title": "cell"
+            }
+          },
+          "jspsychType": "BOOL",
+          "format": "grid",
+          "title": "grid",
+          "description": "This array represents the grid of boxes shown on the screen. Each inner array represents a single row. The entries in the inner arrays represent the columns. If an entry is `1` then a square will be drawn at that location on the grid. If an entry is `0` then the corresponding location on the grid will be empty. Thus, by mixing `1`s and `0`s it is possible to create many different grid-based arrangements.",
+          "default": [
+            [
+              1,
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        "target": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "jspsychType": "INT"
+          },
+          "jspsychType": "INT",
+          "title": "target",
+          "description": "The location of the target. The array should be the [row, column] of the target.",
+          "examples": [
+            [
+              0,
+              0
+            ]
+          ],
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "grid_square_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "grid square size",
+          "description": "The width and height in pixels of each square in the grid.",
+          "default": 100
+        },
+        "target_color": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "target color",
+          "description": "The color of the target square.",
+          "default": "#999"
+        },
+        "response_ends_trial": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "response ends trial",
+          "description": "If true, the trial ends after a click. Feedback is displayed if `show_response_feedback` is true.",
+          "default": true
+        },
+        "pre_target_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "pre target duration",
+          "description": "The number of milliseconds to display the grid *before* the target changes color.",
+          "default": 0
+        },
+        "trial_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "trial duration",
+          "description": "How long to show the trial */ /** The maximum length of time of the trial, not including feedback.",
+          "default": null
+        },
+        "show_response_feedback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show response feedback",
+          "description": "If true, show feedback indicating where the participant clicked and whether it was correct.",
+          "default": false
+        },
+        "feedback_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "feedback duration",
+          "description": "The length of time in milliseconds to show the feedback.",
+          "default": 200
+        },
+        "fade_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "fade duration",
+          "description": "If a positive number, the target will progressively change color at the start of the trial, with the transition lasting this many milliseconds.",
+          "default": null
+        },
+        "allow_nontarget_responses": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow nontarget responses",
+          "description": "If true, then user can make nontarget response.",
+          "default": false
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which keys to press).",
+          "default": null
+        }
+      },
+      "required": [
+        "target"
+      ],
+      "records": [
+        "grid",
+        "target",
+        "response",
+        "rt",
+        "correct"
+      ]
+    },
     "sketchpad": {
       "plugin": "sketchpad",
       "title": "Drawing",
