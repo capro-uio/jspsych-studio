@@ -14,6 +14,8 @@ export interface StaticServer {
   close: () => Promise<void>;
   /** Bodies posted to /api/data/, so a test can see what an experiment uploaded. */
   uploads: { experimentID: string; filename: string; data: string }[];
+  /** Bodies posted to /api/base64/: recordings, each sent as a file of its own. */
+  recordings: { experimentID: string; filename: string; data: string }[];
   /** Set to make the upload route fail, exercising the fallback path. */
   failUploads: boolean;
   /** The group number /api/condition/ hands out next. */
@@ -26,6 +28,7 @@ export interface StaticServer {
 
 export async function serveDirectory(root: string): Promise<StaticServer> {
   const uploads: StaticServer["uploads"] = [];
+  const recordings: StaticServer["recordings"] = [];
   const state = {
     failUploads: false,
     nextCondition: 0,
@@ -46,7 +49,8 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
         .end(JSON.stringify({ condition: state.nextCondition }));
       return;
     }
-    if (request.url?.startsWith("/api/data")) {
+    if (request.url?.startsWith("/api/data") || request.url?.startsWith("/api/base64")) {
+      const received = request.url.startsWith("/api/data") ? uploads : recordings;
       const chunks: Buffer[] = [];
       request.on("data", (chunk: Buffer) => chunks.push(chunk));
       request.on("end", () => {
@@ -55,7 +59,7 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
           response.writeHead(500).end("nope");
           return;
         }
-        uploads.push(JSON.parse(Buffer.concat(chunks).toString()) as (typeof uploads)[number]);
+        received.push(JSON.parse(Buffer.concat(chunks).toString()) as (typeof uploads)[number]);
         response.writeHead(200, { "content-type": "application/json" }).end("{}");
       });
       return;
@@ -84,6 +88,7 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
     url: `http://127.0.0.1:${address.port}`,
     close: () => new Promise<void>((resolve) => server.close(() => resolve())),
     uploads,
+    recordings,
     get failUploads() {
       return state.failUploads;
     },

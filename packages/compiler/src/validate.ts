@@ -25,6 +25,7 @@ import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { pluginRuleProblems } from "./plugin-rules.ts";
+import { recordingOrderProblems } from "./recordings.ts";
 import { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 import { appearanceProblems } from "./appearance.ts";
 
@@ -753,6 +754,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
   }
   problems.push(...recruitmentProblems(spec));
   problems.push(...appearanceProblems(spec.settings));
+  problems.push(...recordingOrderProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
   if (problems.length > 0) throw new SpecError(spec.name, problems);

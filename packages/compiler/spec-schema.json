@@ -245,16 +245,21 @@
             "external-html",
             "free-sort",
             "fullscreen",
+            "html-audio-response",
             "html-button-response",
             "html-keyboard-response",
             "html-slider-response",
+            "html-video-response",
             "iat-html",
             "iat-image",
             "image-button-response",
             "image-keyboard-response",
             "image-slider-response",
+            "initialize-camera",
+            "initialize-microphone",
             "instructions",
             "maxdiff",
+            "mirror-camera",
             "preload",
             "psychophysics",
             "resize",
@@ -2948,6 +2953,180 @@
           "if": {
             "properties": {
               "plugin": {
+                "const": "html-audio-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML content to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recording_duration": {
+                    "title": "recording duration",
+                    "description": "The maximum length of the recording, in milliseconds. The default value is intentionally set low because of the potential to accidentally record very large data files if left too high. You can set this to `null` to allow the participant to control the length of the recording via the done button, but be careful with this option as it can lead to crashing the browser if the participant waits too long to stop the recording.",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_done_button": {
+                    "title": "show done button",
+                    "description": "Whether to show a button on the screen that the participant can click to finish the recording.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "done_button_label": {
+                    "title": "done button label",
+                    "description": "The label for the done button.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "record_again_button_label": {
+                    "title": "record again button label",
+                    "description": "The label for the record again button enabled when `allow_playback: true`.",
+                    "default": "Record again",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "accept_button_label": {
+                    "title": "accept button label",
+                    "description": "The label for the accept button enabled when `allow_playback: true`.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "allow_playback": {
+                    "title": "allow playback",
+                    "description": "Whether to allow the participant to listen to their recording and decide whether to rerecord or not. If `true`, then the participant will be shown an interface to play their recorded audio and click one of two buttons to either accept the recording or rerecord. If rerecord is selected, then stimulus will be shown again, as if the trial is starting again from the beginning.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "save_audio_url": {
+                    "title": "save audio url",
+                    "description": "If `true`, then an [Object URL](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL) will be generated and stored for the recorded audio. Only set this to `true` if you plan to reuse the recorded audio later in the experiment, as it is a potentially memory-intensive feature.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
                 "const": "html-button-response"
               }
             },
@@ -3552,6 +3731,180 @@
                     "title": "response ends trial",
                     "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can set this parameter to `false` to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
                     "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "html-video-response"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML string to be displayed",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stimulus_duration": {
+                    "title": "stimulus duration",
+                    "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "recording_duration": {
+                    "title": "recording duration",
+                    "description": "The maximum length of the recording, in milliseconds. The default value is intentionally set low because of the potential to accidentally record very large data files if left too high. You can set this to `null` to allow the participant to control the length of the recording via the done button, but be careful with this option as it can lead to crashing the browser if the participant waits too long to stop the recording.",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_done_button": {
+                    "title": "show done button",
+                    "description": "Whether or not to show a button to end the recording. If false, the recording_duration must be set.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "done_button_label": {
+                    "title": "done button label",
+                    "description": "Label for the done (stop recording) button. Only used if show_done_button is true.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "record_again_button_label": {
+                    "title": "record again button label",
+                    "description": "The label for the record again button enabled when `allow_playback: true`.",
+                    "default": "Record again",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "accept_button_label": {
+                    "title": "accept button label",
+                    "description": "The label for the accept button enabled when `allow_playback: true`.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "allow_playback": {
+                    "title": "allow playback",
+                    "description": "Whether to allow the participant to listen to their recording and decide whether to rerecord or not. If `true`, then the participant will be shown an interface to play their recorded video and click one of two buttons to either accept the recording or rerecord. If rerecord is selected, then stimulus will be shown again, as if the trial is starting again from the beginning.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "save_video_url": {
+                    "title": "save video url",
+                    "description": "If `true`, then an [Object URL](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL) will be generated and stored for the recorded video. Only set this to `true` if you plan to reuse the recorded video later in the experiment, as it is a potentially memory-intensive feature.",
+                    "default": false,
                     "anyOf": [
                       {
                         "type": "boolean"
@@ -4971,6 +5324,195 @@
           "if": {
             "properties": {
               "plugin": {
+                "const": "initialize-camera"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "device_select_message": {
+                    "title": "device select message",
+                    "description": "The message to display when the user is presented with a dropdown list of available devices.",
+                    "default": "<p>Please select the camera you would like to use.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "The label for the select button.",
+                    "default": "Use this camera",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "include_audio": {
+                    "title": "include audio",
+                    "description": "Set to `true` to include an audio track in the recordings.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "width": {
+                    "title": "width",
+                    "description": "Request a specific width for the recording. This is not a guarantee that this width will be used, as it depends on the capabilities of the participant's device. Learn more about `MediaRecorder` constraints [here](https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#requesting_a_specific_value_for_a_setting).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "title": "height",
+                    "description": "Request a specific height for the recording. This is not a guarantee that this height will be used, as it depends on the capabilities of the participant's device. Learn more about `MediaRecorder` constraints [here](https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#requesting_a_specific_value_for_a_setting).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mime_type": {
+                    "title": "mime type",
+                    "description": "Set this to use a specific [MIME type](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType) for the recording. Set the entire type, e.g., `'video/mp4; codecs=\"avc1.424028, mp4a.40.2\"'`.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "initialize-microphone"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "device_select_message": {
+                    "title": "device select message",
+                    "description": "The message to display when the user is presented with a dropdown list of available devices.",
+                    "default": "<p>Please select the microphone you would like to use.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "The label for the select button.",
+                    "default": "Use this microphone",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
                 "const": "instructions"
               }
             },
@@ -5316,6 +5858,121 @@
                   "alternatives",
                   "labels"
                 ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "mirror-camera"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "HTML-formatted content to display below the camera feed.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "The label of the button to advance to the next trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "height": {
+                    "title": "height",
+                    "description": "The height of the video playback element. If left `null` then it will match the size of the recording.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "width": {
+                    "title": "width",
+                    "description": "The width of the video playback element. If left `null` then it will match the size of the recording.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "mirror_camera": {
+                    "title": "mirror camera",
+                    "description": "Whether to mirror the video image.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
                 "additionalProperties": false
               }
             }

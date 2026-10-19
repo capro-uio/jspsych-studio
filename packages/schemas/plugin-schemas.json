@@ -1299,6 +1299,89 @@
         "rt"
       ]
     },
+    "html-audio-response": {
+      "plugin": "html-audio-response",
+      "title": "Text, answered aloud",
+      "summary": "Shows text and records what the participant says, saved as a sound file.",
+      "family": "show",
+      "package": "@jspsych/plugin-html-audio-response",
+      "version": "2.1.1",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "stimulus",
+          "description": "The HTML content to be displayed."
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+          "default": null
+        },
+        "recording_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "recording duration",
+          "description": "The maximum length of the recording, in milliseconds. The default value is intentionally set low because of the potential to accidentally record very large data files if left too high. You can set this to `null` to allow the participant to control the length of the recording via the done button, but be careful with this option as it can lead to crashing the browser if the participant waits too long to stop the recording.",
+          "default": 2000
+        },
+        "show_done_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show done button",
+          "description": "Whether to show a button on the screen that the participant can click to finish the recording.",
+          "default": true
+        },
+        "done_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "done button label",
+          "description": "The label for the done button.",
+          "default": "Continue"
+        },
+        "record_again_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "record again button label",
+          "description": "The label for the record again button enabled when `allow_playback: true`.",
+          "default": "Record again"
+        },
+        "accept_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "accept button label",
+          "description": "The label for the accept button enabled when `allow_playback: true`.",
+          "default": "Continue"
+        },
+        "allow_playback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow playback",
+          "description": "Whether to allow the participant to listen to their recording and decide whether to rerecord or not. If `true`, then the participant will be shown an interface to play their recorded audio and click one of two buttons to either accept the recording or rerecord. If rerecord is selected, then stimulus will be shown again, as if the trial is starting again from the beginning.",
+          "default": false
+        },
+        "save_audio_url": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "save audio url",
+          "description": "If `true`, then an [Object URL](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL) will be generated and stored for the recorded audio. Only set this to `true` if you plan to reuse the recorded audio later in the experiment, as it is a potentially memory-intensive feature.",
+          "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ],
+      "records": [
+        "rt",
+        "response",
+        "stimulus",
+        "estimated_stimulus_onset",
+        "audio_url"
+      ]
+    },
     "html-button-response": {
       "plugin": "html-button-response",
       "title": "Text, answered with buttons",
@@ -1591,6 +1674,88 @@
         "response",
         "stimulus",
         "slider_start"
+      ]
+    },
+    "html-video-response": {
+      "plugin": "html-video-response",
+      "title": "Text, answered on camera",
+      "summary": "Shows text and records the participant on camera, saved as a video file.",
+      "family": "show",
+      "package": "@jspsych/plugin-html-video-response",
+      "version": "2.1.0",
+      "properties": {
+        "stimulus": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "stimulus",
+          "description": "The HTML string to be displayed"
+        },
+        "stimulus_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "stimulus duration",
+          "description": "How long to display the stimulus in milliseconds. The visibility CSS property of the stimulus will be set to `hidden` after this time has elapsed. If this is null, then the stimulus will remain visible until the trial ends.",
+          "default": null
+        },
+        "recording_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "recording duration",
+          "description": "The maximum length of the recording, in milliseconds. The default value is intentionally set low because of the potential to accidentally record very large data files if left too high. You can set this to `null` to allow the participant to control the length of the recording via the done button, but be careful with this option as it can lead to crashing the browser if the participant waits too long to stop the recording.",
+          "default": 2000
+        },
+        "show_done_button": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show done button",
+          "description": "Whether or not to show a button to end the recording. If false, the recording_duration must be set.",
+          "default": true
+        },
+        "done_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "done button label",
+          "description": "Label for the done (stop recording) button. Only used if show_done_button is true.",
+          "default": "Continue"
+        },
+        "record_again_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "record again button label",
+          "description": "The label for the record again button enabled when `allow_playback: true`.",
+          "default": "Record again"
+        },
+        "accept_button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "accept button label",
+          "description": "The label for the accept button enabled when `allow_playback: true`.",
+          "default": "Continue"
+        },
+        "allow_playback": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow playback",
+          "description": "Whether to allow the participant to listen to their recording and decide whether to rerecord or not. If `true`, then the participant will be shown an interface to play their recorded video and click one of two buttons to either accept the recording or rerecord. If rerecord is selected, then stimulus will be shown again, as if the trial is starting again from the beginning.",
+          "default": false
+        },
+        "save_video_url": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "save video url",
+          "description": "If `true`, then an [Object URL](https://developer.mozilla.org/en-US/docs/Web/API/URL/createObjectURL) will be generated and stored for the recorded video. Only set this to `true` if you plan to reuse the recorded video later in the experiment, as it is a potentially memory-intensive feature.",
+          "default": false
+        }
+      },
+      "required": [
+        "stimulus"
+      ],
+      "records": [
+        "rt",
+        "stimulus",
+        "response",
+        "video_url"
       ]
     },
     "iat-html": {
@@ -2258,6 +2423,92 @@
         "slider_start"
       ]
     },
+    "initialize-camera": {
+      "plugin": "initialize-camera",
+      "title": "Set up the camera",
+      "summary": "Asks the participant to allow and choose a camera, for the camera steps after.",
+      "family": "setup",
+      "package": "@jspsych/plugin-initialize-camera",
+      "version": "2.1.0",
+      "properties": {
+        "device_select_message": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "device select message",
+          "description": "The message to display when the user is presented with a dropdown list of available devices.",
+          "default": "<p>Please select the camera you would like to use.</p>"
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "The label for the select button.",
+          "default": "Use this camera"
+        },
+        "include_audio": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "include audio",
+          "description": "Set to `true` to include an audio track in the recordings.",
+          "default": false
+        },
+        "width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "width",
+          "description": "Request a specific width for the recording. This is not a guarantee that this width will be used, as it depends on the capabilities of the participant's device. Learn more about `MediaRecorder` constraints [here](https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#requesting_a_specific_value_for_a_setting).",
+          "default": null
+        },
+        "height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "height",
+          "description": "Request a specific height for the recording. This is not a guarantee that this height will be used, as it depends on the capabilities of the participant's device. Learn more about `MediaRecorder` constraints [here](https://developer.mozilla.org/en-US/docs/Web/API/Media_Streams_API/Constraints#requesting_a_specific_value_for_a_setting).",
+          "default": null
+        },
+        "mime_type": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "mime type",
+          "description": "Set this to use a specific [MIME type](https://developer.mozilla.org/en-US/docs/Web/API/MediaRecorder/mimeType) for the recording. Set the entire type, e.g., `'video/mp4; codecs=\"avc1.424028, mp4a.40.2\"'`.",
+          "default": null
+        }
+      },
+      "required": [],
+      "records": [
+        "device_id"
+      ]
+    },
+    "initialize-microphone": {
+      "plugin": "initialize-microphone",
+      "title": "Set up the microphone",
+      "summary": "Asks the participant to allow and choose a microphone, for the recording steps after.",
+      "family": "setup",
+      "package": "@jspsych/plugin-initialize-microphone",
+      "version": "2.1.0",
+      "properties": {
+        "device_select_message": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "device select message",
+          "description": "The message to display when the user is presented with a dropdown list of available devices.",
+          "default": "<p>Please select the microphone you would like to use.</p>"
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "The label for the select button.",
+          "default": "Use this microphone"
+        }
+      },
+      "required": [],
+      "records": [
+        "device_id"
+      ]
+    },
     "instructions": {
       "plugin": "instructions",
       "title": "Instruction pages",
@@ -2445,6 +2696,56 @@
         "rt",
         "labels",
         "response"
+      ]
+    },
+    "mirror-camera": {
+      "plugin": "mirror-camera",
+      "title": "Show the camera",
+      "summary": "Shows the participant their own camera, so they can get into frame.",
+      "family": "setup",
+      "package": "@jspsych/plugin-mirror-camera",
+      "version": "2.1.0",
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "HTML-formatted content to display below the camera feed.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "The label of the button to advance to the next trial.",
+          "default": "Continue"
+        },
+        "height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "height",
+          "description": "The height of the video playback element. If left `null` then it will match the size of the recording.",
+          "default": null
+        },
+        "width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "width",
+          "description": "The width of the video playback element. If left `null` then it will match the size of the recording.",
+          "default": null
+        },
+        "mirror_camera": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "mirror camera",
+          "description": "Whether to mirror the video image.",
+          "default": true
+        }
+      },
+      "required": [],
+      "records": [
+        "rt"
       ]
     },
     "preload": {

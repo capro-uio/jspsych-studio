@@ -122,6 +122,21 @@ upload fails, the data is downloaded and the participant gets a link back to the
 have the file. The builder's Study tab fills in each platform's parameter, and its preview never
 redirects.
 
+## Recording sound and video
+
+The steps that record, _Text, answered aloud_ and _Text, answered on camera_, need a _Set up the
+microphone_ or _Set up the camera_ step before them, and the validator says so if one is missing.
+jsPsych keeps a recording as base64 text in the row, megabytes of it for a few seconds of video, so
+a study that saves its data saves each recording as a file of its own instead, named after the
+participant and the trial, and the row's `response` holds that name. Uploads go to DataPipe's
+`/api/base64/`, which has to be switched on for the experiment in DataPipe; if it is not, the
+upload fails and the recordings stay inside the CSV the participant downloads, so none is lost.
+Recordings are only sent when the data is, so an ending that keeps nothing sends none.
+
+The preview cannot reach a camera or microphone: browsers give none to a sandboxed frame without an
+origin of its own, which is what keeps study code away from the builder. Download the experiment to
+try those steps.
+
 ## Ending early
 
 A study can end before its last step, for a participant who declines consent or is screened out.

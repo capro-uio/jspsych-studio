@@ -70,8 +70,14 @@ function uploadStep(
   filename: string,
   studyEnding: Ending | undefined,
   rows: string,
+  recordings: boolean,
 ) {
-  const endpoint = `${(settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "")}/api/data/`;
+  const base = (settings.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "");
+  const endpoint = `${base}/api/data/`;
+  // DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
+  const saveRecordings = recordings
+    ? `await uploadRecordings(${rows}, filename, ${literal(`${base}/api/base64/`)}, ${literal(settings.experiment_id ?? "")});`
+    : "";
   const ending = uploadEnding(studyEnding);
   // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
   return `async (done) => {
@@ -79,6 +85,7 @@ function uploadStep(
     const filename = ${filename};
     ${ending.declaration}
     try {
+      ${saveRecordings}
       const response = await fetch(${literal(endpoint)}, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -101,9 +108,15 @@ function uploadStep(
   }`;
 }
 
-function downloadStep(filename: string, ending: Ending | undefined, rows: string) {
+function downloadStep(
+  filename: string,
+  ending: Ending | undefined,
+  rows: string,
+  recordings: boolean,
+) {
   return `() => {
     ${savingScreen("Downloading your data.")}
+    ${recordings ? `downloadRecordings(${rows}, ${filename});` : ""}
     ${rows}.localSave("csv", ${filename});
     ${ending?.message ? showMessage(ending.message) : ""}
   }`;
@@ -120,13 +133,14 @@ export function compileDataStep(
   experimentName: string,
   ending: Ending | undefined,
   rows = ALL_ROWS,
+  recordings = false,
 ) {
   const prefix = settings.filename_prefix ?? experimentName;
   const filename = `${literal(prefix)} + "_" + ${PARTICIPANT_ID} + ".csv"`;
   const func =
     settings.save === "post"
-      ? uploadStep(settings, filename, ending, rows)
-      : downloadStep(filename, ending, rows);
+      ? uploadStep(settings, filename, ending, rows, recordings)
+      : downloadStep(filename, ending, rows, recordings);
   return {
     plugin: CALL_FUNCTION_PLUGIN,
     source: `{\n  type: jsPsychCallFunction,\n  async: ${settings.save === "post"},\n  func: ${func},\n}`,

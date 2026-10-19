@@ -188,6 +188,22 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Places shapes, text and images on a canvas, and records a key press or click.",
     family: "canvas",
   },
+  "initialize-microphone": {
+    title: "Set up the microphone",
+    summary:
+      "Asks the participant to allow and choose a microphone, for the recording steps after.",
+    family: "setup",
+  },
+  "initialize-camera": {
+    title: "Set up the camera",
+    summary: "Asks the participant to allow and choose a camera, for the camera steps after.",
+    family: "setup",
+  },
+  "mirror-camera": {
+    title: "Show the camera",
+    summary: "Shows the participant their own camera, so they can get into frame.",
+    family: "setup",
+  },
   resize: {
     title: "Calibrate screen size",
     summary: "Has the participant size a box to a card; everything after is shown at that scale.",
@@ -203,6 +219,16 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     title: "Check the browser",
     summary: "Records the browser, screen and devices, and can turn away those your rule excludes.",
     family: "setup",
+  },
+  "html-audio-response": {
+    title: "Text, answered aloud",
+    summary: "Shows text and records what the participant says, saved as a sound file.",
+    family: "show",
+  },
+  "html-video-response": {
+    title: "Text, answered on camera",
+    summary: "Shows text and records the participant on camera, saved as a video file.",
+    family: "show",
   },
   "external-html": {
     title: "Page from your website",
