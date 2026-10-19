@@ -2,11 +2,11 @@ import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { assemblePages, repositoryLayout } from "../scripts/pages.ts";
+import { assemblePages, repositoryLayout, type PagesSources } from "../scripts/pages.ts";
 
 describe("assemblePages", () => {
   let dir: string;
-  let sources: { site: string; builder: string; specSchema: string };
+  let sources: PagesSources;
 
   beforeEach(() => {
     dir = mkdtempSync(join(tmpdir(), "tachisto-pages-"));

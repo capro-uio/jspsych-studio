@@ -1,3 +1,5 @@
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
 // vitest's defineConfig, because the `test` block is not part of vite's own config type.
 import { defineConfig } from "vitest/config";
@@ -5,6 +7,8 @@ import { defineConfig } from "vitest/config";
 export default defineConfig({
   plugins: [svelte()],
   base: "./",
+  // The brand's logos are served as they are, so only the one the theme shows is fetched.
+  publicDir: dirname(fileURLToPath(import.meta.resolve("@tachisto/brand/logos/favicon.svg"))),
   server: { port: 5180 },
   test: {
     fileParallelism: false,

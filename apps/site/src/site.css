@@ -1,5 +1,6 @@
 @import "@tachisto/brand/fonts.css";
 @import "@tachisto/brand/tokens.css";
+@import "@tachisto/brand/base.css";
 @import "@tachisto/brand/type.css";
 @import "@tachisto/brand/logos.css";
 
@@ -7,16 +8,13 @@
 :root {
   --trial: 4400ms;
   --gutter: var(--space-4);
+  --section-pad: calc(var(--space-12) * 1.5);
 }
 
 @media (min-width: 48rem) {
   :root {
     --gutter: var(--space-8);
   }
-}
-
-* {
-  box-sizing: border-box;
 }
 
 html {
@@ -30,10 +28,6 @@ html {
 }
 
 body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans);
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -58,13 +52,7 @@ h3 {
 }
 
 a {
-  color: var(--stimulus-text);
   text-underline-offset: 0.18em;
-}
-
-:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
 }
 
 .wrap {
@@ -193,7 +181,7 @@ a {
   display: grid;
   gap: var(--space-12);
   padding-top: var(--space-12);
-  padding-bottom: calc(var(--space-12) * 1.5);
+  padding-bottom: var(--section-pad);
   align-items: center;
 }
 
@@ -223,7 +211,6 @@ a {
 
 .lede {
   font-size: 18px;
-  line-height: 1.6;
   color: var(--ink-muted);
   max-width: 34rem;
 }
@@ -350,24 +337,21 @@ a {
   translate: 0 -50%;
 }
 
-.frame-fixation {
-  color: var(--ink);
+.word,
+.mask-text {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  letter-spacing: 0.04em;
 }
 
 .word {
-  font-family: var(--font-sans);
   font-weight: 700;
-  font-size: clamp(2.4rem, 6vw, 3.6rem);
-  letter-spacing: 0.04em;
   color: var(--stimulus);
 }
 
 .mask-text {
   font-family: var(--font-mono);
   font-weight: 500;
-  font-size: clamp(2.4rem, 6vw, 3.6rem);
   color: var(--mask);
-  letter-spacing: 0.04em;
 }
 
 .keys {
@@ -390,7 +374,6 @@ kbd {
   text-align: center;
 }
 
-.keys kbd + kbd,
 .keys kbd:nth-of-type(2) {
   margin-left: var(--space-3);
 }
@@ -419,11 +402,6 @@ kbd {
   height: 40px;
   padding: 0 var(--space-2);
   border-radius: var(--radius-sm);
-  font-size: 12px;
-  line-height: 16px;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -433,7 +411,6 @@ kbd {
   color: var(--ink-muted);
   padding-left: 2px;
   white-space: nowrap;
-  text-overflow: clip;
 }
 
 .fixation .block-name {
@@ -478,22 +455,26 @@ kbd {
   width: 10px;
 }
 
+/* The playhead is as wide as the lane and draws its line at its right edge, so moving it by its
+   own width carries the line across the blocks with a transform alone, at any window size. */
+.lane {
+  position: absolute;
+  inset: var(--space-2) var(--space-3) calc(var(--space-2) + 22px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
 .playhead {
   position: absolute;
-  top: var(--space-2);
-  bottom: calc(var(--space-2) + 22px);
-  left: var(--space-3);
-  width: 2px;
-  background: var(--stimulus);
+  inset: 0;
+  border-right: 2px solid var(--stimulus);
+  translate: calc(2px - 100%);
   animation: playhead var(--trial) linear infinite;
 }
 
 @keyframes playhead {
-  from {
-    left: var(--space-3);
-  }
   to {
-    left: calc(100% - var(--space-3) - 2px);
+    translate: 0;
   }
 }
 
@@ -511,7 +492,7 @@ kbd {
   }
   .playhead {
     animation: none;
-    left: calc(5 / 22 * 100%);
+    translate: calc(2px - 17 / 22 * 100%);
   }
 }
 
@@ -521,7 +502,7 @@ kbd {
   background: var(--paper-sunk);
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
-  padding: calc(var(--space-12) * 1.5) 0;
+  padding: var(--section-pad) 0;
 }
 
 section > .wrap > h2,
@@ -566,8 +547,8 @@ section > .wrap > h2,
 .why {
   display: grid;
   gap: var(--space-8);
-  padding-top: calc(var(--space-12) * 1.5);
-  padding-bottom: calc(var(--space-12) * 1.5);
+  padding-top: var(--section-pad);
+  padding-bottom: var(--section-pad);
   align-items: center;
 }
 
@@ -656,8 +637,8 @@ section > .wrap > h2,
 }
 
 .trust {
-  padding-top: calc(var(--space-12) * 1.5);
-  padding-bottom: calc(var(--space-12) * 1.5);
+  padding-top: var(--section-pad);
+  padding-bottom: var(--section-pad);
 }
 
 .facts {
@@ -675,10 +656,6 @@ section > .wrap > h2,
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
-}
-
-.facts dd {
-  margin: 0;
 }
 
 .status {
@@ -749,7 +726,7 @@ section > .wrap > h2,
   .wide-only {
     display: none;
   }
-  .playhead {
-    left: var(--space-2);
+  .lane {
+    inset-inline: var(--space-2);
   }
 }

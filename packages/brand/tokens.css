@@ -1,68 +1,32 @@
-:root,
-[data-theme="light"] {
-  --paper: #f6f4ee;
-  --paper-sunk: #ece9e0;
-  --paper-raised: #ffffff;
-  --ink: #1c2b2d;
-  --ink-muted: #4a5759;
-  --ink-subtle: #66726f;
-  --line: #dad6cb;
-  --line-strong: #7a8687;
-  --stimulus: #e4572e;
-  --stimulus-text: #b8401a;
-  --stimulus-fill: #c2461f;
-  --on-stimulus: #ffffff;
-  --stimulus-tint: #fbe3da;
-  --mask: #b7bfc0;
-  --signal: #1f6e7f;
-  --caution: #8a5a00;
-  --danger: #a3243b;
-  --shadow-pop: 0 4px 16px rgba(28, 43, 45, 0.12);
+/* Each colour is written once, for both themes. The page follows the system setting unless
+   data-theme on <html> names a theme. */
+:root {
+  color-scheme: light dark;
+  --paper: light-dark(#f6f4ee, #121d1f);
+  --paper-sunk: light-dark(#ece9e0, #0d1617);
+  --paper-raised: light-dark(#ffffff, #1c2b2d);
+  --ink: light-dark(#1c2b2d, #f6f4ee);
+  --ink-muted: light-dark(#4a5759, #b4bebf);
+  --ink-subtle: light-dark(#66726f, #8d999a);
+  --line: light-dark(#dad6cb, #2a3c3f);
+  --line-strong: light-dark(#7a8687, #6e8588);
+  --stimulus: light-dark(#e4572e, #f06a43);
+  --stimulus-text: light-dark(#b8401a, #ff8a65);
+  --stimulus-fill: light-dark(#c2461f, #f06a43);
+  --on-stimulus: light-dark(#ffffff, #121d1f);
+  --stimulus-tint: light-dark(#fbe3da, #3a2420);
+  --mask: light-dark(#b7bfc0, #4a5f62);
+  --signal: light-dark(#1f6e7f, #5fb8c9);
+  --caution: light-dark(#8a5a00, #e0a84a);
+  --danger: light-dark(#a3243b, #f4a3b4);
+  --shadow-pop: 0 4px 16px light-dark(rgba(28, 43, 45, 0.12), rgba(0, 0, 0, 0.45));
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --paper: #121d1f;
-    --paper-sunk: #0d1617;
-    --paper-raised: #1c2b2d;
-    --ink: #f6f4ee;
-    --ink-muted: #b4bebf;
-    --ink-subtle: #8d999a;
-    --line: #2a3c3f;
-    --line-strong: #6e8588;
-    --stimulus: #f06a43;
-    --stimulus-text: #ff8a65;
-    --stimulus-fill: #f06a43;
-    --on-stimulus: #121d1f;
-    --stimulus-tint: #3a2420;
-    --mask: #4a5f62;
-    --signal: #5fb8c9;
-    --caution: #e0a84a;
-    --danger: #f4a3b4;
-    --shadow-pop: 0 4px 16px rgba(0, 0, 0, 0.45);
-    color-scheme: dark;
-  }
+[data-theme="light"] {
+  color-scheme: light;
 }
 
 [data-theme="dark"] {
-  --paper: #121d1f;
-  --paper-sunk: #0d1617;
-  --paper-raised: #1c2b2d;
-  --ink: #f6f4ee;
-  --ink-muted: #b4bebf;
-  --ink-subtle: #8d999a;
-  --line: #2a3c3f;
-  --line-strong: #6e8588;
-  --stimulus: #f06a43;
-  --stimulus-text: #ff8a65;
-  --stimulus-fill: #f06a43;
-  --on-stimulus: #121d1f;
-  --stimulus-tint: #3a2420;
-  --mask: #4a5f62;
-  --signal: #5fb8c9;
-  --caution: #e0a84a;
-  --danger: #f4a3b4;
-  --shadow-pop: 0 4px 16px rgba(0, 0, 0, 0.45);
   color-scheme: dark;
 }
 

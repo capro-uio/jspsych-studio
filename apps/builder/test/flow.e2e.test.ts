@@ -21,12 +21,15 @@ const treeRowSelected = (page: Page, testId: string) =>
 /** WCAG contrast between the fill of each text part and the fill of the shape behind it. */
 function textContrasts(page: Page, testId: string) {
   return page.getByTestId(testId).evaluate((box) => {
-    // A colour mixed with color-mix() comes back as `color(srgb r g b)`, in 0 to 1.
-    const channels = (color: string) =>
-      color
-        .match(/\d+(\.\d+)?/g)!
-        .slice(0, 3)
-        .map((value) => (color.startsWith("color(srgb") ? Number(value) * 255 : Number(value)));
+    // Computed colours come back in whatever syntax produced them, rgb() or color(srgb …) among
+    // others, so the browser paints each one and the pixel says what it is.
+    const pixel = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
+    const channels = (color: string) => {
+      pixel.clearRect(0, 0, 1, 1);
+      pixel.fillStyle = color;
+      pixel.fillRect(0, 0, 1, 1);
+      return [...pixel.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+    };
     const luminance = (color: string) => {
       const [r, g, b] = channels(color).map((value) => {
         const unit = value / 255;

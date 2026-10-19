@@ -171,12 +171,12 @@
     font-size: 12px;
   }
   .outline {
-    fill: var(--flow-step-fill);
-    stroke: var(--flow-step-stroke);
+    fill: var(--paper-raised);
+    stroke: var(--line-strong);
     stroke-width: 1.25;
   }
   .shape-frame .outline {
-    fill: var(--flow-frame-fill);
+    fill: var(--paper-sunk);
   }
   .shape-decision .outline {
     fill: var(--flow-split-fill);
