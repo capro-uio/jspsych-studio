@@ -166,19 +166,19 @@
   }
   label {
     font-size: 0.85rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .muted {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .ending {
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
     padding: 0.4rem 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
   }
   .ending-name {
     display: flex;
@@ -188,13 +188,13 @@
   .ending-name button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .warn {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--accent);
+    color: var(--caution);
   }
   .add-ending {
     display: flex;

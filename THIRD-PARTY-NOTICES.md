@@ -27,3 +27,8 @@ experiment by hand.
 The builder bundles [Svelte](https://svelte.dev), [Prettier](https://prettier.io) and
 [fflate](https://github.com/101arrowz/fflate), all MIT licensed, each retaining its own copyright
 notice. Everything else in `node_modules` is a build or test dependency and ships in nothing.
+
+The builder and the website bundle the fonts [Jost](https://github.com/indestructible-type/Jost),
+[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) and
+[IBM Plex Mono](https://github.com/IBM/plex), through Fontsource. All three are licensed under the
+SIL Open Font License 1.1, which lets them be bundled and served with other software.

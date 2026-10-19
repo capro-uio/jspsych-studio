@@ -1,21 +1,18 @@
+/* Colours, type and spacing come from @tachisto/brand; these name what the flow diagram draws
+   with them. Each kind of block keeps a hue of its own so the diagram reads at a glance, on a
+   fill mixed from the brand's raised paper so it follows the theme. */
 :root {
-  --bg: #fcfcfd;
-  --fg: #16181d;
-  --muted: #666d7a;
-  --rule: #e2e5ea;
-  --selected: #e8eefc;
-  --accent: #b3261e;
-  --flow-step-fill: #ffffff;
-  --flow-step-stroke: #7d8696;
-  --flow-frame-fill: #f2f3f6;
-  --flow-block-fill: #eef3fc;
-  --flow-block-stroke: #4a6fb5;
-  --flow-loop-fill: #f6effb;
-  --flow-loop-stroke: #7e4aa8;
-  --flow-split-fill: #fdf3e6;
-  --flow-split-stroke: #9a5d14;
-  --flow-checkpoint-fill: #e9f6ee;
-  --flow-checkpoint-stroke: #2c7d4f;
+  --flow-step-fill: var(--paper-raised);
+  --flow-step-stroke: var(--line-strong);
+  --flow-frame-fill: var(--paper-sunk);
+  --flow-block-stroke: #3f6a9a;
+  --flow-loop-stroke: #7a4f9c;
+  --flow-split-stroke: var(--caution);
+  --flow-checkpoint-stroke: var(--signal);
+  --flow-block-fill: color-mix(in srgb, var(--flow-block-stroke) 9%, var(--paper-raised));
+  --flow-loop-fill: color-mix(in srgb, var(--flow-loop-stroke) 9%, var(--paper-raised));
+  --flow-split-fill: color-mix(in srgb, var(--flow-split-stroke) 9%, var(--paper-raised));
+  --flow-checkpoint-fill: color-mix(in srgb, var(--flow-checkpoint-stroke) 9%, var(--paper-raised));
   color-scheme: light;
 }
 
@@ -23,43 +20,15 @@
    because CSS has no way to name a set of declarations and apply it under two conditions. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #15171c;
-    --fg: #e8eaee;
-    --muted: #9aa2af;
-    --rule: #2b2f38;
-    --selected: #223052;
-    --accent: #f2b8b5;
-    --flow-step-fill: #1c1f26;
-    --flow-frame-fill: #1b1e25;
-    --flow-block-fill: #19202f;
     --flow-block-stroke: #86a5e3;
-    --flow-loop-fill: #221a2d;
     --flow-loop-stroke: #c09be3;
-    --flow-split-fill: #282015;
-    --flow-split-stroke: #dba65e;
-    --flow-checkpoint-fill: #142319;
-    --flow-checkpoint-stroke: #6cc690;
     color-scheme: dark;
   }
 }
 
 :root[data-theme="dark"] {
-  --bg: #15171c;
-  --fg: #e8eaee;
-  --muted: #9aa2af;
-  --rule: #2b2f38;
-  --selected: #223052;
-  --accent: #f2b8b5;
-  --flow-step-fill: #1c1f26;
-  --flow-frame-fill: #1b1e25;
-  --flow-block-fill: #19202f;
   --flow-block-stroke: #86a5e3;
-  --flow-loop-fill: #221a2d;
   --flow-loop-stroke: #c09be3;
-  --flow-split-fill: #282015;
-  --flow-split-stroke: #dba65e;
-  --flow-checkpoint-fill: #142319;
-  --flow-checkpoint-stroke: #6cc690;
   color-scheme: dark;
 }
 
@@ -73,11 +42,11 @@
 
 body {
   margin: 0;
-  background: var(--bg);
-  color: var(--fg);
-  font:
-    14px/1.45 system-ui,
-    sans-serif;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 input,
@@ -87,9 +56,19 @@ button {
   font: inherit;
   color: inherit;
   background: transparent;
-  border: 1px solid var(--rule);
-  border-radius: 4px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
   padding: 0.25rem 0.4rem;
+  transition:
+    background-color var(--duration-ui),
+    border-color var(--duration-ui),
+    color var(--duration-ui);
+}
+
+input,
+select,
+textarea {
+  background: var(--paper-raised);
 }
 
 button {
@@ -97,12 +76,29 @@ button {
 }
 
 button:disabled {
-  opacity: 0.45;
+  color: var(--ink-subtle);
+  border-color: var(--line);
+  background: none;
   cursor: not-allowed;
+}
+
+:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
 }
 
 textarea {
   resize: vertical;
+}
+
+a {
+  color: var(--stimulus-text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }
 
 /* Svelte mounts into #app, so that element — not body — is the shell the layout sizes against.

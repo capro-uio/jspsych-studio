@@ -45,7 +45,7 @@
     gap: 0.2rem;
   }
   textarea {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.82rem;
     line-height: 1.4;
     tab-size: 2;
@@ -54,14 +54,14 @@
     box-sizing: border-box;
   }
   textarea[aria-invalid="true"] {
-    border-color: var(--accent);
+    border-color: var(--danger);
   }
   p {
     margin: 0;
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   p.problem {
-    color: var(--accent);
+    color: var(--danger);
   }
 </style>

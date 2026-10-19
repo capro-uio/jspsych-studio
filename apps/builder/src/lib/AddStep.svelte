@@ -139,18 +139,18 @@
   }
   .slot:hover,
   .slot.active {
-    color: var(--accent);
-    border-top-color: color-mix(in srgb, var(--accent) 45%, transparent);
+    color: var(--stimulus-text);
+    border-top-color: color-mix(in srgb, var(--stimulus) 45%, transparent);
   }
   .slot.active {
-    border-top-color: var(--accent);
+    border-top-color: var(--stimulus);
   }
   .menu {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     padding: 0.25rem;
     margin: 0.15rem 0;
   }
@@ -162,14 +162,14 @@
     background: none;
     cursor: pointer;
     padding: 0.25rem;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
     font-size: 0.85rem;
   }
   .menu button:hover:not(:disabled) {
-    background: var(--selected);
+    background: var(--paper-sunk);
   }
   .menu button span {
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.75rem;
   }
   .menu button:disabled {
@@ -177,7 +177,7 @@
     cursor: not-allowed;
   }
   .cancel {
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.75rem;
   }
 </style>

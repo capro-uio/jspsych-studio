@@ -199,7 +199,7 @@
   .views {
     display: flex;
     gap: 0.15rem;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--line);
   }
   .views button {
     border: 0;
@@ -207,12 +207,12 @@
     background: none;
     padding: 0.3rem 0.5rem;
     cursor: pointer;
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.85rem;
   }
   .views button.active {
     color: inherit;
-    border-bottom-color: var(--accent);
+    border-bottom-color: var(--stimulus);
   }
   .runbar {
     display: flex;
@@ -224,28 +224,28 @@
     display: flex;
   }
   .segmented button {
-    border: 1px solid var(--rule);
+    border: 1px solid var(--line);
     background: none;
     cursor: pointer;
     padding: 0.2rem 0.5rem;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .segmented button:first-child {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
   }
   .segmented button:last-child {
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
     border-left: 0;
   }
   .segmented button.active {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--stimulus);
+    color: var(--stimulus-text);
   }
   .restart {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
     font-size: 0.8rem;
   }
@@ -254,34 +254,34 @@
   }
   .note {
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .note {
     margin: 0 0 0.35rem;
     font-size: 0.78rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .device-note {
     margin: 0 0 0.35rem;
     padding: 0.3rem 0.5rem;
     font-size: 0.8rem;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
   }
   iframe {
     flex: 1;
     width: 100%;
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    background: var(--stimulus-background, #fff);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    background: var(--participant-background, #fff);
   }
   pre {
     flex: 1;
     overflow: auto;
     margin: 0;
     padding: 0.6rem;
-    border: 1px solid var(--rule);
-    border-radius: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     font-size: 0.78rem;
     white-space: pre-wrap;
   }
@@ -291,14 +291,14 @@
     overflow: auto;
     margin-bottom: 0.4rem;
     padding: 0.5rem;
-    border: 1px solid var(--accent);
-    border-radius: 6px;
-    color: var(--accent);
+    border: 1px solid var(--danger);
+    border-radius: var(--radius-md);
+    color: var(--danger);
   }
   .error p {
     margin: 0 0 0.25rem;
   }
   .placeholder {
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 </style>

@@ -109,7 +109,7 @@
   .factor button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .actions {
@@ -123,11 +123,11 @@
   .muted {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .warn {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--accent);
+    color: var(--caution);
   }
 </style>

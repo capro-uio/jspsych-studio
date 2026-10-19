@@ -87,7 +87,7 @@
     align-items: start;
   }
   .entry.selected :global(.object) {
-    border-color: var(--accent);
+    border-color: var(--stimulus);
   }
   .entry > :global(.rich) {
     flex: 1;
@@ -98,7 +98,7 @@
     flex: 1;
   }
   .position {
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.75rem;
     padding-top: 0.35rem;
     min-width: 1rem;
@@ -106,13 +106,13 @@
   .controls button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
     padding: 0.1rem 0.2rem;
   }
   .add {
     align-self: start;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 </style>

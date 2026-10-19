@@ -168,8 +168,8 @@
   .spot {
     position: fixed;
     z-index: 101;
-    border-radius: 6px;
-    outline: 2px solid var(--accent);
+    border-radius: var(--radius-md);
+    outline: 2px solid var(--stimulus);
     box-shadow: 0 0 0 100vmax rgb(0 0 0 / 0.45);
     pointer-events: none;
   }
@@ -178,11 +178,11 @@
     z-index: 102;
     width: min(22rem, calc(100vw - 24px));
     padding: 0.8rem 0.9rem 0.7rem;
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    background: var(--bg);
-    color: var(--fg);
-    box-shadow: 0 6px 24px rgb(0 0 0 / 0.25);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    background: var(--paper-raised);
+    color: var(--ink);
+    box-shadow: var(--shadow-pop);
   }
   @media (prefers-reduced-motion: no-preference) {
     .spot,
@@ -197,7 +197,7 @@
   .count {
     margin: 0;
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   h2 {
     margin: 0.15rem 0 0.35rem;
@@ -218,10 +218,12 @@
   .close {
     border: 0;
     padding-left: 0;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .next {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--stimulus-fill);
+    background: var(--stimulus-fill);
+    color: var(--on-stimulus);
+    font-weight: 700;
   }
 </style>

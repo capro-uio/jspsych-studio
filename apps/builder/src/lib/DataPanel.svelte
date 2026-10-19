@@ -79,7 +79,7 @@
   }
   label {
     font-size: 0.85rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .muted,
   .warn {
@@ -87,9 +87,9 @@
     font-size: 0.8rem;
   }
   .muted {
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .warn {
-    color: var(--accent);
+    color: var(--caution);
   }
 </style>

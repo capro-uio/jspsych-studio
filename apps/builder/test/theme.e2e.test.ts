@@ -19,8 +19,8 @@ async function chooseTheme(page: Page, choice: "system" | "light" | "dark") {
   await page.keyboard.press("Escape");
 }
 
-const DARK = "rgb(21, 23, 28)";
-const LIGHT = "rgb(252, 252, 253)";
+const DARK = "rgb(18, 29, 31)";
+const LIGHT = "rgb(246, 244, 238)";
 
 beforeAll(async () => {
   await build({ logLevel: "warn" });

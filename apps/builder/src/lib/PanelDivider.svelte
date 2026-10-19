@@ -71,12 +71,12 @@
     content: "";
     position: absolute;
     inset: 0 calc(50% - 1px);
-    background: var(--rule);
-    border-radius: 1px;
+    background: var(--line);
+    border-radius: var(--radius-sm);
   }
   .divider:hover::after,
   .divider:focus-visible::after {
-    background: var(--accent);
+    background: var(--signal);
     inset: 0 calc(50% - 2px);
   }
 </style>

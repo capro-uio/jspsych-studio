@@ -107,41 +107,41 @@
     display: flex;
     gap: 0.3rem;
     align-items: center;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     padding: 0.1rem 0.2rem;
   }
   .row.selected {
-    background: var(--selected);
+    background: var(--stimulus-tint);
   }
   .code-badge {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.68rem;
     padding: 0 0.3rem;
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    color: var(--muted);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    color: var(--ink-muted);
   }
   .issue {
     display: block;
     font-size: 0.7rem;
-    color: var(--accent);
+    color: var(--danger);
   }
   .group {
-    border-left: 2px solid var(--rule);
+    border-left: 2px solid var(--line);
     margin-left: 0.5rem;
     padding-left: 0.2rem;
   }
   .group-name {
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
     background: none;
     border: 0;
     cursor: pointer;
     padding: 0.1rem 0.4rem;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
   }
   .group-name.selected {
-    background: var(--selected);
+    background: var(--stimulus-tint);
     color: inherit;
   }
   .label {
@@ -157,17 +157,17 @@
   .kind {
     font-size: 0.7rem;
     text-transform: uppercase;
-    color: var(--muted);
+    color: var(--ink-muted);
     margin-right: 0.35rem;
   }
   .controls button {
     background: none;
     border: 0;
     cursor: pointer;
-    color: var(--muted);
+    color: var(--ink-muted);
     padding: 0.1rem 0.2rem;
   }
   .controls button:hover {
-    color: var(--accent);
+    color: var(--ink);
   }
 </style>

@@ -189,13 +189,13 @@
     gap: 0.4rem 0.6rem;
     align-items: start;
     padding: 0.4rem 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
   }
   label {
     font-weight: 600;
   }
   .required {
-    color: var(--accent);
+    color: var(--danger);
   }
   .wide {
     grid-column: 1 / -1;
@@ -208,7 +208,7 @@
     grid-column: 3;
     margin: 0;
     font-size: 0.78rem;
-    color: var(--muted);
+    color: var(--ink-muted);
     display: -webkit-box;
     -webkit-line-clamp: 2;
     line-clamp: 2;
