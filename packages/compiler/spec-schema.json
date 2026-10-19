@@ -260,6 +260,8 @@
             "resize",
             "same-different-html",
             "same-different-image",
+            "serial-reaction-time",
+            "serial-reaction-time-mouse",
             "sketchpad",
             "survey-html-form",
             "survey-likert",
@@ -7619,6 +7621,553 @@
                 "required": [
                   "stimuli",
                   "answer"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "serial-reaction-time"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "grid": {
+                    "title": "grid",
+                    "description": "This array represents the grid of boxes shown on the screen. Each inner array represents a single row. The entries in the inner arrays represent the columns. If an entry is `1` then a square will be drawn at that location on the grid. If an entry is `0` then the corresponding location on the grid will be empty. Thus, by mixing `1`s and `0`s it is possible to create many different grid-based arrangements.",
+                    "default": [
+                      [
+                        1,
+                        1,
+                        1,
+                        1
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "grid",
+                        "type": "array",
+                        "items": {
+                          "title": "row",
+                          "type": "array",
+                          "items": {
+                            "title": "cell",
+                            "enum": [
+                              0,
+                              1
+                            ],
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target": {
+                    "title": "target",
+                    "description": "The location of the target. The array should be the [row, column] of the target.",
+                    "examples": [
+                      [
+                        0,
+                        0
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "The dimensions of this array must match the dimensions of `grid`. Each entry in this array is the key that should be pressed for that corresponding location in the grid. Entries can be left blank if there is no key associated with that location of the grid.",
+                    "default": [
+                      [
+                        "3",
+                        "5",
+                        "7",
+                        "9"
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "grid",
+                        "type": "array",
+                        "items": {
+                          "title": "row",
+                          "type": "array",
+                          "items": {
+                            "title": "cell",
+                            "format": "keyboard-key",
+                            "type": "string"
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "grid_square_size": {
+                    "title": "grid square size",
+                    "description": "The width and height in pixels of each square in the grid.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_color": {
+                    "title": "target color",
+                    "description": "The color of the target square.",
+                    "default": "#999",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, the trial ends after a key press. Feedback is displayed if `show_response_feedback` is true.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "pre_target_duration": {
+                    "title": "pre target duration",
+                    "description": "The number of milliseconds to display the grid *before* the target changes color.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "The maximum length of time of the trial, not including feedback.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "show_response_feedback": {
+                    "title": "show response feedback",
+                    "description": "If true, show feedback indicating where the user responded and whether it was correct.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "feedback_duration": {
+                    "title": "feedback duration",
+                    "description": "The length of time in milliseconds to show the feedback.",
+                    "default": 200,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "fade_duration": {
+                    "title": "fade duration",
+                    "description": "If a positive number, the target will progressively change color at the start of the trial, with the transition lasting this many milliseconds.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which keys to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "target"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "serial-reaction-time-mouse"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "grid": {
+                    "title": "grid",
+                    "description": "This array represents the grid of boxes shown on the screen. Each inner array represents a single row. The entries in the inner arrays represent the columns. If an entry is `1` then a square will be drawn at that location on the grid. If an entry is `0` then the corresponding location on the grid will be empty. Thus, by mixing `1`s and `0`s it is possible to create many different grid-based arrangements.",
+                    "default": [
+                      [
+                        1,
+                        1,
+                        1,
+                        1
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "grid",
+                        "type": "array",
+                        "items": {
+                          "title": "row",
+                          "type": "array",
+                          "items": {
+                            "title": "cell",
+                            "enum": [
+                              0,
+                              1
+                            ],
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target": {
+                    "title": "target",
+                    "description": "The location of the target. The array should be the [row, column] of the target.",
+                    "examples": [
+                      [
+                        0,
+                        0
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "grid_square_size": {
+                    "title": "grid square size",
+                    "description": "The width and height in pixels of each square in the grid.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_color": {
+                    "title": "target color",
+                    "description": "The color of the target square.",
+                    "default": "#999",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, the trial ends after a click. Feedback is displayed if `show_response_feedback` is true.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "pre_target_duration": {
+                    "title": "pre target duration",
+                    "description": "The number of milliseconds to display the grid *before* the target changes color.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to show the trial */ /** The maximum length of time of the trial, not including feedback.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "show_response_feedback": {
+                    "title": "show response feedback",
+                    "description": "If true, show feedback indicating where the participant clicked and whether it was correct.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "feedback_duration": {
+                    "title": "feedback duration",
+                    "description": "The length of time in milliseconds to show the feedback.",
+                    "default": 200,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "fade_duration": {
+                    "title": "fade duration",
+                    "description": "If a positive number, the target will progressively change color at the start of the trial, with the transition lasting this many milliseconds.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "allow_nontarget_responses": {
+                    "title": "allow nontarget responses",
+                    "description": "If true, then user can make nontarget response.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which keys to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "target"
                 ],
                 "additionalProperties": false
               }

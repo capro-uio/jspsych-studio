@@ -3,6 +3,8 @@
   import { isCode, isVariableReference, takesFunction } from "@jspsych-studio/compiler";
   import CanvasField from "./CanvasField.svelte";
   import CodeInput from "./CodeInput.svelte";
+  import GridField from "./GridField.svelte";
+  import { singleCell } from "./grid.ts";
   import { codeHint, codeSeed } from "./code.ts";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
@@ -22,8 +24,9 @@
 
   const { assets, name, parameter, required, columns, value, onchange, params }: Props = $props();
 
+  const grid = $derived(parameter.format === "grid");
   // KEYS keeps its comma-separated control: it accepts "ALL_KEYS" as well as a list.
-  const list = $derived(parameter.type === "array" && parameter.jspsychType !== "KEYS");
+  const list = $derived(parameter.type === "array" && parameter.jspsychType !== "KEYS" && !grid);
 
   const isBound = $derived(value !== undefined && isVariableReference(value));
   // A parameter that takes a function can only be given one as code.
@@ -38,6 +41,11 @@
   const numeric = $derived(parameter.jspsychType === "INT" || parameter.jspsychType === "FLOAT");
 
   function fixedSeed(): ParameterValue {
+    if (grid) {
+      return Array.isArray(parameter.default)
+        ? (structuredClone(parameter.default) as unknown[][])
+        : singleCell(parameter.items?.items ?? parameter);
+    }
     if (list)
       return Array.isArray(parameter.default) ? [...(parameter.default as unknown[])] : [""];
     if (parameter.jspsychType === "BOOL") return Boolean(parameter.default);
@@ -117,7 +125,17 @@
       />
     {/if}
   {:else if mode === "fixed"}
-    {#if list}
+    {#if grid}
+      <div class="wide">
+        <GridField
+          {name}
+          testId={`value-${name}`}
+          {parameter}
+          value={Array.isArray(value) ? (value as unknown[][]) : []}
+          onchange={(next: unknown[][]) => onchange(next)}
+        />
+      </div>
+    {:else if list}
       <div class="wide">
         {#if parameter.editor === "canvas"}
           <CanvasField

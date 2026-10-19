@@ -101,6 +101,9 @@ export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
   "categorize-image": { key_answer: "f" },
   "categorize-animation": { key_answer: "f" },
   "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"] },
+  // The square that lights up, as its row and column counted from 0.
+  "serial-reaction-time": { target: [0, 0] },
+  "serial-reaction-time-mouse": { target: [0, 0] },
   "survey-html-form": {
     html: '<p><label>Your age <input name="age" type="number" min="18" required></label></p>',
   },
@@ -121,6 +124,8 @@ export const LIST_LENGTHS: Record<
   "same-different-html": { stimuli: { minItems: 2, maxItems: 2 } },
   "same-different-image": { stimuli: { minItems: 2, maxItems: 2 } },
   maxdiff: { alternatives: { minItems: 2 }, labels: { minItems: 2, maxItems: 2 } },
+  "serial-reaction-time": { target: { minItems: 2, maxItems: 2 } },
+  "serial-reaction-time-mouse": { target: { minItems: 2, maxItems: 2 } },
   // An IAT names each side with one or two categories; none makes the plugin fail.
   "iat-html": {
     left_category_label: { minItems: 1, maxItems: 2 },

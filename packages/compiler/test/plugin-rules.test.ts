@@ -163,3 +163,125 @@ describe("measuring viewing distance", () => {
     expect(compiles(study("virtual-chinrest", {}))).not.toThrow();
   });
 });
+
+describe("squares answered with a key", () => {
+  const squares = (params: Record<string, unknown>) =>
+    study("serial-reaction-time", { target: [0, 1], ...params });
+
+  it("takes a target on a square of the default grid", () => {
+    expect(compiles(squares({}))).not.toThrow();
+  });
+
+  it.each([
+    [{ target: [0, 4] }, /lights square \[0, 4\], which is not a square of its grid/],
+    [{ grid: [[1, 0]], choices: [["a", "b"]] }, /lights square \[0, 1\], which is not a square/],
+    [
+      {
+        grid: [
+          [1, 1],
+          [1, 1],
+        ],
+      },
+      /needs one key in its choices for each place in its grid/,
+    ],
+    [{ grid: [1, 1] }, /expects a grid: a list of rows/],
+  ])("rejects %j", (params, message) => {
+    expect(compiles(squares(params))).toThrow(message);
+  });
+
+  it.each([
+    [{ choices: "ALL_KEYS" }, /parameter "choices" expects a grid/],
+    [{ grid: [[1, 2, 1, 1]] }, /1 for a square or 0 for a gap/],
+    [{ grid: [[true, true, true, true]] }, /1 for a square or 0 for a gap/],
+    [{ grid: [[1, 1], []], choices: [["a", "b"], []] }, /each a list of at least one place/],
+    [{ choices: [["3", "", "7", "9"]] }, /has no key for the square it lights, \[0, 1\]/],
+    [{ choices: [["3", "5", "5", "9"]] }, /uses a key for more than one place/],
+  ])("rejects %j", (params, message) => {
+    expect(compiles(squares(params))).toThrow(message);
+  });
+
+  it("takes a grid of keys shaped like its squares", () => {
+    expect(
+      compiles(
+        squares({
+          grid: [
+            [1, 1],
+            [1, 1],
+          ],
+          choices: [
+            ["q", "w"],
+            ["a", "s"],
+          ],
+        }),
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("squares answered by clicking", () => {
+  it("needs no keys, only a target on a square", () => {
+    expect(
+      compiles(
+        study("serial-reaction-time-mouse", {
+          grid: [
+            [1, 1],
+            [1, 1],
+          ],
+          target: [1, 1],
+        }),
+      ),
+    ).not.toThrow();
+  });
+});
+
+describe("grids and targets read from a column", () => {
+  const fromColumns = (params: Record<string, unknown>, rows: Record<string, unknown>[]): Spec => ({
+    name: "rules",
+    conditions: { trials: rows },
+    timeline: [
+      {
+        kind: "block",
+        conditions: "trials",
+        children: [
+          {
+            kind: "trial",
+            plugin: "serial-reaction-time-mouse",
+            params: params as TrialNode["params"],
+          },
+        ],
+      },
+    ],
+  });
+
+  it("turns a target written as text into numbers when the trial starts", () => {
+    const { source } = compileSpec(
+      fromColumns({ target: { var: "target" } }, [{ target: "0,1" }]),
+      schemas,
+    );
+    expect(source).toContain(
+      'target: () => ((cell) => (Array.isArray(cell) ? cell : String(cell).split(",")).map(Number))(jsPsych.evaluateTimelineVariable("target"))',
+    );
+  });
+
+  it("reads a grid written as text", () => {
+    const spec = fromColumns({ grid: { var: "grid" }, target: [0, 0] }, [
+      { grid: "[[1, 1], [1, 0]]" },
+    ]);
+    expect(compileSpec(spec, schemas).source).toContain("JSON.parse(cell)");
+  });
+
+  it.each([
+    [
+      { target: { var: "target" } },
+      { target: "top left" },
+      /which is not numbers separated by commas/,
+    ],
+    [
+      { grid: { var: "grid" }, target: [0, 0] },
+      { grid: "two by two" },
+      /which is not a grid written as rows/,
+    ],
+  ])("rejects a cell that cannot be read: %j", (params, row, message) => {
+    expect(compiles(fromColumns(params, [row]))).toThrow(message);
+  });
+});

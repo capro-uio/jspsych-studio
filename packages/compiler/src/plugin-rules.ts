@@ -69,7 +69,46 @@ function viewingDistanceProblems(params: Record<string, ParameterValue>) {
     : [];
 }
 
+function isGrid(value: ParameterValue | undefined): value is unknown[][] {
+  return Array.isArray(value) && value.every(Array.isArray);
+}
+
+// The serial reaction time plugins light the square at the target's row and column, and look up
+// its key at the same place in the grid of keys; outside the grid, or on a gap, nothing lights up
+// and no key can be right. Their defaults are a single row of four squares, with four keys.
+function gridProblems(params: Record<string, ParameterValue>, keyed: boolean) {
+  const grid = params.grid ?? [[1, 1, 1, 1]];
+  if (!isGrid(grid)) return [];
+  const problems: string[] = [];
+  const target = params.target;
+  if (Array.isArray(target) && target.length === 2 && target.every(Number.isInteger)) {
+    const [row, column] = target as number[];
+    if (grid[row]?.[column] !== 1) {
+      problems.push(`lights square [${row}, ${column}], which is not a square of its grid`);
+    }
+  }
+  const keys = params.choices ?? [["3", "5", "7", "9"]];
+  if (keyed && isGrid(keys)) {
+    const sameShape =
+      keys.length === grid.length && keys.every((row, index) => row.length === grid[index].length);
+    if (!sameShape) problems.push("needs one key in its choices for each place in its grid");
+    // Scoring compares the key pressed with the target's key, looked up by the key: a target with
+    // no key, or a key used twice, makes even the right press score wrong.
+    const [row, column] = Array.isArray(target) ? (target as number[]) : [];
+    if (sameShape && keys[row]?.[column] === "") {
+      problems.push(`has no key for the square it lights, [${row}, ${column}]`);
+    }
+    const used = keys.flat().filter((key) => key !== "");
+    if (new Set(used.map((key) => String(key).toLowerCase())).size < used.length) {
+      problems.push("uses a key for more than one place in its grid");
+    }
+  }
+  return problems;
+}
+
 const RULES: Record<string, (params: Record<string, ParameterValue>) => string[]> = {
+  "serial-reaction-time": (params) => gridProblems(params, true),
+  "serial-reaction-time-mouse": (params) => gridProblems(params, false),
   "visual-search-circle": visualSearchProblems,
   cloze: clozeProblems,
   "external-html": externalPageProblems,

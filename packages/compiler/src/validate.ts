@@ -68,6 +68,7 @@ function literalTypeProblem(value: ParameterValue, parameter: ParameterSchema) {
   if (parameter.enum && !parameter.enum.includes(value)) {
     return `expects one of ${parameter.enum.map((option) => JSON.stringify(option)).join(", ")}`;
   }
+  if (parameter.format === "grid") return gridProblem(value, parameter);
   if (parameter.type === "array") {
     if (Array.isArray(value)) {
       const options = parameter.items?.enum;
@@ -152,6 +153,70 @@ function listLengthProblem(value: ParameterValue, parameter: ParameterSchema) {
   return `takes ${wanted} entries, but the spec holds ${value.length}`;
 }
 
+// A grid is rows of places, each a square that is there (1) or not (0), or a key; the plugins draw
+// nothing for an empty row and crash on a word such as ALL_KEYS where rows belong.
+function gridProblem(value: unknown, parameter: ParameterSchema) {
+  const rows = "expects a grid: a list of rows, each a list of at least one place";
+  if (!Array.isArray(value) || value.length === 0) return rows;
+  if (!value.every((row) => Array.isArray(row) && row.length > 0)) return rows;
+  const squares = parameter.items?.items?.jspsychType === "BOOL";
+  const cells = (value as unknown[][]).flat();
+  if (squares && !cells.every((cell) => cell === 0 || cell === 1)) {
+    return "expects each place of its grid to be 1 for a square or 0 for a gap";
+  }
+  if (!squares && !cells.every((cell) => typeof cell === "string")) {
+    return "expects each place of its grid to be a key";
+  }
+  return null;
+}
+
+// What a conditions cell must hold for a parameter that takes a grid or a list of numbers, which
+// a cell can only give as text.
+function cellProblem(cell: unknown, parameter: ParameterSchema) {
+  if (parameter.format === "grid") {
+    let parsed = cell;
+    if (typeof cell === "string") {
+      try {
+        parsed = JSON.parse(cell);
+      } catch {
+        return "which is not a grid written as rows, such as [[1, 0], [0, 1]]";
+      }
+    }
+    return gridProblem(parsed, parameter)
+      ? "which is not a grid written as rows, such as [[1, 0], [0, 1]]"
+      : null;
+  }
+  const numbers =
+    parameter.type === "array" && ["integer", "number"].includes(parameter.items?.type ?? "");
+  if (!numbers) return null;
+  const entries = Array.isArray(cell) ? cell : String(cell).split(",");
+  return entries.length > 0 &&
+    entries.every((entry) => String(entry).trim() !== "" && Number.isFinite(Number(entry)))
+    ? null
+    : "which is not numbers separated by commas, such as 0,1";
+}
+
+function checkColumnCells(
+  spec: Spec,
+  column: string,
+  parameter: ParameterSchema,
+  report: (message: string) => void,
+  where: string,
+) {
+  for (const [table, rows] of Object.entries(spec.conditions ?? {})) {
+    for (const row of rows) {
+      if (!(column in row)) continue;
+      const problem = cellProblem(row[column], parameter);
+      if (problem) {
+        report(
+          `${where} reads column "${column}", whose cell in table "${table}" holds ${JSON.stringify(row[column])}, ${problem}`,
+        );
+        return;
+      }
+    }
+  }
+}
+
 function looksLikePath(value: string) {
   return value.includes("/") || value.includes(":");
 }
@@ -194,6 +259,7 @@ function checkTrial(
       if (problem) report(`${where}, parameter "${name}" ${problem}`);
     } else if (isVariableReference(value)) {
       checkColumn(value.var, columns, `${where}, parameter "${name}"`, problems, path);
+      checkColumnCells(spec, value.var, parameter, report, `${where}, parameter "${name}"`);
     } else if (kind) {
       const lengthProblem = listLengthProblem(value, parameter);
       if (lengthProblem) report(`${where}, parameter "${name}" ${lengthProblem}`);
