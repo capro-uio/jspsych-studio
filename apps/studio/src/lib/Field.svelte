@@ -47,6 +47,8 @@
       return parameter.default === null ? null : 0;
     }
     if (parameter.enum) return parameter.enum[0] as string;
+    // As with numbers, jsPsych's null means none: an empty file name would be loaded as a file.
+    if (parameter.default === null) return null;
     return typeof parameter.default === "string" ? parameter.default : "";
   }
 

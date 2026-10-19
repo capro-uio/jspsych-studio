@@ -69,6 +69,25 @@ describe("startingParams", () => {
     expect(startingParams(plugin)).toEqual(params);
   });
 
+  it.each([
+    ["cloze", { text: "<p>The cat sat on the %mat%.</p>" }],
+    [
+      "maxdiff",
+      {
+        alternatives: ["Option 1", "Option 2", "Option 3"],
+        labels: ["Least important", "Most important"],
+      },
+    ],
+    ["iat-html", { stimulus: "<p>Your text here</p>", stim_key_association: "left" }],
+    ["sketchpad", {}],
+  ])("starts %s ready to run", (plugin, params) => {
+    expect(startingParams(plugin)).toEqual(params);
+  });
+
+  it("starts a required yes or no on no", () => {
+    expect(startingParams("visual-search-circle")).toEqual({ target_present: false });
+  });
+
   it("starts a required choice from a fixed list on its first option", () => {
     expect(startingParams("same-different-image")).toEqual({ answer: "same" });
   });

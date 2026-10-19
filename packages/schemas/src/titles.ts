@@ -80,6 +80,11 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Plays a video and records where on a scale the participant sets a slider.",
     family: "show",
   },
+  animation: {
+    title: "Images as an animation",
+    summary: "Shows images one after another as an animation, and records any keys pressed.",
+    family: "show",
+  },
   instructions: {
     title: "Instruction pages",
     summary: "Pages the participant reads, moving back and forth with keys or buttons.",
@@ -109,6 +114,44 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     title: "Two images, same or different",
     summary: "Shows two images one after the other and records whether they were judged the same.",
     family: "judge",
+  },
+  "free-sort": {
+    title: "Images, sorted by dragging",
+    summary: "Lets the participant drag images into place, and records where each one ends up.",
+    family: "judge",
+  },
+  "iat-html": {
+    title: "Implicit association, with text",
+    summary: "One trial of an implicit association test: text sorted left or right by a key.",
+    family: "judge",
+  },
+  "iat-image": {
+    title: "Implicit association, with images",
+    summary: "One trial of an implicit association test: an image sorted left or right by a key.",
+    family: "judge",
+  },
+  "visual-search-circle": {
+    title: "Visual search",
+    summary:
+      "Shows images in a circle and records whether the participant saw the target among them.",
+    family: "judge",
+  },
+  cloze: {
+    title: "Fill in the blanks",
+    summary:
+      "Shows text with words left out, and records what the participant types into each gap.",
+    family: "ask",
+  },
+  maxdiff: {
+    title: "Most and least",
+    summary: "Asks which of several options is most and which is least, on one scale.",
+    family: "ask",
+  },
+  sketchpad: {
+    title: "Drawing",
+    summary:
+      "Gives the participant a canvas to draw on, and saves each drawing in the data as an image.",
+    family: "ask",
   },
   "survey-likert": {
     title: "Rating scale questions",

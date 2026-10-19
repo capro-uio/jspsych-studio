@@ -549,6 +549,21 @@ describe("a step that scores itself", () => {
   }, 180_000);
 });
 
+describe("a setting jsPsych leaves empty", () => {
+  it("starts empty rather than as an empty file name", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "sketchpad", "slot-0");
+    await showAllParameters(page);
+    await page.getByTestId("mode-background_image").selectOption("fixed");
+
+    await page.getByTestId("view-spec").click();
+    expect(trialParams((await authoredSpec(page)).timeline[0]).background_image).toBeNull();
+    expect(await page.getByTestId("step-problems").count()).toBe(0);
+    await page.close();
+  }, 180_000);
+});
+
 describe("a canvas step", () => {
   it("offers each shape its own fields and draws it in the preview", async () => {
     const page = await browser.newPage();

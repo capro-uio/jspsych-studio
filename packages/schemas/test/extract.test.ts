@@ -114,6 +114,8 @@ describe("extractSchemas", () => {
       curateParameters(schema, {
         examples: { "categorize-html": { key_anwser: "f" } },
         lengths: {},
+        choices: {},
+        distinctKeys: {},
       }),
     ).toThrow(/names "key_anwser", which categorize-html does not take/);
   });

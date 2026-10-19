@@ -232,6 +232,7 @@
         "plugin": {
           "title": "The jsPsych plugin that runs this step.",
           "enum": [
+            "animation",
             "audio-button-response",
             "audio-keyboard-response",
             "audio-slider-response",
@@ -239,25 +240,32 @@
             "categorize-animation",
             "categorize-html",
             "categorize-image",
+            "cloze",
+            "free-sort",
             "fullscreen",
             "html-button-response",
             "html-keyboard-response",
             "html-slider-response",
+            "iat-html",
+            "iat-image",
             "image-button-response",
             "image-keyboard-response",
             "image-slider-response",
             "instructions",
+            "maxdiff",
             "preload",
             "psychophysics",
             "same-different-html",
             "same-different-image",
+            "sketchpad",
             "survey-likert",
             "survey-multi-choice",
             "survey-multi-select",
             "survey-text",
             "video-button-response",
             "video-keyboard-response",
-            "video-slider-response"
+            "video-slider-response",
+            "visual-search-circle"
           ]
         },
         "tag": {
@@ -289,6 +297,162 @@
       },
       "additionalProperties": false,
       "allOf": [
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "animation"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "Each element of the array is a path to an image file.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "asset-image",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "frame_time": {
+                    "title": "frame time",
+                    "description": "How long to display each image in milliseconds.",
+                    "default": 250,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "frame_isi": {
+                    "title": "frame isi",
+                    "description": "If greater than 0, then a gap will be shown between each image in the sequence. This parameter specifies the length of the gap in milliseconds.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "sequence_reps": {
+                    "title": "sequence reps",
+                    "description": "How many times to show the entire sequence. There will be no gap (other than the gap specified by `frame_isi`) between repetitions.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to respond to the stimulus. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"ALL_KEYS\"` means that all keys will be accepted as valid responses. Specifying `\"NO_KEYS\"` will mean that no responses are allowed.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. Any content here will be displayed below the stimulus. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key(s) to press).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "render_on_canvas": {
+                    "title": "render on canvas",
+                    "description": "If true, the images will be drawn onto a canvas element. This prevents a blank screen (white flash) between consecutive images in some browsers, like Firefox and Edge. If false, the image will be shown via an img element, as in previous versions of jsPsych.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
         {
           "if": {
             "properties": {
@@ -1846,6 +2010,481 @@
           "if": {
             "properties": {
               "plugin": {
+                "const": "cloze"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "text": {
+                    "title": "text",
+                    "description": "The cloze text to be displayed. Blanks are indicated by %% signs and automatically replaced by input fields. If there is a correct answer you want the system to check against, it must be typed between the two percentage signs (i.e. % correct solution %). If you would like to input multiple solutions, type a slash between each responses (i.e. %1/2/3%).",
+                    "examples": [
+                      "<p>The cat sat on the %mat%.</p>"
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_text": {
+                    "title": "button text",
+                    "description": "Text of the button participants have to press for finishing the cloze test.",
+                    "default": "OK",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "check_answers": {
+                    "title": "check answers",
+                    "description": "Boolean value indicating if the answers given by participants should be compared against a correct solution given in `text` after the submit button was clicked. If ```true```, answers are checked and in case of differences, the ```mistake_fn``` is called. In this case, the trial does not automatically finish. If ```false```, no checks are performed and the trial ends when clicking the submit button.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "allow_blanks": {
+                    "title": "allow blanks",
+                    "description": "Boolean value indicating if the answers given by participants should be checked for completion after the button was clicked. If ```true```, answers are not checked for completion and blank answers are allowed. The trial will then automatically finish upon the clicking the button. If ```false```, answers are checked for completion, and in case there are some fields with missing answers, the ```mistake_fn``` is called. In this case, the trial does not automatically finish.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "case_sensitivity": {
+                    "title": "Case sensitivity",
+                    "description": "Boolean value indicating if the solutions checker must be case sensitive.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "mistake_fn": {
+                    "title": "mistake fn",
+                    "description": "Function called if either `check_answers` is `true` or `allow_blanks` is `false` and there is a discrepancy between the set answers and the answers provided, or if all input fields aren't filled out, respectively.",
+                    "examples": [
+                      {
+                        "code": "() => {\n}"
+                      }
+                    ],
+                    "anyOf": [
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "autofocus": {
+                    "title": "autofocus",
+                    "description": "Boolean value indicating if the first input field should be focused when the trial starts. Enabled by default, but may be disabled especially if participants are using screen readers.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "text"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "free-sort"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "Each element of this array is an image path.",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "asset-image",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stim_height": {
+                    "title": "stim height",
+                    "description": "The height of the images in pixels.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stim_width": {
+                    "title": "stim width",
+                    "description": "The width of the images in pixels.",
+                    "default": 100,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "scale_factor": {
+                    "title": "scale factor",
+                    "description": "How much larger to make the stimulus while moving (1 = no scaling).",
+                    "default": 1.5,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "sort_area_height": {
+                    "title": "sort area height",
+                    "description": "The height of the container that participants can move the stimuli in. Stimuli will be constrained to this area.",
+                    "default": 700,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "sort_area_width": {
+                    "title": "sort area width",
+                    "description": "The width of the container that participants can move the stimuli in. Stimuli will be constrained to this area.",
+                    "default": 700,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "sort_area_shape": {
+                    "title": "sort area shape",
+                    "description": "The shape of the sorting area, can be \"ellipse\" or \"square\".",
+                    "default": "ellipse",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "square",
+                          "ellipse"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "This string can contain HTML markup. The intention is that it can be used to provide a reminder about the action the participant is supposed to take (e.g., which key to press).",
+                    "default": "",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt_location": {
+                    "title": "prompt location",
+                    "description": "Indicates whether to show the prompt `\"above\"` or `\"below\"` the sorting area.",
+                    "default": "above",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "above",
+                          "below"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "The text that appears on the button to continue to the next trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "change_border_background_color": {
+                    "title": "change border background color",
+                    "description": "If true, the sort area border color will change while items are being moved in and out of the sort area, and the background color will change once all items have been moved into the sort area. If false, the border will remain black and the background will remain white throughout the trial.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "border_color_in": {
+                    "title": "border color in",
+                    "description": "If change_border_background_color is true, the sort area border will change to this color when an item is being moved into the sort area, and the background will change to this color when all of the items have been moved into the sort area.",
+                    "default": "#a1d99b",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "border_color_out": {
+                    "title": "border color out",
+                    "description": "If change_border_background_color is true, this will be the color of the sort area border when there are one or more items that still need to be moved into the sort area.",
+                    "default": "#fc9272",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "border_width": {
+                    "title": "border width",
+                    "description": "The width in pixels of the border around the sort area. If null, the border width defaults to 3% of the sort area height.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "counter_text_unfinished": {
+                    "title": "counter text unfinished",
+                    "description": "Text to display when there are one or more items that still need to be placed in the sort area. If \"%n%\" is included in the string, it will be replaced with the number of items that still need to be moved inside. If \"%s%\" is included in the string, a \"s\" will be included when the number of items remaining is greater than one.",
+                    "default": "You still need to place %n% item%s% inside the sort area.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "counter_text_finished": {
+                    "title": "counter text finished",
+                    "description": "Text that will take the place of the counter_text_unfinished text when all items have been moved inside the sort area.",
+                    "default": "All items placed. Feel free to reposition items if necessary.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stim_starts_inside": {
+                    "title": "stim starts inside",
+                    "description": "If false, the images will be positioned to the left and right of the sort area when the trial loads. If true, the images will be positioned at random locations inside the sort area when the trial loads.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "column_spread_factor": {
+                    "title": "column spread factor",
+                    "description": "When the images appear outside the sort area, this determines the x-axis spread of the image columns. Default value is 1. Values less than 1 will compress the image columns along the x-axis, and values greater than 1 will spread them farther apart.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimuli"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
                 "const": "fullscreen"
               }
             },
@@ -2560,6 +3199,558 @@
                 ],
                 "additionalProperties": false
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "iat-html"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The HTML string to be displayed.",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "left_category_key": {
+                    "title": "left category key",
+                    "description": "Key press that is associated with the `left_category_label`.",
+                    "default": "e",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "right_category_key": {
+                    "title": "right category key",
+                    "description": "Key press that is associated with the `right_category_label`.",
+                    "default": "i",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "left_category_label": {
+                    "title": "left category label",
+                    "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
+                    "default": [
+                      "left"
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "right_category_label": {
+                    "title": "right category label",
+                    "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
+                    "default": [
+                      "right"
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_to_move_forward": {
+                    "title": "key to move forward",
+                    "description": "This array contains the characters the participant is allowed to press to move on to the next trial if their key press was incorrect and feedback was displayed. Can also have 'other key' as an option which will only allow the user to select the right key to move forward.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "display_feedback": {
+                    "title": "display feedback",
+                    "description": "If `true`, then `html_when_wrong` and `wrong_image_name` is required. If `false`, `trial_duration` is needed and trial will continue automatically.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "html_when_wrong": {
+                    "title": "html when wrong",
+                    "description": "The content to display when a user presses the wrong key.",
+                    "default": "<span style=\"color: red; font-size: 80px\">X</span>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "bottom_instructions": {
+                    "title": "bottom instructions",
+                    "description": "Instructions about making a wrong key press and whether another key press is needed to continue.",
+                    "default": "<p>If you press the wrong key, a red X will appear. Press any key to continue.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "force_correct_key_press": {
+                    "title": "force correct key press",
+                    "description": "If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used. If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stim_key_association": {
+                    "title": "stim key association",
+                    "description": "Either 'left' or 'right'. This indicates whether the stimulus is associated with the key press and category on the left or right side of the page (`left_category_key` or `right_category_key`).",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "left",
+                          "right"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use this parameter to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as `null` for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "stim_key_association"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "iat-image"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "stimulus": {
+                    "title": "stimulus",
+                    "description": "The stimulus to display. The path to an image.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "left_category_key": {
+                    "title": "left category key",
+                    "description": "Key press that is associated with the `left_category_label`.",
+                    "default": "e",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "right_category_key": {
+                    "title": "right category key",
+                    "description": "Key press that is associated with the `right_category_label`.",
+                    "default": "i",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "left_category_label": {
+                    "title": "left category label",
+                    "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the left side of the page.",
+                    "default": [
+                      "left"
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "right_category_label": {
+                    "title": "right category label",
+                    "description": "An array that contains the words/labels associated with a certain stimulus. The labels are aligned to the right side of the page.",
+                    "default": [
+                      "right"
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_to_move_forward": {
+                    "title": "key to move forward",
+                    "description": "This array contains the characters the participant is allowed to press to move on to the next trial if their key press was incorrect and feedback was displayed. Can also have 'other key' as an option which will only allow the user to select the right key to move forward.",
+                    "default": "ALL_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "display_feedback": {
+                    "title": "display feedback",
+                    "description": "If `true`, then `html_when_wrong` and `wrong_image_name` is required. If `false`, `trial_duration` is needed and trial will continue automatically.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "html_when_wrong": {
+                    "title": "html when wrong",
+                    "description": "The content to display when a user presses the wrong key.",
+                    "default": "<span style=\"color: red; font-size: 80px\">X</span>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "bottom_instructions": {
+                    "title": "bottom instructions",
+                    "description": "Instructions about making a wrong key press and whether another key press is needed to continue.",
+                    "default": "<p>If you press the wrong key, a red X will appear. Press any key to continue.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "force_correct_key_press": {
+                    "title": "force correct key press",
+                    "description": "If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used. If this is `true` and the user presses the wrong key then they have to press the other key to continue. An example would be two keys 'e' and 'i'. If the key associated with the stimulus is 'e' and key 'i' was pressed, then pressing 'e' is needed to continue the trial. When this is `true`, then parameter `key_to_move_forward` is not used.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stim_key_association": {
+                    "title": "stim key association",
+                    "description": "Either 'left' or 'right'. This indicates whether the stimulus is associated with the key press and category on the left or right side of the page (`left_category_key` or `right_category_key`).",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "left",
+                          "right"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, then the trial will end whenever the participant makes a response (assuming they make their response before the cutoff specified by the `trial_duration` parameter). If false, then the trial will continue until the value for `trial_duration` is reached. You can use this parameter to force the participant to view a stimulus for a fixed amount of time, even if they respond before the time is complete.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "How long to wait for the participant to make a response before ending the trial in milliseconds. If the participant fails to make a response before this timer is reached, the participant's response will be recorded as `null` for the trial and the trial will end. If the value of this parameter is `null`, then the trial will wait for a response indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "stimulus",
+                  "stim_key_association"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         },
@@ -3606,6 +4797,151 @@
                 },
                 "required": [
                   "pages"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "maxdiff"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "alternatives": {
+                    "title": "alternatives",
+                    "description": "An array of one or more alternatives of string type to fill the rows of the maxdiff table. If `required` is true, then the array must contain two or more alternatives, so that at least one can be selected for both the left and right columns.",
+                    "examples": [
+                      [
+                        "Option 1",
+                        "Option 2",
+                        "Option 3"
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "labels": {
+                    "title": "labels",
+                    "description": "An array with exactly two labels of string type to display as column headings (to the left and right of the alternatives) for responses on the criteria of interest.",
+                    "examples": [
+                      [
+                        "Least important",
+                        "Most important"
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_alternative_order": {
+                    "title": "randomize alternative order",
+                    "description": "If true, the display order of `alternatives` is randomly determined at the start of the trial.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "preamble": {
+                    "title": "preamble",
+                    "description": "HTML formatted string to display at the top of the page above the maxdiff table.",
+                    "default": "",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_label": {
+                    "title": "button label",
+                    "description": "Label of the button to submit response.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "required": {
+                    "title": "required",
+                    "description": "If true, prevents the user from submitting the response and proceeding until a radio button in both the left and right response columns has been selected.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "alternatives",
+                  "labels"
                 ],
                 "additionalProperties": false
               }
@@ -5803,6 +7139,517 @@
           "if": {
             "properties": {
               "plugin": {
+                "const": "sketchpad"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "canvas_shape": {
+                    "title": "canvas shape",
+                    "description": "The shape of the canvas element. Accepts `'rectangle'` or `'circle'`",
+                    "default": "rectangle",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "rectangle",
+                          "circle"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "canvas_width": {
+                    "title": "canvas width",
+                    "description": "Width of the canvas in pixels when `canvas_shape` is a `\"rectangle\"`.",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "canvas_height": {
+                    "title": "canvas height",
+                    "description": "Height of the canvas in pixels when `canvas_shape` is a `\"rectangle\"`.",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "canvas_diameter": {
+                    "title": "canvas diameter",
+                    "description": "Diameter of the canvas (when `canvas_shape` is `'circle'`) in pixels.",
+                    "default": 500,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "canvas_border_width": {
+                    "title": "canvas border width",
+                    "description": "This width of the border around the canvas element",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "canvas_border_color": {
+                    "title": "canvas border color",
+                    "description": "The color of the border around the canvas element.",
+                    "default": "#000",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "background_image": {
+                    "title": "background image",
+                    "description": "Path to an image to render as the background of the canvas.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "background_color": {
+                    "title": "background color",
+                    "description": "Color of the canvas background. Note that a `background_image` will render on top of the color.",
+                    "default": "#ffffff",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stroke_width": {
+                    "title": "stroke width",
+                    "description": "The width of the strokes on the canvas.",
+                    "default": 2,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stroke_color": {
+                    "title": "stroke color",
+                    "description": "The color of the stroke on the canvas.",
+                    "default": "#000000",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "stroke_color_palette": {
+                    "title": "stroke color palette",
+                    "description": "Array of colors to render as a palette of choices for stroke color. Clicking on the corresponding color button will change the stroke color.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "prompt": {
+                    "title": "prompt",
+                    "description": "HTML content to render above or below the canvas (use `prompt_location` parameter to change location).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "prompt_location": {
+                    "title": "prompt location",
+                    "description": "Location of the `prompt` content. Can be 'abovecanvas' or 'belowcanvas' or 'belowbutton'.",
+                    "default": "abovecanvas",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "abovecanvas",
+                          "belowcanvas",
+                          "belowbutton"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "save_final_image": {
+                    "title": "save final image",
+                    "description": "Whether to save the final image in the data as a base64 encoded data URL.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "save_strokes": {
+                    "title": "save strokes",
+                    "description": "Whether to save the individual stroke data that generated the final image.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "key_to_draw": {
+                    "title": "key to draw",
+                    "description": "If this key is held down then it is like the mouse button being held down. The \"ink\" will flow when the button is held and stop when it is lifted. Pass in the string representation of the key, e.g., `'a'` for the A key or `' '` for the spacebar.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "show_finished_button": {
+                    "title": "show finished button",
+                    "description": "Whether to show the button that ends the trial.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "finished_button_label": {
+                    "title": "finished button label",
+                    "description": "The label for the button that ends the trial.",
+                    "default": "Finished",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_clear_button": {
+                    "title": "show clear button",
+                    "description": "Whether to show the button that clears the entire drawing.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "clear_button_label": {
+                    "title": "clear button label",
+                    "description": "The label for the button that clears the entire drawing.",
+                    "default": "Clear",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_undo_button": {
+                    "title": "show undo button",
+                    "description": "Whether to show the button that enables an undo action.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "undo_button_label": {
+                    "title": "undo button label",
+                    "description": "The label for the button that performs an undo action.",
+                    "default": "Undo",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_redo_button": {
+                    "title": "show redo button",
+                    "description": "Whether to show the button that enables an redo action. `show_undo_button` must also be `true` for the redo button to show.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "redo_button_label": {
+                    "title": "redo button label",
+                    "description": "The label for the button that performs an redo action.",
+                    "default": "Redo",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "choices": {
+                    "title": "choices",
+                    "description": "This array contains the key(s) that the participant is allowed to press in order to end the trial. Keys should be specified as characters (e.g., `'a'`, `'q'`, `' '`, `'Enter'`, `'ArrowDown'`) - see [this page](https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values) and [this page (event.key column)](https://www.freecodecamp.org/news/javascript-keycode-list-keypress-event-key-codes/) for more examples. Any key presses that are not listed in the array will be ignored. The default value of `\"NO_KEYS\"` means that no keys will be accepted as valid responses. Specifying `\"ALL_KEYS\"` will mean that all responses are allowed.",
+                    "default": "NO_KEYS",
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "keyboard-key",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "enum": [
+                          "ALL_KEYS",
+                          "NO_KEYS"
+                        ]
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "Length of time before the trial ends. If `null` the trial will continue indefinitely (until another way of ending the trial occurs).",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "show_countdown_trial_duration": {
+                    "title": "show countdown trial duration",
+                    "description": "Whether to show a timer that counts down until the end of the trial when `trial_duration` is not `null`.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "countdown_timer_html": {
+                    "title": "countdown timer html",
+                    "description": "The HTML to use for rendering the countdown timer. The element with `id=\"sketchpad-timer\"` will have its content replaced by a countdown timer in the format `MM:SS`.",
+                    "default": "<span id=\"sketchpad-timer\"></span> remaining",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
                 "const": "survey-likert"
               }
             },
@@ -7698,6 +9545,327 @@
                 ],
                 "additionalProperties": false
               }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "visual-search-circle"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "target": {
+                    "title": "target",
+                    "description": "Path to image file that is the search target. This parameter must specified when the stimuli set is defined using the `target`, `foil` and `set_size` parameters, but should NOT be specified when using the `stimuli` parameter.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "foil": {
+                    "title": "foil",
+                    "description": "Path to image file that is the foil/distractor. This image will be repeated for all distractors up to the `set_size` value. This parameter must specified when the stimuli set is defined using the `target`, `foil` and `set_size` parameters, but should NOT be specified when using the `stimuli` parameter.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "set_size": {
+                    "title": "set size",
+                    "description": "How many items should be displayed, including the target when `target_present` is `true`. The foil image will be repeated up to this value when `target_present` is `false`, or up to `set_size - 1` when `target_present` is `true`. This parameter must specified when using the `target`, `foil` and `set_size` parameters to define the stimuli set, but should NOT be specified when using the `stimuli` parameter.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "stimuli": {
+                    "title": "stimuli",
+                    "description": "Array containing all of the image files to be displayed. This parameter must be specified when NOT using the `target`, `foil`, and `set_size` parameters to define the stimuli set.",
+                    "default": [],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "format": "asset-image",
+                          "type": "string"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_present": {
+                    "title": "target present",
+                    "description": "Is the target present? This parameter must always be specified. When using the `target`, `foil` and `set_size` parameters, `false` means that the foil image will be repeated up to the set_size, and `true` means that the target will be presented along with the foil image repeated up to set_size - 1. When using the `stimuli` parameter, this parameter is only used to determine the response accuracy.",
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "fixation_image": {
+                    "title": "fixation image",
+                    "description": "Path to image file that is a fixation target. This parameter must always be specified.",
+                    "anyOf": [
+                      {
+                        "format": "asset-image",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_size": {
+                    "title": "target size",
+                    "description": "Two element array indicating the height and width of the search array element images.",
+                    "default": [
+                      50,
+                      50
+                    ],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "fixation_size": {
+                    "title": "fixation size",
+                    "description": "Two element array indicating the height and width of the fixation image.",
+                    "default": [
+                      16,
+                      16
+                    ],
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "integer"
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "circle_diameter": {
+                    "title": "circle diameter",
+                    "description": "The diameter of the search array circle in pixels.",
+                    "default": 250,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_present_key": {
+                    "title": "target present key",
+                    "description": "The key to press if the target is present in the search array.",
+                    "default": "j",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "target_absent_key": {
+                    "title": "target absent key",
+                    "description": "The key to press if the target is not present in the search array.",
+                    "default": "f",
+                    "anyOf": [
+                      {
+                        "format": "keyboard-key",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "trial_duration": {
+                    "title": "trial duration",
+                    "description": "The maximum amount of time the participant is allowed to search before the trial will continue. A value of null will allow the participant to search indefinitely.",
+                    "default": null,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "fixation_duration": {
+                    "title": "fixation duration",
+                    "description": "How long to show the fixation image for before the search array (in milliseconds).",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_item_locations": {
+                    "title": "Randomize item locations",
+                    "description": "Whether to use randomized locations on the circle for the items. If `false`, then the first item will always show at the location specified by `location_first_item`.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "location_first_item": {
+                    "title": "Location first item",
+                    "description": "If `randomize_item_locations` is `false`, the location of the first item on the circle, in degrees. 0 degrees is above the fixation, and moving clockwise in the positive direction.",
+                    "default": 0,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "response_ends_trial": {
+                    "title": "response ends trial",
+                    "description": "If true, the trial will end when the participant makes a response.",
+                    "default": true,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [
+                  "target_present",
+                  "fixation_image"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "not": {
+              "title": "This step scores its answers itself.",
+              "required": [
+                "score"
+              ]
             }
           }
         }

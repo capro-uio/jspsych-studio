@@ -8,7 +8,14 @@ import type {
   PluginSchema,
   PluginSchemas,
 } from "./types.ts";
-import { CURATED_PLUGINS, LIST_LENGTHS, STARTING_EXAMPLES, UNDECLARED_RECORDS } from "./curated.ts";
+import {
+  CURATED_PLUGINS,
+  DISTINCT_KEYS,
+  FIXED_CHOICES,
+  LIST_LENGTHS,
+  STARTING_EXAMPLES,
+  UNDECLARED_RECORDS,
+} from "./curated.ts";
 import { PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
@@ -191,13 +198,20 @@ async function extractOne(
 
 export interface ParameterCuration {
   examples: Record<string, Record<string, unknown>>;
-  lengths: Record<string, Record<string, { minItems: number; maxItems: number }>>;
+  lengths: Record<string, Record<string, { minItems?: number; maxItems?: number }>>;
+  choices: Record<string, Record<string, string[]>>;
+  distinctKeys: Record<string, [string, string][]>;
 }
 
 /** Fills in what a plugin's declarations leave out for some of its parameters, named by plugin. */
 export function curateParameters(
   schema: PluginSchema,
-  curation: ParameterCuration = { examples: STARTING_EXAMPLES, lengths: LIST_LENGTHS },
+  curation: ParameterCuration = {
+    examples: STARTING_EXAMPLES,
+    lengths: LIST_LENGTHS,
+    choices: FIXED_CHOICES,
+    distinctKeys: DISTINCT_KEYS,
+  },
 ) {
   const named = <T>(table: Record<string, Record<string, T>>) =>
     Object.entries(table[schema.plugin] ?? {}).map(([name, value]) => {
@@ -209,6 +223,11 @@ export function curateParameters(
     });
   for (const [parameter, example] of named(curation.examples)) parameter.examples = [example];
   for (const [parameter, length] of named(curation.lengths)) Object.assign(parameter, length);
+  for (const [parameter, choices] of named(curation.choices)) parameter.enum = choices;
+  const pairs = curation.distinctKeys[schema.plugin] ?? [];
+  // Named like the others, so a misspelt key is caught when the schemas are built.
+  named({ [schema.plugin]: Object.fromEntries(pairs.flat().map((name) => [name, true])) });
+  if (pairs.length > 0) schema.distinctKeys = pairs;
 }
 
 /** The columns a plugin writes into its data; an older plugin may declare none. */

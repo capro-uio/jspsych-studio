@@ -101,16 +101,49 @@ export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
   "categorize-image": { key_answer: "f" },
   "categorize-animation": { key_answer: "f" },
   "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"] },
+  // A word between percent signs is a gap to fill in.
+  cloze: { text: "<p>The cat sat on the %mat%.</p>" },
+  maxdiff: {
+    alternatives: ["Option 1", "Option 2", "Option 3"],
+    labels: ["Least important", "Most important"],
+  },
 };
 
 // The same/different plugins read exactly two stimuli: one fewer shows "undefined", and any more
-// are ignored without a word.
+// are ignored without a word. Most-and-least takes one label for each end of its scale.
 export const LIST_LENGTHS: Record<
   string,
-  Record<string, { minItems: number; maxItems: number }>
+  Record<string, { minItems?: number; maxItems?: number }>
 > = {
   "same-different-html": { stimuli: { minItems: 2, maxItems: 2 } },
   "same-different-image": { stimuli: { minItems: 2, maxItems: 2 } },
+  maxdiff: { alternatives: { minItems: 2 }, labels: { minItems: 2, maxItems: 2 } },
+  // An IAT names each side with one or two categories; none makes the plugin fail.
+  "iat-html": {
+    left_category_label: { minItems: 1, maxItems: 2 },
+    right_category_label: { minItems: 1, maxItems: 2 },
+  },
+  "iat-image": {
+    left_category_label: { minItems: 1, maxItems: 2 },
+    right_category_label: { minItems: 1, maxItems: 2 },
+  },
+};
+
+// Settings a plugin declares as text but reads as one of a few words; any other makes it fail.
+export const FIXED_CHOICES: Record<string, Record<string, string[]>> = {
+  sketchpad: {
+    canvas_shape: ["rectangle", "circle"],
+    prompt_location: ["abovecanvas", "belowcanvas", "belowbutton"],
+  },
+};
+
+// Keys that must differ for the plugin's answers, and so its scoring, to mean anything.
+export const DISTINCT_KEYS: Record<string, [string, string][]> = {
+  "same-different-html": [["same_key", "different_key"]],
+  "same-different-image": [["same_key", "different_key"]],
+  "iat-html": [["left_category_key", "right_category_key"]],
+  "iat-image": [["left_category_key", "right_category_key"]],
+  "visual-search-circle": [["target_present_key", "target_absent_key"]],
 };
 
 // Columns a plugin writes without declaring them in its info: the same/different plugins record a
