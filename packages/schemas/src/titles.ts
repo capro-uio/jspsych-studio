@@ -204,6 +204,22 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Shows the participant their own camera, so they can get into frame.",
     family: "setup",
   },
+  "webgazer-init-camera": {
+    title: "Set up eye tracking",
+    summary: "Starts the webcam eye tracker and has the participant centre their face for it.",
+    family: "setup",
+  },
+  "webgazer-calibrate": {
+    title: "Calibrate eye tracking",
+    summary:
+      "Shows points to click or look at, so the eye tracker learns where the participant looks.",
+    family: "setup",
+  },
+  "webgazer-validate": {
+    title: "Check eye-tracking accuracy",
+    summary: "Shows points to look at and records how close the eye tracker's estimates fall.",
+    family: "setup",
+  },
   resize: {
     title: "Calibrate screen size",
     summary: "Has the participant size a box to a card; everything after is shown at that scale.",

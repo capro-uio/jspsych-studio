@@ -1,8 +1,10 @@
-export { assertExtracted, extractSchemas, pluginPackages } from "./extract.ts";
-export { PLUGIN_FAMILIES, PLUGIN_LABELS } from "./titles.ts";
+export { extractBundle } from "./extract.ts";
+export { PLUGIN_LABELS } from "./titles.ts";
 export type { PluginFamily, PluginLabel } from "./titles.ts";
 export type {
+  ExtensionSchema,
   ExtractionReport,
+  Library,
   ParameterSchema,
   ParameterTypeName,
   PluginSchema,

@@ -4,7 +4,7 @@
   import CanvasField from "./CanvasField.svelte";
   import CodeInput from "./CodeInput.svelte";
   import GridField from "./GridField.svelte";
-  import { singleCell } from "./grid.ts";
+  import { firstRow } from "./grid.ts";
   import { codeHint, codeSeed } from "./code.ts";
   import ListField from "./ListField.svelte";
   import ScalarInput from "./ScalarInput.svelte";
@@ -44,7 +44,7 @@
     if (grid) {
       return Array.isArray(parameter.default)
         ? (structuredClone(parameter.default) as unknown[][])
-        : singleCell(parameter.items?.items ?? parameter);
+        : firstRow(parameter);
     }
     if (list)
       return Array.isArray(parameter.default) ? [...(parameter.default as unknown[])] : [""];

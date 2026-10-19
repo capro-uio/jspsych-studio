@@ -1,5 +1,9 @@
 export { compileSpec } from "./compile.ts";
-export { usesDevices, usesRecordings } from "./recordings.ts";
+export { usesRecordings } from "./recordings.ts";
+export { isEyeTrackingStep, usesDevices } from "./setup-order.ts";
+export { usesEyeTracking } from "./gaze.ts";
+export { gridShape } from "./grids.ts";
+export type { GridPlace, GridShape } from "./grids.ts";
 export { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 export { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 export { assetsOfType, isMediaType, preloadListOf } from "./assets.ts";

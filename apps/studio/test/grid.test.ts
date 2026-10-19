@@ -4,20 +4,33 @@ import {
   addColumn,
   addRow,
   blankCell,
-  isSquares,
+  firstRow,
   removeColumn,
   removeRow,
   setCell,
-  singleCell,
 } from "../src/lib/grid.ts";
 
-const square = { title: "cell", type: "integer", jspsychType: "BOOL" } as ParameterSchema;
-const key = { title: "cell", type: "string", jspsychType: "KEYS" } as ParameterSchema;
+const gridOf = (cell: Partial<ParameterSchema>, width?: number) =>
+  ({
+    title: "grid",
+    type: "array",
+    format: "grid",
+    jspsychType: cell.jspsychType,
+    items: {
+      title: "row",
+      type: "array",
+      ...(width !== undefined && { minItems: width, maxItems: width }),
+      items: { title: "cell", ...cell },
+    },
+  }) as ParameterSchema;
+
+const square = gridOf({ type: "integer", jspsychType: "BOOL" });
+const key = gridOf({ type: "string", jspsychType: "KEYS" });
+const point = gridOf({ type: "integer", jspsychType: "INT" }, 2);
 
 describe("grids", () => {
-  it("tells squares from keys, and starts a new place as a square or an empty key", () => {
-    expect([isSquares(square), isSquares(key)]).toEqual([true, false]);
-    expect([blankCell(square), blankCell(key)]).toEqual([1, ""]);
+  it("starts a new place as a square, nought, or an empty key", () => {
+    expect([blankCell(square), blankCell(point), blankCell(key)]).toEqual([1, 0, ""]);
   });
 
   it("adds a row as wide as the grid, and a column to every row", () => {
@@ -44,9 +57,10 @@ describe("grids", () => {
     expect(removeColumn([[1, 1], [0]])).toEqual([[1, 1], [0]]);
   });
 
-  it("starts an empty grid from a single place", () => {
+  it("starts an empty grid from one row, as wide as its rows must be", () => {
     expect(addColumn([], square)).toEqual([[1]]);
-    expect(singleCell(key)).toEqual([[""]]);
+    expect(addRow([], key)).toEqual([[""]]);
+    expect(firstRow(point)).toEqual([[0, 0]]);
   });
 
   it("changes one place and leaves the rest", () => {

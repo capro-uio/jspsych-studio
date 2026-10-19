@@ -1,4 +1,6 @@
 import { escapeHtmlText } from "../emit.ts";
+import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
+import { BROWSER_BUNDLE } from "../identifiers.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
@@ -19,22 +21,23 @@ const CDN = "https://unpkg.com";
 
 // CDN URLs pin exact versions: a floating range would let a plugin update change the behaviour of
 // an experiment that is already collecting data.
+function packageUrl(name: string, version: string, file: string, base: string) {
+  return base === "cdn" ? `${CDN}/${name}@${version}/${file}` : `${base}/${name}/${file}`;
+}
+
 function scriptUrls(result: CompileResult, base: string) {
-  const core =
-    base === "cdn"
-      ? `${CDN}/jspsych@${result.jspsych}/dist/index.browser.min.js`
-      : `${base}/jspsych/dist/index.browser.min.js`;
+  const core = packageUrl("jspsych", result.jspsych, BROWSER_BUNDLE, base);
+  // Each extra script says which package it is, so the experiment can find files beside it.
+  const extras = result.scripts.map(({ package: name, version, file }) => ({
+    url: packageUrl(name, version, file, base),
+    name,
+  }));
   const pluginUrls = result.plugins.map((plugin) => {
     const { name, version } = result.packages[plugin];
-    return base === "cdn"
-      ? `${CDN}/${name}@${version}/dist/index.browser.min.js`
-      : `${base}/${name}/dist/index.browser.min.js`;
+    return packageUrl(name, version, BROWSER_BUNDLE, base);
   });
-  const stylesheet =
-    base === "cdn"
-      ? `${CDN}/jspsych@${result.jspsych}/css/jspsych.css`
-      : `${base}/jspsych/css/jspsych.css`;
-  return { core, pluginUrls, stylesheet };
+  const stylesheet = packageUrl("jspsych", result.jspsych, "css/jspsych.css", base);
+  return { core, extras, pluginUrls, stylesheet };
 }
 
 export interface HtmlOutput {
@@ -47,10 +50,15 @@ export async function emitHtml(
   result: CompileResult,
   options: HtmlTargetOptions,
 ): Promise<HtmlOutput> {
-  const { core, pluginUrls, stylesheet } = scriptUrls(result, options.base ?? "cdn");
+  const { core, extras, pluginUrls, stylesheet } = scriptUrls(result, options.base ?? "cdn");
   const scripts = [
     ...(options.headScripts ?? []).map((script) => `    <script>${script}</script>`),
-    ...[core, ...pluginUrls].map((url) => `    <script src="${url}"></script>`),
+    `    <script src="${core}"></script>`,
+    ...extras.map(
+      ({ url, name }) =>
+        `    <script ${PACKAGE_ATTRIBUTE}="${escapeHtmlText(name)}" src="${url}"></script>`,
+    ),
+    ...pluginUrls.map((url) => `    <script src="${url}"></script>`),
   ].join("\n");
 
   // The jsPsych browser bundle already declares a global `initJsPsych`, so the experiment body

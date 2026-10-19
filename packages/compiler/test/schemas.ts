@@ -1,7 +1,6 @@
-import { extractSchemas, PLUGIN_FAMILIES } from "@jspsych-studio/schemas";
-import type { SchemaBundle } from "@jspsych-studio/schemas";
+import { extractBundle } from "@jspsych-studio/schemas";
 
-const report = await extractSchemas([
+export const { bundle: schemas } = await extractBundle([
   "@jspsych/plugin-audio-keyboard-response",
   "@jspsych/plugin-audio-button-response",
   "@jspsych/plugin-video-keyboard-response",
@@ -42,11 +41,8 @@ const report = await extractSchemas([
   "@jspsych/plugin-survey-likert",
   "@jspsych/plugin-survey-multi-choice",
   "@jspsych/plugin-survey-multi-select",
+  "@jspsych/plugin-webgazer-init-camera",
+  "@jspsych/plugin-webgazer-calibrate",
+  "@jspsych/plugin-webgazer-validate",
   "@kurokida/jspsych-psychophysics",
 ]);
-
-export const schemas: SchemaBundle = {
-  jspsych: report.jspsych,
-  families: PLUGIN_FAMILIES,
-  plugins: report.schemas,
-};

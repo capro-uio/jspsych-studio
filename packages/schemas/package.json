@@ -13,6 +13,7 @@
     "test": "vitest run"
   },
   "devDependencies": {
+    "@jspsych/extension-webgazer": "^1.2.0",
     "@jspsych/plugin-animation": "^2.1.0",
     "@jspsych/plugin-audio-button-response": "^2.1.1",
     "@jspsych/plugin-audio-keyboard-response": "^2.0.0",
@@ -58,7 +59,11 @@
     "@jspsych/plugin-video-slider-response": "^2.1.1",
     "@jspsych/plugin-virtual-chinrest": "^3.1.0",
     "@jspsych/plugin-visual-search-circle": "^2.2.0",
+    "@jspsych/plugin-webgazer-calibrate": "^2.1.0",
+    "@jspsych/plugin-webgazer-init-camera": "^2.1.0",
+    "@jspsych/plugin-webgazer-validate": "^2.1.0",
     "@kurokida/jspsych-psychophysics": "5.1.0",
-    "jspsych": "^8.3.0"
+    "jspsych": "^8.3.0",
+    "webgazer": "^3.5.3"
   }
 }

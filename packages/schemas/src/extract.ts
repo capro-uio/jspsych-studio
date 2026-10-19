@@ -2,23 +2,28 @@ import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
 import type {
+  ExtensionSchema,
   ExtractionReport,
   ParameterSchema,
   ParameterTypeName,
   PluginSchema,
   PluginSchemas,
+  SchemaBundle,
 } from "./types.ts";
 import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
+  EXTENSION_LIBRARIES,
   FIXED_CHOICES,
   DECIMAL_PARAMETERS,
+  GRID_WIDTHS,
+  STIMULUS_ELEMENTS,
   LIST_LENGTHS,
   REQUIRED_PARAMETERS,
   STARTING_EXAMPLES,
   UNDECLARED_RECORDS,
 } from "./curated.ts";
-import { PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
+import { PLUGIN_FAMILIES, PLUGIN_LABELS, type PluginLabel } from "./titles.ts";
 
 const JSON_TYPE: Record<ParameterTypeName, Partial<ParameterSchema>> = {
   BOOL: { type: "boolean" },
@@ -190,25 +195,29 @@ function toObjectSchema(
   return { properties, required };
 }
 
+interface StaticInfo {
+  name: string;
+  version: string;
+  data?: Record<string, unknown>;
+}
+
+// A plugin or an extension is the class its package exports with a static `info`.
+async function infoOf<Extra>(packageName: string): Promise<{ info: StaticInfo & Extra }> {
+  const module = await importWithWindowShim(packageName);
+  const found = [module.default, ...Object.values(module)].find(
+    (value: unknown) => typeof value === "function" && "info" in value,
+  );
+  if (!found) throw new Error(`${packageName} exports no class with a static \`info\``);
+  return found as { info: StaticInfo & Extra };
+}
+
 async function extractOne(
   packageName: string,
   typeNames: Map<number, ParameterTypeName>,
   labels: Record<string, PluginLabel>,
   warnings: ExtractionReport["warnings"],
 ): Promise<PluginSchema> {
-  const module = await importWithWindowShim(packageName);
-  const candidates = [module.default, ...Object.values(module)];
-  const plugin = candidates.find((value: unknown) => {
-    return typeof value === "function" && "info" in (value as object);
-  }) as {
-    info: {
-      name: string;
-      version: string;
-      parameters: Record<string, RawParameter>;
-      data?: Record<string, unknown>;
-    };
-  };
-  if (!plugin) throw new Error("no exported class with a static `info` property");
+  const plugin = await infoOf<{ parameters: Record<string, RawParameter> }>(packageName);
 
   let descriptions: Record<string, string> = {};
   try {
@@ -229,9 +238,31 @@ async function extractOne(
     properties,
     required,
     records: [...recordedColumns(plugin.info), ...(UNDECLARED_RECORDS[plugin.info.name] ?? [])],
+    ...stimulusSelectorOf(packageName, plugin.info.name),
   };
   curateParameters(schema);
   return CURATED_PLUGINS[packageName]?.(schema) ?? schema;
+}
+
+// Most of jsPsych's plugins show their stimulus in an element with an id of their own name, which
+// is what an eye tracker can record the place of without the author writing a selector.
+export function stimulusSelectorOf(
+  packageName: string,
+  plugin: string,
+  curated: Record<string, string> = STIMULUS_ELEMENTS,
+) {
+  const isCurated = Object.hasOwn(curated, plugin);
+  const id = isCurated ? curated[plugin] : `jspsych-${plugin}-stimulus`;
+  const source = readFileSync(resolveFrom.resolve(packageName), "utf8");
+  // Written into markup as id="…" or id='…', or set on an element as `.id = "…"`; a plugin's name
+  // is letters and hyphens, so the id needs no escaping.
+  const assigned = new RegExp(`id ?= ?["']${id}["']`).test(source);
+  if (!assigned && isCurated) {
+    throw new Error(
+      `curated.ts names "${id}" as the stimulus of ${plugin}, which no longer has it`,
+    );
+  }
+  return assigned ? { stimulusSelector: `#${id}` } : {};
 }
 
 export interface ParameterCuration {
@@ -241,6 +272,7 @@ export interface ParameterCuration {
   distinctKeys: Record<string, [string, string][]>;
   required: Record<string, string[]>;
   decimals: Record<string, string[]>;
+  widths: Record<string, Record<string, number>>;
 }
 
 /** Fills in what a plugin's declarations leave out for some of its parameters, named by plugin. */
@@ -253,6 +285,7 @@ export function curateParameters(
     distinctKeys: DISTINCT_KEYS,
     required: REQUIRED_PARAMETERS,
     decimals: DECIMAL_PARAMETERS,
+    widths: GRID_WIDTHS,
   },
 ) {
   const named = <T>(table: Record<string, Record<string, T>>) =>
@@ -264,6 +297,12 @@ export function curateParameters(
       return [parameter, value] as const;
     });
   for (const [parameter, example] of named(curation.examples)) parameter.examples = [example];
+  for (const [parameter, width] of named(curation.widths)) {
+    if (parameter.format !== "grid" || !parameter.items) {
+      throw new Error(`curated.ts gives a row width to "${parameter.title}", which is not a grid`);
+    }
+    Object.assign(parameter.items, { minItems: width, maxItems: width });
+  }
   for (const [parameter, length] of named(curation.lengths)) Object.assign(parameter, length);
   for (const [parameter, choices] of named(curation.choices)) {
     if (parameter.type === "array" && parameter.items) parameter.items.enum = choices;
@@ -339,14 +378,62 @@ export function assertExtracted(report: ExtractionReport) {
   );
 }
 
-export function officialPluginPackages(): string[] {
+function installedPackages() {
   const manifest = JSON.parse(
     readFileSync(new URL("../package.json", import.meta.url), "utf8"),
   ) as { devDependencies: Record<string, string> };
-  return Object.keys(manifest.devDependencies).filter((name) => name.includes("/plugin-"));
+  return Object.keys(manifest.devDependencies);
+}
+
+export function officialPluginPackages(): string[] {
+  return installedPackages().filter((name) => name.includes("/plugin-"));
+}
+
+export function extensionPackages(): string[] {
+  return installedPackages().filter((name) => name.includes("/extension-"));
+}
+
+/** What each extension is called, records, and needs loaded before it. */
+export async function extractExtensions(
+  packageNames: string[],
+): Promise<Record<string, ExtensionSchema>> {
+  const extensions = await Promise.all(
+    packageNames.map(async (packageName): Promise<ExtensionSchema> => {
+      const { info } = await infoOf(packageName);
+      return {
+        extension: info.name,
+        package: packageName,
+        version: info.version,
+        records: recordedColumns(info),
+        libraries: (EXTENSION_LIBRARIES[packageName] ?? []).map((library) => ({
+          ...library,
+          version: installedVersion(library.package),
+        })),
+      };
+    }),
+  );
+  return Object.fromEntries(extensions.map((extension) => [extension.extension, extension]));
 }
 
 /** jsPsych's own plugins plus the third-party ones whose gaps are filled in by hand. */
 export function pluginPackages(): string[] {
   return [...officialPluginPackages(), ...Object.keys(CURATED_PLUGINS)];
+}
+
+/** The schemas a builder and the compiler work from, for the plugins named and every extension. */
+export async function extractBundle(
+  packageNames: string[] = pluginPackages(),
+): Promise<{ bundle: SchemaBundle; report: ExtractionReport }> {
+  const [report, extensions] = await Promise.all([
+    extractSchemas(packageNames),
+    extractExtensions(extensionPackages()),
+  ]);
+  assertExtracted(report);
+  const bundle: SchemaBundle = {
+    jspsych: report.jspsych,
+    families: PLUGIN_FAMILIES,
+    plugins: report.schemas,
+    extensions,
+  };
+  return { bundle, report };
 }

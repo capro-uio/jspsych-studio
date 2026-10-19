@@ -22,10 +22,12 @@ import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./ass
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
-import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
+import { conditionColumns, isVariableReference, slotsOf, trialsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { pluginRuleProblems } from "./plugin-rules.ts";
-import { recordingOrderProblems } from "./recordings.ts";
+import { gridShape, type GridPlace } from "./grids.ts";
+import { setupOrderProblems } from "./setup-order.ts";
+import { gazeProblems } from "./gaze.ts";
 import { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 import { appearanceProblems } from "./appearance.ts";
 
@@ -51,12 +53,7 @@ const STUDY_COLUMN = "which is a column the study writes itself";
 const RECIPE_SUPPLIED_PARAMETERS = new Set(["data", "on_finish"]);
 
 function collectTags(nodes: SpecNode[]): string[] {
-  return nodes.flatMap((node) => {
-    if (node.kind === "trial") return node.tag ? [node.tag] : [];
-    if (node.kind === "block" || node.kind === "loop") return collectTags(node.children);
-    const slots = slotsOf(node);
-    return slots ? slots.flatMap((slot) => collectTags(slot.children)) : [];
-  });
+  return trialsOf(nodes).flatMap((trial) => (trial.tag ? [trial.tag] : []));
 }
 
 const KEY_LIST_KEYWORDS = new Set(["ALL_KEYS", "NO_KEYS"]);
@@ -154,21 +151,33 @@ function listLengthProblem(value: ParameterValue, parameter: ParameterSchema) {
   return `takes ${wanted} entries, but the spec holds ${value.length}`;
 }
 
-// A grid is rows of places, each a square that is there (1) or not (0), or a key; the plugins draw
-// nothing for an empty row and crash on a word such as ALL_KEYS where rows belong.
+const PLACE_RULES: Record<GridPlace, { holds: (place: unknown) => boolean; expected: string }> = {
+  square: {
+    holds: (place) => place === 0 || place === 1,
+    expected: "1 for a square or 0 for a gap",
+  },
+  integer: { holds: (place) => Number.isInteger(place), expected: "a whole number" },
+  number: {
+    holds: (place) => typeof place === "number" && Number.isFinite(place),
+    expected: "a number",
+  },
+  key: { holds: (place) => typeof place === "string", expected: "a key" },
+};
+
+// A grid is rows of places; the plugins draw nothing for an empty row and crash on a word such as
+// ALL_KEYS where rows belong.
 function gridProblem(value: unknown, parameter: ParameterSchema) {
   const rows = "expects a grid: a list of rows, each a list of at least one place";
   if (!Array.isArray(value) || value.length === 0) return rows;
   if (!value.every((row) => Array.isArray(row) && row.length > 0)) return rows;
-  const squares = parameter.items?.items?.jspsychType === "BOOL";
-  const cells = (value as unknown[][]).flat();
-  if (squares && !cells.every((cell) => cell === 0 || cell === 1)) {
-    return "expects each place of its grid to be 1 for a square or 0 for a gap";
+  const { place, width } = gridShape(parameter);
+  if (width !== undefined && !(value as unknown[][]).every((row) => row.length === width)) {
+    return `expects each row of its grid to hold exactly ${width} places`;
   }
-  if (!squares && !cells.every((cell) => typeof cell === "string")) {
-    return "expects each place of its grid to be a key";
-  }
-  return null;
+  const { holds, expected } = PLACE_RULES[place];
+  return (value as unknown[][]).flat().every(holds)
+    ? null
+    : `expects each place of its grid to be ${expected}`;
 }
 
 // What a conditions cell must hold for a parameter that takes a grid or a list of numbers, which
@@ -321,6 +330,7 @@ function checkTrial(
   for (const problem of answerKeyProblems(trial, schema)) report(`${where} ${problem}`);
   for (const problem of pluginRuleProblems(trial)) report(`${where} ${problem}`);
   for (const problem of exclusionProblems(trial, spec)) report(`${where} ${problem}`);
+  for (const problem of gazeProblems(trial)) report(`${where} ${problem}`);
   const expected = trial.score?.correct_if_response_equals;
   if (expected !== undefined && typeof expected === "object") {
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);
@@ -754,7 +764,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
   }
   problems.push(...recruitmentProblems(spec));
   problems.push(...appearanceProblems(spec.settings));
-  problems.push(...recordingOrderProblems(spec));
+  problems.push(...setupOrderProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
   if (problems.length > 0) throw new SpecError(spec.name, problems);
