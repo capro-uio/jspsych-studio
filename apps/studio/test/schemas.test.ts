@@ -80,6 +80,13 @@ describe("startingParams", () => {
     ],
     ["iat-html", { stimulus: "<p>Your text here</p>", stim_key_association: "left" }],
     ["sketchpad", {}],
+    [
+      "survey-html-form",
+      { html: '<p><label>Your age <input name="age" type="number" min="18" required></label></p>' },
+    ],
+    ["resize", {}],
+    ["virtual-chinrest", {}],
+    ["browser-check", {}],
   ])("starts %s ready to run", (plugin, params) => {
     expect(startingParams(plugin)).toEqual(params);
   });
@@ -179,10 +186,13 @@ describe("pluginChoices", () => {
 
   it("sorts each group by title", () => {
     const setup = pluginChoices.find((group) => group.label === "Set up and run");
-    expect(setup?.plugins.map(({ plugin }) => plugin)).toEqual([
-      "preload",
-      "call-function",
-      "fullscreen",
+    expect(setup?.plugins.map(({ title }) => title)).toEqual([
+      "Calibrate screen size",
+      "Check the browser",
+      "Load files in advance",
+      "Measure viewing distance",
+      "Run a function",
+      "Switch to full screen",
     ]);
   });
 });

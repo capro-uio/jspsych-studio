@@ -12,7 +12,9 @@ import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
   FIXED_CHOICES,
+  DECIMAL_PARAMETERS,
   LIST_LENGTHS,
+  REQUIRED_PARAMETERS,
   STARTING_EXAMPLES,
   UNDECLARED_RECORDS,
 } from "./curated.ts";
@@ -201,6 +203,8 @@ export interface ParameterCuration {
   lengths: Record<string, Record<string, { minItems?: number; maxItems?: number }>>;
   choices: Record<string, Record<string, string[]>>;
   distinctKeys: Record<string, [string, string][]>;
+  required: Record<string, string[]>;
+  decimals: Record<string, string[]>;
 }
 
 /** Fills in what a plugin's declarations leave out for some of its parameters, named by plugin. */
@@ -211,6 +215,8 @@ export function curateParameters(
     lengths: LIST_LENGTHS,
     choices: FIXED_CHOICES,
     distinctKeys: DISTINCT_KEYS,
+    required: REQUIRED_PARAMETERS,
+    decimals: DECIMAL_PARAMETERS,
   },
 ) {
   const named = <T>(table: Record<string, Record<string, T>>) =>
@@ -223,7 +229,20 @@ export function curateParameters(
     });
   for (const [parameter, example] of named(curation.examples)) parameter.examples = [example];
   for (const [parameter, length] of named(curation.lengths)) Object.assign(parameter, length);
-  for (const [parameter, choices] of named(curation.choices)) parameter.enum = choices;
+  for (const [parameter, choices] of named(curation.choices)) {
+    if (parameter.type === "array" && parameter.items) parameter.items.enum = choices;
+    else parameter.enum = choices;
+  }
+  const decimals = curation.decimals[schema.plugin] ?? [];
+  for (const [parameter] of named({
+    [schema.plugin]: Object.fromEntries(decimals.map((name) => [name, true])),
+  })) {
+    parameter.type = "number";
+    parameter.jspsychType = "FLOAT";
+  }
+  const required = curation.required[schema.plugin] ?? [];
+  named({ [schema.plugin]: Object.fromEntries(required.map((name) => [name, true])) });
+  schema.required = [...new Set([...schema.required, ...required])];
   const pairs = curation.distinctKeys[schema.plugin] ?? [];
   // Named like the others, so a misspelt key is caught when the schemas are built.
   named({ [schema.plugin]: Object.fromEntries(pairs.flat().map((name) => [name, true])) });

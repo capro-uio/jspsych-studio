@@ -3,6 +3,7 @@ import { orderColumn } from "./counterbalance.ts";
 import { ENDING_COLUMN } from "./data.ts";
 import { linkParamsOf, needsParticipantId } from "./recruitment.ts";
 import { slotsOf } from "./variables.ts";
+import { EXCLUDED_COLUMN } from "./exclusions.ts";
 import type { Author, Spec, SpecNode } from "./types.ts";
 
 /** The version every workspace carries until a release sets a real one. */
@@ -48,6 +49,10 @@ export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
         if (node.tag) columns.add("tag");
         if (node.score) columns.add("correct");
         for (const field of Object.keys(node.record ?? {})) columns.add(field);
+        if (node.exclusion_ending !== undefined) {
+          columns.add(EXCLUDED_COLUMN);
+          columns.add(ENDING_COLUMN);
+        }
         continue;
       }
       if (node.kind === "checkpoint") {

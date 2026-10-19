@@ -1,4 +1,5 @@
 export { compileSpec } from "./compile.ts";
+export { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 export { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 export { assetsOfType, isMediaType, preloadListOf } from "./assets.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";

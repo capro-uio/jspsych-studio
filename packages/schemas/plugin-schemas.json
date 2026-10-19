@@ -398,6 +398,157 @@
         "slider_start"
       ]
     },
+    "browser-check": {
+      "plugin": "browser-check",
+      "title": "Check the browser",
+      "summary": "Records the browser, screen and devices, and can turn away those your rule excludes.",
+      "family": "setup",
+      "package": "@jspsych/plugin-browser-check",
+      "version": "2.1.0",
+      "properties": {
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING",
+            "enum": [
+              "width",
+              "height",
+              "webaudio",
+              "browser",
+              "browser_version",
+              "mobile",
+              "os",
+              "fullscreen",
+              "vsync_rate",
+              "webcam",
+              "microphone"
+            ]
+          },
+          "jspsychType": "STRING",
+          "title": "features",
+          "description": "The list of browser features to record. The default value includes all of the available options.",
+          "default": [
+            "width",
+            "height",
+            "webaudio",
+            "browser",
+            "browser_version",
+            "mobile",
+            "os",
+            "fullscreen",
+            "vsync_rate",
+            "webcam",
+            "microphone"
+          ]
+        },
+        "skip_features": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "jspsychType": "STRING",
+            "enum": [
+              "width",
+              "height",
+              "webaudio",
+              "browser",
+              "browser_version",
+              "mobile",
+              "os",
+              "fullscreen",
+              "vsync_rate",
+              "webcam",
+              "microphone"
+            ]
+          },
+          "jspsychType": "STRING",
+          "title": "skip features",
+          "description": "Any features listed here will be skipped, even if they appear in `features`. Use this when you want to run most of the defaults.",
+          "default": []
+        },
+        "vsync_frame_count": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "vsync frame count",
+          "description": "The number of frames to sample when measuring the display refresh rate (`\"vsync_rate\"`). Increasing the number will potenially improve the stability of the estimate at the cost of increasing the amount of time the plugin takes during this test. On most devices, 60 frames takes about 1 second to measure.",
+          "default": 60
+        },
+        "allow_window_resize": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "allow window resize",
+          "description": "Whether to allow the participant to resize the browser window if the window is smaller than `minimum_width` and/or `minimum_height`. If `false`, then the `minimum_width` and `minimum_height` parameters are ignored and you can validate the size in the `inclusion_function`.",
+          "default": true
+        },
+        "minimum_width": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "minimum width",
+          "description": "If `allow_window_resize` is `true`, then this is the minimum width of the window (in pixels) that must be met before continuing.",
+          "default": 0
+        },
+        "minimum_height": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "minimum height",
+          "description": "If `allow_window_resize` is `true`, then this is the minimum height of the window (in pixels) that must be met before continuing.",
+          "default": 0
+        },
+        "window_resize_message": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "window resize message",
+          "description": "The message that will be displayed during the interactive resize when `allow_window_resize` is `true` and the window is too small. If the message contains HTML elements with the special IDs `browser-check-min-width`, `browser-check-min-height`, `browser-check-actual-height`, and/or `browser-check-actual-width`, then the contents of those elements will be dynamically updated to reflect the `minimum_width`, `minimum_height` and measured width and height of the browser. The default message is: `<p>Your browser window is too small to complete this experiment. Please maximize the size of your browser window. If your browser window is already maximized, you will not be able to complete this experiment.</p> <p>The minimum window width is <span id=\"browser-check-min-width\"></span> px.</p> <p>Your current window width is <span id=\"browser-check-actual-width\"></span> px.</p> <p>The minimum window height is <span id=\"browser-check-min-height\"></span> px.</p> <p>Your current window height is <span id=\"browser-check-actual-height\"></span> px.</p>`.",
+          "default": "<p>Your browser window is too small to complete this experiment. Please maximize the size of your browser window. \n        If your browser window is already maximized, you will not be able to complete this experiment.</p>\n        <p>The minimum window width is <span id=\"browser-check-min-width\"></span> px.</p>\n        <p>Your current window width is <span id=\"browser-check-actual-width\"></span> px.</p>\n        <p>The minimum window height is <span id=\"browser-check-min-height\"></span> px.</p>\n        <p>Your current window height is <span id=\"browser-check-actual-height\"></span> px.</p>"
+        },
+        "resize_fail_button_text": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "resize fail button text",
+          "description": "During the interactive resize, a button with this text will be displayed below the `window_resize_message` for the participant to click if the window cannot meet the minimum size needed. When the button is clicked, the experiment will end and `exclusion_message` will be displayed.",
+          "default": "I cannot make the window any larger"
+        },
+        "inclusion_function": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "inclusion function",
+          "description": "A function that evaluates to `true` if the browser meets all of the inclusion criteria for the experiment, and `false` otherwise. The first argument to the function will be an object containing key value pairs with the measured features of the browser. The keys will be the same as those listed in `features`.",
+          "examples": [
+            {
+              "code": "() => {\n  return true;\n}"
+            }
+          ]
+        },
+        "exclusion_message": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "exclusion message",
+          "description": "A function that returns the message to display if `inclusion_function` evaluates to `false` or if the participant clicks on the resize fail button during the interactive resize. In order to allow customization of the message, the first argument to the function will be an object containing key value pairs with the measured features of the browser. The keys will be the same as those listed in `features`. See example below.",
+          "examples": [
+            {
+              "code": "() => {\n  return `<p>Your browser does not meet the requirements to participate in this experiment.</p>`;\n}"
+            }
+          ]
+        }
+      },
+      "required": [],
+      "records": [
+        "width",
+        "height",
+        "browser",
+        "browser_version",
+        "os",
+        "mobile",
+        "webaudio",
+        "fullscreen",
+        "vsync_rate",
+        "webcam",
+        "microphone"
+      ]
+    },
     "call-function": {
       "plugin": "call-function",
       "title": "Run a function",
@@ -878,6 +1029,70 @@
       ],
       "records": [
         "response"
+      ]
+    },
+    "external-html": {
+      "plugin": "external-html",
+      "title": "Page from your website",
+      "summary": "Shows a page served beside the study, such as a consent form; not in the preview.",
+      "family": "show",
+      "package": "@jspsych/plugin-external-html",
+      "version": "2.1.0",
+      "properties": {
+        "url": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "url",
+          "description": "The URL of the page to display."
+        },
+        "cont_key": {
+          "type": "string",
+          "format": "keyboard-key",
+          "jspsychType": "KEY",
+          "title": "cont key",
+          "description": "The key character the participant can use to advance to the next trial. If left as null, then the participant will not be able to advance trials using the keyboard.",
+          "default": null
+        },
+        "cont_btn": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "cont btn",
+          "description": "The ID of a clickable element on the page. When the element is clicked, the trial will advance.",
+          "default": null
+        },
+        "check_fn": {
+          "type": "string",
+          "format": "expression",
+          "jspsychType": "FUNCTION",
+          "title": "check fn",
+          "description": "`function(){ return true; }` | This function is called with the jsPsych `display_element` as the only argument when the participant attempts to advance the trial. The trial will only advance if the function return `true`. This can be used to verify that the participant has correctly filled out a form before continuing, for example.",
+          "examples": [
+            {
+              "code": "() => true"
+            }
+          ]
+        },
+        "force_refresh": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "force refresh",
+          "description": "If `true`, then the plugin will avoid using the cached version of the HTML page to load if one exists.",
+          "default": false
+        },
+        "execute_script": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "Execute scripts",
+          "description": "If `true`, then scripts on the remote page will be executed.",
+          "default": false
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "records": [
+        "url",
+        "rt"
       ]
     },
     "free-sort": {
@@ -2358,6 +2573,64 @@
         "failed_video"
       ]
     },
+    "resize": {
+      "plugin": "resize",
+      "title": "Calibrate screen size",
+      "summary": "Has the participant size a box to a card; everything after is shown at that scale.",
+      "family": "setup",
+      "package": "@jspsych/plugin-resize",
+      "version": "2.1.0",
+      "properties": {
+        "item_height": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "item height",
+          "description": "The height of the item to be measured. Any units can be used as long as you are consistent with using the same units for all parameters.",
+          "default": 1
+        },
+        "item_width": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "item width",
+          "description": "The width of the item to be measured.",
+          "default": 1
+        },
+        "prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "prompt",
+          "description": "The content displayed below the resizable box and above the button.",
+          "default": null
+        },
+        "pixels_per_unit": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "pixels per unit",
+          "description": "After the scaling factor is applied, this many pixels will equal one unit of measurement.",
+          "default": 100
+        },
+        "starting_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "starting size",
+          "description": "The initial size of the box, in pixels, along the largest dimension. The aspect ratio will be set automatically to match the item width and height.",
+          "default": 100
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "Label to display on the button to complete calibration.",
+          "default": "Continue"
+        }
+      },
+      "required": [],
+      "records": [
+        "final_width_px",
+        "scale_factor"
+      ]
+    },
     "same-different-html": {
       "plugin": "same-different-html",
       "title": "Two texts, same or different",
@@ -2790,6 +3063,70 @@
         "response",
         "png",
         "strokes"
+      ]
+    },
+    "survey-html-form": {
+      "plugin": "survey-html-form",
+      "title": "Your own form",
+      "summary": "Shows a form written in HTML and records what is filled in, by each field's name.",
+      "family": "ask",
+      "package": "@jspsych/plugin-survey-html-form",
+      "version": "2.1.0",
+      "properties": {
+        "html": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "html",
+          "description": "HTML formatted string containing all the input elements to display. Every element has to have its own distinctive name attribute. The <form> tag must not be included and is generated by the plugin.",
+          "default": null,
+          "examples": [
+            "<p><label>Your age <input name=\"age\" type=\"number\" min=\"18\" required></label></p>"
+          ]
+        },
+        "preamble": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "preamble",
+          "description": "HTML formatted string to display at the top of the page above all the questions.",
+          "default": null
+        },
+        "button_label": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button label",
+          "description": "The text that appears on the button to finish the trial.",
+          "default": "Continue"
+        },
+        "autofocus": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "autofocus",
+          "description": "The HTML element ID of a form field to autofocus on.",
+          "default": ""
+        },
+        "dataAsArray": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "dataAsArray",
+          "description": "Retrieve the data as an array e.g. [{name: \"INPUT_NAME\", value: \"INPUT_VALUE\"}, ...] instead of an object e.g. {INPUT_NAME: INPUT_VALUE, ...}.",
+          "default": false
+        },
+        "autocomplete": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "autocomplete",
+          "description": "Setting this to true will enable browser auto-complete or auto-fill for the form.",
+          "default": false
+        }
+      },
+      "required": [
+        "html"
+      ],
+      "records": [
+        "response",
+        "rt"
       ]
     },
     "survey-likert": {
@@ -3679,6 +4016,143 @@
         "stimulus",
         "slider_start",
         "start"
+      ]
+    },
+    "virtual-chinrest": {
+      "plugin": "virtual-chinrest",
+      "title": "Measure viewing distance",
+      "summary": "Estimates how far the participant sits from the screen, from a card and the blind spot.",
+      "family": "setup",
+      "package": "@jspsych/plugin-virtual-chinrest",
+      "version": "3.1.0",
+      "properties": {
+        "resize_units": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "resize units",
+          "description": "Units to resize the jsPsych content to after the trial is over: `\"none\"` `\"cm\"` `\"inch\"` or `\"deg\"`. If `\"none\"`, no resizing will be done to the jsPsych content after the virtual-chinrest trial ends.",
+          "default": "none",
+          "enum": [
+            "none",
+            "cm",
+            "inch",
+            "deg"
+          ]
+        },
+        "pixels_per_unit": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "pixels per unit",
+          "description": "After the scaling factor is applied, this many pixels will equal one unit of measurement, where the units are indicated by `resize_units`. This is only used when resizing is done after the trial ends (i.e. the `resize_units` parameter is not \"none\").",
+          "default": 100
+        },
+        "adjustment_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "adjustment prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed **below the card stimulus** during the resizing phase.",
+          "default": "\n          <div style=\"text-align: left;\">\n          <p>Click and drag the lower right corner of the image until it is the same size as a credit card held up to the screen.</p>\n          <p>You can use any card that is the same size as a credit card, like a membership card or driver's license.</p>\n          <p>If you do not have access to a real card you can use a ruler to measure the image width to 3.37 inches or 85.6 mm.</p>\n          </div>"
+        },
+        "adjustment_button_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "adjustment button prompt",
+          "description": "Content of the button displayed below the card stimulus during the resizing phase.",
+          "default": "Click here when the image is the correct size"
+        },
+        "item_path": {
+          "type": "string",
+          "format": "asset-image",
+          "jspsychType": "IMAGE",
+          "title": "item path",
+          "description": "Path of the item to be presented in the card stimulus during the resizing phase. If `null` then no image is shown, and a solid color background is used instead. _An example image is available in `/examples/img/card.png`_",
+          "default": null
+        },
+        "item_height_mm": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "item height mm",
+          "description": "The known height of the physical item (e.g. credit card) to be measured, in mm.",
+          "default": 53.98
+        },
+        "item_width_mm": {
+          "type": "number",
+          "jspsychType": "FLOAT",
+          "title": "item width mm",
+          "description": "The known width of the physical item (e.g. credit card) to be measured, in mm.",
+          "default": 85.6
+        },
+        "item_init_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "item init size",
+          "description": "The initial size of the card stimulus, in pixels, along its largest dimension.",
+          "default": 250
+        },
+        "blindspot_reps": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "blindspot reps",
+          "description": "How many times to measure the blindspot location. If `0`, blindspot will not be detected, and viewing distance and degree data will not be computed.",
+          "default": 5
+        },
+        "blindspot_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "Blindspot prompt",
+          "description": "This string can contain HTML markup. Any content here will be displayed **above the blindspot task**.",
+          "default": "\n          <p>Now we will quickly measure how far away you are sitting.</p>\n          <div style=\"text-align: left\">\n            <ol>\n              <li>Put your left hand on the <b>space bar</b>.</li>\n              <li>Cover your right eye with your right hand.</li>\n              <li>Using your left eye, focus on the black square. Keep your focus on the black square.</li>\n              <li>The <span style=\"color: red; font-weight: bold;\">red ball</span> will disappear as it moves from right to left. Press the space bar as soon as the ball disappears.</li>\n            </ol>\n          </div>\n          <p>Press the space bar when you are ready to begin.</p>\n          "
+        },
+        "blindspot_measurements_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "blindspot measurements prompt",
+          "description": "Content of the start button for the blindspot tasks. */ /** Text accompanying the remaining measurements counter that appears below the blindspot task.",
+          "default": "Remaining measurements: "
+        },
+        "viewing_distance_report": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "viewing distance report",
+          "description": "Estimated viewing distance data displayed after blindspot task. If `\"none\"` is given, viewing distance will not be reported to the participant. The HTML `span` element with `id = distance-estimate` returns the distance.",
+          "default": "<p>Based on your responses, you are sitting about <span id='distance-estimate' style='font-weight: bold;'></span> from the screen.</p><p>Does that seem about right?</p>"
+        },
+        "redo_measurement_button_label": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "redo measurement button label",
+          "description": "Text for the button on the viewing distance report page to re-do the viewing distance estimate. If the participant click this button, the blindspot task starts again.",
+          "default": "No, that is not close. Try again."
+        },
+        "blindspot_done_prompt": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "blindspot done prompt",
+          "description": "Text for the button on the viewing distance report page that can be clicked to accept the viewing distance estimate.",
+          "default": "Yes"
+        }
+      },
+      "required": [],
+      "records": [
+        "rt",
+        "item_height_mm",
+        "item_width_mm",
+        "item_height_deg",
+        "item_width_deg",
+        "item_width_px",
+        "px2deg",
+        "px2mm",
+        "scale_factor",
+        "win_width_deg",
+        "win_height_deg",
+        "view_dist_mm"
       ]
     },
     "visual-search-circle": {

@@ -40,9 +40,40 @@ function clozeProblems(params: Record<string, ParameterValue>) {
   ];
 }
 
+// An element id the plugin looks up with a CSS selector, which any other text makes it throw on.
+const ELEMENT_ID = /^-?[A-Za-z_][\w-]*$/;
+
+// An external page is left by a button on it: the plugin listens for its key on an element that
+// never has the keyboard, so a key alone leaves the participant on the page. The page is fetched
+// from the study's own site, so its address is given relative to the study.
+function externalPageProblems(params: Record<string, ParameterValue>) {
+  const problems: string[] = [];
+  const button = params.cont_btn;
+  if (!isGiven(button)) {
+    problems.push("needs the id of a button on the page to continue with (cont_btn)");
+  } else if (typeof button === "string" && !ELEMENT_ID.test(button)) {
+    problems.push(`names "${button}" as its button, which is not an element id`);
+  }
+  if (typeof params.url === "string" && /^([a-z][a-z0-9+.-]*:|\/\/)/i.test(params.url)) {
+    problems.push(
+      `loads "${params.url}", but the page has to come from the study's own site, given as an address beside it such as consent.html`,
+    );
+  }
+  return problems;
+}
+
+// Sizes in degrees come from the blind-spot measurement; without one the plugin stops and waits.
+function viewingDistanceProblems(params: Record<string, ParameterValue>) {
+  return params.resize_units === "deg" && params.blindspot_reps === 0
+    ? ["sizes things in degrees, which needs at least one blind-spot measurement"]
+    : [];
+}
+
 const RULES: Record<string, (params: Record<string, ParameterValue>) => string[]> = {
   "visual-search-circle": visualSearchProblems,
   cloze: clozeProblems,
+  "external-html": externalPageProblems,
+  "virtual-chinrest": viewingDistanceProblems,
 };
 
 /** What is wrong with how a step combines its settings, by its plugin's own rules. */

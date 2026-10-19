@@ -44,6 +44,11 @@ export interface TrialNode {
   params?: Record<string, ParameterValue>;
   record?: Record<string, RecordedValue>;
   score?: CorrectIfRule;
+  /**
+   * The ending a participant this step turns away is sent to, for a step that can turn people away
+   * such as a browser check: the study saves what that ending keeps and ends its way.
+   */
+  exclusion_ending?: string;
 }
 
 export interface BlockNode {

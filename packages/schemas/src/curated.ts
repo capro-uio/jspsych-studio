@@ -101,6 +101,9 @@ export const STARTING_EXAMPLES: Record<string, Record<string, unknown>> = {
   "categorize-image": { key_answer: "f" },
   "categorize-animation": { key_answer: "f" },
   "same-different-html": { stimuli: ["<p>A</p>", "<p>A</p>"] },
+  "survey-html-form": {
+    html: '<p><label>Your age <input name="age" type="number" min="18" required></label></p>',
+  },
   // A word between percent signs is a gap to fill in.
   cloze: { text: "<p>The cat sat on the %mat%.</p>" },
   maxdiff: {
@@ -130,11 +133,38 @@ export const LIST_LENGTHS: Record<
 };
 
 // Settings a plugin declares as text but reads as one of a few words; any other makes it fail.
+// For a list, each of its entries is one of the words.
+const BROWSER_FEATURES = [
+  "width",
+  "height",
+  "webaudio",
+  "browser",
+  "browser_version",
+  "mobile",
+  "os",
+  "fullscreen",
+  "vsync_rate",
+  "webcam",
+  "microphone",
+];
+
 export const FIXED_CHOICES: Record<string, Record<string, string[]>> = {
+  "browser-check": { features: BROWSER_FEATURES, skip_features: BROWSER_FEATURES },
   sketchpad: {
     canvas_shape: ["rectangle", "circle"],
     prompt_location: ["abovecanvas", "belowcanvas", "belowbutton"],
   },
+};
+
+// Sizes a plugin divides as decimals but declares as whole numbers, where real sizes are not whole:
+// a bank card is 8.56 by 5.398 centimetres.
+export const DECIMAL_PARAMETERS: Record<string, string[]> = {
+  resize: ["item_width", "item_height", "pixels_per_unit"],
+};
+
+// Settings a plugin cannot do without but declares with a default of nothing: a form with no form.
+export const REQUIRED_PARAMETERS: Record<string, string[]> = {
+  "survey-html-form": ["html"],
 };
 
 // Keys that must differ for the plugin's answers, and so its scoring, to mean anything.

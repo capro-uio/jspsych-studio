@@ -19,6 +19,8 @@ import {
   compileGroupGate,
 } from "./groups.ts";
 import { literal } from "./emit.ts";
+import { pluginIdentifier } from "./identifiers.ts";
+import { WAS_EXCLUDED, compileExcludingPlugin, excludingIdentifier } from "./exclusions.ts";
 import {
   ORDERS_VARIABLE,
   compileCounterbalancedTasks,
@@ -41,13 +43,7 @@ import type {
   VariableReference,
 } from "./types.ts";
 
-export function pluginIdentifier(plugin: string) {
-  const camelCased = plugin
-    .split("-")
-    .map((part) => part[0].toUpperCase() + part.slice(1))
-    .join("");
-  return `jsPsych${camelCased}`;
-}
+export { pluginIdentifier } from "./identifiers.ts";
 
 // Inside a function body a timeline variable must be read with evaluateTimelineVariable:
 // jsPsych.timelineVariable() returns a placeholder object there, which renders as [object Object].
@@ -162,7 +158,10 @@ function scoreExpression(trial: TrialNode) {
 function compileTrial(trial: TrialNode, context: CompileContext) {
   context.plugins.add(trial.plugin);
   const properties = context.bundle.plugins[trial.plugin]?.properties ?? {};
-  const entries = [`type: ${pluginIdentifier(trial.plugin)}`];
+  const excluding = trial.exclusion_ending !== undefined;
+  if (excluding) context.excludingPlugins.add(trial.plugin);
+  const type = excluding ? excludingIdentifier(trial.plugin) : pluginIdentifier(trial.plugin);
+  const entries = [`type: ${type}`];
   for (const [name, value] of Object.entries(trial.params ?? {})) {
     const item = properties[name]?.items;
     if (item?.properties && Array.isArray(value)) {
@@ -177,7 +176,12 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
   if (data) entries.push(`data: ${data}`);
   const score = scoreExpression(trial);
   if (score) entries.push(`on_finish: ${score}`);
-  return `{\n${entries.map((entry) => `  ${entry},`).join("\n")}\n}`;
+  const step = `{\n${entries.map((entry) => `  ${entry},`).join("\n")}\n}`;
+  if (!excluding) return step;
+  // A participant the step turned away goes to its ending, as an end step would send them.
+  const end = compileEndStep({ kind: "end", ending: trial.exclusion_ending! }, context.spec);
+  context.plugins.add(end.plugin);
+  return `{\n  timeline: [${step}, {\n  timeline: [${end.source}],\n  conditional_function: ${WAS_EXCLUDED},\n}],\n}`;
 }
 
 function compileBlock(block: BlockNode, context: CompileContext) {
@@ -206,6 +210,8 @@ interface CompileContext {
   hasAssets: boolean;
   usesGroups: boolean;
   usesCounterbalance: boolean;
+  /** Plugins whose excluding form the study defines, for steps that send excluded people on. */
+  excludingPlugins: Set<string>;
 }
 
 function callFunctionStep(step: { async: boolean; body: string }) {
@@ -307,6 +313,7 @@ export function compileSpec(
     hasAssets: assets.length > 0,
     usesGroups: false,
     usesCounterbalance: false,
+    excludingPlugins: new Set(),
   };
   const steps = spec.timeline.map((node) => compileNode(node, context));
 
@@ -341,6 +348,7 @@ export function compileSpec(
     `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
+    [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({

@@ -135,6 +135,11 @@ const NODE_DEFINITIONS = {
         additionalProperties: reference("parameterValue"),
       },
       score: reference("scoringRule"),
+      exclusion_ending: {
+        title:
+          "The ending a participant this step turns away is sent to, for a step that can, such as a browser check.",
+        type: "string",
+      },
     },
   },
   block: {

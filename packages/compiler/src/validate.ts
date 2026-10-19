@@ -25,6 +25,7 @@ import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import { conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { pluginRuleProblems } from "./plugin-rules.ts";
+import { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 import { appearanceProblems } from "./appearance.ts";
 
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
@@ -247,6 +248,7 @@ function checkTrial(
   }
   for (const problem of answerKeyProblems(trial, schema)) report(`${where} ${problem}`);
   for (const problem of pluginRuleProblems(trial)) report(`${where} ${problem}`);
+  for (const problem of exclusionProblems(trial, spec)) report(`${where} ${problem}`);
   const expected = trial.score?.correct_if_response_equals;
   if (expected !== undefined && typeof expected === "object") {
     checkColumn(expected.var, columns, `${where}, scoring rule`, problems, path);
@@ -542,6 +544,34 @@ function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: nu
         (available.length > 0 ? ` (tags available: ${available.join(", ")})` : ""),
     );
   }
+}
+
+// A step that turns participants away would otherwise end the study on the spot, unsaved and with
+// no way back to the platform, so it has to say where they go, and the ending's own message is
+// what they then see.
+function exclusionProblems(trial: TrialNode, spec: Spec) {
+  const ending = trial.exclusion_ending;
+  if (ending === undefined) {
+    return excludesParticipants(trial)
+      ? ["can turn participants away, so it needs an ending to send them to (exclusion_ending)"]
+      : [];
+  }
+  if (!canExcludeParticipants(trial.plugin))
+    return ["turns no one away, so it takes no exclusion_ending"];
+  const names = endingNames(spec.recruitment);
+  const known = names.length > 0 ? ` (endings: ${names.join(", ")})` : "";
+  const problems: string[] = [];
+  if (!names.includes(ending)) {
+    problems.push(
+      `sends excluded participants to "${ending}", which the study does not have${known}`,
+    );
+  }
+  if (trial.params?.exclusion_message !== undefined) {
+    problems.push(
+      "shows its ending's message to excluded participants, so it takes no exclusion_message",
+    );
+  }
+  return problems;
 }
 
 function checkEnd(node: EndNode, spec: Spec, report: (message: string) => void) {

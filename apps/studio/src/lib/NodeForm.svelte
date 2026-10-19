@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { isResponseRule, latinSquareOrders, questionNames } from "@jspsych-studio/compiler";
+  import {
+    canExcludeParticipants,
+    isResponseRule,
+    latinSquareOrders,
+    questionNames,
+  } from "@jspsych-studio/compiler";
   import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
   import { earlyEndingNames } from "@jspsych-studio/compiler";
@@ -109,8 +114,10 @@
         if (chosen === trial.plugin) return;
         trial.params = paramsForPlugin(trial.params, trial.plugin, chosen) as typeof trial.params;
         trial.plugin = chosen;
-        // A step that scores itself takes no scoring rule over its own.
+        // A step that scores itself takes no scoring rule over its own, and only a step that can
+        // turn participants away has somewhere to send them.
         if (pluginSchema(chosen)?.records.includes("correct")) delete trial.score;
+        if (!canExcludeParticipants(chosen)) delete trial.exclusion_ending;
       }}
     >
       {#each pluginChoices as group (group.label)}
@@ -145,6 +152,31 @@
       }}
     />
   </div>
+
+  {#if canExcludeParticipants(trial.plugin)}
+    <div class="field">
+      <label for="trial-exclusion"><span class="name">send those it turns away to</span></label>
+      <select
+        id="trial-exclusion"
+        data-testid="trial-exclusion"
+        value={trial.exclusion_ending ?? ""}
+        onchange={(event) => {
+          const ending = event.currentTarget.value;
+          if (ending) trial.exclusion_ending = ending;
+          else delete trial.exclusion_ending;
+        }}
+      >
+        <option value="">no one is turned away</option>
+        {#each endingChoices as name (name)}
+          <option value={name}>{name}</option>
+        {/each}
+      </select>
+    </div>
+    <p class="help">
+      A participant this step turns away has their data saved as that ending keeps it, then sees its
+      message or is sent back. Endings are set in the Study tab.
+    </p>
+  {/if}
 
   {#each visibleParameters as { name, parameter, required } (name)}
     <Field

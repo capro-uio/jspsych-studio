@@ -108,3 +108,58 @@ describe("drawing", () => {
     );
   });
 });
+
+describe("a page from the study's website", () => {
+  it.each([{}, { cont_key: "Enter" }])("rejects a page with no button to continue: %j", (way) => {
+    expect(compiles(study("external-html", { url: "consent.html", ...way }))).toThrow(
+      /needs the id of a button on the page to continue with/,
+    );
+  });
+
+  it("takes a button on the page to continue", () => {
+    expect(
+      compiles(study("external-html", { url: "consent.html", cont_btn: "agree" })),
+    ).not.toThrow();
+  });
+
+  it("rejects a button name that is not an element id", () => {
+    expect(
+      compiles(study("external-html", { url: "consent.html", cont_btn: "my button" })),
+    ).toThrow(/names "my button" as its button, which is not an element id/);
+  });
+
+  it.each(["https://example.com/consent.html", "//example.com/consent.html", "data:text/html,hi"])(
+    "rejects a page from elsewhere: %s",
+    (url) => {
+      expect(compiles(study("external-html", { url, cont_btn: "agree" }))).toThrow(
+        /has to come from the study's own site/,
+      );
+    },
+  );
+});
+
+describe("the browser check", () => {
+  it("rejects a feature it does not measure", () => {
+    expect(compiles(study("browser-check", { features: ["width", "gps"] }))).toThrow(
+      /parameter "features" expects each entry to be one of/,
+    );
+  });
+});
+
+describe("your own form", () => {
+  it("requires the form", () => {
+    expect(compiles(study("survey-html-form", {}))).toThrow(/requires parameter "html"/);
+  });
+});
+
+describe("measuring viewing distance", () => {
+  it("rejects sizes in degrees with no blind-spot measurement", () => {
+    expect(compiles(study("virtual-chinrest", { resize_units: "deg", blindspot_reps: 0 }))).toThrow(
+      /needs at least one blind-spot measurement/,
+    );
+  });
+
+  it("compiles with every setting left to the plugin", () => {
+    expect(compiles(study("virtual-chinrest", {}))).not.toThrow();
+  });
+});

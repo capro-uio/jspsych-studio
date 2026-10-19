@@ -116,8 +116,17 @@ describe("extractSchemas", () => {
         lengths: {},
         choices: {},
         distinctKeys: {},
+        required: {},
+        decimals: {},
       }),
     ).toThrow(/names "key_anwser", which categorize-html does not take/);
+  });
+
+  it("takes decimal card sizes for calibrating the screen", () => {
+    expect(report.schemas.resize.properties.item_width).toMatchObject({
+      type: "number",
+      jspsychType: "FLOAT",
+    });
   });
 
   it("lists the columns each plugin writes into its data", () => {
