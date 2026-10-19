@@ -1,12 +1,12 @@
 {
-  "name": "@jspsych-studio/schemas",
+  "name": "@tachisto/schemas",
   "version": "0.0.1",
   "private": true,
   "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
   "bin": {
-    "jspsych-studio-schemas": "src/cli.ts"
+    "tachisto-schemas": "src/cli.ts"
   },
   "scripts": {
     "build": "node --experimental-strip-types src/cli.ts",

@@ -1,4 +1,4 @@
-import type { Library } from "@jspsych-studio/schemas";
+import type { Library } from "@tachisto/schemas";
 
 export interface VariableReference {
   var: string;
