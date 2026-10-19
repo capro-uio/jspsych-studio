@@ -1,4 +1,4 @@
-# Logos
+# Logos (in logos/)
 
 - `tachisto-wordmark.svg`: the primary logo for light grounds (`paper`, `paper-raised`). Cross in `stimulus` #E4572E, the rest in `ink` #1C2B2D.
 - `tachisto-wordmark-dark.svg`: the same on dark grounds. Cross #F06A43, the rest #F6F4EE.

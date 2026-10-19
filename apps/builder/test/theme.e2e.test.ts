@@ -1,6 +1,7 @@
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { brandColour } from "./brand.ts";
 
 let browser: Browser;
 let server: PreviewServer;
@@ -19,8 +20,8 @@ async function chooseTheme(page: Page, choice: "system" | "light" | "dark") {
   await page.keyboard.press("Escape");
 }
 
-const DARK = "rgb(18, 29, 31)";
-const LIGHT = "rgb(246, 244, 238)";
+const DARK = brandColour("paper", "dark");
+const LIGHT = brandColour("paper", "light");
 
 beforeAll(async () => {
   await build({ logLevel: "warn" });
@@ -43,7 +44,8 @@ describe("appearance", () => {
       const page = await browser.newPage({ colorScheme: scheme });
       await page.goto(appUrl);
       expect(await background(page)).toBe(expected);
-      expect(await colorScheme(page)).toBe(scheme);
+      // Offering both lets the system pick, for native controls and scrollbars as for the page.
+      expect(await colorScheme(page)).toBe("light dark");
       await page.close();
     }
   }, 120_000);

@@ -2,6 +2,7 @@ import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { TOUR_STEPS } from "../src/lib/tour.svelte.ts";
+import { brandColour } from "./brand.ts";
 
 const VIEWPORTS = [
   { name: "desktop", width: 1500, height: 900, columns: true },
@@ -171,7 +172,10 @@ describe("the tour", () => {
       const style = getComputedStyle(document.querySelector('[data-testid="tour"]')!);
       return { background: style.backgroundColor, text: style.color };
     });
-    expect(colours).toEqual({ background: "rgb(28, 43, 45)", text: "rgb(246, 244, 238)" });
+    expect(colours).toEqual({
+      background: brandColour("paper-raised", "dark"),
+      text: brandColour("ink", "dark"),
+    });
     await page.close();
   }, 120_000);
 });

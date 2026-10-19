@@ -1,50 +1,17 @@
-/* Colours, type and spacing come from @tachisto/brand; these name what the flow diagram draws
-   with them. Each kind of block keeps a hue of its own so the diagram reads at a glance, on a
-   fill mixed from the brand's raised paper so it follows the theme. */
+/* The flow diagram gives each kind of block a hue of its own so it reads at a glance, on a fill
+   mixed from the brand's raised paper so it follows the theme. */
 :root {
-  --flow-step-fill: var(--paper-raised);
-  --flow-step-stroke: var(--line-strong);
-  --flow-frame-fill: var(--paper-sunk);
-  --flow-block-stroke: #3f6a9a;
-  --flow-loop-stroke: #7a4f9c;
+  --flow-block-stroke: light-dark(#3f6a9a, #86a5e3);
+  --flow-loop-stroke: light-dark(#7a4f9c, #c09be3);
   --flow-split-stroke: var(--caution);
   --flow-checkpoint-stroke: var(--signal);
   --flow-block-fill: color-mix(in srgb, var(--flow-block-stroke) 9%, var(--paper-raised));
   --flow-loop-fill: color-mix(in srgb, var(--flow-loop-stroke) 9%, var(--paper-raised));
   --flow-split-fill: color-mix(in srgb, var(--flow-split-stroke) 9%, var(--paper-raised));
   --flow-checkpoint-fill: color-mix(in srgb, var(--flow-checkpoint-stroke) 9%, var(--paper-raised));
-  color-scheme: light;
-}
-
-/* The system setting decides, unless the document says otherwise. The dark values appear twice
-   because CSS has no way to name a set of declarations and apply it under two conditions. */
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --flow-block-stroke: #86a5e3;
-    --flow-loop-stroke: #c09be3;
-    color-scheme: dark;
-  }
-}
-
-:root[data-theme="dark"] {
-  --flow-block-stroke: #86a5e3;
-  --flow-loop-stroke: #c09be3;
-  color-scheme: dark;
-}
-
-:root[data-theme="light"] {
-  color-scheme: light;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 body {
-  margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: var(--font-sans);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -82,17 +49,8 @@ button:disabled {
   cursor: not-allowed;
 }
 
-:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-
 textarea {
   resize: vertical;
-}
-
-a {
-  color: var(--stimulus-text);
 }
 
 @media (prefers-reduced-motion: reduce) {

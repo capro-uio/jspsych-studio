@@ -5,8 +5,12 @@
   "license": "MIT",
   "description": "Tachisto's colours, type, logos and brand book, shared by the builder and the website.",
   "type": "module",
+  "scripts": {
+    "test": "vitest run"
+  },
   "exports": {
     "./tokens.css": "./tokens.css",
+    "./base.css": "./base.css",
     "./type.css": "./type.css",
     "./fonts.css": "./fonts.css",
     "./logos.css": "./logos.css",

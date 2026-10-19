@@ -28,10 +28,6 @@
     project,
   } from "./lib/project.svelte.ts";
   import { examples } from "./lib/examples.ts";
-  import wordmark from "@tachisto/brand/logos/tachisto-wordmark.svg";
-  import wordmarkDark from "@tachisto/brand/logos/tachisto-wordmark-dark.svg";
-  import icon from "@tachisto/brand/logos/tachisto-icon.svg";
-  import iconDark from "@tachisto/brand/logos/tachisto-icon-dark.svg";
 
   let importError = $state("");
   let downloadError = $state("");
@@ -98,14 +94,20 @@
 
 <header>
   <h1>
-    <a class="brand" href="../" title="About Tachisto">
+    <a
+      class="brand"
+      href="../"
+      target="_blank"
+      rel="noopener"
+      title="About Tachisto (opens in a new tab)"
+    >
       <picture class="on-light">
-        <source media="(max-width: 30rem)" srcset={icon} />
-        <img src={wordmark} alt="Tachisto" />
+        <source media="(max-width: 30rem)" srcset="./tachisto-icon.svg" />
+        <img src="./tachisto-wordmark.svg" alt="Tachisto" loading="lazy" />
       </picture>
       <picture class="on-dark">
-        <source media="(max-width: 30rem)" srcset={iconDark} />
-        <img src={wordmarkDark} alt="Tachisto" />
+        <source media="(max-width: 30rem)" srcset="./tachisto-icon-dark.svg" />
+        <img src="./tachisto-wordmark-dark.svg" alt="Tachisto" loading="lazy" />
       </picture>
     </a>
   </h1>

@@ -190,3 +190,32 @@ describe("the sidebar tabs", () => {
     await page.close();
   }, 120_000);
 });
+
+describe("the header logo", () => {
+  // Nothing open in the builder is saved anywhere, so leaving the page would lose it.
+  it("opens the website beside the builder rather than in place of it", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await page.getByTestId("example-stroop").click();
+    const link = page.locator("header a.brand");
+    expect(await link.getAttribute("target")).toBe("_blank");
+    expect(await link.getAttribute("href")).toBe("../");
+    await page.close();
+  });
+
+  it("shows the light wordmark on light ground and the dark one on dark", async () => {
+    for (const colorScheme of ["light", "dark"] as const) {
+      const page = await browser.newPage({ colorScheme });
+      await page.goto(appUrl);
+      const visible = await page
+        .locator("header a.brand picture")
+        .evaluateAll((pictures: HTMLElement[]) =>
+          pictures
+            .filter((picture) => getComputedStyle(picture).display !== "none")
+            .map((picture) => picture.className),
+        );
+      expect(visible, colorScheme).toEqual([`on-${colorScheme}`]);
+      await page.close();
+    }
+  });
+});
