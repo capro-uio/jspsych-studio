@@ -77,15 +77,15 @@
     align-items: start;
     flex: 1;
     padding: 0.4rem;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
   }
   label {
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
     padding-top: 0.3rem;
   }
   .required {
-    color: var(--accent);
+    color: var(--danger);
   }
 </style>

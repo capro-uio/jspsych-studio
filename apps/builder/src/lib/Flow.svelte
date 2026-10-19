@@ -156,14 +156,14 @@
   .flow {
     flex: 1;
     overflow: auto;
-    border: 1px solid var(--rule);
-    border-radius: 6px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     padding: 0.4rem;
   }
   .hint {
     margin: 0 0 0.3rem;
     font-size: 0.78rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   svg {
     display: block;
@@ -187,18 +187,18 @@
     stroke: var(--flow-checkpoint-stroke);
   }
   .shape-lane .outline {
-    fill: var(--bg);
+    fill: var(--paper);
     stroke: var(--flow-split-stroke);
     stroke-dasharray: 3 3;
   }
   .shape-empty .outline {
     fill: none;
-    stroke: var(--rule);
+    stroke: var(--line);
     stroke-dasharray: 4 3;
   }
   .shape-terminal .outline {
-    fill: var(--bg);
-    stroke: var(--fg);
+    fill: var(--paper);
+    stroke: var(--ink);
   }
   .kind-block .outline {
     fill: var(--flow-block-fill);
@@ -209,38 +209,38 @@
     stroke: var(--flow-loop-stroke);
   }
   text {
-    fill: var(--fg);
+    fill: var(--ink);
   }
   .title {
     font-weight: 600;
   }
   .detail {
-    fill: var(--muted);
+    fill: var(--ink-muted);
   }
   .shape-empty text {
-    fill: var(--muted);
+    fill: var(--ink-muted);
     font-style: italic;
   }
   .interactive {
     cursor: pointer;
   }
   .interactive:hover .outline {
-    stroke: var(--accent);
+    stroke: var(--line-strong);
   }
   .interactive:focus {
     outline: none;
   }
   .interactive:focus-visible .outline {
-    stroke: var(--accent);
+    stroke: var(--signal);
     stroke-width: 3;
   }
   .selected .outline {
-    stroke: var(--accent);
+    stroke: var(--stimulus);
     stroke-width: 2.5;
   }
   .edge {
     fill: none;
-    stroke: var(--muted);
+    stroke: var(--ink-muted);
     stroke-width: 1.25;
   }
   .edge.repeat {
@@ -248,7 +248,7 @@
     stroke-dasharray: 5 3;
   }
   .arrowhead {
-    fill: var(--muted);
+    fill: var(--ink-muted);
   }
   .edge-label {
     fill: var(--flow-loop-stroke);

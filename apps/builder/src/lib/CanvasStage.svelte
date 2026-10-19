@@ -303,8 +303,8 @@
   }
   svg {
     display: block;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     touch-action: none;
     user-select: none;
   }
@@ -315,7 +315,7 @@
     vector-effect: non-scaling-stroke;
   }
   .centre-lines line.snapped {
-    stroke: var(--accent);
+    stroke: var(--signal);
     stroke-dasharray: none;
   }
   .object {
@@ -340,7 +340,7 @@
   }
   .object.selected .outline,
   .object:focus-visible .outline {
-    stroke: var(--accent);
+    stroke: var(--signal);
     stroke-width: 2;
     stroke-dasharray: none;
   }
@@ -353,6 +353,6 @@
   figcaption {
     margin-top: 0.3rem;
     font-size: 0.78rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 </style>

@@ -73,14 +73,14 @@
   .author button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .add {
     align-self: start;
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
     font-size: 0.8rem;
     padding: 0;
@@ -88,6 +88,6 @@
   .muted {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 </style>

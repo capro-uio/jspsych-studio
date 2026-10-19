@@ -1,7 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node", "svelte"],
+    "types": ["node", "svelte", "vite/client"],
     "lib": ["ES2022", "DOM", "DOM.Iterable"]
   },
   "include": ["src", "test", "vite.config.ts"]

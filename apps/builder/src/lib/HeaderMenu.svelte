@@ -55,7 +55,7 @@
     border: 0;
     background: none;
     cursor: pointer;
-    color: var(--muted);
+    color: var(--ink-muted);
     padding: 0.2rem 0.45rem;
     font-size: 1rem;
     line-height: 1;
@@ -70,9 +70,9 @@
     flex-direction: column;
     gap: 0.1rem;
     padding: 0.3rem;
-    background: var(--bg);
-    border: 1px solid var(--rule);
-    border-radius: 6px;
-    box-shadow: 0 6px 18px rgb(0 0 0 / 18%);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-pop);
   }
 </style>

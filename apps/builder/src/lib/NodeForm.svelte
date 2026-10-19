@@ -611,7 +611,7 @@
   h3 {
     margin: 1rem 0 0;
     font-size: 0.9rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .field {
     display: grid;
@@ -619,7 +619,7 @@
     gap: 0.4rem 0.6rem;
     align-items: center;
     padding: 0.4rem 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
   }
   .name {
     font-weight: 600;
@@ -634,7 +634,7 @@
   .group-row button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .checks {
@@ -651,18 +651,18 @@
     margin-top: 0.6rem;
     border: 0;
     padding: 0.2rem 0;
-    color: var(--muted);
+    color: var(--ink-muted);
     text-decoration: underline;
   }
   .problems {
     margin: 0 0 0.5rem;
     padding-left: 1rem;
-    color: var(--accent);
+    color: var(--danger);
     font-size: 0.85rem;
   }
   .empty,
   .help {
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .plugin-summary {
     grid-column: 2;
@@ -670,7 +670,7 @@
     font-size: 0.8rem;
   }
   .plugin-name {
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-family: var(--font-mono);
     font-size: 0.72rem;
     margin-left: 0.3rem;
     white-space: nowrap;

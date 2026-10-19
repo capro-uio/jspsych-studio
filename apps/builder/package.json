@@ -12,6 +12,7 @@
     "check": "svelte-check --tsconfig ./tsconfig.json --threshold error"
   },
   "dependencies": {
+    "@tachisto/brand": "*",
     "@tachisto/compiler": "*",
     "@tachisto/schemas": "*",
     "fflate": "^0.8.3"

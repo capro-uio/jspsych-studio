@@ -28,6 +28,10 @@
     project,
   } from "./lib/project.svelte.ts";
   import { examples } from "./lib/examples.ts";
+  import wordmark from "@tachisto/brand/logos/tachisto-wordmark.svg";
+  import wordmarkDark from "@tachisto/brand/logos/tachisto-wordmark-dark.svg";
+  import icon from "@tachisto/brand/logos/tachisto-icon.svg";
+  import iconDark from "@tachisto/brand/logos/tachisto-icon-dark.svg";
 
   let importError = $state("");
   let downloadError = $state("");
@@ -93,8 +97,20 @@
 </script>
 
 <header>
-  <h1>Tachisto</h1>
+  <h1>
+    <a class="brand" href="../" title="About Tachisto">
+      <picture class="on-light">
+        <source media="(max-width: 30rem)" srcset={icon} />
+        <img src={wordmark} alt="Tachisto" />
+      </picture>
+      <picture class="on-dark">
+        <source media="(max-width: 30rem)" srcset={iconDark} />
+        <img src={wordmarkDark} alt="Tachisto" />
+      </picture>
+    </a>
+  </h1>
   <input
+    class="experiment-name"
     aria-label="experiment name"
     data-testid="experiment-name"
     bind:value={project.spec.name}
@@ -152,8 +168,8 @@
 
 <main
   style={`--panel-widths: ${panels.widths.map((width) => `${width}fr`).join(" auto ")};` +
-    `--stimulus-background: ${backgroundColor(project.spec.settings)};` +
-    `--stimulus-text: ${textColor(project.spec.settings)}`}
+    `--participant-background: ${backgroundColor(project.spec.settings)};` +
+    `--participant-text: ${textColor(project.spec.settings)}`}
 >
   <aside>
     <div class="tabs" role="tablist">
@@ -224,35 +240,55 @@
 <style>
   header {
     display: flex;
-    gap: 0.6rem;
+    gap: var(--space-3);
     align-items: center;
-    padding: 0.6rem 1rem;
-    border-bottom: 1px solid var(--rule);
+    min-height: 56px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  .experiment-name {
+    min-width: 0;
+    border-color: transparent;
+    background: transparent;
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 500;
+  }
+  .experiment-name:hover {
+    border-color: transparent;
+    border-bottom-color: var(--line-strong);
   }
   h1 {
     margin: 0;
-    font-size: 1rem;
-    letter-spacing: 0.02em;
+    line-height: 0;
+  }
+  .brand {
+    display: block;
+    padding: var(--space-1);
+  }
+  .brand img {
+    height: 28px;
+    width: auto;
   }
   .spacer {
     flex: 1;
   }
   .notice {
     margin: 0;
-    color: var(--accent);
+    color: var(--danger);
     font-size: 0.85rem;
   }
   .primary {
-    border: 1px solid var(--rule);
-    border-radius: 5px;
-    background: none;
-    cursor: pointer;
-    padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
+    border: 1px solid var(--stimulus-fill);
+    border-radius: var(--radius-md);
+    background: var(--stimulus-fill);
+    color: var(--on-stimulus);
+    font-weight: 700;
+    padding: var(--space-2) var(--space-4);
   }
   .primary:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    background: color-mix(in srgb, var(--stimulus-fill) 88%, var(--ink));
   }
   .item {
     display: block;
@@ -262,11 +298,11 @@
     background: none;
     cursor: pointer;
     padding: 0.35rem 0.45rem;
-    border-radius: 4px;
+    border-radius: var(--radius-md);
     font-size: 0.85rem;
   }
   .item:hover {
-    background: var(--selected);
+    background: var(--paper-sunk);
   }
   .item input {
     display: none;
@@ -276,35 +312,35 @@
     flex-direction: column;
     gap: 0.25rem;
     padding: 0.4rem 0.45rem 0.2rem;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
     margin-top: 0.2rem;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .segmented {
     display: flex;
   }
   .segmented button {
     flex: 1;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--line);
     background: none;
     cursor: pointer;
     padding: 0.15rem 0.3rem;
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .segmented button + button {
     border-left: 0;
   }
   .segmented button:first-child {
-    border-radius: 4px 0 0 4px;
+    border-radius: var(--radius-md) 0 0 var(--radius-md);
   }
   .segmented button:last-child {
-    border-radius: 0 4px 4px 0;
+    border-radius: 0 var(--radius-md) var(--radius-md) 0;
   }
   .segmented button.active {
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--stimulus);
+    color: var(--stimulus-text);
   }
   main {
     display: grid;
@@ -327,7 +363,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 0.15rem;
-    border-bottom: 1px solid var(--rule);
+    border-bottom: 1px solid var(--line);
   }
   .tabs button {
     border: 0;
@@ -335,17 +371,17 @@
     background: none;
     padding: 0.3rem 0.35rem;
     cursor: pointer;
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.85rem;
     /* A tab that cannot show its own name is worse than one that wraps to the next line. */
     white-space: nowrap;
   }
   .tabs button.active {
     color: inherit;
-    border-bottom-color: var(--accent);
+    border-bottom-color: var(--stimulus);
   }
   .mark {
-    color: var(--accent);
+    color: var(--caution);
   }
   .panel {
     display: flex;
@@ -356,8 +392,7 @@
   }
   .tour {
     align-self: flex-start;
-    border-color: var(--accent);
-    color: var(--accent);
+    border-color: var(--line-strong);
     font-size: 0.85rem;
   }
   .examples {
@@ -371,7 +406,7 @@
     gap: 0.15rem;
     text-align: left;
     padding: 0.5rem;
-    border: 1px dashed var(--rule);
+    border: 1px dashed var(--line);
   }
   .example .muted {
     font-size: 0.78rem;
@@ -381,7 +416,7 @@
     min-height: 26rem;
   }
   .muted {
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.85rem;
     margin: 0;
   }

@@ -171,7 +171,7 @@ describe("the tour", () => {
       const style = getComputedStyle(document.querySelector('[data-testid="tour"]')!);
       return { background: style.backgroundColor, text: style.color };
     });
-    expect(colours).toEqual({ background: "rgb(21, 23, 28)", text: "rgb(232, 234, 238)" });
+    expect(colours).toEqual({ background: "rgb(28, 43, 45)", text: "rgb(246, 244, 238)" });
     await page.close();
   }, 120_000);
 });

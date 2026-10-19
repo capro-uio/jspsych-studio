@@ -207,34 +207,34 @@
 
 <style>
   .rich {
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     overflow: hidden;
   }
   .html-note {
     margin: 0;
     padding: 0.3rem 0.4rem;
     font-size: 0.78rem;
-    color: var(--muted);
-    border-bottom: 1px solid var(--rule);
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--line);
   }
   .toolbar {
     display: flex;
     gap: 0.2rem;
     align-items: center;
     padding: 0.2rem;
-    border-bottom: 1px solid var(--rule);
-    background: color-mix(in srgb, var(--rule) 25%, transparent);
+    border-bottom: 1px solid var(--line);
+    background: color-mix(in srgb, var(--line) 25%, transparent);
   }
   .toolbar button {
     border: 0;
     background: none;
     padding: 0.1rem 0.35rem;
     cursor: pointer;
-    border-radius: 3px;
+    border-radius: var(--radius-sm);
   }
   .toolbar button:hover {
-    background: var(--selected);
+    background: var(--paper-sunk);
   }
   .toolbar select,
   .toolbar input[type="color"] {
@@ -251,13 +251,13 @@
   }
   .markup {
     font-size: 0.75rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   /* Text is written against the backdrop the participant will see it on, so a colour that would
      vanish in the experiment looks wrong here too rather than the other way round. */
   .surface {
-    background: var(--stimulus-background, #fff);
-    color: var(--stimulus-text, #000);
+    background: var(--participant-background, #fff);
+    color: var(--participant-text, #000);
   }
   .surface,
   .markup-area {
@@ -272,11 +272,11 @@
     resize: vertical;
   }
   .surface:focus-visible {
-    outline: 2px solid var(--accent);
+    outline: 2px solid var(--signal);
     outline-offset: -2px;
   }
   .markup-area {
-    font-family: ui-monospace, monospace;
+    font-family: var(--font-mono);
     font-size: 0.8rem;
   }
 </style>

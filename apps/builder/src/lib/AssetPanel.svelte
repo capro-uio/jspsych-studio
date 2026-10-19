@@ -86,15 +86,15 @@
     width: 1.6rem;
     height: 1.6rem;
     object-fit: cover;
-    border: 1px solid var(--rule);
-    border-radius: 3px;
-    background: var(--selected);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-sm);
+    background: var(--paper-sunk);
   }
   .asset .sound {
     display: grid;
     place-items: center;
     box-sizing: border-box;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .name {
     flex: 1;
@@ -105,16 +105,16 @@
   .asset button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .add {
     cursor: pointer;
-    border: 1px dashed var(--rule);
-    border-radius: 4px;
+    border: 1px dashed var(--line);
+    border-radius: var(--radius-md);
     padding: 0.4rem;
     text-align: center;
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.85rem;
   }
   .add input {
@@ -123,6 +123,6 @@
   .muted {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
 </style>

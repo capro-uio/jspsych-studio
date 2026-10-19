@@ -208,18 +208,18 @@
     padding: 0.15rem;
   }
   .caret {
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .table > button:last-child {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
   }
   .grid {
     overflow-x: auto;
-    border: 1px solid var(--rule);
-    border-radius: 4px;
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
     padding: 0.3rem;
   }
   table {
@@ -242,7 +242,7 @@
   }
   .number,
   .corner {
-    color: var(--muted);
+    color: var(--ink-muted);
     width: 1.2rem;
     text-align: right;
   }
@@ -250,7 +250,7 @@
   td button {
     border: 0;
     background: none;
-    color: var(--muted);
+    color: var(--ink-muted);
     cursor: pointer;
     padding: 0 0.15rem;
   }
@@ -260,7 +260,7 @@
     margin-top: 0.3rem;
   }
   .muted {
-    color: var(--muted);
+    color: var(--ink-muted);
     font-size: 0.8rem;
     margin: 0;
   }
@@ -271,15 +271,15 @@
   }
   .adding button {
     flex: 1;
-    border: 1px solid var(--rule);
+    border: 1px solid var(--line);
     background: none;
     cursor: pointer;
     padding: 0.25rem;
     font-size: 0.85rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .adding button.active {
-    border-color: var(--accent);
+    border-color: var(--stimulus);
     color: inherit;
   }
 </style>

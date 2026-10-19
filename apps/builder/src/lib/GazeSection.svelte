@@ -75,7 +75,7 @@
   h3 {
     margin: 1rem 0 0;
     font-size: 0.9rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .check {
     display: flex;
@@ -87,7 +87,7 @@
     display: grid;
     gap: 0.4rem;
     padding: 0.4rem 0;
-    border-top: 1px solid var(--rule);
+    border-top: 1px solid var(--line);
   }
   .name {
     font-weight: 600;
@@ -95,11 +95,11 @@
   .help {
     margin: 0;
     font-size: 0.8rem;
-    color: var(--muted);
+    color: var(--ink-muted);
   }
   .problem {
     margin: 0;
     font-size: 0.85rem;
-    color: var(--accent);
+    color: var(--danger);
   }
 </style>
