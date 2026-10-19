@@ -1,4 +1,4 @@
-# tachisto
+# Tachisto
 
 A no-code builder for [jsPsych](https://www.jspsych.org) experiments. Researchers assemble a study
 in a UI; the tool compiles it to readable, correct jsPsych source they can host anywhere.
@@ -13,8 +13,12 @@ SONA or CloudResearch Connect are identified by the platform's id and sent back 
 Tasks can run in a counterbalanced order. There is no hosting or consent flow yet. 0.0.1 is the
 first release, and every export names the version that built it.
 
-**Try it:** <https://www.capro.dev/tachisto/> — nothing to install, and the examples
-open a working experiment in one click.
+**Try it:** <https://www.capro.dev/tachisto/app/> — nothing to install, and the examples
+open a working experiment in one click. The website at <https://www.capro.dev/tachisto/> explains
+what it does.
+
+Tachisto is named after the tachistoscope, the lab instrument that showed a stimulus for an exact
+number of milliseconds. Its first release was called jsPsych Studio.
 
 ## Why
 
@@ -35,12 +39,17 @@ maintainable by a small team.
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@tachisto/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the builder's forms are generated rather than hand-written |
 | `@tachisto/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
+| `@tachisto/brand`    | Colours, type, logos and the brand book (`packages/brand/BRAND.md`), shared by the builder and the website                                                   |
+
+The builder lives in `apps/builder`, and the website that introduces it in `apps/site`.
 
 ## Use
 
 ```sh
 npm install
 npm run dev              # the builder at http://localhost:5180
+npm run dev:site         # the website at http://localhost:5181
+npm run build:pages      # the website, with the builder under app/, in dist-pages/ as Pages serves it
 npm test                 # unit tests plus two real-browser end-to-end runs
 npm run coverage         # the same, reporting coverage of the compiler, schemas and builder logic
 npm run typecheck
