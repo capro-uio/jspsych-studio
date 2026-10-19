@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tachisto: build jsPsych experiments without code</title>
+    <meta
+      name="description"
+      content="Tachisto is a free, open-source builder for jsPsych experiments. Lay out trials, blocks and conditions in your browser, preview them as you go, and download an experiment you can host anywhere."
+    />
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <meta property="og:title" content="Tachisto" />
+    <meta
+      property="og:description"
+      content="Build jsPsych experiments without writing code. Free, open source, runs in your browser."
+    />
+    <link rel="stylesheet" href="./src/site.css" />
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <header class="site-header">
+      <div class="wrap header-row">
+        <a class="brand" href="./" aria-label="Tachisto home">
+          <img
+            class="on-light"
+            src="../../packages/brand/logos/tachisto-wordmark.svg"
+            alt="Tachisto"
+            width="118"
+            height="40"
+          />
+          <img
+            class="on-dark"
+            src="../../packages/brand/logos/tachisto-wordmark-dark.svg"
+            alt="Tachisto"
+            width="118"
+            height="40"
+          />
+        </a>
+        <nav aria-label="Sections">
+          <a href="#how">How it works</a>
+          <a href="#features">What you can build</a>
+          <a href="#trust">Your data</a>
+          <a href="https://github.com/capro-uio/tachisto">Source</a>
+        </nav>
+        <a class="button secondary" href="./app/" data-testid="open-builder-header"
+          >Open the builder</a
+        >
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero wrap">
+        <div class="hero-copy">
+          <p class="label eyebrow">Free and open source · runs in your browser</p>
+          <h1 class="display">Build jsPsych experiments without writing code.</h1>
+          <p class="lede">
+            Lay out trials, blocks and conditions on a timeline, watch the experiment run as you
+            build it, and download a readable jsPsych study you can host anywhere. Nothing to
+            install and no account to make.
+          </p>
+          <div class="actions">
+            <a class="button primary large" href="./app/" data-testid="open-builder">
+              Open the builder
+            </a>
+            <a class="button secondary large" href="#how">See how it works</a>
+          </div>
+          <p class="fine">Start from a flanker, Stroop or image task, or from an empty timeline.</p>
+        </div>
+
+        <figure
+          class="bench"
+          aria-label="One trial: a fixation cross, a stimulus, a mask, then a response"
+        >
+          <div class="screen" aria-hidden="true">
+            <div class="frame frame-fixation"><span class="cross"></span></div>
+            <div class="frame frame-stimulus"><span class="word">BLUE</span></div>
+            <div class="frame frame-mask"><span class="mask-text">#####</span></div>
+            <div class="frame frame-response">
+              <span class="keys"><kbd>f</kbd> red <kbd>j</kbd> blue</span>
+            </div>
+          </div>
+          <div class="track" aria-hidden="true">
+            <div class="block fixation" style="--span: 5">
+              <span class="block-name"><span class="mini-cross"></span>Fixation</span>
+              <span class="timing">500 ms</span>
+            </div>
+            <div class="block stimulus" style="--span: 8">
+              <span class="block-name">Stimulus</span>
+              <span class="timing">800 ms</span>
+            </div>
+            <div class="block mask" style="--span: 3">
+              <span class="block-name">Mask</span>
+              <span class="timing">300 ms</span>
+            </div>
+            <div class="block response" style="--span: 6">
+              <span class="block-name"><span class="wide-only">Until&nbsp;</span>response</span>
+              <span class="timing">f or j</span>
+            </div>
+            <span class="playhead"></span>
+          </div>
+          <figcaption class="body-sm">
+            One trial of a Stroop task, as you would lay it out in Tachisto.
+          </figcaption>
+        </figure>
+      </section>
+
+      <section id="how" class="band">
+        <div class="wrap">
+          <h2 class="heading-1">How it works</h2>
+          <ol class="steps">
+            <li>
+              <span class="step-number timing">01</span>
+              <h3 class="heading-2">Build the timeline</h3>
+              <p>
+                Add steps from jsPsych's plugins: instructions, keyboard and button responses,
+                questionnaires, images, sound, video. Each one opens a form made from the plugin's
+                own documentation, so every setting is there with its explanation. Group steps into
+                blocks, loop them, and drive them from a conditions table.
+              </p>
+            </li>
+            <li>
+              <span class="step-number timing">02</span>
+              <h3 class="heading-2">Preview as you go</h3>
+              <p>
+                Run the whole experiment, or only the step you are editing, beside the form. The
+                flow view shows the paths a participant can take, and the code view shows the
+                jsPsych that Tachisto writes for you.
+              </p>
+            </li>
+            <li>
+              <span class="step-number timing">03</span>
+              <h3 class="heading-2">Download and run it</h3>
+              <p>
+                Export one self-contained HTML file, or a project folder with a readme and a
+                Psych-DS description of your data. Host it wherever you like, send results to
+                DataPipe or let participants download them, and recruit from Prolific, SONA or
+                CloudResearch Connect.
+              </p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <section class="why wrap">
+        <div class="why-copy">
+          <h2 class="heading-1">Correct by construction</h2>
+          <p>
+            Hand-written jsPsych can fail without a sound. A widely shared flanker timeline showed
+            the same stimulus in every condition because it read its timeline variables the wrong
+            way, and the browser console never said a word.
+          </p>
+          <p>
+            Tachisto writes those rules down once, in a compiler, and checks your design before it
+            runs: a recording step without a microphone set-up, a calibration before the webcam
+            starts, a column a trial reads that the conditions table does not have. Each problem is
+            listed beside the step it belongs to, before a participant ever sees it.
+          </p>
+        </div>
+        <div class="problem-card" role="note" aria-label="Example of a problem Tachisto reports">
+          <p class="label">Problem</p>
+          <p class="problem-text">
+            <svg class="problem-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <circle cx="12" cy="12" r="9" />
+              <path d="M12 7.5v5.5M12 16.2v.3" />
+            </svg>
+            plugin "html-audio-response" needs a "Set up the microphone" step
+            (initialize-microphone) that every participant reaches before it
+          </p>
+        </div>
+      </section>
+
+      <section id="features" class="band">
+        <div class="wrap">
+          <h2 class="heading-1">What you can build today</h2>
+          <ul class="features">
+            <li>
+              <h3 class="heading-3">Designs from conditions tables</h3>
+              <p>
+                Cross your factors into a table, or paste one in. Blocks run each row once, in order
+                or shuffled, as many times as you ask.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Practice until it sticks</h3>
+              <p>
+                Repeat a block while accuracy stays under a threshold, and branch on performance or
+                on an answer.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Groups and counterbalancing</h3>
+              <p>
+                Assign participants to groups, and run tasks in a random order or a balanced Latin
+                square, with the order recorded on every row.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Stimuli of every kind</h3>
+              <p>
+                Formatted text, images, sound and video, plus a psychophysics canvas whose shapes
+                you drag into place.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Spoken and filmed answers</h3>
+              <p>
+                Record sound and video from the participant, each saved as a file of its own next to
+                their data.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Webcam eye tracking</h3>
+              <p>
+                Set up, calibrate and check WebGazer, then record where participants look during any
+                step.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Recruitment platforms</h3>
+              <p>
+                Read the participant's id from Prolific, SONA or CloudResearch Connect, and send
+                them back once their data is saved.
+              </p>
+            </li>
+            <li>
+              <h3 class="heading-3">Ending early</h3>
+              <p>
+                End the study for someone who declines consent or is screened out, and decide
+                whether their data is kept.
+              </p>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="trust" class="trust wrap">
+        <h2 class="heading-1">Your study, your data</h2>
+        <dl class="facts">
+          <div>
+            <dt class="heading-3">No server of ours</dt>
+            <dd>
+              Tachisto is a static page. Your experiment stays in your browser until you download
+              it, and results go only where you send them.
+            </dd>
+          </div>
+          <div>
+            <dt class="heading-3">Readable output</dt>
+            <dd>
+              The download is ordinary jsPsych code a colleague can read, change and run without
+              Tachisto. Nothing locks you in.
+            </dd>
+          </div>
+          <div>
+            <dt class="heading-3">Data that says where it came from</dt>
+            <dd>
+              Every export names the Tachisto and jsPsych versions that made it, and describes its
+              columns in Psych-DS, so a dataset can be traced years later.
+            </dd>
+          </div>
+          <div>
+            <dt class="heading-3">A preview that cannot reach you</dt>
+            <dd>
+              Experiments preview in a sealed frame that cannot read the builder or your browser's
+              storage, and saves no data.
+            </dd>
+          </div>
+        </dl>
+        <p class="status body-sm">
+          <strong>Tachisto is young.</strong> Version 0.0.1 builds and exports full experiments, but
+          there is no hosting or consent flow yet. Tell us what you need on
+          <a href="https://github.com/capro-uio/tachisto/issues">GitHub</a>.
+        </p>
+      </section>
+
+      <section class="closing band">
+        <div class="wrap closing-row">
+          <div>
+            <h2 class="heading-1">Your first trial is a minute away.</h2>
+            <p>Open an example, change a stimulus, and watch it run.</p>
+          </div>
+          <a class="button primary large" href="./app/">Open the builder</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-row">
+        <img
+          class="on-light footer-mark"
+          src="../../packages/brand/logos/tachisto-icon.svg"
+          alt=""
+          width="28"
+          height="28"
+        />
+        <img
+          class="on-dark footer-mark"
+          src="../../packages/brand/logos/tachisto-icon-dark.svg"
+          alt=""
+          width="28"
+          height="28"
+        />
+        <p class="body-sm">
+          Named after the tachistoscope, which showed a stimulus for an exact number of
+          milliseconds. Built on <a href="https://www.jspsych.org">jsPsych</a>, open source under
+          the MIT licence.
+        </p>
+        <a class="body-sm" href="https://github.com/capro-uio/tachisto">Source on GitHub</a>
+      </div>
+    </footer>
+  </body>
+</html>

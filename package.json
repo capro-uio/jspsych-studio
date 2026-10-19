@@ -32,8 +32,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "typecheck": "tsc -p packages/schemas/tsconfig.json && tsc -p packages/compiler/tsconfig.json && npm run check --workspace @tachisto/builder",
-    "dev": "npm run dev --workspace @tachisto/builder"
+    "typecheck": "tsc -p packages/schemas/tsconfig.json && tsc -p packages/compiler/tsconfig.json && npm run check --workspace @tachisto/builder && tsc -p apps/site/tsconfig.json",
+    "dev": "npm run dev --workspace @tachisto/builder",
+    "dev:site": "npm run dev --workspace @tachisto/site",
+    "build:pages": "npm run build --workspace @tachisto/site && npm run build --workspace @tachisto/builder && node apps/site/scripts/pages.ts"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
