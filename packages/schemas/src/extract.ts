@@ -131,6 +131,8 @@ function gridOf(list: ParameterSchema, rows: unknown[][]): ParameterSchema {
         title: "cell",
         type: CELL_TYPES[typeof cell] ?? declared.type,
         jspsychType: list.jspsychType,
+        // A square is there (1) or not (0), as the plugins read it.
+        ...(list.jspsychType === "BOOL" && { enum: [0, 1] }),
       },
     },
   };

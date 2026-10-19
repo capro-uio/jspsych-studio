@@ -16,11 +16,17 @@ function width(grid: Grid) {
   return Math.max(1, ...grid.map((row) => row.length));
 }
 
+/** A grid of one place, for a grid with nothing in it yet. */
+export function singleCell(cell: ParameterSchema): Grid {
+  return [[blankCell(cell)]];
+}
+
 export function addRow(grid: Grid, cell: ParameterSchema): Grid {
   return [...grid, Array.from({ length: width(grid) }, () => blankCell(cell))];
 }
 
 export function addColumn(grid: Grid, cell: ParameterSchema): Grid {
+  if (grid.length === 0) return singleCell(cell);
   return grid.map((row) => [...row, blankCell(cell)]);
 }
 
@@ -30,7 +36,7 @@ export function removeRow(grid: Grid): Grid {
 }
 
 export function removeColumn(grid: Grid): Grid {
-  return width(grid) > 1 ? grid.map((row) => row.slice(0, -1)) : grid;
+  return grid.every((row) => row.length > 1) ? grid.map((row) => row.slice(0, -1)) : grid;
 }
 
 export function setCell(grid: Grid, row: number, column: number, value: unknown): Grid {

@@ -617,7 +617,7 @@ describe("a grid of squares", () => {
       .poll(() => page.getByTestId("step-problems").innerText())
       .toContain("needs one key in its choices for each place in its grid");
 
-    await page.getByRole("button", { name: "− row" }).click();
+    await page.getByTestId("value-grid-remove-row").click();
     await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
     await page.close();
   }, 180_000);

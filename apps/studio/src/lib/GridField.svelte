@@ -11,20 +11,21 @@
   } from "./grid.ts";
 
   interface Props {
+    name: string;
     testId: string;
     parameter: ParameterSchema;
     value: Grid;
     onchange: (grid: Grid) => void;
   }
 
-  const { testId, parameter, value, onchange }: Props = $props();
+  const { name, testId, parameter, value, onchange }: Props = $props();
 
   const cell = $derived(parameter.items?.items ?? parameter);
   const squares = $derived(isSquares(cell));
 </script>
 
 <div class="grid-field">
-  <table data-testid={testId}>
+  <table data-testid={testId} aria-label={`${name}: ${squares ? "squares" : "keys"} by row`}>
     <tbody>
       {#each value as row, rowIndex (rowIndex)}
         <tr>
@@ -68,8 +69,16 @@
       data-testid={`${testId}-add-column`}
       onclick={() => onchange(addColumn(value, cell))}>+ column</button
     >
-    <button type="button" onclick={() => onchange(removeRow(value))}>− row</button>
-    <button type="button" onclick={() => onchange(removeColumn(value))}>− column</button>
+    <button
+      type="button"
+      data-testid={`${testId}-remove-row`}
+      onclick={() => onchange(removeRow(value))}>− row</button
+    >
+    <button
+      type="button"
+      data-testid={`${testId}-remove-column`}
+      onclick={() => onchange(removeColumn(value))}>− column</button
+    >
   </div>
 </div>
 

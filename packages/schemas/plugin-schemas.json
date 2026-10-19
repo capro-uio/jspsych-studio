@@ -2848,7 +2848,11 @@
             "items": {
               "type": "integer",
               "jspsychType": "BOOL",
-              "title": "cell"
+              "title": "cell",
+              "enum": [
+                0,
+                1
+              ]
             }
           },
           "jspsychType": "BOOL",
@@ -3001,7 +3005,11 @@
             "items": {
               "type": "integer",
               "jspsychType": "BOOL",
-              "title": "cell"
+              "title": "cell",
+              "enum": [
+                0,
+                1
+              ]
             }
           },
           "jspsychType": "BOOL",

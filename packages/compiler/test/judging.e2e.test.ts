@@ -109,6 +109,8 @@ describe("squares lit one at a time", () => {
   it("score the key pressed and the square clicked", async () => {
     const squares: Spec = {
       name: "squares",
+      // A conditions cell holds its target as text, as the builder's table writes it.
+      conditions: { targets: [{ target: "0,1" }] },
       timeline: [
         {
           kind: "trial",
@@ -127,16 +129,22 @@ describe("squares lit one at a time", () => {
           },
         },
         {
-          kind: "trial",
-          plugin: "serial-reaction-time-mouse",
-          tag: "clicked",
-          params: {
-            grid: [
-              [1, 1],
-              [1, 1],
-            ],
-            target: [0, 1],
-          },
+          kind: "block",
+          conditions: "targets",
+          children: [
+            {
+              kind: "trial",
+              plugin: "serial-reaction-time-mouse",
+              tag: "clicked",
+              params: {
+                grid: [
+                  [1, 1],
+                  [1, 1],
+                ],
+                target: { var: "target" },
+              },
+            },
+          ],
         },
       ],
     };

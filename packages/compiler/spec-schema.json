@@ -7669,6 +7669,10 @@
                           "type": "array",
                           "items": {
                             "title": "cell",
+                            "enum": [
+                              0,
+                              1
+                            ],
                             "type": "integer"
                           }
                         }
@@ -7737,12 +7741,6 @@
                       },
                       {
                         "$ref": "#/definitions/code"
-                      },
-                      {
-                        "enum": [
-                          "ALL_KEYS",
-                          "NO_KEYS"
-                        ]
                       }
                     ]
                   },
@@ -7953,6 +7951,10 @@
                           "type": "array",
                           "items": {
                             "title": "cell",
+                            "enum": [
+                              0,
+                              1
+                            ],
                             "type": "integer"
                           }
                         }

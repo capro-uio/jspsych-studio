@@ -59,16 +59,32 @@ interface ValueShape {
   list?: boolean;
   /** Takes a function, which code is rather than computes. */
   isFunction?: boolean;
+  /** Takes a list of numbers, which a conditions cell holds as text such as "0,1". */
+  numbers?: boolean;
+  /** Takes a grid of rows, which a conditions cell holds as text such as "[[1,0],[0,1]]". */
+  grid?: boolean;
 }
 
 function shapeOf(parameter: ParameterSchema | undefined, media: boolean): ValueShape {
+  const grid = parameter?.format === "grid";
   return {
     media,
     // A KEYS list also takes the words "ALL_KEYS" and "NO_KEYS", which must stay words.
-    list: parameter?.type === "array" && parameter.jspsychType !== "KEYS",
+    list: parameter?.type === "array" && parameter.jspsychType !== "KEYS" && !grid,
     isFunction: takesFunction(parameter?.jspsychType),
+    numbers:
+      parameter?.type === "array" &&
+      !grid &&
+      (parameter.items?.type === "integer" || parameter.items?.type === "number"),
+    grid,
   };
 }
+
+// Conditions cells are text, so a value read from one is turned into what the parameter takes.
+const AS_NUMBERS = (read: string) =>
+  `((cell) => (Array.isArray(cell) ? cell : String(cell).split(",")).map(Number))(${read})`;
+const AS_GRID = (read: string) =>
+  `((cell) => (typeof cell === "string" ? JSON.parse(cell) : cell))(${read})`;
 
 // Media parameters resolve through the asset map, so a spec can name a file rather than carry a
 // data URL in every parameter and every conditions cell.
@@ -85,7 +101,9 @@ function parameterExpression(value: ParameterValue, shape: ValueShape = {}): str
     }
     return `asset(${literal(value)})`;
   }
-  if (value.wrap || shape.media || shape.list) return `() => ${valueInsideFunction(value, shape)}`;
+  if (value.wrap || shape.media || shape.list || shape.grid) {
+    return `() => ${valueInsideFunction(value, shape)}`;
+  }
   return `jsPsych.timelineVariable(${literal(value.var)})`;
 }
 
@@ -97,6 +115,8 @@ function valueInsideFunction(value: ParameterValue, shape: ValueShape): string {
   if (isVariableReference(value) && value.wrap) {
     read = `${literal(value.wrap)}.replace("{}", () => ${read})`;
   }
+  if (isVariableReference(value) && shape.grid) return AS_GRID(read);
+  if (isVariableReference(value) && shape.numbers) return AS_NUMBERS(read);
   // A conditions cell holds one value, and a plugin that takes a list would read a lone string
   // one character at a time.
   if (shape.list) read = `[].concat(${read})`;

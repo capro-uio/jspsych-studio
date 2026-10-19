@@ -8,6 +8,7 @@ import {
   removeColumn,
   removeRow,
   setCell,
+  singleCell,
 } from "../src/lib/grid.ts";
 
 const square = { title: "cell", type: "integer", jspsychType: "BOOL" } as ParameterSchema;
@@ -40,6 +41,12 @@ describe("grids", () => {
       ]),
     ).toEqual([[1], [0]]);
     expect(removeColumn([[1], [0]])).toEqual([[1], [0]]);
+    expect(removeColumn([[1, 1], [0]])).toEqual([[1, 1], [0]]);
+  });
+
+  it("starts an empty grid from a single place", () => {
+    expect(addColumn([], square)).toEqual([[1]]);
+    expect(singleCell(key)).toEqual([[""]]);
   });
 
   it("changes one place and leaves the rest", () => {
