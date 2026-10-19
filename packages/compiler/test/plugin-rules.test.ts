@@ -108,3 +108,35 @@ describe("drawing", () => {
     );
   });
 });
+
+describe("a page from the study's website", () => {
+  it("rejects a page with no way to continue", () => {
+    expect(compiles(study("external-html", { url: "consent.html" }))).toThrow(
+      /needs a key or a button on the page to continue with/,
+    );
+  });
+
+  it.each([{ cont_btn: "agree" }, { cont_key: "Enter" }])("takes %j to continue", (way) => {
+    expect(compiles(study("external-html", { url: "consent.html", ...way }))).not.toThrow();
+  });
+});
+
+describe("the browser check", () => {
+  it("rejects a feature it does not measure", () => {
+    expect(compiles(study("browser-check", { features: ["width", "gps"] }))).toThrow(
+      /parameter "features" expects each entry to be one of/,
+    );
+  });
+});
+
+describe("your own form", () => {
+  it("requires the form", () => {
+    expect(compiles(study("survey-html-form", {}))).toThrow(/requires parameter "html"/);
+  });
+});
+
+describe("measuring viewing distance", () => {
+  it("compiles with every setting left to the plugin", () => {
+    expect(compiles(study("virtual-chinrest", {}))).not.toThrow();
+  });
+});

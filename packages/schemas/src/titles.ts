@@ -178,6 +178,33 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
     summary: "Places shapes, text and images on a canvas, and records a key press or click.",
     family: "canvas",
   },
+  resize: {
+    title: "Calibrate screen size",
+    summary: "Has the participant resize a box to match a card, so later stimuli can be scaled.",
+    family: "setup",
+  },
+  "virtual-chinrest": {
+    title: "Measure viewing distance",
+    summary:
+      "Estimates screen size and how far the participant sits, from a card and the blind spot.",
+    family: "setup",
+  },
+  "browser-check": {
+    title: "Check the browser",
+    summary: "Records the browser, screen and devices, and can turn away those your rule excludes.",
+    family: "setup",
+  },
+  "external-html": {
+    title: "Page from your website",
+    summary:
+      "Shows an HTML page served beside the study, such as a consent form; not in the preview.",
+    family: "show",
+  },
+  "survey-html-form": {
+    title: "Your own form",
+    summary: "Shows a form written in HTML and records what is filled in, by each field's name.",
+    family: "ask",
+  },
   fullscreen: {
     title: "Switch to full screen",
     summary: "Asks the participant to enter, or leave, full-screen mode.",

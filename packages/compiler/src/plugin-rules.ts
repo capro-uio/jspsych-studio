@@ -40,9 +40,17 @@ function clozeProblems(params: Record<string, ParameterValue>) {
   ];
 }
 
+// An external page is left by a key or by a button on the page; with neither, never.
+function externalPageProblems(params: Record<string, ParameterValue>) {
+  return isGiven(params.cont_key) || isGiven(params.cont_btn)
+    ? []
+    : ["needs a key or a button on the page to continue with (cont_key or cont_btn)"];
+}
+
 const RULES: Record<string, (params: Record<string, ParameterValue>) => string[]> = {
   "visual-search-circle": visualSearchProblems,
   cloze: clozeProblems,
+  "external-html": externalPageProblems,
 };
 
 /** What is wrong with how a step combines its settings, by its plugin's own rules. */

@@ -116,6 +116,7 @@ describe("extractSchemas", () => {
         lengths: {},
         choices: {},
         distinctKeys: {},
+        required: {},
       }),
     ).toThrow(/names "key_anwser", which categorize-html does not take/);
   });
