@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
-import { extractBundle } from "@jspsych-studio/schemas";
+import { extractBundle } from "@tachisto/schemas";
 import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
 import { compileSpec } from "./compile.ts";
@@ -21,9 +21,9 @@ const [command, specPath] = process.argv.slice(2);
 
 if (!["compile", "schema", "codemeta"].includes(command) || (command === "compile" && !specPath)) {
   console.error(
-    "usage: jspsych-studio compile <spec.json> [--out <file>] [--base <cdn|path>]\n" +
-      "       jspsych-studio schema [--out <file>]\n" +
-      "       jspsych-studio codemeta [--out <file>]",
+    "usage: tachisto compile <spec.json> [--out <file>] [--base <cdn|path>]\n" +
+      "       tachisto schema [--out <file>]\n" +
+      "       tachisto codemeta [--out <file>]",
   );
   process.exit(2);
 }
@@ -59,7 +59,7 @@ if (command === "codemeta") {
   // Formatted as the repository formats it, so a regeneration diffs only where something changed.
   const options = { ...(await resolveConfig(outputPath)), filepath: outputPath };
   writeFileSync(outputPath, await format(JSON.stringify(updated), options));
-  console.log(`codemeta for jsPsych Studio ${manifest.version} -> ${outputPath}`);
+  console.log(`codemeta for Tachisto ${manifest.version} -> ${outputPath}`);
   process.exit(0);
 }
 

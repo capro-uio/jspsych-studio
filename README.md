@@ -1,4 +1,4 @@
-# jspsych-studio
+# tachisto
 
 A no-code builder for [jsPsych](https://www.jspsych.org) experiments. Researchers assemble a study
 in a UI; the tool compiles it to readable, correct jsPsych source they can host anywhere.
@@ -13,7 +13,7 @@ SONA or CloudResearch Connect are identified by the platform's id and sent back 
 Tasks can run in a counterbalanced order. There is no hosting or consent flow yet. 0.0.1 is the
 first release, and every export names the version that built it.
 
-**Try it:** <https://www.capro.dev/jspsych-studio/> — nothing to install, and the examples
+**Try it:** <https://www.capro.dev/tachisto/> — nothing to install, and the examples
 open a working experiment in one click.
 
 ## Why
@@ -31,10 +31,10 @@ maintainable by a small team.
 
 ## Packages
 
-| Package                    | What it does                                                                                                                                                 |
-| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `@jspsych-studio/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the builder's forms are generated rather than hand-written |
-| `@jspsych-studio/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
+| Package              | What it does                                                                                                                                                 |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `@tachisto/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the builder's forms are generated rather than hand-written |
+| `@tachisto/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
 
 ## Use
 
@@ -281,21 +281,21 @@ frame has nothing of yours to send.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
   browser, because the preview compiles there. A test enforces it.
 - **Versioned provenance.** Exports say what made them: the Psych-DS `isBasedOn`, the header
-  comment in `experiment.js`, the `generator` meta tag and the project readme all name Studio and
-  jsPsych with their versions. Studio's comes from `packages/compiler/package.json`, so a release
+  comment in `experiment.js`, the `generator` meta tag and the project readme all name Tachisto and
+  jsPsych with their versions. Tachisto's comes from `packages/compiler/package.json`, so a release
   is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere, and
   regenerates `codemeta.json` with the new version, its release URL and the jsPsych it builds for
   (`npm run codemeta` does the same by hand; CI fails if it is out of date). The description,
   licence, keywords and links come from the root `package.json`, so they are said once; only what
   npm has no field for, such as the authors and development status, is written in
   `codemeta.json` by hand.
-  While the workspaces sit at `0.0.0` no Studio version is claimed, because a dataset built by
-  "jsPsych Studio 0.0.0" names a build nobody can obtain.
+  While the workspaces sit at `0.0.0` no Tachisto version is claimed, because a dataset built by
+  "Tachisto 0.0.0" names a build nobody can obtain.
 
 ## License
 
 MIT — see [LICENSE](LICENSE). Experiments you build with it are yours, under whatever terms you
-like; nothing Studio generates carries this licence onward.
+like; nothing Tachisto generates carries this licence onward.
 
 The repository also ships jsPsych's own documentation text inside
 `packages/schemas/plugin-schemas.json`, which is MIT licensed too. See

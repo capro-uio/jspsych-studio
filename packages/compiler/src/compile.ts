@@ -1,4 +1,4 @@
-import type { ParameterSchema, SchemaBundle } from "@jspsych-studio/schemas";
+import type { ParameterSchema, SchemaBundle } from "@tachisto/schemas";
 import { compileAppearance } from "./appearance.ts";
 import {
   NAME_FILES_IN_DATA,

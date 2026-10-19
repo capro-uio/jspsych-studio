@@ -1,6 +1,6 @@
 # Third-party notices
 
-jsPsych Studio is MIT licensed (see [LICENSE](LICENSE)). It also carries material from the
+Tachisto is MIT licensed (see [LICENSE](LICENSE)). It also carries material from the
 projects below, which are themselves MIT licensed.
 
 ## jsPsych
@@ -14,7 +14,7 @@ Two things here come from jsPsych:
   packages, and the parameter titles and descriptions in it are jsPsych's own documentation text,
   copied verbatim. Where a plugin's parameter defaults to a function, such as a button's
   `button_html`, that function's source is copied in too, as the code an author starts from.
-- Experiments produced by Studio are jsPsych experiments. They call the jsPsych API and load
+- Experiments produced by Tachisto are jsPsych experiments. They call the jsPsych API and load
   jsPsych and its plugins from a CDN at the pinned versions. No jsPsych code is copied into the
   generated files, except a default function an author started from and kept as their own code.
 

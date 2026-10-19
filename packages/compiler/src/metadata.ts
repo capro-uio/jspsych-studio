@@ -9,20 +9,20 @@ import type { Author, Spec, SpecNode } from "./types.ts";
 /** The version every workspace carries until a release sets a real one. */
 const UNRELEASED = "0.0.0";
 
-export const GENERATOR = "jsPsych Studio";
-export const GENERATOR_URL = "https://github.com/capro-uio/jspsych-studio";
+export const GENERATOR = "Tachisto";
+export const GENERATOR_URL = "https://github.com/capro-uio/tachisto";
 export const JSPSYCH_URL = "https://www.jspsych.org/";
 
 /**
- * Which Studio produced the output, or undefined until the first release. The workspaces sit at
- * 0.0.0 before then, and a dataset claiming to come from "jsPsych Studio 0.0.0" identifies
+ * Which Tachisto produced the output, or undefined until the first release. The workspaces sit at
+ * 0.0.0 before then, and a dataset claiming to come from "Tachisto 0.0.0" identifies
  * nothing; provenance leaves the version out while that is true and starts carrying it the moment
  * a release bumps the manifest.
  */
 export const GENERATOR_VERSION: string | undefined =
   manifest.version === UNRELEASED ? undefined : manifest.version;
 
-/** The generator as people and parsers should see it: "jsPsych Studio 1.2.0", or the bare name. */
+/** The generator as people and parsers should see it: "Tachisto 1.2.0", or the bare name. */
 export function generatorLabel(version = GENERATOR_VERSION) {
   return version ? `${GENERATOR} ${version}` : GENERATOR;
 }
@@ -87,8 +87,8 @@ export interface MetadataOptions {
   /** When the files were produced; given explicitly so output can be reproduced. */
   generatedAt?: string;
   jspsych: string;
-  /** Which Studio built it; defaults to this build's own version. */
-  studio?: string;
+  /** Which Tachisto built it; defaults to this build's own version. */
+  tachisto?: string;
 }
 
 function person(author: Author) {
@@ -102,7 +102,7 @@ function person(author: Author) {
 /** Psych-DS metadata, so the data arrives described rather than as a bare CSV. */
 export function datasetDescription(spec: Spec, columns: string[], options: MetadataOptions) {
   const authors = (spec.authors ?? []).filter((author) => author.name.trim());
-  const studio = options.studio ?? GENERATOR_VERSION;
+  const tachisto = options.tachisto ?? GENERATOR_VERSION;
   return {
     "@context": "https://schema.org/",
     "@type": "Dataset",
@@ -113,14 +113,14 @@ export function datasetDescription(spec: Spec, columns: string[], options: Metad
     // The people who made the experiment. Software belongs under isBasedOn, not here: author and
     // producer mean a person or an organisation, and a tool is neither.
     ...(authors.length > 0 ? { author: authors.map(person) } : {}),
-    // Both tools, in the order they acted: Studio generated the experiment, jsPsych ran it and
+    // Both tools, in the order they acted: Tachisto generated the experiment, jsPsych ran it and
     // wrote the rows. Each carries its version, so a dataset says what produced it.
     isBasedOn: [
       {
         "@type": "SoftwareApplication",
         name: GENERATOR,
         url: GENERATOR_URL,
-        ...(studio ? { softwareVersion: studio } : {}),
+        ...(tachisto ? { softwareVersion: tachisto } : {}),
       },
       {
         "@type": "SoftwareApplication",
@@ -146,7 +146,7 @@ export function sourceHeader(spec: Spec, options: MetadataOptions) {
     `/*\n` +
     ` * ${commentSafe(spec.name)}\n` +
     ` *\n` +
-    ` * Built with ${generatorLabel(options.studio)} on ${date}, for jsPsych ${options.jspsych}.\n` +
+    ` * Built with ${generatorLabel(options.tachisto)} on ${date}, for jsPsych ${options.jspsych}.\n` +
     ` * ${GENERATOR_URL}\n` +
     ` *\n` +
     ` * This file is generated from experiment.json. Open that file in the builder to keep\n` +

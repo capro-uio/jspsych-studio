@@ -1,4 +1,4 @@
-import { extractBundle } from "@jspsych-studio/schemas";
+import { extractBundle } from "@tachisto/schemas";
 
 export const { bundle: schemas } = await extractBundle([
   "@jspsych/plugin-audio-keyboard-response",

@@ -1,9 +1,4 @@
-import type {
-  ParameterSchema,
-  PluginSchema,
-  PluginSchemas,
-  Variants,
-} from "@jspsych-studio/schemas";
+import type { ParameterSchema, PluginSchema, PluginSchemas, Variants } from "@tachisto/schemas";
 import type {
   Asset,
   AccuracyRule,

@@ -1,5 +1,5 @@
 {
-  "name": "jspsych-studio",
+  "name": "tachisto",
   "private": true,
   "description": "A no-code builder for jsPsych experiments: author in the browser, export readable jsPsych you can host anywhere.",
   "keywords": [
@@ -9,13 +9,13 @@
     "online experiments",
     "no-code"
   ],
-  "homepage": "https://www.capro.dev/jspsych-studio/",
+  "homepage": "https://www.capro.dev/tachisto/",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/capro-uio/jspsych-studio.git"
+    "url": "git+https://github.com/capro-uio/tachisto.git"
   },
   "bugs": {
-    "url": "https://github.com/capro-uio/jspsych-studio/issues"
+    "url": "https://github.com/capro-uio/tachisto/issues"
   },
   "license": "MIT",
   "type": "module",
@@ -26,14 +26,14 @@
   "scripts": {
     "test": "npm run test --workspaces --if-present",
     "coverage": "npm run test --workspaces --if-present -- --coverage",
-    "schemas": "npm run build --workspace @jspsych-studio/schemas",
-    "spec-schema": "npm run spec-schema --workspace @jspsych-studio/compiler",
-    "codemeta": "npm run codemeta --workspace @jspsych-studio/compiler",
+    "schemas": "npm run build --workspace @tachisto/schemas",
+    "spec-schema": "npm run spec-schema --workspace @tachisto/compiler",
+    "codemeta": "npm run codemeta --workspace @tachisto/compiler",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "eslint .",
-    "typecheck": "tsc -p packages/schemas/tsconfig.json && tsc -p packages/compiler/tsconfig.json && npm run check --workspace @jspsych-studio/studio",
-    "dev": "npm run dev --workspace @jspsych-studio/studio"
+    "typecheck": "tsc -p packages/schemas/tsconfig.json && tsc -p packages/compiler/tsconfig.json && npm run check --workspace @tachisto/builder",
+    "dev": "npm run dev --workspace @tachisto/builder"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

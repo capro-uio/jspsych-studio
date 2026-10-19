@@ -11,8 +11,8 @@ export interface HtmlTargetOptions {
   sourceFile?: string;
   /** `"cdn"` emits unpkg URLs; any other value is a base path serving the npm packages. */
   base?: string;
-  /** Which Studio built the page; defaults to this build's own version. */
-  studio?: string;
+  /** Which Tachisto built the page; defaults to this build's own version. */
+  tachisto?: string;
   /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
   headScripts?: string[];
 }
@@ -71,7 +71,7 @@ window.studioExperiment = { jsPsych };
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="generator" content="${generatorLabel(options.studio)}" />
+    <meta name="generator" content="${generatorLabel(options.tachisto)}" />
     <meta name="description" content="${escapeHtmlText(options.title)}, a behavioural experiment." />
     <title>${escapeHtmlText(options.title)}</title>
     <link rel="stylesheet" href="${stylesheet}" />

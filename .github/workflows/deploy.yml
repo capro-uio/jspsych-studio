@@ -24,12 +24,12 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run build --workspace @jspsych-studio/studio
+      - run: npm run build --workspace @tachisto/builder
       # Specs point `$schema` at the site, so the schema has to be served from it.
-      - run: cp packages/compiler/spec-schema.json apps/studio/dist/
+      - run: cp packages/compiler/spec-schema.json apps/builder/dist/
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: apps/studio/dist
+          path: apps/builder/dist
 
   deploy:
     needs: build
