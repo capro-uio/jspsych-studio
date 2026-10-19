@@ -44,7 +44,7 @@ describe("canvas steps", () => {
     expect(source).toContain(
       'stimuli: () => [{ "obj_type": "circle", "radius": 50, ' +
         '"fill_color": jsPsych.evaluateTimelineVariable("colour"), ' +
-        '"startX": jsPsych.evaluateTimelineVariable("x") }]',
+        '"startX": ((cell) => (typeof cell === "string" && cell.trim() !== "" && Number.isFinite(Number(cell)) ? Number(cell) : cell))(jsPsych.evaluateTimelineVariable("x")) }]',
     );
   });
 

@@ -186,6 +186,11 @@ function cellProblem(cell: unknown, parameter: ParameterSchema) {
       ? "which is not a grid written as rows, such as [[1, 0], [0, 1]]"
       : null;
   }
+  if (parameter.type === "integer" || parameter.type === "number") {
+    if (cell === "" && parameter.default === null) return null;
+    const number = typeof cell === "string" && cell.trim() !== "" ? Number(cell) : cell;
+    return typeof number === "number" && Number.isFinite(number) ? null : "which is not a number";
+  }
   const numbers =
     parameter.type === "array" && ["integer", "number"].includes(parameter.items?.type ?? "");
   if (!numbers) return null;

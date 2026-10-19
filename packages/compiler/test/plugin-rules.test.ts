@@ -285,3 +285,51 @@ describe("grids and targets read from a column", () => {
     expect(compiles(fromColumns(params, [row]))).toThrow(message);
   });
 });
+
+describe("a number read from a column", () => {
+  const timed = (row: Record<string, unknown>): Spec => ({
+    name: "rules",
+    conditions: { trials: [row] },
+    timeline: [
+      {
+        kind: "block",
+        conditions: "trials",
+        children: [
+          {
+            kind: "trial",
+            plugin: "html-keyboard-response",
+            params: { stimulus: "<p>hi</p>", trial_duration: { var: "duration" } },
+          },
+        ],
+      },
+    ],
+  });
+
+  it("is turned into a number when the trial starts", () => {
+    const { source } = compileSpec(timed({ duration: "500" }), schemas);
+    expect(source).toContain('Number(cell) : cell))(jsPsych.evaluateTimelineVariable("duration"))');
+  });
+
+  it.each([["500"], [500], [" 2.5 "]])("takes %j", (duration) => {
+    expect(compiles(timed({ duration }))).not.toThrow();
+  });
+
+  it("rejects text that is not a number", () => {
+    expect(compiles(timed({ duration: "half a second" }))).toThrow(
+      /reads column "duration", .* which is not a number/,
+    );
+  });
+
+  it("reads a blank cell as none where jsPsych's default is none", () => {
+    expect(compiles(timed({ duration: "" }))).not.toThrow();
+    expect(compileSpec(timed({ duration: "" }), schemas).source).toContain('cell === "" ? null');
+  });
+
+  it("rejects a blank cell where a number is needed", () => {
+    const spec = timed({ duration: "" });
+    const trial = (spec.timeline[0] as { children: TrialNode[] }).children[0];
+    trial.plugin = "html-slider-response";
+    trial.params = { stimulus: "<p>hi</p>", min: { var: "duration" } };
+    expect(compiles(spec)).toThrow(/which is not a number/);
+  });
+});

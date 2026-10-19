@@ -63,6 +63,10 @@ interface ValueShape {
   numbers?: boolean;
   /** Takes a grid of rows, which a conditions cell holds as text such as "[[1,0],[0,1]]". */
   grid?: boolean;
+  /** Takes a number, which a conditions cell holds as text such as "100". */
+  number?: boolean;
+  /** Takes null for none, as jsPsych's default, which a blank conditions cell then means. */
+  blankIsNone?: boolean;
 }
 
 function shapeOf(parameter: ParameterSchema | undefined, media: boolean): ValueShape {
@@ -77,12 +81,18 @@ function shapeOf(parameter: ParameterSchema | undefined, media: boolean): ValueS
       !grid &&
       (parameter.items?.type === "integer" || parameter.items?.type === "number"),
     grid,
+    number: parameter?.type === "integer" || parameter?.type === "number",
+    blankIsNone: parameter?.default === null,
   };
 }
 
 // Conditions cells are text, so a value read from one is turned into what the parameter takes.
 const AS_NUMBERS = (read: string) =>
   `((cell) => (Array.isArray(cell) ? cell : String(cell).split(",")).map(Number))(${read})`;
+// A plugin adding to a number read as text joins the two instead: "100" + 400 is "100400". A blank
+// cell is none where jsPsych's own default is none, and jsPsych times out on "" as on 0.
+const AS_NUMBER = (read: string, blankIsNone = false) =>
+  `((cell) => (${blankIsNone ? 'cell === "" ? null : ' : ""}typeof cell === "string" && cell.trim() !== "" && Number.isFinite(Number(cell)) ? Number(cell) : cell))(${read})`;
 const AS_GRID = (read: string) =>
   `((cell) => (typeof cell === "string" ? JSON.parse(cell) : cell))(${read})`;
 
@@ -101,7 +111,7 @@ function parameterExpression(value: ParameterValue, shape: ValueShape = {}): str
     }
     return `asset(${literal(value)})`;
   }
-  if (value.wrap || shape.media || shape.list || shape.grid) {
+  if (value.wrap || shape.media || shape.list || shape.grid || shape.number) {
     return `() => ${valueInsideFunction(value, shape)}`;
   }
   return `jsPsych.timelineVariable(${literal(value.var)})`;
@@ -117,6 +127,7 @@ function valueInsideFunction(value: ParameterValue, shape: ValueShape): string {
   }
   if (isVariableReference(value) && shape.grid) return AS_GRID(read);
   if (isVariableReference(value) && shape.numbers) return AS_NUMBERS(read);
+  if (isVariableReference(value) && shape.number) return AS_NUMBER(read, shape.blankIsNone);
   // A conditions cell holds one value, and a plugin that takes a list would read a lone string
   // one character at a time.
   if (shape.list) read = `[].concat(${read})`;
