@@ -53,6 +53,24 @@ const VIDEO_BLOBS = `for (const [name, url] of Object.entries(assets)) {
 }
 `;
 
+// A plugin records the file it showed as the address it was given, which for an embedded file is
+// the whole file as a data URL, in every row, every frame of an animation and every move of a free
+// sort. Each row has those addresses put back to the file names a spec uses.
+const FILE_NAMES = `const fileNames = new Map(Object.entries(assets).map(([name, url]) => [url, name]));
+const named = (value) =>
+  typeof value === "string"
+    ? (fileNames.get(value) ?? value)
+    : Array.isArray(value)
+      ? value.map(named)
+      : value !== null && typeof value === "object"
+        ? Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, named(entry)]))
+        : value;
+`;
+
+/** Puts back the names of files a row of data holds by address; the row is jsPsych's own. */
+export const NAME_FILES_IN_DATA =
+  "on_data_update: (row) => { for (const [column, value] of Object.entries(row)) row[column] = named(value); }";
+
 export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inline") {
   const entries = assets.map(
     (asset) =>
@@ -63,7 +81,8 @@ export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inl
   return (
     `const assets = {\n${entries.join(",\n")}\n};\n` +
     (embedsVideo ? VIDEO_BLOBS : "") +
-    `const asset = (name) => (Array.isArray(name) ? name.map(asset) : (assets[name] ?? name));\n`
+    `const asset = (name) => (Array.isArray(name) ? name.map(asset) : (assets[name] ?? name));\n` +
+    FILE_NAMES
   );
 }
 
