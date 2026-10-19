@@ -180,13 +180,13 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
   },
   resize: {
     title: "Calibrate screen size",
-    summary: "Has the participant resize a box to match a card, so later stimuli can be scaled.",
+    summary: "Has the participant size a box to a card; everything after is shown at that scale.",
     family: "setup",
   },
   "virtual-chinrest": {
     title: "Measure viewing distance",
     summary:
-      "Estimates screen size and how far the participant sits, from a card and the blind spot.",
+      "Estimates how far the participant sits from the screen, from a card and the blind spot.",
     family: "setup",
   },
   "browser-check": {
@@ -196,8 +196,7 @@ export const PLUGIN_LABELS: Record<string, PluginLabel> = {
   },
   "external-html": {
     title: "Page from your website",
-    summary:
-      "Shows an HTML page served beside the study, such as a consent form; not in the preview.",
+    summary: "Shows a page served beside the study, such as a consent form; not in the preview.",
     family: "show",
   },
   "survey-html-form": {

@@ -156,6 +156,12 @@ export const FIXED_CHOICES: Record<string, Record<string, string[]>> = {
   },
 };
 
+// Sizes a plugin divides as decimals but declares as whole numbers, where real sizes are not whole:
+// a bank card is 8.56 by 5.398 centimetres.
+export const DECIMAL_PARAMETERS: Record<string, string[]> = {
+  resize: ["item_width", "item_height", "pixels_per_unit"],
+};
+
 // Settings a plugin cannot do without but declares with a default of nothing: a form with no form.
 export const REQUIRED_PARAMETERS: Record<string, string[]> = {
   "survey-html-form": ["html"],

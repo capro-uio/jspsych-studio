@@ -298,6 +298,10 @@
         },
         "score": {
           "$ref": "#/definitions/scoringRule"
+        },
+        "exclusion_ending": {
+          "title": "The ending a participant this step turns away is sent to, for a step that can, such as a browser check.",
+          "type": "string"
         }
       },
       "additionalProperties": false,
@@ -7166,7 +7170,7 @@
                     "default": 1,
                     "anyOf": [
                       {
-                        "type": "integer"
+                        "type": "number"
                       },
                       {
                         "$ref": "#/definitions/variableReference"
@@ -7182,7 +7186,7 @@
                     "default": 1,
                     "anyOf": [
                       {
-                        "type": "integer"
+                        "type": "number"
                       },
                       {
                         "$ref": "#/definitions/variableReference"
@@ -7218,7 +7222,7 @@
                     "default": 100,
                     "anyOf": [
                       {
-                        "type": "integer"
+                        "type": "number"
                       },
                       {
                         "$ref": "#/definitions/variableReference"

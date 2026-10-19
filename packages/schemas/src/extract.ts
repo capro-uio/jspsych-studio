@@ -12,6 +12,7 @@ import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
   FIXED_CHOICES,
+  DECIMAL_PARAMETERS,
   LIST_LENGTHS,
   REQUIRED_PARAMETERS,
   STARTING_EXAMPLES,
@@ -203,6 +204,7 @@ export interface ParameterCuration {
   choices: Record<string, Record<string, string[]>>;
   distinctKeys: Record<string, [string, string][]>;
   required: Record<string, string[]>;
+  decimals: Record<string, string[]>;
 }
 
 /** Fills in what a plugin's declarations leave out for some of its parameters, named by plugin. */
@@ -214,6 +216,7 @@ export function curateParameters(
     choices: FIXED_CHOICES,
     distinctKeys: DISTINCT_KEYS,
     required: REQUIRED_PARAMETERS,
+    decimals: DECIMAL_PARAMETERS,
   },
 ) {
   const named = <T>(table: Record<string, Record<string, T>>) =>
@@ -229,6 +232,13 @@ export function curateParameters(
   for (const [parameter, choices] of named(curation.choices)) {
     if (parameter.type === "array" && parameter.items) parameter.items.enum = choices;
     else parameter.enum = choices;
+  }
+  const decimals = curation.decimals[schema.plugin] ?? [];
+  for (const [parameter] of named({
+    [schema.plugin]: Object.fromEntries(decimals.map((name) => [name, true])),
+  })) {
+    parameter.type = "number";
+    parameter.jspsychType = "FLOAT";
   }
   const required = curation.required[schema.plugin] ?? [];
   named({ [schema.plugin]: Object.fromEntries(required.map((name) => [name, true])) });

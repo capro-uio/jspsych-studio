@@ -157,6 +157,22 @@ participant's data to be discarded:
 
 `complete` always keeps everything.
 
+A browser check can screen participants out on its own, by a minimum window size or a rule written
+as code. jsPsych would end the whole study there, unsaved and with no way back to the platform, so
+a browser check that can turn people away names the ending to send them to instead:
+
+```json
+{
+  "kind": "trial",
+  "plugin": "browser-check",
+  "params": { "minimum_width": 1000 },
+  "exclusion_ending": "screened_out"
+}
+```
+
+A participant it turns away gets an `excluded` column on its row, then leaves by that ending as an
+`end` step would send them, with what the ending keeps.
+
 ## Editing a spec by hand
 
 Every spec names a JSON Schema in `$schema`, so a spec file opened in VS Code, Positron or any

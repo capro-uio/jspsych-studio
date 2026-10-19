@@ -1034,7 +1034,7 @@
     "external-html": {
       "plugin": "external-html",
       "title": "Page from your website",
-      "summary": "Shows an HTML page served beside the study, such as a consent form; not in the preview.",
+      "summary": "Shows a page served beside the study, such as a consent form; not in the preview.",
       "family": "show",
       "package": "@jspsych/plugin-external-html",
       "version": "2.1.0",
@@ -2576,21 +2576,21 @@
     "resize": {
       "plugin": "resize",
       "title": "Calibrate screen size",
-      "summary": "Has the participant resize a box to match a card, so later stimuli can be scaled.",
+      "summary": "Has the participant size a box to a card; everything after is shown at that scale.",
       "family": "setup",
       "package": "@jspsych/plugin-resize",
       "version": "2.1.0",
       "properties": {
         "item_height": {
-          "type": "integer",
-          "jspsychType": "INT",
+          "type": "number",
+          "jspsychType": "FLOAT",
           "title": "item height",
           "description": "The height of the item to be measured. Any units can be used as long as you are consistent with using the same units for all parameters.",
           "default": 1
         },
         "item_width": {
-          "type": "integer",
-          "jspsychType": "INT",
+          "type": "number",
+          "jspsychType": "FLOAT",
           "title": "item width",
           "description": "The width of the item to be measured.",
           "default": 1
@@ -2604,8 +2604,8 @@
           "default": null
         },
         "pixels_per_unit": {
-          "type": "integer",
-          "jspsychType": "INT",
+          "type": "number",
+          "jspsychType": "FLOAT",
           "title": "pixels per unit",
           "description": "After the scaling factor is applied, this many pixels will equal one unit of measurement.",
           "default": 100
@@ -4021,7 +4021,7 @@
     "virtual-chinrest": {
       "plugin": "virtual-chinrest",
       "title": "Measure viewing distance",
-      "summary": "Estimates screen size and how far the participant sits, from a card and the blind spot.",
+      "summary": "Estimates how far the participant sits from the screen, from a card and the blind spot.",
       "family": "setup",
       "package": "@jspsych/plugin-virtual-chinrest",
       "version": "3.1.0",

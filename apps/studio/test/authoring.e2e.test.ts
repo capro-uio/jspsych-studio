@@ -564,6 +564,39 @@ describe("a setting jsPsych leaves empty", () => {
   }, 180_000);
 });
 
+describe("a browser check that turns people away", () => {
+  it("is asked where to send them, and drops that if it becomes another step", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    const spec = {
+      name: "screening",
+      recruitment: { endings: { screened_out: { message: "<p>Sorry.</p>" } } },
+      timeline: [{ kind: "trial", plugin: "browser-check", params: { minimum_width: 800 } }],
+    };
+    await page.getByTestId("header-menu").click();
+    await page.getByTestId("import-spec").setInputFiles({
+      name: "screening.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(spec)),
+    });
+    await page.getByTestId("node-0").click();
+    await expect
+      .poll(() => page.getByTestId("step-problems").innerText())
+      .toContain("needs an ending to send them to");
+
+    await page.getByTestId("trial-exclusion").selectOption("screened_out");
+    await expect.poll(() => page.getByTestId("step-problems").count()).toBe(0);
+
+    await page.getByTestId("trial-plugin").selectOption("html-keyboard-response");
+    expect(await page.getByTestId("trial-exclusion").count()).toBe(0);
+    await page.getByTestId("view-spec").click();
+    expect(
+      stepOfKind((await authoredSpec(page)).timeline[0], "trial").exclusion_ending,
+    ).toBeUndefined();
+    await page.close();
+  }, 180_000);
+});
+
 describe("a canvas step", () => {
   it("offers each shape its own fields and draws it in the preview", async () => {
     const page = await browser.newPage();
