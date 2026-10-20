@@ -137,10 +137,10 @@ export async function packageFiles(packageName: string, paths: string[]): Promis
     await Promise.all(
       [...paths]
         .sort()
-        .map(async (path) => [
-          path,
-          await integrityOf(new Uint8Array(readFileSync(join(root, path)))),
-        ]),
+        .map(
+          async (path) =>
+            [path, await integrityOf(new Uint8Array(readFileSync(join(root, path))))] as const,
+        ),
     ),
   );
   return {
