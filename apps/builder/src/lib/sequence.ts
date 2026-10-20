@@ -96,12 +96,21 @@ const ROW_LABEL_LENGTH = 40;
 
 const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&amp;": "&", "&nbsp;": " " };
 
-// Only what reads as a tag goes: a "<" with a letter or "/" after it. A flanker's "<<<>>" stays.
-const plainText = (html: string) =>
-  html
-    .replace(/<\/?[a-zA-Z][^>]*>/g, "")
-    .replace(/&(lt|gt|amp|nbsp);/g, (entity) => ENTITIES[entity])
-    .trim();
+const TAG = /<\/?[a-zA-Z][^<>]*>/g;
+
+/**
+ * A cell as plain words for a list of rows, which shows it as text: entities are read first, then
+ * whatever reads as a tag (a "<" with a letter or "/" after it) is taken out until none is left,
+ * so a flanker's "<<<>>" stays and a tag split around another cannot come back together.
+ */
+function plainText(html: string) {
+  let text = html.replace(/&(lt|gt|amp|nbsp);/g, (entity) => ENTITIES[entity]);
+  for (let previous = ""; previous !== text;) {
+    previous = text;
+    text = text.replace(TAG, "");
+  }
+  return text.trim();
+}
 
 /**
  * Each row of the table the steps at a path read, named by its number and the first few values
