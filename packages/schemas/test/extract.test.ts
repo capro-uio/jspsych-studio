@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "../src/types.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "../src/files.ts";
 import {
   assertExtracted,
   curateParameters,

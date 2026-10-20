@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "./types.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "./files.ts";
 import type {
   ExtensionSchema,
   ExtractionReport,

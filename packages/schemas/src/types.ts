@@ -95,12 +95,6 @@ export interface ExtensionSchema {
   libraries: Library[];
 }
 
-/** Where a jsPsych package's browser build, which defines its global, sits inside the package. */
-export const BROWSER_BUNDLE = "dist/index.browser.min.js";
-
-/** jsPsych's own stylesheet, inside the jspsych package. */
-export const JSPSYCH_STYLESHEET = "css/jspsych.css";
-
 /** The files a study's page loads from one package, each with the hash a copy of it must match. */
 export interface PackageFiles {
   version: string;

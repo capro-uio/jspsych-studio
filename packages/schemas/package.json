@@ -5,6 +5,11 @@
   "license": "MIT",
   "type": "module",
   "main": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./files": "./src/files.ts",
+    "./plugin-schemas.json": "./plugin-schemas.json"
+  },
   "bin": {
     "tachisto-schemas": "src/cli.ts"
   },
