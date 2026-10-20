@@ -182,12 +182,13 @@ function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets:
 export const STEP_COLUMN = "tachisto_step";
 
 function dataExpression(trial: TrialNode, step: string | undefined) {
+  // The step's place comes last, so a column of the author's with the same name cannot replace it.
   const entries = [
-    ...(step !== undefined ? [`${STEP_COLUMN}: ${literal(step)}`] : []),
     ...(trial.tag ? [`tag: ${literal(trial.tag)}`] : []),
     ...Object.entries(trial.record ?? {}).map(
       ([key, value]) => `${literal(key)}: ${parameterExpression(value)}`,
     ),
+    ...(step !== undefined ? [`${STEP_COLUMN}: ${literal(step)}`] : []),
   ];
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : null;
 }
