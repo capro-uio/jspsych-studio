@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "@tachisto/compiler";
 import type { Spec } from "@tachisto/compiler";
-import { previewSpec } from "../src/lib/preview.ts";
+import { readStepEvent, tracedPreview, type PreviewOptions } from "../src/lib/preview.ts";
 import { schemas } from "../src/lib/schemas.ts";
+
+const previewSpec = (spec: Spec, options?: PreviewOptions) => tracedPreview(spec, options).spec;
 
 const trial = (stimulus: string, tag?: string) => ({
   kind: "trial" as const,
@@ -174,5 +176,56 @@ describe("what the preview runs", () => {
 
   it("gives back nothing when the step is gone", () => {
     expect(previewSpec(spec, { from: [9] }).timeline).toEqual([]);
+  });
+});
+
+describe("tracedPreview", () => {
+  it("names every step by the path the builder selects it with", () => {
+    const { spec: traced, stepIds } = tracedPreview(spec);
+    const names = [...stepIds.values()];
+    expect(names).toEqual(["0", "1.0.0", "1.0.1", "2.0.0", "2.1.0"]);
+    expect(stepIds.get(traced.timeline[0] as never)).toBe("0");
+  });
+
+  it("keeps the whole timeline's names when the preview runs one step", () => {
+    const { spec: traced, stepIds } = tracedPreview(spec, { from: [1, 0, 1] });
+    const loop = traced.timeline[0];
+    if (loop.kind !== "loop" || loop.children[0].kind !== "block") throw new Error("not a loop");
+    const practice = loop.children[0].children[0];
+    expect(stepIds.get(practice as never)).toBe("1.0.1");
+  });
+
+  it("leaves the author's spec untouched", () => {
+    const before = JSON.stringify(spec);
+    tracedPreview(spec, { from: [2, 1, 0] });
+    expect(JSON.stringify(spec)).toBe(before);
+  });
+});
+
+describe("readStepEvent", () => {
+  const message = { source: "tachisto-preview", event: "start", step: "1.0.2", duration: 300 };
+
+  it("reads what the trace hooks send", () => {
+    expect(readStepEvent(message)).toEqual({ event: "start", step: "1.0.2", duration: 300 });
+    expect(readStepEvent({ ...message, event: "finish", duration: null })).toEqual({
+      event: "finish",
+      step: "1.0.2",
+      duration: null,
+    });
+  });
+
+  // The frame runs the author's code, which can post whatever it likes.
+  it.each([
+    ["nothing", null],
+    ["text", "start"],
+    ["another sender", { ...message, source: "someone-else" }],
+    ["an unknown event", { ...message, event: "pause" }],
+    ["a step that is not a path", { ...message, step: "1.0; alert(1)" }],
+    ["a step that is not text", { ...message, step: 1 }],
+    ["a negative duration", { ...message, duration: -5 }],
+    ["an endless duration", { ...message, duration: Infinity }],
+    ["a duration in words", { ...message, duration: "300" }],
+  ])("ignores %s", (_case, data) => {
+    expect(readStepEvent(data)).toBeNull();
   });
 });

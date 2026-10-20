@@ -1,4 +1,12 @@
-import { escapeHtmlText, slotsOf, type Ending, type Spec, type SpecNode } from "@tachisto/compiler";
+import {
+  escapeHtmlText,
+  slotsOf,
+  STEP_COLUMN,
+  type Ending,
+  type Spec,
+  type SpecNode,
+  type TrialNode,
+} from "@tachisto/compiler";
 
 /**
  * The steps leading to `path`, keeping the containers that give a step its context — a block still
@@ -40,21 +48,70 @@ export interface PreviewOptions {
   from?: number[] | null;
 }
 
+/** Each step in a timeline, named by the path the builder selects it with. */
+function stepPaths(nodes: SpecNode[], path: number[], into: Map<TrialNode, string>) {
+  nodes.forEach((node, index) => {
+    const here = [...path, index];
+    if (node.kind === "trial") into.set(node, here.join("."));
+    if (node.kind === "block" || node.kind === "loop") stepPaths(node.children, here, into);
+    slotsOf(node)?.forEach((slot, slotIndex) =>
+      stepPaths(slot.children, [...here, slotIndex], into),
+    );
+  });
+  return into;
+}
+
 /**
  * The experiment as the preview should run it: never saving data or sending anyone back to a
  * recruitment platform, since a preview is not a participant, and optionally narrowed to one step.
+ * Each step keeps the name of its place in the whole timeline, narrowed or not, so the builder can
+ * point at the step the participant is on.
  */
-export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
+export function tracedPreview(spec: Spec, options: PreviewOptions = {}) {
   const { data: _data, recruitment, ...rest } = spec;
-  const timeline = structuredClone(
-    options.from?.length ? trim(spec.timeline, options.from) : spec.timeline,
-  );
+  const whole = structuredClone(spec.timeline);
+  const stepIds = stepPaths(whole, [], new Map());
+  const timeline = options.from?.length ? trim(whole, options.from) : whole;
   drawLocally(timeline);
-  return {
+  const previewed: Spec = {
     ...rest,
     ...(recruitment?.endings && { recruitment: { endings: previewEndings(recruitment.endings) } }),
     timeline,
   };
+  return { spec: previewed, stepIds };
+}
+
+const MESSAGE_SOURCE = "tachisto-preview";
+
+/** Hooks for the running study that tell the builder each time a step starts and finishes. */
+export const TRACE_HOOKS =
+  `on_trial_start: (trial) => { const step = trial.data?.${STEP_COLUMN}; ` +
+  `if (step) window.parent.postMessage({ source: "${MESSAGE_SOURCE}", event: "start", step, ` +
+  `duration: typeof trial.trial_duration === "number" ? trial.trial_duration : null }, "*"); }, ` +
+  `on_trial_finish: (data) => { const step = data.${STEP_COLUMN}; ` +
+  `if (step) window.parent.postMessage({ source: "${MESSAGE_SOURCE}", event: "finish", step, ` +
+  `duration: null }, "*"); }`;
+
+export interface StepEvent {
+  event: "start" | "finish";
+  step: string;
+  /** How long the step will run, when the study knows it as the step starts. */
+  duration: number | null;
+}
+
+/**
+ * A message from the preview frame, if it is one the trace hooks send. The frame runs the author's
+ * own code, which can post anything, so only that exact shape is read.
+ */
+export function readStepEvent(message: unknown): StepEvent | null {
+  if (typeof message !== "object" || message === null) return null;
+  const { source, event, step, duration } = message as Record<string, unknown>;
+  if (source !== MESSAGE_SOURCE) return null;
+  if (event !== "start" && event !== "finish") return null;
+  if (typeof step !== "string" || !/^\d+(\.\d+)*$/.test(step)) return null;
+  const known = typeof duration === "number" && Number.isFinite(duration) && duration >= 0;
+  if (duration !== null && !known) return null;
+  return { event, step, duration: known ? duration : null };
 }
 
 // An end step has to reach an ending that exists, so the preview keeps every ending, saying where

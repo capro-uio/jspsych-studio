@@ -14,6 +14,7 @@
   import { buildExperimentHtml, buildProjectZip } from "./lib/experiment.svelte.ts";
   import { backgroundColor, textColor } from "@tachisto/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
+  import SequenceStrip from "./lib/SequenceStrip.svelte";
   import Preview from "./lib/Preview.svelte";
   import Tree from "./lib/Tree.svelte";
   import Tour from "./lib/Tour.svelte";
@@ -232,7 +233,7 @@
   </aside>
 
   <PanelDivider index={0} label="Resize the timeline panel" />
-  <section class="form"><NodeForm /></section>
+  <section class="form"><SequenceStrip /><NodeForm /></section>
   <PanelDivider index={1} label="Resize the settings panel" />
   <section class="preview"><Preview /></section>
 </main>

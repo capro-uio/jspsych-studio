@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { compileSpec } from "../src/compile.ts";
+import { compileSpec, STEP_COLUMN } from "../src/compile.ts";
 import { SpecError } from "../src/validate.ts";
-import type { Spec } from "../src/types.ts";
+import type { Spec, TrialNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const flanker = JSON.parse(
@@ -284,5 +284,32 @@ describe("validateSpec", () => {
       timeline: [{ kind: "block", conditions: "missing", children: [] }],
     } as Spec;
     expect(() => compileSpec(spec, schemas)).toThrow(/does not define/);
+  });
+});
+
+describe("tracing steps", () => {
+  const spec = (): Spec => ({
+    name: "traced",
+    timeline: [
+      { kind: "trial", plugin: "html-keyboard-response", params: { stimulus: "+" } },
+      {
+        kind: "trial",
+        plugin: "html-keyboard-response",
+        tag: "word",
+        params: { stimulus: "RED" },
+      },
+    ],
+  });
+
+  it("names a step in its data when asked to", () => {
+    const traced = spec();
+    const stepIds = new Map([[traced.timeline[1] as TrialNode, "1"]]);
+    const { source } = compileSpec(traced, schemas, { stepIds });
+    expect(source).toContain(`data: { tag: "word", ${STEP_COLUMN}: "1" }`);
+    expect(source.match(new RegExp(STEP_COLUMN, "g"))).toHaveLength(1);
+  });
+
+  it("leaves an exported study's data as the author wrote it", () => {
+    expect(compileSpec(spec(), schemas).source).not.toContain(STEP_COLUMN);
   });
 });

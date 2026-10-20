@@ -2,7 +2,8 @@
   import { compileSpec, emitHtml, formatSource, SpecError, usesDevices } from "@tachisto/compiler";
   import type { Spec } from "@tachisto/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
-  import { FOCUS_GUARD, previewSpec } from "./preview.ts";
+  import { FOCUS_GUARD, readStepEvent, TRACE_HOOKS, tracedPreview } from "./preview.ts";
+  import { followPreview, resetPlayback } from "./playback.svelte.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
   import Flow from "./Flow.svelte";
@@ -44,8 +45,10 @@
       // The experiment as it will be exported decides what is valid and what the code view shows.
       // What runs in the frame is a preview of it, which never saves data.
       const exported = compileSpec(spec, schemas);
-      const running = compileSpec(previewSpec(spec, { from }), schemas, {
-        initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
+      const preview = tracedPreview(spec, { from });
+      const running = compileSpec(preview.spec, schemas, {
+        initEntries: `on_finish: () => { window.studioExperiment.finished = true; }, ${TRACE_HOOKS}`,
+        stepIds: preview.stepIds,
       });
       error = "";
       exportedSource = exported.source;
@@ -78,6 +81,28 @@
     const from = runningFrom;
     const timer = setTimeout(() => rebuild(JSON.parse(json) as Spec, from), REBUILD_DELAY_MS);
     return () => clearTimeout(timer);
+  });
+
+  let frame = $state<HTMLIFrameElement>();
+
+  // The frame says which step is on screen, so the timing strip can follow along. Only messages
+  // from this frame count, and only in the shape its hooks send.
+  $effect(() => {
+    const listen = (event: MessageEvent) => {
+      if (!frame || event.source !== frame.contentWindow) return;
+      const step = readStepEvent(event.data);
+      if (step) followPreview(step);
+    };
+    window.addEventListener("message", listen);
+    return () => window.removeEventListener("message", listen);
+  });
+
+  // A rebuilt, restarted or hidden preview has nothing on screen.
+  $effect(() => {
+    void html;
+    void runToken;
+    void view;
+    resetPlayback();
   });
 
   // Formatting is only worth doing when someone is looking at the code.
@@ -169,6 +194,7 @@
     {#if html}
       {#key `${html}-${runToken}`}
         <iframe
+          bind:this={frame}
           title="experiment preview"
           data-testid="preview"
           sandbox="allow-scripts allow-forms allow-modals"

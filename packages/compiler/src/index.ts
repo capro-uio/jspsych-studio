@@ -1,4 +1,4 @@
-export { compileSpec } from "./compile.ts";
+export { compileSpec, STEP_COLUMN } from "./compile.ts";
 export { usesRecordings } from "./recordings.ts";
 export { isEyeTrackingStep, usesDevices } from "./setup-order.ts";
 export { usesEyeTracking } from "./gaze.ts";
