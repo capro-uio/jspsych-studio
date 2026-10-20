@@ -56,8 +56,9 @@ function packagesAmong(files: PackageFile[]) {
   return [...seen.values()];
 }
 
-// A bar inside a cell would end it and shift every cell after it.
-const tableCell = (text: string) => text.replace(/\|/g, "\\|");
+// A bar inside a cell would end it and shift every cell after it, and a backslash before a bar
+// would undo the escape meant to stop that, so backslashes are escaped first.
+const tableCell = (text: string) => text.replace(/\\/g, "\\\\").replace(/\|/g, "\\|");
 
 /**
  * What a download that carries copies of these packages owes their authors: which packages they

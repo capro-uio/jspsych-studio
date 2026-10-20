@@ -257,6 +257,11 @@ describe("the notice of what a download carries", () => {
     expect(notice).toContain("| a | 1.0.0 | MIT\\|Apache | https://example.org/a |");
   });
 
+  it("keeps a backslash before a bar from undoing the bar's escape", () => {
+    const notice = thirdPartyNotice([{ ...file("a", "a.js"), license: "MIT\\|x" }]);
+    expect(notice).toContain("| MIT\\\\\\|x |");
+  });
+
   it("cannot end the comment it is written in early", () => {
     const comment = thirdPartyComment([file("a", "a.js", "https://example.org/a--->b---")]);
     expect(comment.slice(4, -3)).not.toContain("--");
