@@ -13,6 +13,8 @@ const jspsychFile = (path: string): PackageFile => ({
   version: schemas.jspsych,
   path,
   integrity: schemas.packages.jspsych.files[path],
+  license: schemas.packages.jspsych.license,
+  source: schemas.packages.jspsych.source,
 });
 
 describe("integrityOf", () => {
