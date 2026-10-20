@@ -27,7 +27,7 @@ export { DEFAULT_BACKGROUND, DEFAULT_TEXT, backgroundColor, textColor } from "./
 export type { CompileOptions } from "./compile.ts";
 export { formatSource } from "./format.ts";
 export { emitHtml } from "./targets/html.ts";
-export { projectFiles } from "./targets/project.ts";
+export { projectFiles, type ProjectOptions } from "./targets/project.ts";
 export {
   dataColumns,
   datasetDescription,

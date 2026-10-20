@@ -10,7 +10,7 @@
     type FlowBox,
   } from "./flow.ts";
   import { download, specFilename } from "./files.ts";
-  import { flowFigureSvg } from "./flow-figure.ts";
+  import { studyFlowFigure } from "./flow-figure.ts";
   import { project } from "./project.svelte.ts";
   import { ui } from "./ui.svelte.ts";
 
@@ -30,8 +30,11 @@
   }
 
   function downloadFigure() {
-    const name = specFilename(project.spec);
-    download(`${name}-flow.svg`, flowFigureSvg(layout, `${name}: study flow`), "image/svg+xml");
+    download(
+      `${specFilename(project.spec)}-flow.svg`,
+      studyFlowFigure(project.spec),
+      "image/svg+xml",
+    );
   }
 </script>
 

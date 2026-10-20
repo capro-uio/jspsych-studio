@@ -1,9 +1,12 @@
 import tokens from "@tachisto/brand/tokens.json" with { type: "json" };
+import type { Spec } from "@tachisto/compiler";
+import { specFilename } from "./files.ts";
 import {
   centred,
   cornerRadius,
   decisionOutline,
   edgePath,
+  layoutFlow,
   lineY,
   textX,
   type FlowBox,
@@ -114,4 +117,9 @@ export function flowFigureSvg(layout: FlowLayout, title: string) {
     `<g>${edges}</g>`,
     `</svg>`,
   ].join("\n");
+}
+
+/** A study's flow as the figure the flow view downloads and the project zip carries. */
+export function studyFlowFigure(spec: Spec) {
+  return flowFigureSvg(layoutFlow(spec), `${specFilename(spec)}: study flow`);
 }
