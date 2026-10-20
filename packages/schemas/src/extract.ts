@@ -106,16 +106,44 @@ export function integrityOf(bytes: Uint8Array) {
   return `sha384-${createHash("sha384").update(bytes).digest("base64")}`;
 }
 
-/** The installed version of a package and the hash of each of the files named inside it. */
+interface Manifest {
+  version: string;
+  license?: string;
+  repository?: string | { url?: string; directory?: string };
+  homepage?: string;
+}
+
+/**
+ * Where a package's source can be read: its repository, at the folder that holds it when it
+ * shares one with others, as jsPsych's plugins do; else its home page; else its npm page.
+ */
+export function sourceOf(packageName: string, manifest: Manifest) {
+  const repository =
+    typeof manifest.repository === "string" ? { url: manifest.repository } : manifest.repository;
+  const url = repository?.url
+    ?.replace(/^git\+/, "")
+    .replace(/^github:/, "https://github.com/")
+    .replace(/\.git$/, "");
+  if (url?.startsWith("https://")) {
+    return repository?.directory ? `${url}/tree/HEAD/${repository.directory}` : url;
+  }
+  return manifest.homepage ?? `https://www.npmjs.com/package/${packageName}`;
+}
+
+/** The installed version of a package, its licence and source, and the hash of each file named. */
 export function packageFiles(packageName: string, paths: string[]): PackageFiles {
   const root = packageRoot(packageName);
-  const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
-    version: string;
-  };
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Manifest;
+  if (!manifest.license) throw new Error(`${packageName} names no licence`);
   const files = Object.fromEntries(
     [...paths].sort().map((path) => [path, integrityOf(readFileSync(join(root, path)))]),
   );
-  return { version, files };
+  return {
+    version: manifest.version,
+    license: manifest.license,
+    source: sourceOf(packageName, manifest),
+    files,
+  };
 }
 
 /** Every file a page can load: jsPsych and its stylesheet, each plugin, each extension and library. */
