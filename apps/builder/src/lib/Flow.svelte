@@ -1,20 +1,21 @@
 <script lang="ts">
   import {
-    DECISION_INSET,
-    LINE_HEIGHT,
-    PAD_X,
-    PAD_Y,
+    centred,
+    cornerRadius,
+    decisionOutline,
+    edgePath,
     layoutFlow,
+    lineY,
+    textX,
     type FlowBox,
-    type FlowEdge,
   } from "./flow.ts";
+  import { download, specFilename } from "./files.ts";
+  import { flowFigureSvg } from "./flow-figure.ts";
   import { project } from "./project.svelte.ts";
   import { ui } from "./ui.svelte.ts";
 
   const layout = $derived(layoutFlow(project.spec));
   const selectionKey = $derived(project.selection?.join(".") ?? null);
-
-  const BASELINE = 12;
 
   function select(box: FlowBox) {
     if (!box.path) return;
@@ -28,34 +29,22 @@
     select(box);
   }
 
-  const centred = (box: FlowBox) => box.shape !== "frame";
-
-  function textX(box: FlowBox) {
-    return centred(box) ? box.x + box.width / 2 : box.x + PAD_X;
+  function downloadFigure() {
+    const name = specFilename(project.spec);
+    download(`${name}-flow.svg`, flowFigureSvg(layout, `${name}: study flow`), "image/svg+xml");
   }
-
-  function lineY(box: FlowBox, line: number) {
-    return box.y + PAD_Y + BASELINE + line * LINE_HEIGHT;
-  }
-
-  function decisionOutline(box: FlowBox) {
-    const { x, y, width, height } = box;
-    const middle = y + height / 2;
-    return (
-      `M ${x + DECISION_INSET} ${y} H ${x + width - DECISION_INSET} L ${x + width} ${middle} ` +
-      `L ${x + width - DECISION_INSET} ${y + height} H ${x + DECISION_INSET} L ${x} ${middle} Z`
-    );
-  }
-
-  const edgePath = (edge: FlowEdge) =>
-    edge.points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
-
-  const radius = (box: FlowBox) =>
-    box.shape === "terminal" || box.shape === "lane" ? box.height / 2 : 6;
 </script>
 
 <div class="flow" data-testid="flow">
-  <p class="hint" id="flow-hint">How the study runs, top to bottom. Select a step to edit it.</p>
+  <div class="bar">
+    <p class="hint" id="flow-hint">How the study runs, top to bottom. Select a step to edit it.</p>
+    <button
+      type="button"
+      onclick={downloadFigure}
+      title="An SVG for a paper or poster, in print colours"
+      data-testid="download-flow-svg">Download as SVG</button
+    >
+  </div>
   <svg
     width={layout.width}
     height={layout.height}
@@ -90,7 +79,7 @@
           y={box.y}
           width={box.width}
           height={box.height}
-          rx={radius(box)}
+          rx={cornerRadius(box)}
         />
       {/if}
       <text text-anchor={centred(box) ? "middle" : "start"} aria-hidden="true">
@@ -160,8 +149,19 @@
     border-radius: var(--radius-md);
     padding: 0.4rem;
   }
-  .hint {
+  .bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
     margin: 0 0 0.3rem;
+  }
+  .bar button {
+    flex: none;
+    font-size: 0.78rem;
+  }
+  .hint {
+    margin: 0;
     font-size: 0.78rem;
     color: var(--ink-muted);
   }

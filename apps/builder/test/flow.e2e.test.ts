@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -86,6 +87,21 @@ describe("the flow diagram", () => {
     );
     expect(await page.getByTestId("flow-repeat").count()).toBe(1);
     expect(await page.getByRole("button", { name: /^Text, answered with a key/ }).count()).toBe(3);
+    await page.close();
+  }, 120_000);
+
+  it("downloads the diagram as an SVG figure named after the study", async () => {
+    const page = await browser.newPage();
+    await openFlow(page, "flanker");
+
+    const [file] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByTestId("download-flow-svg").click(),
+    ]);
+    expect(file.suggestedFilename()).toMatch(/-flow\.svg$/);
+    const svg = readFileSync(await file.path(), "utf8");
+    expect(svg).toMatch(/^<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+    expect(svg).toContain("block · flanker_trials");
     await page.close();
   }, 120_000);
 
