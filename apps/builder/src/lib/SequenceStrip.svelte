@@ -2,7 +2,7 @@
   import { playback } from "./playback.svelte.ts";
   import { project } from "./project.svelte.ts";
   import { pluginSchema } from "./schemas.ts";
-  import { segmentHolds, sequenceAt, timingText, type Segment } from "./sequence.ts";
+  import { detailText, segmentHolds, sequenceAt, timingText, type Segment } from "./sequence.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
   const selectedKey = $derived(project.selection?.join(".") ?? "");
@@ -27,16 +27,14 @@
   });
 
   const isSelected = (segment: Segment) => segment.path?.join(".") === selectedKey;
-
-  const shown = (segment: Segment) =>
-    segment.shownFor &&
-    (segment.shownFor.min === segment.shownFor.max
-      ? `shown ${segment.shownFor.min} ms`
-      : `shown ${segment.shownFor.min}–${segment.shownFor.max} ms`);
 </script>
 
 {#if sequence}
-  <section class="sequence" data-testid="sequence" aria-label="Timing of the steps in this block">
+  <section
+    class="sequence"
+    data-testid="sequence"
+    aria-label={`Timing of the steps in this ${sequence.kind}`}
+  >
     <p class="caption">
       One pass through this {sequence.kind === "block" ? "block" : "loop"}
       {#if active !== -1}<span class="live" data-testid="sequence-live"
@@ -78,10 +76,8 @@
             </span>
           {/if}
           <span class="timing">{timingText(segment)}</span>
-          {#if segment.answer || segment.shownFor}
-            <span class="detail"
-              >{[shown(segment), segment.answer].filter(Boolean).join(" · ")}</span
-            >
+          {#if detailText(segment)}
+            <span class="detail">{detailText(segment)}</span>
           {/if}
         </li>
       {/each}

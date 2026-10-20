@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import {
+  detailText,
   segmentFor,
   segmentHolds,
   sequenceAt,
@@ -94,6 +95,7 @@ describe("segmentFor", () => {
       keyTrial({ stimulus: "RED", stimulus_duration: 200, trial_duration: 1500 }),
     );
     expect(flashed.shownFor).toEqual({ min: 200, max: 200 });
+    expect(detailText(flashed)).toBe("shown 200 ms · any key");
   });
 
   it("names keys from a column, a long list of keys, and buttons", () => {

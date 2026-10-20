@@ -223,3 +223,9 @@ export function segmentHolds(segment: Segment, step: string) {
   const own = segment.path.join(".");
   return step === own || step.startsWith(`${own}.`);
 }
+
+/** What else the strip says about a segment: how long its stimulus shows, and how it is answered. */
+export function detailText(segment: Segment) {
+  const shown = segment.shownFor && `shown ${ms(segment.shownFor)}`;
+  return [shown, segment.answer].filter(Boolean).join(" · ");
+}
