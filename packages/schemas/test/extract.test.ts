@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "../src/files.ts";
+import { BROWSER_BUNDLE, integrityOf, JSPSYCH_STYLESHEET } from "../src/files.ts";
 import {
   assertExtracted,
   curateParameters,
@@ -14,7 +14,6 @@ import {
   extractSchemas,
   filesFor,
   functionSource,
-  integrityOf,
   packageFiles,
   sourceOf,
   pluginPackages,
@@ -352,47 +351,46 @@ describe("functionSource", () => {
 });
 
 describe("integrityOf", () => {
-  it("writes the sha384 hash a browser checks a script against", () => {
-    expect(integrityOf(new TextEncoder().encode("abc"))).toBe(
+  it("writes the sha384 hash a browser checks a script against", async () => {
+    expect(await integrityOf(new TextEncoder().encode("abc"))).toBe(
       "sha384-ywB1P0WjXou1oD1pmsZQBycsMqsO3tFjGotgWkP/W+2AhgcroefMI1i67KE0yCWn",
     );
   });
 });
 
 describe("packageFiles", () => {
-  it("hashes each file as it is installed, under the installed version", () => {
-    const { version, files } = packageFiles("jspsych", [JSPSYCH_STYLESHEET]);
+  it("hashes each file as it is installed, under the installed version", async () => {
+    const { version, files } = await packageFiles("jspsych", [JSPSYCH_STYLESHEET]);
     const require = createRequire(import.meta.url);
     const css = readFileSync(require.resolve(`jspsych/${JSPSYCH_STYLESHEET}`));
     expect(version).toBe(report.jspsych);
-    expect(files).toEqual({ [JSPSYCH_STYLESHEET]: integrityOf(css) });
+    expect(files).toEqual({ [JSPSYCH_STYLESHEET]: await integrityOf(new Uint8Array(css)) });
   });
 
-  it("says what licence a package is under and where its source is", () => {
-    expect(packageFiles("jspsych", [JSPSYCH_STYLESHEET])).toMatchObject({
+  it("says what licence a package is under and where its source is", async () => {
+    expect(await packageFiles("jspsych", [JSPSYCH_STYLESHEET])).toMatchObject({
       license: "MIT",
       source: "https://github.com/jspsych/jsPsych/tree/HEAD/packages/jspsych",
     });
-    expect(packageFiles("webgazer", ["dist/webgazer.js"])).toMatchObject({
+    expect(await packageFiles("webgazer", ["dist/webgazer.js"])).toMatchObject({
       license: "GPL-3.0-or-later",
       source: "https://github.com/brownhci/WebGazer",
     });
   });
 
-  it("refuses a file the package does not have", () => {
-    expect(() => packageFiles("jspsych", ["dist/not-there.js"])).toThrow(/not-there/);
+  it("refuses a file the package does not have", async () => {
+    await expect(packageFiles("jspsych", ["dist/not-there.js"])).rejects.toThrow(/not-there/);
   });
 
-  it("refuses a package that is not installed", () => {
-    expect(() => packageFiles("@jspsych/plugin-not-a-plugin", [BROWSER_BUNDLE])).toThrow();
+  it("refuses a package that is not installed", async () => {
+    await expect(packageFiles("@jspsych/plugin-not-a-plugin", [BROWSER_BUNDLE])).rejects.toThrow();
   });
 });
 
 const extensions = await extractExtensions(["@jspsych/extension-webgazer"]);
+const files = await filesFor(report.schemas, extensions);
 
 describe("filesFor", () => {
-  const files = filesFor(report.schemas, extensions);
-
   it("carries jsPsych's browser build and its stylesheet", () => {
     expect(Object.keys(files.jspsych.files)).toEqual([JSPSYCH_STYLESHEET, BROWSER_BUNDLE]);
   });
@@ -427,6 +425,16 @@ describe("sourceOf", () => {
     expect(sourceOf("a", { version: "1", repository: { url: "git+https://x.org/a.git" } })).toBe(
       "https://x.org/a",
     );
+  });
+
+  it("takes only a plain web address, since it is written into a download's notice", () => {
+    expect(
+      sourceOf("a", {
+        version: "1",
+        repository: "https://x.org/a|b",
+        homepage: "https://a.org/<x>",
+      }),
+    ).toBe("https://www.npmjs.com/package/a");
   });
 
   it("falls back on the home page, then the npm page, without a web address for the source", () => {
