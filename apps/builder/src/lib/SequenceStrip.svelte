@@ -1,8 +1,10 @@
 <script lang="ts">
+  import { download, specFilename } from "./files.ts";
   import { playback } from "./playback.svelte.ts";
   import { project } from "./project.svelte.ts";
   import { pluginSchema } from "./schemas.ts";
   import { detailText, segmentHolds, sequenceAt, timingText, type Segment } from "./sequence.ts";
+  import { sequenceFigure, type Arrangement } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
   const selectedKey = $derived(project.selection?.join(".") ?? "");
@@ -27,6 +29,17 @@
   });
 
   const isSelected = (segment: Segment) => segment.path?.join(".") === selectedKey;
+
+  let arrangement = $state<Arrangement>("stack");
+
+  function downloadFigure() {
+    if (!sequence) return;
+    download(
+      `${specFilename(project.spec)}-${sequence.kind}-${sequence.path.join("-")}.svg`,
+      sequenceFigure(project.spec, sequence, arrangement),
+      "image/svg+xml",
+    );
+  }
 </script>
 
 {#if sequence}
@@ -35,12 +48,30 @@
     data-testid="sequence"
     aria-label={`Timing of the steps in this ${sequence.kind}`}
   >
-    <p class="caption">
-      One pass through this {sequence.kind === "block" ? "block" : "loop"}
-      {#if active !== -1}<span class="live" data-testid="sequence-live"
-          >· following the preview</span
-        >{/if}
-    </p>
+    <div class="heading">
+      <p class="caption">
+        One pass through this {sequence.kind === "block" ? "block" : "loop"}
+        {#if active !== -1}<span class="live" data-testid="sequence-live"
+            >· following the preview</span
+          >{/if}
+      </p>
+      <div class="figure" role="group" aria-label="Figure for a paper">
+        <select
+          bind:value={arrangement}
+          aria-label="Figure layout"
+          data-testid="sequence-figure-layout"
+        >
+          <option value="stack">Screens stacked</option>
+          <option value="row">Screens in a row</option>
+        </select>
+        <button
+          type="button"
+          onclick={downloadFigure}
+          title="An SVG of these steps as screens, for a paper or poster"
+          data-testid="download-sequence-svg">Download figure</button
+        >
+      </div>
+    </div>
     <ol class="track">
       {#each sequence.segments as segment, index (index)}
         <li
@@ -93,6 +124,18 @@
     padding-bottom: var(--space-3);
     margin-bottom: var(--space-3);
     border-bottom: 1px solid var(--line);
+  }
+  .heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+  .figure {
+    display: flex;
+    gap: var(--space-1);
+    font-size: 12px;
   }
   .caption {
     margin: 0;

@@ -1,5 +1,5 @@
-import tokens from "@tachisto/brand/tokens.json" with { type: "json" };
 import { escapeHtmlText, type Spec } from "@tachisto/compiler";
+import { ARROW_ID, figureSvg, ink } from "./figure.ts";
 import { specFilename } from "./files.ts";
 import {
   centred,
@@ -12,16 +12,6 @@ import {
   type FlowBox,
   type FlowLayout,
 } from "./flow.ts";
-
-const LIGHT_INKS = new Map(tokens.color.tokens.map((token) => [token.name, token.value.light]));
-
-function ink(name: string) {
-  const colour = LIGHT_INKS.get(name);
-  if (!colour) throw new Error(`no brand colour named ${name}`);
-  return colour;
-}
-
-const FONT = "'Atkinson Hyperlegible', Arial, Helvetica, sans-serif";
 
 /** The tint app.css mixes each flow hue into raised paper with, so the figure needs no CSS. */
 export const FLOW_TINT = 0.09;
@@ -90,17 +80,13 @@ function boxSvg(box: FlowBox) {
   return `<g>${shape}<text text-anchor="${anchor}"${style}>${text}</text></g>`;
 }
 
-/**
- * The flow as a standalone SVG for a paper or a poster: every colour and font is written on the
- * element it paints, so it opens the same in a browser, Inkscape, Illustrator or a journal's
- * system, and stays in the light inks whatever theme the builder is in.
- */
+/** The flow as a standalone SVG figure. */
 export function flowFigureSvg(layout: FlowLayout, title: string) {
   const edges = layout.edges
     .map((edge) => {
       const stroke = edge.repeat ? ink("flow-loop") : ink("ink-muted");
       const dash = edge.repeat ? ` stroke-dasharray="5 3"` : "";
-      const arrow = edge.arrow ? ` marker-end="url(#arrow)"` : "";
+      const arrow = edge.arrow ? ` marker-end="url(#${ARROW_ID})"` : "";
       const path = `<path d="${edgePath(edge)}" fill="none" stroke="${stroke}" stroke-width="1.25"${dash}${arrow}/>`;
       const label =
         edge.label && edge.labelAt
@@ -109,15 +95,12 @@ export function flowFigureSvg(layout: FlowLayout, title: string) {
       return path + label;
     })
     .join("");
-  return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${layout.width}" height="${layout.height}" viewBox="0 0 ${layout.width} ${layout.height}" font-family="${FONT}" font-size="12" role="img">`,
-    `<title>${escapeHtmlText(title)}</title>`,
-    `<defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${ink("ink-muted")}"/></marker></defs>`,
-    `<rect width="100%" height="100%" fill="#ffffff"/>`,
-    ...layout.boxes.map(boxSvg),
-    `<g>${edges}</g>`,
-    `</svg>`,
-  ].join("\n");
+  return figureSvg({
+    width: layout.width,
+    height: layout.height,
+    title,
+    body: [...layout.boxes.map(boxSvg), `<g>${edges}</g>`],
+  });
 }
 
 /** A study's flow as the figure the flow view downloads and the project zip carries. */
