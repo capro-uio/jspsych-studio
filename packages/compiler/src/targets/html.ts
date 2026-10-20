@@ -60,11 +60,27 @@ export function filesLoadedWhileRunning(result: CompileResult) {
   return result.files.filter((file) => !named.has(packageFileKey(file)));
 }
 
-// Text written inside a script or style element ends it wherever it spells the closing tag, so
-// that spelling is broken up; inside the JavaScript and CSS these files hold, the escape is
-// harmless.
-const insideElement = (text: string, tag: string) =>
-  text.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1").replace(/<!--/g, "<\\!--");
+// Text inside an element can end it, or for a script change how the rest is read: a script
+// element ends at "</script", and "<!--" or "<script" inside one shift the browser into reading
+// it differently; a style element ends at "</style". Rewriting these could change what a file
+// does, so a file that holds one is refused instead. Other tags are only text there, such as the
+// "</style>" several jsPsych plugins build into their own markup.
+const BREAKS_OUT = { script: /<\/script|<script|<!--/i, style: /<\/style/i };
+
+export type Element = keyof typeof BREAKS_OUT;
+
+/** What in a file would break out of the element it is written into, if anything. */
+export function breaksOut(text: string, element: Element) {
+  return BREAKS_OUT[element].exec(text)?.[0] ?? null;
+}
+
+function insideElement(text: string, element: Element, key: string) {
+  const found = breaksOut(text, element);
+  if (found) {
+    throw new Error(`${key} holds "${found}", so it cannot be written safely into the page`);
+  }
+  return text;
+}
 
 function urlOf(file: PageFile, base: string) {
   return base === "cdn"
@@ -73,16 +89,17 @@ function urlOf(file: PageFile, base: string) {
 }
 
 function tagFor(file: PageFile, result: CompileResult, options: HtmlTargetOptions) {
-  const isStylesheet = file.path === JSPSYCH_STYLESHEET;
+  const isStylesheet = file.path.endsWith(".css");
   const name = file.named ? ` ${PACKAGE_ATTRIBUTE}="${escapeHtmlText(file.package)}"` : "";
   if (options.inline) {
     const text = options.inline[packageFileKey(file)];
     if (text === undefined) throw new Error(`no copy of ${packageFileKey(file)} to write in`);
+    const contents = insideElement(text, isStylesheet ? "style" : "script", packageFileKey(file));
     return isStylesheet
-      ? `<style>\n${insideElement(text, "style")}\n</style>`
-      : `<script${name}>\n${insideElement(text, "script")}\n</script>`;
+      ? `<style>\n${contents}\n</style>`
+      : `<script${name}>\n${contents}\n</script>`;
   }
-  const base = options.base ?? "cdn";
+  const base = (options.base ?? "cdn").replace(/\/+$/, "");
   const url = urlOf(file, base);
   // A CDN file is checked against the hash recorded for it, so a changed copy is refused rather
   // than run; files beside the page are the author's own.
