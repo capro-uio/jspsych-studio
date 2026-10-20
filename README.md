@@ -171,7 +171,8 @@ Webcam eye tracking is far coarser than a lab eye tracker and needs good light a
 it suits which part of the screen someone looks at more than which word. The video never leaves
 the participant's computer: only the gaze coordinates are kept, and WebGazer is told not to store
 what it learns in the browser, where the next person at a shared computer would inherit it. WebGazer is GPL-3.0
-licensed, and an exported study loads it from unpkg, as it does jsPsych. Like recording, it cannot
+licensed; an exported study loads it from unpkg, as it does jsPsych, unless the download is
+self-contained, when it carries a copy. Like recording, it cannot
 run in the preview.
 
 ## Ending early
@@ -283,10 +284,12 @@ frame has nothing of yours to send.
   upload falls back to a download so a participant's data is never lost silently. Balanced group
   assignment and Latin-square task order ask that same service for the next participant's
   condition, since only it can count participants.
-- **Media travels with the experiment.** Media is embedded in the project and in the exported file,
-  so an experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB
-  each). jsPsych and its plugins still load from unpkg at pinned versions; downloads that carry
-  them too are tracked in #87.
+- **Self-contained downloads.** Media is embedded in the project and in the exported file (files
+  are capped at 5 MB each), and by default a download carries jsPsych and its plugins too, so the
+  study loads nothing from elsewhere. Those copies are fetched from unpkg at pinned versions and
+  kept only if they match hashes recorded from the npm packages when Tachisto was built; a study
+  that loads from unpkg instead checks the same hashes in the browser. Eye tracking loads a model
+  as it runs, so it is self-contained as a project folder, not as a single file.
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a
   collaborator. The builder shows the generated code as you edit.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
