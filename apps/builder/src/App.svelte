@@ -11,7 +11,11 @@
   import { setTheme, theme } from "./lib/theme.svelte.ts";
   import { download, specFilename } from "./lib/files.ts";
   import HeaderMenu from "./lib/HeaderMenu.svelte";
-  import { buildExperimentHtml, buildProjectZip } from "./lib/experiment.svelte.ts";
+  import {
+    buildExperimentHtml,
+    buildProjectZip,
+    type FigureProgress,
+  } from "./lib/experiment.svelte.ts";
   import { downloads, setSelfContained } from "./lib/downloads.svelte.ts";
   import { backgroundColor, textColor } from "@tachisto/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
@@ -65,9 +69,15 @@
     );
   }
 
+  // Picturing each block for its figure is most of the wait, so the button says how far along.
+  let picturing = $state<FigureProgress | null>(null);
+
   function downloadEverything() {
     return prepareDownload(async () => {
-      const zip = await buildProjectZip(downloads);
+      const zip = await buildProjectZip({
+        ...downloads,
+        onProgress: (progress) => (picturing = progress),
+      }).finally(() => (picturing = null));
       download(`${specFilename(project.spec)}.zip`, zip, "application/zip");
     });
   }
@@ -141,7 +151,11 @@
     aria-busy={preparing}
     onclick={downloadEverything}
   >
-    {preparing ? "Preparing download…" : "Download experiment"}
+    {picturing
+      ? `Picturing ${picturing.done + 1} of ${picturing.total}…`
+      : preparing
+        ? "Preparing download…"
+        : "Download experiment"}
   </button>
 
   <HeaderMenu label="More actions" id={TOUR_HOME_ID}>

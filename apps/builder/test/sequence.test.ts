@@ -3,6 +3,7 @@ import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import {
   activeSegment,
+  containerName,
   containerPaths,
   detailText,
   rowLabels,
@@ -208,6 +209,14 @@ describe("containerPaths", () => {
     for (const path of containerPaths(study().timeline)) {
       expect(sequenceAt(study(), path, pluginSchema)?.path).toEqual(path);
     }
+  });
+});
+
+describe("containerName", () => {
+  it("names a block by its table, a loop by its id or as a loop", () => {
+    expect(containerName(study(), [1])).toBe("words");
+    expect(containerName(study(), [2, 0, 0])).toBe("loop");
+    expect(containerName(study(), [0])).toBe("steps");
   });
 });
 

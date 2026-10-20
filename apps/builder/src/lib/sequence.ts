@@ -93,6 +93,17 @@ export function containerPaths(timeline: SpecNode[], path: number[] = []): numbe
   });
 }
 
+/**
+ * What a block or loop at a path is called, for naming its figure: a block by the conditions
+ * table it runs, a loop by its id, or by what it is.
+ */
+export function containerName(spec: Spec, path: number[]) {
+  const node = nodesAlong(spec.timeline, path).at(-1)?.node;
+  if (node?.kind === "block") return node.conditions;
+  if (node?.kind === "loop") return node.id ?? "loop";
+  return "steps";
+}
+
 /** The conditions table a step reads from: that of the innermost block around it. */
 function tableFor(along: { node: SpecNode }[]) {
   for (const { node } of [...along].reverse()) {

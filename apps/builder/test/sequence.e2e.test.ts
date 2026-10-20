@@ -141,9 +141,9 @@ describe("the timing strip", () => {
       page.getByTestId("download-zip").click(),
     ]);
     const files = unzipSync(readFileSync(await file.path()));
-    const figure = strFromU8(files["figures/block-2.svg"]);
+    const figure = strFromU8(files["figures/block-stroop_trials.svg"]);
     expect(figure.match(/<image /g) ?? []).toHaveLength(2);
-    expect(strFromU8(files["README.md"])).toContain("`block-2.svg`");
+    expect(strFromU8(files["README.md"])).toContain("`block-stroop_trials.svg`");
     await page.close();
   }, 150_000);
 

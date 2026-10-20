@@ -16,8 +16,10 @@ describe("buildProjectZip", () => {
     loadSpec(flanker as Spec);
     const files = unzipSync(await buildProjectZip({ selfContained: false, capture: pictureFirst }));
     expect(strFromU8(files["figures/flow.svg"])).toBe(studyFlowFigure(exportedSpec()));
-    expect(strFromU8(files["figures/block-1-0.svg"])).toContain("<image");
-    expect(strFromU8(files["README.md"])).toContain("`flow.svg`, `loop-1.svg`, `block-1-0.svg`");
+    expect(strFromU8(files["figures/block-flanker_trials.svg"])).toContain("<image");
+    expect(strFromU8(files["README.md"])).toContain(
+      "`flow.svg`, `loop-practice.svg`, `block-flanker_trials.svg`",
+    );
     expect(files["index.html"]).toBeDefined();
   });
 });
@@ -28,17 +30,53 @@ const pictureFirst = vi.fn((_spec: Spec, sequence: { segments: unknown[] }) =>
 );
 
 describe("studyFigures", () => {
-  it("draws the flow and each block and loop, pictured", async () => {
-    const figures = await studyFigures(flanker as Spec, pictureFirst);
-    expect(Object.keys(figures)).toEqual(["flow.svg", "loop-1.svg", "block-1-0.svg"]);
-    expect(figures["block-1-0.svg"]).toContain(`xlink:href="${PNG}"`);
+  it("draws the flow and each block and loop, pictured, named after its conditions or the loop", async () => {
+    const figures = await studyFigures(flanker as Spec, { capture: pictureFirst });
+    expect(Object.keys(figures)).toEqual([
+      "flow.svg",
+      "loop-practice.svg",
+      "block-flanker_trials.svg",
+    ]);
+    expect(figures["block-flanker_trials.svg"]).toContain(`xlink:href="${PNG}"`);
   });
 
   it("still draws a block whose screens could not be pictured", async () => {
     const failing = () => Promise.reject(new Error("no frame"));
-    const figures = await studyFigures(flanker as Spec, failing);
-    expect(figures["block-1-0.svg"]).toContain("<svg");
-    expect(figures["block-1-0.svg"]).not.toContain("<image");
+    const figures = await studyFigures(flanker as Spec, { capture: failing });
+    expect(figures["block-flanker_trials.svg"]).toContain("<svg");
+    expect(figures["block-flanker_trials.svg"]).not.toContain("<image");
+  });
+
+  it("stops picturing once a block comes back with no screen at all, as when jsPsych is out of reach", async () => {
+    const nothing = vi.fn(() => Promise.resolve([] as (string | undefined)[]));
+    const figures = await studyFigures(flanker as Spec, { capture: nothing });
+    expect(nothing).toHaveBeenCalledTimes(1);
+    expect(Object.keys(figures)).toHaveLength(3);
+  });
+
+  it("says how far along it is", async () => {
+    const progress: number[] = [];
+    await studyFigures(flanker as Spec, {
+      capture: pictureFirst,
+      onProgress: ({ done, total }) => progress.push(done, total),
+    });
+    expect(progress).toEqual([0, 2, 1, 2]);
+  });
+
+  it("tells apart two blocks that run the same table", async () => {
+    const twice: Spec = {
+      name: "twice",
+      conditions: { words: [{ word: "RED" }] },
+      timeline: [0, 1].map(() => ({
+        kind: "block" as const,
+        conditions: "words",
+        children: [
+          { kind: "trial" as const, plugin: "html-keyboard-response", params: { stimulus: "x" } },
+        ],
+      })),
+    };
+    const figures = await studyFigures(twice, { capture: pictureFirst });
+    expect(Object.keys(figures)).toEqual(["flow.svg", "block-words.svg", "block-words-1.svg"]);
   });
 });
 
