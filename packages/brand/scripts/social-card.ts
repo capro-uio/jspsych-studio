@@ -8,9 +8,13 @@ export const CARD_SIZE = { width: 1200, height: 630 };
 
 export const CARD_PATH = join(import.meta.dirname, "..", "logos", "tachisto-social-card.png");
 
-const light = Object.fromEntries(
-  tokens.color.tokens.map((token) => [token.name, token.value.light]),
-);
+const LIGHT_INKS = new Map(tokens.color.tokens.map((token) => [token.name, token.value.light]));
+
+function light(name: string) {
+  const colour = LIGHT_INKS.get(name);
+  if (!colour) throw new Error(`no brand colour named ${name}`);
+  return colour;
+}
 
 function fontFace(family: string, file: string, weight: number) {
   const bytes = readFileSync(fileURLToPath(import.meta.resolve(file)));
@@ -40,20 +44,20 @@ body {
   width: ${CARD_SIZE.width}px; height: ${CARD_SIZE.height}px;
   padding: 64px 72px;
   display: flex; flex-direction: column; justify-content: space-between;
-  background: ${light.paper}; color: ${light.ink};
+  background: ${light("paper")}; color: ${light("ink")};
   font-family: "Atkinson Hyperlegible", sans-serif;
 }
 .wordmark svg { height: 64px; width: auto; display: block; }
 h1 { font-family: "Jost", sans-serif; font-weight: 500; font-size: 68px; line-height: 1.08; letter-spacing: -0.01em; max-width: 960px; }
-.lede { margin-top: 20px; font-size: 28px; color: ${light["ink-muted"]}; }
-.track { display: flex; gap: 6px; padding: 14px; background: ${light["paper-sunk"]}; border-radius: 6px; }
+.lede { margin-top: 20px; font-size: 28px; color: ${light("ink-muted")}; }
+.track { display: flex; gap: 6px; padding: 14px; background: ${light("paper-sunk")}; border-radius: 6px; }
 .block { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .name { height: 52px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border-radius: 3px; font-weight: 700; font-size: 22px; }
-.timing { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 18px; color: ${light["ink-muted"]}; padding-left: 2px; }
-.fixation .name { background: ${light["paper-raised"]}; }
-.stimulus .name { background: ${light["stimulus-fill"]}; color: ${light["on-stimulus"]}; }
-.mask .name { background: ${light.mask}; }
-.response .name { background: ${light["paper-raised"]}; border: 2px dashed ${light["line-strong"]}; }
+.timing { font-family: "IBM Plex Mono", monospace; font-weight: 500; font-size: 18px; color: ${light("ink-muted")}; padding-left: 2px; }
+.fixation .name { background: ${light("paper-raised")}; }
+.stimulus .name { background: ${light("stimulus-fill")}; color: ${light("on-stimulus")}; }
+.mask .name { background: ${light("mask")}; }
+.response .name { background: ${light("paper-raised")}; border: 2px dashed ${light("line-strong")}; }
 .cross { position: relative; width: 14px; height: 14px; flex: none; }
 .cross::before, .cross::after { content: ""; position: absolute; background: currentColor; }
 .cross::before { left: 6px; width: 2px; height: 14px; }
