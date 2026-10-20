@@ -1,8 +1,8 @@
 /* The flow diagram gives each kind of block a hue of its own so it reads at a glance, on a fill
    mixed from the brand's raised paper so it follows the theme. */
 :root {
-  --flow-block-stroke: light-dark(#3f6a9a, #86a5e3);
-  --flow-loop-stroke: light-dark(#7a4f9c, #c09be3);
+  --flow-block-stroke: var(--flow-block);
+  --flow-loop-stroke: var(--flow-loop);
   --flow-split-stroke: var(--caution);
   --flow-checkpoint-stroke: var(--signal);
   --flow-block-fill: color-mix(in srgb, var(--flow-block-stroke) 9%, var(--paper-raised));

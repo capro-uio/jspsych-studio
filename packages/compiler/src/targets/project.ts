@@ -24,6 +24,12 @@ export type ProjectFile = string | Uint8Array;
 const SOURCE_FILE = "experiment.js";
 const PROJECT_FILE = "experiment.json";
 const METADATA_FILE = "dataset_description.json";
+const FIGURES_DIR = "figures";
+
+export interface ProjectOptions extends Partial<MetadataOptions> {
+  /** Figures of the study by file name, such as the builder's flow diagram, saved under figures/. */
+  figures?: Record<string, string>;
+}
 
 function decodeDataUrl(url: string) {
   const comma = url.indexOf(",");
@@ -34,7 +40,13 @@ function decodeDataUrl(url: string) {
   return Uint8Array.from(binary, (character) => character.charCodeAt(0));
 }
 
-function readme(spec: Spec, assetCount: number, options: MetadataOptions) {
+function figuresLine(names: string[]) {
+  if (names.length === 0) return "";
+  const listed = names.map((name) => `\`${name}\``).join(", ");
+  return `- \`${FIGURES_DIR}/\` — figures of the study for a paper or poster, as SVG: ${listed}\n`;
+}
+
+function readme(spec: Spec, assetCount: number, figureNames: string[], options: MetadataOptions) {
   return `# ${spec.name}
 
 Built with ${generatorLabel(options.tachisto)}.
@@ -51,7 +63,7 @@ department uses — and give participants the address.
 - \`${SOURCE_FILE}\` — the experiment itself, as jsPsych. Yours to read and change
 - \`${PROJECT_FILE}\` — the project file; open this in the builder to keep editing
 - \`${METADATA_FILE}\` — what the data will contain, in [Psych-DS](https://psych-ds.github.io/) form
-${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment shows\n` : ""}
+${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment shows\n` : ""}${figuresLine(figureNames)}
 ## Where the data goes
 
 ${
@@ -108,7 +120,7 @@ function earlyEndingsNote(spec: Spec) {
 export async function projectFiles(
   spec: Spec,
   bundle: SchemaBundle,
-  options: Partial<MetadataOptions> = {},
+  { figures = {}, ...options }: ProjectOptions = {},
 ) {
   const compiled = compileSpec(spec, bundle, { assets: "files" });
   const metadata: MetadataOptions = { jspsych: compiled.jspsych, ...options };
@@ -123,8 +135,12 @@ export async function projectFiles(
     [SOURCE_FILE]: sourceHeader(spec, metadata) + (await formatSource(compiled.source)),
     [PROJECT_FILE]: `${JSON.stringify(spec, null, 2)}\n`,
     [METADATA_FILE]: `${JSON.stringify(datasetDescription(spec, compiled.columns, metadata), null, 2)}\n`,
-    "README.md": readme(spec, spec.assets?.length ?? 0, metadata),
+    "README.md": readme(spec, spec.assets?.length ?? 0, Object.keys(figures), metadata),
   };
+
+  for (const [name, contents] of Object.entries(figures)) {
+    files[`${FIGURES_DIR}/${name}`] = contents;
+  }
 
   for (const asset of spec.assets ?? []) {
     files[assetPath(asset)] = decodeDataUrl(asset.url);

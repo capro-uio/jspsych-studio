@@ -1,6 +1,7 @@
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { assemblePages, repositoryLayout, type PagesSources } from "../scripts/pages.ts";
 
@@ -66,5 +67,33 @@ describe("the website", () => {
 
   it("uses paths relative to itself, since it is served from a subfolder", () => {
     expect(html).not.toMatch(/(?:href|src)="\/[^/]/);
+  });
+});
+
+describe("the link preview", () => {
+  const html = readFileSync(join(import.meta.dirname, "..", "index.html"), "utf8");
+  const meta = (property: string) =>
+    new RegExp(`<meta\\s+(?:property|name)="${property}"\\s+content="([^"]*)"`).exec(html)?.[1];
+  const home = "https://www.capro.dev/tachisto/";
+
+  it("names the address the site is served from", () => {
+    expect(meta("og:url")).toBe(home);
+    expect(html).toContain(`<link rel="canonical" href="${home}" />`);
+  });
+
+  it("points at an image on the site by its full address, since crawlers do not resolve paths", () => {
+    const image = meta("og:image");
+    expect(image?.startsWith(home)).toBe(true);
+    const file = fileURLToPath(
+      import.meta.resolve(`@tachisto/brand/logos/${image!.slice(home.length)}`),
+    );
+    const header = readFileSync(file).subarray(0, 24);
+    expect(header.readUInt32BE(16)).toBe(Number(meta("og:image:width")));
+    expect(header.readUInt32BE(20)).toBe(Number(meta("og:image:height")));
+  });
+
+  it("describes the image and asks for the large card", () => {
+    expect(meta("og:image:alt")).toBeTruthy();
+    expect(meta("twitter:card")).toBe("summary_large_image");
   });
 });

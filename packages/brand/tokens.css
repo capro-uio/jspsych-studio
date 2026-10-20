@@ -17,6 +17,8 @@
   --stimulus-tint: light-dark(#fbe3da, #3a2420);
   --mask: light-dark(#b7bfc0, #4a5f62);
   --signal: light-dark(#1f6e7f, #5fb8c9);
+  --flow-block: light-dark(#3f6a9a, #86a5e3);
+  --flow-loop: light-dark(#7a4f9c, #c09be3);
   --caution: light-dark(#8a5a00, #e0a84a);
   --danger: light-dark(#a3243b, #f4a3b4);
   --shadow-pop: 0 4px 16px light-dark(rgba(28, 43, 45, 0.12), rgba(0, 0, 0, 0.45));

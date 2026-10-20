@@ -74,6 +74,32 @@ const LOOP_GUTTER = 22;
 const LOOP_TAIL = 30;
 const LANE_GAP = 24;
 const MARGIN = 16;
+const BASELINE = 12;
+
+export const centred = (box: FlowBox) => box.shape !== "frame";
+
+export function textX(box: FlowBox) {
+  return centred(box) ? box.x + box.width / 2 : box.x + PAD_X;
+}
+
+export function lineY(box: FlowBox, line: number) {
+  return box.y + PAD_Y + BASELINE + line * LINE_HEIGHT;
+}
+
+export function decisionOutline(box: FlowBox) {
+  const { x, y, width, height } = box;
+  const middle = y + height / 2;
+  return (
+    `M ${x + DECISION_INSET} ${y} H ${x + width - DECISION_INSET} L ${x + width} ${middle} ` +
+    `L ${x + width - DECISION_INSET} ${y + height} H ${x + DECISION_INSET} L ${x} ${middle} Z`
+  );
+}
+
+export const edgePath = (edge: FlowEdge) =>
+  edge.points.map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`).join(" ");
+
+export const cornerRadius = (box: FlowBox) =>
+  box.shape === "terminal" || box.shape === "lane" ? box.height / 2 : 6;
 
 function plural(count: number, one: string, many = `${one}s`) {
   return `${count} ${count === 1 ? one : many}`;
