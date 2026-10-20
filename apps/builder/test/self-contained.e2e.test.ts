@@ -19,12 +19,18 @@ afterAll(async () => {
   await server?.close();
 });
 
+/** The builder with the flanker example open and the menu showing the download option. */
+async function openMenu() {
+  const page = await browser.newPage();
+  await page.goto(appUrl);
+  await page.getByTestId("example-flanker").click();
+  await page.getByTestId("header-menu").click();
+  return page;
+}
+
 describe("a self-contained download", () => {
   it("runs in a browser that can reach nothing outside it", async () => {
-    const builder = await browser.newPage();
-    await builder.goto(appUrl);
-    await builder.getByTestId("example-flanker").click();
-    await builder.getByTestId("header-menu").click();
+    const builder = await openMenu();
     expect(await builder.getByTestId("self-contained").isChecked()).toBe(true);
     const [file] = await Promise.all([
       builder.waitForEvent("download"),
@@ -48,10 +54,7 @@ describe("a self-contained download", () => {
   }, 120_000);
 
   it("loads from unpkg once it is turned off, and remembers that", async () => {
-    const page = await browser.newPage();
-    await page.goto(appUrl);
-    await page.getByTestId("example-flanker").click();
-    await page.getByTestId("header-menu").click();
+    const page = await openMenu();
     await page.getByTestId("self-contained").uncheck();
     const [file] = await Promise.all([
       page.waitForEvent("download"),

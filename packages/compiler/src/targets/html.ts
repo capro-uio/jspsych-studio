@@ -58,6 +58,20 @@ export function filesLoadedWhileRunning(result: CompileResult) {
   return result.files.filter((file) => !named.has(packageFileKey(file)));
 }
 
+/**
+ * Refuses a study that loads files while it runs, such as the eye tracker's model, since a page
+ * carrying its scripts inside it has no folder for them. Asked before gathering any copies, so
+ * nobody waits for files that would only be thrown away.
+ */
+export function assertFitsInOnePage(result: CompileResult) {
+  if (filesLoadedWhileRunning(result).length > 0) {
+    throw new Error(
+      "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
+        "carried in one page; download the project folder instead",
+    );
+  }
+}
+
 // Text inside an element can end it, or for a script change how the rest is read: a script
 // element ends at "</script", and "<!--" or "<script" inside one shift the browser into reading
 // it differently; a style element ends at "</style". Rewriting these could change what a file
@@ -119,12 +133,7 @@ export async function emitHtml(
   result: CompileResult,
   options: HtmlTargetOptions,
 ): Promise<HtmlOutput> {
-  if (options.inline && filesLoadedWhileRunning(result).length > 0) {
-    throw new Error(
-      "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
-        "carried in one page; download the project folder instead",
-    );
-  }
+  if (options.inline) assertFitsInOnePage(result);
   const [stylesheet, ...packageScripts] = pageFiles(result).map((file) =>
     tagFor(file, result, options),
   );

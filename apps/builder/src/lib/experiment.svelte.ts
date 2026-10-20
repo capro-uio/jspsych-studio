@@ -1,4 +1,4 @@
-import { compileSpec, emitHtml, projectFiles } from "@tachisto/compiler";
+import { assertFitsInOnePage, compileSpec, emitHtml, projectFiles } from "@tachisto/compiler";
 import { zipSync, strToU8 } from "fflate";
 import { studyFlowFigure } from "./flow-figure.ts";
 import { asText, fetchPackageSources } from "./package-sources.ts";
@@ -14,6 +14,7 @@ export interface DownloadOptions {
 export async function buildExperimentHtml({ selfContained }: DownloadOptions) {
   const spec = exportedSpec();
   const compiled = compileSpec(spec, schemas);
+  if (selfContained) assertFitsInOnePage(compiled);
   const inline = selfContained ? asText(await fetchPackageSources(compiled.files)) : undefined;
   const { html } = await emitHtml(compiled, { title: spec.name, inline });
   return html;
@@ -25,12 +26,9 @@ export async function buildExperimentHtml({ selfContained }: DownloadOptions) {
  */
 export async function buildProjectZip({ selfContained }: DownloadOptions) {
   const spec = exportedSpec();
-  const packageSources = selfContained
-    ? await fetchPackageSources(compileSpec(spec, schemas).files)
-    : undefined;
   const files = await projectFiles(spec, schemas, {
     figures: { "flow.svg": studyFlowFigure(spec) },
-    packageSources,
+    packageSources: selfContained ? (needed) => fetchPackageSources(needed) : undefined,
   });
   const entries = Object.fromEntries(
     Object.entries(files).map(([path, contents]) => [

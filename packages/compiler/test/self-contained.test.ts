@@ -184,7 +184,7 @@ describe("a page that carries its files inside it", () => {
 describe("a project download that carries its files", () => {
   it("puts each file under lib/ and loads it from there", async () => {
     const files = await projectFiles(plain, schemas, {
-      packageSources: async () => copiesOf(plain),
+      packageSources: () => Promise.resolve(copiesOf(plain)),
     });
     expect(files["lib/jspsych/dist/index.browser.min.js"]).toBe(
       "/* jspsych/dist/index.browser.min.js */",
@@ -197,7 +197,7 @@ describe("a project download that carries its files", () => {
 
   it("lists what it carries, with each licence and source, beside the copies", async () => {
     const files = await projectFiles(tracking, schemas, {
-      packageSources: async () => copiesOf(tracking),
+      packageSources: () => Promise.resolve(copiesOf(tracking)),
     });
     const notice = files["lib/THIRD-PARTY.md"] as string;
     expect(notice).toContain(`| jspsych | ${schemas.jspsych} | MIT |`);
@@ -209,7 +209,7 @@ describe("a project download that carries its files", () => {
 
   it("carries the eye tracker's model, and says to serve the folder to try it", async () => {
     const files = await projectFiles(tracking, schemas, {
-      packageSources: async () => copiesOf(tracking),
+      packageSources: () => Promise.resolve(copiesOf(tracking)),
     });
     expect(
       Object.keys(files).some((path) => path.startsWith("lib/webgazer/dist/mediapipe/face_mesh/")),
@@ -221,7 +221,7 @@ describe("a project download that carries its files", () => {
     const copies = copiesOf(plain);
     delete copies["jspsych/css/jspsych.css"];
     await expect(
-      projectFiles(plain, schemas, { packageSources: async () => copies }),
+      projectFiles(plain, schemas, { packageSources: () => Promise.resolve(copies) }),
     ).rejects.toThrow(/no copy of jspsych\/css\/jspsych\.css to carry/);
   });
 

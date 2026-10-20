@@ -288,7 +288,8 @@ frame has nothing of yours to send.
   are capped at 5 MB each), and by default a download carries jsPsych and its plugins too, so the
   study loads nothing from elsewhere. Those copies are fetched from unpkg at pinned versions and
   kept only if they match hashes recorded from the npm packages when Tachisto was built; a study
-  that loads from unpkg instead checks the same hashes in the browser. Eye tracking loads a model
+  that loads from unpkg instead has the browser check the same hashes for the scripts and
+  stylesheet its page names (not for the eye tracker's model, which WebGazer fetches itself). Eye tracking loads a model
   as it runs, so it is self-contained as a project folder, not as a single file.
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a
   collaborator. The builder shows the generated code as you edit.

@@ -39,6 +39,22 @@ describe("a self-contained download", () => {
     expect(html).toContain(".jspsych-display-element");
   });
 
+  it("refuses an eye-tracking study as one page before fetching anything", async () => {
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    loadSpec({
+      name: "tracking",
+      timeline: [
+        { kind: "trial", plugin: "webgazer-init-camera" },
+        { kind: "trial", plugin: "webgazer-calibrate" },
+      ],
+    });
+    await expect(buildExperimentHtml({ selfContained: true })).rejects.toThrow(
+      /cannot be carried in one page; download the project folder instead/,
+    );
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("loads from unpkg, checked, when it is not self-contained", async () => {
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);
