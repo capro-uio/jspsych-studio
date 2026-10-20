@@ -1,7 +1,7 @@
 import { escapeHtmlText } from "../emit.ts";
 import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
 import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "@tachisto/schemas/files";
-import { packageFileKey, thirdPartyComment } from "../package-files.ts";
+import { cdnUrl, packageFileKey, thirdPartyComment } from "../package-files.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
@@ -22,8 +22,6 @@ export interface HtmlTargetOptions {
   /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
   headScripts?: string[];
 }
-
-const CDN = "https://unpkg.com";
 
 interface PageFile {
   package: string;
@@ -60,6 +58,20 @@ export function filesLoadedWhileRunning(result: CompileResult) {
   return result.files.filter((file) => !named.has(packageFileKey(file)));
 }
 
+/**
+ * Refuses a study that loads files while it runs, such as the eye tracker's model, since a page
+ * carrying its scripts inside it has no folder for them. Asked before gathering any copies, so
+ * nobody waits for files that would only be thrown away.
+ */
+export function assertFitsInOnePage(result: CompileResult) {
+  if (filesLoadedWhileRunning(result).length > 0) {
+    throw new Error(
+      "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
+        "carried in one page; download the project folder instead",
+    );
+  }
+}
+
 // Text inside an element can end it, or for a script change how the rest is read: a script
 // element ends at "</script", and "<!--" or "<script" inside one shift the browser into reading
 // it differently; a style element ends at "</style". Rewriting these could change what a file
@@ -83,9 +95,7 @@ function insideElement(text: string, element: Element, key: string) {
 }
 
 function urlOf(file: PageFile, base: string) {
-  return base === "cdn"
-    ? `${CDN}/${file.package}@${file.version}/${file.path}`
-    : `${base}/${packageFileKey(file)}`;
+  return base === "cdn" ? cdnUrl(file) : `${base}/${packageFileKey(file)}`;
 }
 
 function tagFor(file: PageFile, result: CompileResult, options: HtmlTargetOptions) {
@@ -123,12 +133,7 @@ export async function emitHtml(
   result: CompileResult,
   options: HtmlTargetOptions,
 ): Promise<HtmlOutput> {
-  if (options.inline && filesLoadedWhileRunning(result).length > 0) {
-    throw new Error(
-      "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
-        "carried in one page; download the project folder instead",
-    );
-  }
+  if (options.inline) assertFitsInOnePage(result);
   const [stylesheet, ...packageScripts] = pageFiles(result).map((file) =>
     tagFor(file, result, options),
   );

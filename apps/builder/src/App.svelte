@@ -12,6 +12,7 @@
   import { download, specFilename } from "./lib/files.ts";
   import HeaderMenu from "./lib/HeaderMenu.svelte";
   import { buildExperimentHtml, buildProjectZip } from "./lib/experiment.svelte.ts";
+  import { downloads, setSelfContained } from "./lib/downloads.svelte.ts";
   import { backgroundColor, textColor } from "@tachisto/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
   import SequenceStrip from "./lib/SequenceStrip.svelte";
@@ -33,14 +34,27 @@
   let importError = $state("");
   let downloadError = $state("");
 
-  async function downloadExperiment() {
+  // Gathering jsPsych for a self-contained download takes a moment, and a second click meanwhile
+  // would only start it again.
+  let preparing = $state(false);
+
+  async function prepareDownload(build: () => Promise<void>) {
+    preparing = true;
     try {
-      const html = await buildExperimentHtml();
-      download(`${specFilename(project.spec)}.html`, html, "text/html");
+      await build();
       downloadError = "";
     } catch (error) {
       downloadError = `Not ready to download: ${(error as Error).message.split("\n")[0]}`;
+    } finally {
+      preparing = false;
     }
+  }
+
+  function downloadExperiment() {
+    return prepareDownload(async () => {
+      const html = await buildExperimentHtml(downloads);
+      download(`${specFilename(project.spec)}.html`, html, "text/html");
+    });
   }
 
   function downloadProject() {
@@ -51,14 +65,11 @@
     );
   }
 
-  async function downloadEverything() {
-    try {
-      const zip = await buildProjectZip();
+  function downloadEverything() {
+    return prepareDownload(async () => {
+      const zip = await buildProjectZip(downloads);
       download(`${specFilename(project.spec)}.zip`, zip, "application/zip");
-      downloadError = "";
-    } catch (error) {
-      downloadError = `Not ready to download: ${(error as Error).message.split("\n")[0]}`;
-    }
+    });
   }
 
   // A warning that lives behind a tab is a warning nobody reads, so the tab says it is there.
@@ -123,8 +134,14 @@
     <p class="notice" data-testid="import-error">{importError || downloadError}</p>
   {/if}
 
-  <button class="primary" data-testid="download-zip" onclick={downloadEverything}>
-    Download experiment
+  <button
+    class="primary"
+    data-testid="download-zip"
+    disabled={preparing}
+    aria-busy={preparing}
+    onclick={downloadEverything}
+  >
+    {preparing ? "Preparing download…" : "Download experiment"}
   </button>
 
   <HeaderMenu label="More actions" id={TOUR_HOME_ID}>
@@ -139,7 +156,12 @@
           onchange={importSpec}
         />
       </label>
-      <button class="item" data-testid="download-html" onclick={downloadExperiment}>
+      <button
+        class="item"
+        data-testid="download-html"
+        disabled={preparing}
+        onclick={downloadExperiment}
+      >
         Download as one HTML file
       </button>
       <button class="item" data-testid="download-spec" onclick={downloadProject}>
@@ -153,6 +175,21 @@
           startTour();
         }}>Take the tour</button
       >
+      <div class="group">
+        <span>Downloads</span>
+        <label
+          class="check"
+          title="Downloads carry jsPsych and its plugins, so the study loads nothing from elsewhere and runs without internet"
+        >
+          <input
+            type="checkbox"
+            data-testid="self-contained"
+            checked={downloads.selfContained}
+            onchange={(event) => setSelfContained(event.currentTarget.checked)}
+          />
+          Self-contained
+        </label>
+      </div>
       <div class="group">
         <span>Appearance</span>
         <div class="segmented">
@@ -309,6 +346,14 @@
   }
   .item input {
     display: none;
+  }
+  .check {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: var(--ink);
+    font-size: 0.85rem;
+    cursor: pointer;
   }
   .group {
     display: flex;

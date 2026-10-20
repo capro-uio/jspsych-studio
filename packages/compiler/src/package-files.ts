@@ -18,6 +18,12 @@ export interface PackageFile {
 export const packageFileKey = (file: Pick<PackageFile, "package" | "path">) =>
   `${file.package}/${file.path}`;
 
+const CDN = "https://unpkg.com";
+
+/** Where unpkg serves a package file, at exactly the version the study was built with. */
+export const cdnUrl = (file: Pick<PackageFile, "package" | "version" | "path">) =>
+  `${CDN}/${file.package}@${file.version}/${file.path}`;
+
 /**
  * Every file the bundle records for these packages. A package the bundle has no files for, or
  * records at another version than the study asks for, means the bundle is out of date, which

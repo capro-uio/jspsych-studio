@@ -26,8 +26,8 @@ export {
 export { DEFAULT_BACKGROUND, DEFAULT_TEXT, backgroundColor, textColor } from "./appearance.ts";
 export type { CompileOptions } from "./compile.ts";
 export { formatSource } from "./format.ts";
-export { emitHtml, filesLoadedWhileRunning } from "./targets/html.ts";
-export { packageFileKey, type PackageFile } from "./package-files.ts";
+export { assertFitsInOnePage, emitHtml, filesLoadedWhileRunning } from "./targets/html.ts";
+export { cdnUrl, filesOfPackages, packageFileKey, type PackageFile } from "./package-files.ts";
 export { projectFiles, type ProjectOptions } from "./targets/project.ts";
 export {
   dataColumns,
