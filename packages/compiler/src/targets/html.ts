@@ -1,7 +1,7 @@
 import { escapeHtmlText } from "../emit.ts";
 import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
 import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "@tachisto/schemas/files";
-import { packageFileKey } from "../package-files.ts";
+import { packageFileKey, thirdPartyComment } from "../package-files.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
@@ -130,7 +130,7 @@ window.studioExperiment = { jsPsych };
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="generator" content="${generatorLabel(options.tachisto)}" />
+${options.inline ? `    ${thirdPartyComment(result.files).replace(/\n/g, "\n    ")}\n` : ""}    <meta name="generator" content="${generatorLabel(options.tachisto)}" />
     <meta name="description" content="${escapeHtmlText(options.title)}, a behavioural experiment." />
     <title>${escapeHtmlText(options.title)}</title>
     ${stylesheet}

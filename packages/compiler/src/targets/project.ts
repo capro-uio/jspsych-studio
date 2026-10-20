@@ -16,7 +16,7 @@ import {
   sourceHeader,
   type MetadataOptions,
 } from "../metadata.ts";
-import { packageFileKey } from "../package-files.ts";
+import { packageFileKey, thirdPartyNotice } from "../package-files.ts";
 import { emitHtml, filesLoadedWhileRunning } from "./html.ts";
 import type { Retention, Spec } from "../types.ts";
 
@@ -27,6 +27,7 @@ const PROJECT_FILE = "experiment.json";
 const METADATA_FILE = "dataset_description.json";
 const FIGURES_DIR = "figures";
 const PACKAGES_DIR = "lib";
+const NOTICE_FILE = "THIRD-PARTY.md";
 
 export interface ProjectOptions extends Partial<MetadataOptions> {
   /** Figures of the study by file name, such as the builder's flow diagram, saved under figures/. */
@@ -55,7 +56,7 @@ function figuresLine(names: string[]) {
 
 function packagesLine(selfContained: boolean) {
   return selfContained
-    ? `- \`${PACKAGES_DIR}/\` — jsPsych and the plugins this study uses, so it loads nothing from elsewhere\n`
+    ? `- \`${PACKAGES_DIR}/\` — jsPsych and the plugins this study uses, so it loads nothing from elsewhere; \`${PACKAGES_DIR}/${NOTICE_FILE}\` lists them with their licences\n`
     : "";
 }
 
@@ -196,6 +197,7 @@ export async function projectFiles(
     for (const key of compiled.files.map(packageFileKey)) {
       files[`${PACKAGES_DIR}/${key}`] = packageSources[key];
     }
+    files[`${PACKAGES_DIR}/${NOTICE_FILE}`] = thirdPartyNotice(compiled.files);
   }
 
   for (const [name, contents] of Object.entries(figures)) {
