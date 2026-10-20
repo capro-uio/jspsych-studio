@@ -187,11 +187,14 @@ describe("pluginChoices", () => {
   it("sorts each group by title", () => {
     const setup = pluginChoices.find((group) => group.label === "Set up and run");
     expect(setup?.plugins.map(({ title }) => title)).toEqual([
+      "Calibrate eye tracking",
       "Calibrate screen size",
+      "Check eye-tracking accuracy",
       "Check the browser",
       "Load files in advance",
       "Measure viewing distance",
       "Run a function",
+      "Set up eye tracking",
       "Set up the camera",
       "Set up the microphone",
       "Show the camera",

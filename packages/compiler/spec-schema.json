@@ -277,7 +277,10 @@
             "video-keyboard-response",
             "video-slider-response",
             "virtual-chinrest",
-            "visual-search-circle"
+            "visual-search-circle",
+            "webgazer-calibrate",
+            "webgazer-init-camera",
+            "webgazer-validate"
           ]
         },
         "tag": {
@@ -309,6 +312,21 @@
         "exclusion_ending": {
           "title": "The ending a participant this step turns away is sent to, for a step that can, such as a browser check.",
           "type": "string"
+        },
+        "gaze": {
+          "title": "Records where the participant looks during this step, once eye tracking is calibrated.",
+          "type": "object",
+          "properties": {
+            "targets": {
+              "title": "CSS selectors of elements whose place on the screen is recorded with the gaze, such as the stimulus.",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "additionalProperties": false
         }
       },
       "additionalProperties": false,
@@ -11968,6 +11986,458 @@
               "required": [
                 "score"
               ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "webgazer-calibrate"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "calibration_points": {
+                    "title": "calibration points",
+                    "description": "Array of points in `[x,y]` coordinates. Specified as a percentage of the screen width and height, from the left and top edge. The default grid is 9 points.",
+                    "default": [
+                      [
+                        10,
+                        10
+                      ],
+                      [
+                        10,
+                        50
+                      ],
+                      [
+                        10,
+                        90
+                      ],
+                      [
+                        50,
+                        10
+                      ],
+                      [
+                        50,
+                        50
+                      ],
+                      [
+                        50,
+                        90
+                      ],
+                      [
+                        90,
+                        10
+                      ],
+                      [
+                        90,
+                        50
+                      ],
+                      [
+                        90,
+                        90
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "grid",
+                        "type": "array",
+                        "items": {
+                          "title": "row",
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "type": "array",
+                          "items": {
+                            "title": "cell",
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "calibration_mode": {
+                    "title": "calibration mode",
+                    "description": "Can specify `click` to have participants click on calibration points or `view` to have participants passively watch calibration points.",
+                    "default": "click",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "click",
+                          "view"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "point_size": {
+                    "title": "point size",
+                    "description": "Diameter of the calibration points in pixels.",
+                    "default": 20,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "repetitions_per_point": {
+                    "title": "repetitions per point",
+                    "description": "The number of times to repeat the sequence of calibration points.",
+                    "default": 1,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_calibration_order": {
+                    "title": "randomize calibration order",
+                    "description": "Whether to randomize the order of the calibration points.",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "time_to_saccade": {
+                    "title": "time to saccade",
+                    "description": "If `calibration_mode` is set to `view`, then this is the delay before calibrating after showing a point. Gives the participant time to fixate on the new target before assuming that the participant is looking at the target.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "time_per_point": {
+                    "title": "time per point",
+                    "description": "If `calibration_mode` is set to `view`, then this is the length of time to show a point while calibrating. Note that if `click` calibration is used then the point will remain on the screen until clicked.",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "webgazer-init-camera"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "instructions": {
+                    "title": "instructions",
+                    "description": "Instructions for the participant to follow.",
+                    "default": "\n            <p>Position your head so that the webcam has a good view of your eyes.</p>\n            <p>Center your face in the box and look directly towards the camera.</p>\n            <p>It is important that you try and keep your head reasonably still throughout the experiment, so please take a moment to adjust your setup to be comfortable.</p>\n            <p>When your face is centered in the box and the box is green, you can click to continue.</p>",
+                    "anyOf": [
+                      {
+                        "format": "html",
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "button_text": {
+                    "title": "button text",
+                    "description": "The text for the button that participants click to end the trial.",
+                    "default": "Continue",
+                    "anyOf": [
+                      {
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "plugin": {
+                "const": "webgazer-validate"
+              }
+            },
+            "required": [
+              "plugin"
+            ]
+          },
+          "then": {
+            "properties": {
+              "params": {
+                "type": "object",
+                "properties": {
+                  "validation_points": {
+                    "title": "validation points",
+                    "description": "Array of points in [x,y] coordinates",
+                    "default": [
+                      [
+                        10,
+                        10
+                      ],
+                      [
+                        10,
+                        50
+                      ],
+                      [
+                        10,
+                        90
+                      ],
+                      [
+                        50,
+                        10
+                      ],
+                      [
+                        50,
+                        50
+                      ],
+                      [
+                        50,
+                        90
+                      ],
+                      [
+                        90,
+                        10
+                      ],
+                      [
+                        90,
+                        50
+                      ],
+                      [
+                        90,
+                        90
+                      ]
+                    ],
+                    "anyOf": [
+                      {
+                        "format": "grid",
+                        "type": "array",
+                        "items": {
+                          "title": "row",
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "type": "array",
+                          "items": {
+                            "title": "cell",
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "validation_point_coordinates": {
+                    "title": "validation point coordinates",
+                    "description": "Are the validation_points specified as percentages of screen width and height, or the distance in pixels from the center of the screen? Options are 'percent' and 'center-offset-pixels'",
+                    "default": "percent",
+                    "anyOf": [
+                      {
+                        "enum": [
+                          "percent",
+                          "center-offset-pixels"
+                        ],
+                        "type": "string"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "roi_radius": {
+                    "title": "roi radius",
+                    "description": "Tolerance around validation point in pixels",
+                    "default": 200,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "randomize_validation_order": {
+                    "title": "randomize validation order",
+                    "description": "Whether or not to randomize the order of validation points",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "time_to_saccade": {
+                    "title": "time to saccade",
+                    "description": "Delay before validating after showing a point",
+                    "default": 1000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "validation_duration": {
+                    "title": "validation duration",
+                    "description": "Length of time to show each point",
+                    "default": 2000,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "point_size": {
+                    "title": "point size",
+                    "description": "Validation point size in pixels",
+                    "default": 20,
+                    "anyOf": [
+                      {
+                        "type": "integer"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "show_validation_data": {
+                    "title": "show validation data",
+                    "description": "If true, then validation data will be shown on the screen after validation is complete",
+                    "default": false,
+                    "anyOf": [
+                      {
+                        "type": "boolean"
+                      },
+                      {
+                        "$ref": "#/definitions/variableReference"
+                      },
+                      {
+                        "$ref": "#/definitions/code"
+                      }
+                    ]
+                  },
+                  "data": {},
+                  "on_finish": {}
+                },
+                "required": [],
+                "additionalProperties": false
+              }
             }
           }
         }

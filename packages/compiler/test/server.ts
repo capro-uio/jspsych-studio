@@ -7,6 +7,7 @@ const CONTENT_TYPES: Record<string, string> = {
   ".js": "text/javascript",
   ".css": "text/css",
   ".json": "application/json",
+  ".wasm": "application/wasm",
 };
 
 export interface StaticServer {

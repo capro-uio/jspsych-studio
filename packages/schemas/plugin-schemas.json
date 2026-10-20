@@ -81,7 +81,8 @@
       "records": [
         "animation_sequence",
         "response"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-animation-image"
     },
     "audio-button-response": {
       "plugin": "audio-button-response",
@@ -696,7 +697,8 @@
         "response",
         "rt",
         "correct"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-categorize-animation-stimulus"
     },
     "categorize-html": {
       "plugin": "categorize-html",
@@ -826,7 +828,8 @@
         "response",
         "rt",
         "correct"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-categorize-html-stimulus"
     },
     "categorize-image": {
       "plugin": "categorize-image",
@@ -956,7 +959,8 @@
         "response",
         "rt",
         "correct"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-categorize-image-stimulus"
     },
     "cloze": {
       "plugin": "cloze",
@@ -1380,7 +1384,8 @@
         "stimulus",
         "estimated_stimulus_onset",
         "audio_url"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-html-audio-response-stimulus"
     },
     "html-button-response": {
       "plugin": "html-button-response",
@@ -1485,7 +1490,8 @@
         "rt",
         "response",
         "stimulus"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-html-button-response-stimulus"
     },
     "html-keyboard-response": {
       "plugin": "html-keyboard-response",
@@ -1558,7 +1564,8 @@
         "rt",
         "stimulus",
         "rt_key_duration"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-html-keyboard-response-stimulus"
     },
     "html-slider-response": {
       "plugin": "html-slider-response",
@@ -1674,7 +1681,8 @@
         "response",
         "stimulus",
         "slider_start"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-html-slider-response-stimulus"
     },
     "html-video-response": {
       "plugin": "html-video-response",
@@ -1756,7 +1764,8 @@
         "stimulus",
         "response",
         "video_url"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-html-video-response-stimulus"
     },
     "iat-html": {
       "plugin": "iat-html",
@@ -2177,7 +2186,8 @@
         "stimulus",
         "response",
         "rt"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-image-button-response-stimulus"
     },
     "image-keyboard-response": {
       "plugin": "image-keyboard-response",
@@ -2278,7 +2288,8 @@
         "response",
         "rt",
         "rt_key_duration"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-image-keyboard-response-stimulus"
     },
     "image-slider-response": {
       "plugin": "image-slider-response",
@@ -2421,7 +2432,8 @@
         "response",
         "rt",
         "slider_start"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-image-slider-response-stimulus"
     },
     "initialize-camera": {
       "plugin": "initialize-camera",
@@ -3287,7 +3299,8 @@
         "response",
         "rt",
         "correct"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-serial-reaction-time-stimulus"
     },
     "serial-reaction-time-mouse": {
       "plugin": "serial-reaction-time-mouse",
@@ -3425,7 +3438,8 @@
         "response",
         "rt",
         "correct"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-serial-reaction-time-stimulus"
     },
     "sketchpad": {
       "plugin": "sketchpad",
@@ -4302,7 +4316,8 @@
         "response",
         "rt",
         "stimulus"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-video-button-response-stimulus"
     },
     "video-keyboard-response": {
       "plugin": "video-keyboard-response",
@@ -4435,7 +4450,8 @@
         "rt",
         "stimulus",
         "rt_key_duration"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-video-keyboard-response-stimulus"
     },
     "video-slider-response": {
       "plugin": "video-slider-response",
@@ -4612,7 +4628,8 @@
         "stimulus",
         "slider_start",
         "start"
-      ]
+      ],
+      "stimulusSelector": "#jspsych-video-slider-response-stimulus"
     },
     "virtual-chinrest": {
       "plugin": "virtual-chinrest",
@@ -4911,6 +4928,278 @@
           "target_present_key",
           "target_absent_key"
         ]
+      ]
+    },
+    "webgazer-calibrate": {
+      "plugin": "webgazer-calibrate",
+      "title": "Calibrate eye tracking",
+      "summary": "Shows points to click or look at, so the eye tracker learns where the participant looks.",
+      "family": "setup",
+      "package": "@jspsych/plugin-webgazer-calibrate",
+      "version": "2.1.0",
+      "properties": {
+        "calibration_points": {
+          "type": "array",
+          "items": {
+            "title": "row",
+            "type": "array",
+            "jspsychType": "INT",
+            "items": {
+              "type": "integer",
+              "jspsychType": "INT",
+              "title": "cell"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "jspsychType": "INT",
+          "format": "grid",
+          "title": "calibration points",
+          "description": "Array of points in `[x,y]` coordinates. Specified as a percentage of the screen width and height, from the left and top edge. The default grid is 9 points.",
+          "default": [
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              50
+            ],
+            [
+              10,
+              90
+            ],
+            [
+              50,
+              10
+            ],
+            [
+              50,
+              50
+            ],
+            [
+              50,
+              90
+            ],
+            [
+              90,
+              10
+            ],
+            [
+              90,
+              50
+            ],
+            [
+              90,
+              90
+            ]
+          ]
+        },
+        "calibration_mode": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "calibration mode",
+          "description": "Can specify `click` to have participants click on calibration points or `view` to have participants passively watch calibration points.",
+          "default": "click",
+          "enum": [
+            "click",
+            "view"
+          ]
+        },
+        "point_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "point size",
+          "description": "Diameter of the calibration points in pixels.",
+          "default": 20
+        },
+        "repetitions_per_point": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "repetitions per point",
+          "description": "The number of times to repeat the sequence of calibration points.",
+          "default": 1
+        },
+        "randomize_calibration_order": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "randomize calibration order",
+          "description": "Whether to randomize the order of the calibration points.",
+          "default": false
+        },
+        "time_to_saccade": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "time to saccade",
+          "description": "If `calibration_mode` is set to `view`, then this is the delay before calibrating after showing a point. Gives the participant time to fixate on the new target before assuming that the participant is looking at the target.",
+          "default": 1000
+        },
+        "time_per_point": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "time per point",
+          "description": "If `calibration_mode` is set to `view`, then this is the length of time to show a point while calibrating. Note that if `click` calibration is used then the point will remain on the screen until clicked.",
+          "default": 1000
+        }
+      },
+      "required": [],
+      "records": []
+    },
+    "webgazer-init-camera": {
+      "plugin": "webgazer-init-camera",
+      "title": "Set up eye tracking",
+      "summary": "Starts the webcam eye tracker and has the participant centre their face for it.",
+      "family": "setup",
+      "package": "@jspsych/plugin-webgazer-init-camera",
+      "version": "2.1.0",
+      "properties": {
+        "instructions": {
+          "type": "string",
+          "format": "html",
+          "jspsychType": "HTML_STRING",
+          "title": "instructions",
+          "description": "Instructions for the participant to follow.",
+          "default": "\n            <p>Position your head so that the webcam has a good view of your eyes.</p>\n            <p>Center your face in the box and look directly towards the camera.</p>\n            <p>It is important that you try and keep your head reasonably still throughout the experiment, so please take a moment to adjust your setup to be comfortable.</p>\n            <p>When your face is centered in the box and the box is green, you can click to continue.</p>"
+        },
+        "button_text": {
+          "type": "string",
+          "jspsychType": "STRING",
+          "title": "button text",
+          "description": "The text for the button that participants click to end the trial.",
+          "default": "Continue"
+        }
+      },
+      "required": [],
+      "records": [
+        "load_time"
+      ]
+    },
+    "webgazer-validate": {
+      "plugin": "webgazer-validate",
+      "title": "Check eye-tracking accuracy",
+      "summary": "Shows points to look at and records how close the eye tracker's estimates fall.",
+      "family": "setup",
+      "package": "@jspsych/plugin-webgazer-validate",
+      "version": "2.1.0",
+      "properties": {
+        "validation_points": {
+          "type": "array",
+          "items": {
+            "title": "row",
+            "type": "array",
+            "jspsychType": "INT",
+            "items": {
+              "type": "integer",
+              "jspsychType": "INT",
+              "title": "cell"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "jspsychType": "INT",
+          "format": "grid",
+          "title": "validation points",
+          "description": "Array of points in [x,y] coordinates",
+          "default": [
+            [
+              10,
+              10
+            ],
+            [
+              10,
+              50
+            ],
+            [
+              10,
+              90
+            ],
+            [
+              50,
+              10
+            ],
+            [
+              50,
+              50
+            ],
+            [
+              50,
+              90
+            ],
+            [
+              90,
+              10
+            ],
+            [
+              90,
+              50
+            ],
+            [
+              90,
+              90
+            ]
+          ]
+        },
+        "validation_point_coordinates": {
+          "type": "string",
+          "jspsychType": "SELECT",
+          "title": "validation point coordinates",
+          "description": "Are the validation_points specified as percentages of screen width and height, or the distance in pixels from the center of the screen? Options are 'percent' and 'center-offset-pixels'",
+          "default": "percent",
+          "enum": [
+            "percent",
+            "center-offset-pixels"
+          ]
+        },
+        "roi_radius": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "roi radius",
+          "description": "Tolerance around validation point in pixels",
+          "default": 200
+        },
+        "randomize_validation_order": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "randomize validation order",
+          "description": "Whether or not to randomize the order of validation points",
+          "default": false
+        },
+        "time_to_saccade": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "time to saccade",
+          "description": "Delay before validating after showing a point",
+          "default": 1000
+        },
+        "validation_duration": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "validation duration",
+          "description": "Length of time to show each point",
+          "default": 2000
+        },
+        "point_size": {
+          "type": "integer",
+          "jspsychType": "INT",
+          "title": "point size",
+          "description": "Validation point size in pixels",
+          "default": 20
+        },
+        "show_validation_data": {
+          "type": "boolean",
+          "jspsychType": "BOOL",
+          "title": "show validation data",
+          "description": "If true, then validation data will be shown on the screen after validation is complete",
+          "default": false
+        }
+      },
+      "required": [],
+      "records": [
+        "raw_gaze",
+        "percent_in_roi",
+        "average_offset",
+        "samples_per_sec",
+        "validation_points"
       ]
     },
     "psychophysics": {
@@ -5763,6 +6052,24 @@
         "center_x",
         "center_y",
         "button_pressed"
+      ]
+    }
+  },
+  "extensions": {
+    "webgazer": {
+      "extension": "webgazer",
+      "package": "@jspsych/extension-webgazer",
+      "version": "1.2.0",
+      "records": [
+        "webgazer_data",
+        "webgazer_targets"
+      ],
+      "libraries": [
+        {
+          "package": "webgazer",
+          "file": "dist/webgazer.js",
+          "version": "3.5.3"
+        }
       ]
     }
   }

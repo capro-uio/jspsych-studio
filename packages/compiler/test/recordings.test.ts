@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { usesDevices } from "../src/recordings.ts";
+import { usesDevices } from "../src/setup-order.ts";
 import type { DataSettings, Spec, SpecNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 

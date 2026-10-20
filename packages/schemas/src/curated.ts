@@ -137,6 +137,12 @@ export const LIST_LENGTHS: Record<
   },
 };
 
+// Grids whose every row holds a fixed number of places: an eye-tracking point is across, then down.
+export const GRID_WIDTHS: Record<string, Record<string, number>> = {
+  "webgazer-calibrate": { calibration_points: 2 },
+  "webgazer-validate": { validation_points: 2 },
+};
+
 // Settings a plugin declares as text but reads as one of a few words; any other makes it fail.
 // For a list, each of its entries is one of the words.
 const BROWSER_FEATURES = [
@@ -186,6 +192,18 @@ export const DISTINCT_KEYS: Record<string, [string, string][]> = {
 export const UNDECLARED_RECORDS: Record<string, string[]> = {
   "same-different-html": ["rt_stim1", "response_stim1"],
   "same-different-image": ["rt_stim1", "response_stim1"],
+};
+
+// Stimulus elements a plugin gives an id not of its own name: the mouse version of the serial
+// reaction time task borrows the keyboard version's, and an animation shows its frames in an image.
+export const STIMULUS_ELEMENTS: Record<string, string> = {
+  "serial-reaction-time-mouse": "jspsych-serial-reaction-time-stimulus",
+  animation: "jspsych-animation-image",
+};
+
+// Scripts an extension calls without importing, so they must be on the page before it.
+export const EXTENSION_LIBRARIES: Record<string, { package: string; file: string }[]> = {
+  "@jspsych/extension-webgazer": [{ package: "webgazer", file: "dist/webgazer.js" }],
 };
 
 /** Plugins from outside jsPsych's own set, each with what its declared parameters leave out. */

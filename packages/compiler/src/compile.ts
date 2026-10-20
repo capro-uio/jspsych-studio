@@ -19,9 +19,17 @@ import {
   compileGroupGate,
 } from "./groups.ts";
 import { literal } from "./emit.ts";
-import { pluginIdentifier } from "./identifiers.ts";
+import { BROWSER_BUNDLE, pluginIdentifier } from "./identifiers.ts";
 import { WAS_EXCLUDED, compileExcludingPlugin, excludingIdentifier } from "./exclusions.ts";
 import { RECORDING_HELPERS, usesRecordings } from "./recordings.ts";
+import {
+  EYE_TRACKER,
+  EYE_TRACKER_SETTING,
+  eyeTrackerSetup,
+  gazeExtension,
+  tracksGaze,
+  usesEyeTracking,
+} from "./gaze.ts";
 import {
   ORDERS_VARIABLE,
   compileCounterbalancedTasks,
@@ -208,6 +216,8 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
   if (data) entries.push(`data: ${data}`);
   const score = scoreExpression(trial);
   if (score) entries.push(`on_finish: ${score}`);
+  const extensions = gazeExtension(trial);
+  if (extensions) entries.push(`extensions: ${extensions}`);
   const step = `{\n${entries.map((entry) => `  ${entry},`).join("\n")}\n}`;
   if (!excluding) return step;
   // A participant the step turned away goes to its ending, as an end step would send them.
@@ -321,11 +331,12 @@ const SETTING_KEYS = [
   "progress_bar_message",
 ] as const;
 
-function initOptions(spec: Spec, extra: string | undefined) {
+function initOptions(spec: Spec, eyeTracking: boolean, extra: string | undefined) {
   const entries = SETTING_KEYS.filter((key) => spec.settings?.[key] !== undefined).map(
     (key) => `${key}: ${literal(spec.settings![key])}`,
   );
   if ((spec.assets ?? []).length > 0) entries.push(NAME_FILES_IN_DATA);
+  if (eyeTracking) entries.push(EYE_TRACKER_SETTING);
   if (extra) entries.push(extra);
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : "";
 }
@@ -371,13 +382,21 @@ export function compileSpec(
       return [plugin, { name: schema.package, version: schema.version }];
     }),
   );
-  const columns = dataColumns(
-    spec,
+  const eyeTracking = usesEyeTracking(spec);
+  const eyeTracker = eyeTracking ? bundle.extensions[EYE_TRACKER] : undefined;
+  if (eyeTracking && !eyeTracker) {
+    throw new SpecError(spec.name, [
+      { message: `the schema bundle has no entry for extension "${EYE_TRACKER}"` },
+    ]);
+  }
+  const columns = dataColumns(spec, [
     // Every plugin has a schema by now: one without stopped the compile above.
-    [...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
-  );
+    ...[...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
+    ...(eyeTracker && tracksGaze(spec) ? eyeTracker.records : []),
+  ]);
   const source =
-    `const jsPsych = initJsPsych(${initOptions(spec, options.initEntries)});\n\n` +
+    (eyeTracker ? `${eyeTrackerSetup(eyeTracker.libraries[0].package)}\n\n` : "") +
+    `const jsPsych = initJsPsych(${initOptions(spec, eyeTracking, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
@@ -398,5 +417,11 @@ export function compileSpec(
     columns,
     jspsych: bundle.jspsych,
     packages,
+    scripts: eyeTracker
+      ? [
+          ...eyeTracker.libraries,
+          { package: eyeTracker.package, version: eyeTracker.version, file: BROWSER_BUNDLE },
+        ]
+      : [],
   };
 }

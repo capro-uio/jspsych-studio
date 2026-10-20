@@ -142,6 +142,20 @@ const NODE_DEFINITIONS = {
           "The ending a participant this step turns away is sent to, for a step that can, such as a browser check.",
         type: "string",
       },
+      gaze: {
+        title:
+          "Records where the participant looks during this step, once eye tracking is calibrated.",
+        type: "object",
+        properties: {
+          targets: {
+            title:
+              "CSS selectors of elements whose place on the screen is recorded with the gaze, such as the stimulus.",
+            type: "array",
+            items: { type: "string", minLength: 1 },
+          },
+        },
+        additionalProperties: false,
+      },
     },
   },
   block: {

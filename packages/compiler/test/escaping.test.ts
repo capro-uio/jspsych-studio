@@ -70,6 +70,13 @@ describe("emitHtml", () => {
     expect(html).not.toContain("plugin-html-keyboard-response@2/");
   });
 
+  it("keeps a quote in the experiment name inside the page's description", async () => {
+    const compiled = compileSpec(specWith("<p>hi</p>"), schemas);
+    const { html } = await emitHtml(compiled, { title: 'a" onload="stolen()' });
+    expect(html).toContain('content="a&quot; onload=&quot;stolen()');
+    expect(html).not.toContain('onload="stolen()"');
+  });
+
   it("escapes the experiment name in the document title", async () => {
     const { html } = await emitHtml(compileSpec(specWith("hi"), schemas), {
       title: "</title><script>stolen()</script>",

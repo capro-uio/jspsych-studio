@@ -29,7 +29,7 @@ export interface ParameterSchema {
   default?: unknown;
   /** Values a new step can start from, so it is not born invalid. */
   examples?: unknown[];
-  /** How many entries a list takes, where its plugin reads a fixed number of them. */
+  /** How many entries a list takes, where its plugin reads a fixed number of them, or a grid's row. */
   minItems?: number;
   maxItems?: number;
   /** For a set of fields whose meaning depends on one of them, such as a canvas object's shape. */
@@ -71,9 +71,29 @@ export interface PluginSchema {
   records: string[];
   /** Pairs of key parameters that must differ, as same and different do, or its answers mean nothing. */
   distinctKeys?: [string, string][];
+  /** The CSS selector of the element the plugin shows its stimulus in, where it gives it an id. */
+  stimulusSelector?: string;
 }
 
 export type PluginSchemas = Record<string, PluginSchema>;
+
+/** A script an extension needs on the page before it, such as the eye tracker WebGazer drives. */
+export interface Library {
+  package: string;
+  version: string;
+  /** The script's path inside the package. */
+  file: string;
+}
+
+export interface ExtensionSchema {
+  /** The name jsPsych knows the extension by, as in `jsPsych.extensions.webgazer`. */
+  extension: string;
+  package: string;
+  version: string;
+  /** The columns the extension adds to each row of a step it runs on. */
+  records: string[];
+  libraries: Library[];
+}
 
 export interface SchemaBundle {
   /** The jsPsych release these schemas were extracted against. */
@@ -81,6 +101,7 @@ export interface SchemaBundle {
   /** What each family of plugins is for, in the order a builder lists them. */
   families: Record<PluginFamily, string>;
   plugins: PluginSchemas;
+  extensions: Record<string, ExtensionSchema>;
 }
 
 export interface ExtractionReport {

@@ -1,3 +1,5 @@
+import type { Library } from "@jspsych-studio/schemas";
+
 export interface VariableReference {
   var: string;
   wrap?: string;
@@ -49,6 +51,16 @@ export interface TrialNode {
    * such as a browser check: the study saves what that ending keeps and ends its way.
    */
   exclusion_ending?: string;
+  /** Records where the participant looks during this step, once eye tracking is calibrated. */
+  gaze?: GazeTracking;
+}
+
+export interface GazeTracking {
+  /**
+   * CSS selectors of elements whose place on the screen is recorded with the gaze, so where the
+   * participant looked can be compared with where the stimulus was.
+   */
+  targets?: string[];
 }
 
 export interface BlockNode {
@@ -218,6 +230,8 @@ export interface CompileResult {
   /** jsPsych release and npm package name + version per plugin, so exports can pin exactly. */
   jspsych: string;
   packages: Record<string, { name: string; version: string }>;
+  /** Scripts loaded after jsPsych and before the plugins, such as an extension and its library. */
+  scripts: Library[];
   /** Every column the experiment's data will have, from its plugins and its own additions. */
   columns: string[];
 }

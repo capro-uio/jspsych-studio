@@ -5,6 +5,9 @@ import {
   assertExtracted,
   curateParameters,
   recordedColumns,
+  stimulusSelectorOf,
+  extractBundle,
+  extractExtensions,
   extractSchemas,
   functionSource,
   pluginPackages,
@@ -118,6 +121,7 @@ describe("extractSchemas", () => {
         distinctKeys: {},
         required: {},
         decimals: {},
+        widths: {},
       }),
     ).toThrow(/names "key_anwser", which categorize-html does not take/);
   });
@@ -131,6 +135,54 @@ describe("extractSchemas", () => {
     expect(choices).toMatchObject({ format: "grid", items: { items: { type: "string" } } });
   });
 
+  it("holds each eye-tracking point to two places, across then down", () => {
+    const calibrate = report.schemas["webgazer-calibrate"].properties.calibration_points;
+    const validate = report.schemas["webgazer-validate"].properties.validation_points;
+    for (const points of [calibrate, validate]) {
+      expect(points).toMatchObject({
+        format: "grid",
+        items: { minItems: 2, maxItems: 2, items: { type: "integer" } },
+      });
+    }
+  });
+
+  it("refuses a row width for a parameter that is not a grid", () => {
+    const schema = structuredClone(report.schemas["webgazer-validate"]);
+    expect(() =>
+      curateParameters(schema, {
+        examples: {},
+        lengths: {},
+        choices: {},
+        distinctKeys: {},
+        required: {},
+        decimals: {},
+        widths: { "webgazer-validate": { roi_radius: 2 } },
+      }),
+    ).toThrow(/gives a row width to "roi radius", which is not a grid/);
+  });
+
+  it("finds the element a plugin shows its stimulus in, however the plugin names it", () => {
+    const selectorOf = (plugin: string) => report.schemas[plugin].stimulusSelector;
+    // Written into markup with double quotes, with single quotes, and set on an element.
+    expect(selectorOf("html-keyboard-response")).toBe("#jspsych-html-keyboard-response-stimulus");
+    expect(selectorOf("serial-reaction-time")).toBe("#jspsych-serial-reaction-time-stimulus");
+    expect(selectorOf("html-button-response")).toBe("#jspsych-html-button-response-stimulus");
+    expect(selectorOf("survey-text")).toBeUndefined();
+  });
+
+  it("takes the stimulus element from curation where a plugin names it otherwise", () => {
+    expect(report.schemas["serial-reaction-time-mouse"].stimulusSelector).toBe(
+      "#jspsych-serial-reaction-time-stimulus",
+    );
+    expect(report.schemas.animation.stimulusSelector).toBe("#jspsych-animation-image");
+  });
+
+  it("says so when a plugin no longer has the stimulus element curation names", () => {
+    expect(() =>
+      stimulusSelectorOf("@jspsych/plugin-animation", "animation", { animation: "gone" }),
+    ).toThrow(/names "gone" as the stimulus of animation, which no longer has it/);
+  });
+
   it("takes decimal card sizes for calibrating the screen", () => {
     expect(report.schemas.resize.properties.item_width).toMatchObject({
       type: "number",
@@ -142,8 +194,11 @@ describe("extractSchemas", () => {
     expect(report.schemas["html-slider-response"].records).toEqual(
       expect.arrayContaining(["response", "rt", "stimulus", "slider_start"]),
     );
+    // Calibrating teaches the eye tracker and records nothing of its own.
+    const recordsNothing = ["webgazer-calibrate"];
     for (const schema of Object.values(report.schemas)) {
-      expect(schema.records.length, schema.plugin).toBeGreaterThan(0);
+      if (recordsNothing.includes(schema.plugin)) expect(schema.records).toEqual([]);
+      else expect(schema.records.length, schema.plugin).toBeGreaterThan(0);
     }
   });
 
@@ -155,6 +210,35 @@ describe("extractSchemas", () => {
   it("falls back to the help text a plugin declares in its own info", () => {
     const canvasWidth = report.schemas["psychophysics"].properties.canvas_width;
     expect(canvasWidth.description).toMatch(/width/i);
+  });
+});
+
+describe("extractExtensions", () => {
+  it("names the extension, the columns it adds, and the library it needs first", async () => {
+    const { webgazer } = await extractExtensions(["@jspsych/extension-webgazer"]);
+    expect(webgazer).toMatchObject({
+      extension: "webgazer",
+      package: "@jspsych/extension-webgazer",
+      records: ["webgazer_data", "webgazer_targets"],
+      libraries: [{ package: "webgazer", file: "dist/webgazer.js" }],
+    });
+    expect(webgazer.version).toMatch(/^\d+\.\d+\.\d+/);
+    expect(webgazer.libraries[0].version).toMatch(/^\d+\.\d+\.\d+/);
+  });
+
+  it("refuses a package that exports no extension", async () => {
+    await expect(extractExtensions(["jspsych"])).rejects.toThrow(
+      /jspsych exports no class with a static `info`/,
+    );
+  });
+});
+
+describe("extractBundle", () => {
+  it("bundles the plugins asked for with every installed extension", async () => {
+    const { bundle } = await extractBundle(["@jspsych/plugin-html-keyboard-response"]);
+    expect(Object.keys(bundle.plugins)).toEqual(["html-keyboard-response"]);
+    expect(Object.keys(bundle.extensions)).toEqual(["webgazer"]);
+    expect(bundle.families).toEqual(PLUGIN_FAMILIES);
   });
 });
 

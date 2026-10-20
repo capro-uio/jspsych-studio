@@ -3,6 +3,7 @@ import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { addStep, addTrial } from "./steps.ts";
 import type { Spec, SpecNode } from "@jspsych-studio/compiler";
 
 const CONDITIONS_CSV = [
@@ -56,17 +57,6 @@ async function headerAction(page: Page, testId: string) {
 async function showAllParameters(page: Page) {
   const toggle = page.getByTestId("toggle-parameters");
   if ((await toggle.innerText()).startsWith("show all")) await toggle.click();
-}
-
-/** Steps are added from the menu on a gap, so placement and kind are one choice. */
-async function addStep(page: Page, slot: string, kind: string) {
-  await page.getByTestId(slot).click();
-  await page.getByTestId(`${slot}-${kind}`).click();
-}
-
-async function addTrial(page: Page, plugin: string, slot: string) {
-  await addStep(page, slot, "trial");
-  await page.getByTestId("trial-plugin").selectOption(plugin);
 }
 
 async function setFixed(page: Page, parameter: string, value: string) {

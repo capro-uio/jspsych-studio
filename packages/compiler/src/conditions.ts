@@ -1,6 +1,6 @@
 import { literal } from "./emit.ts";
-import type { AccuracyRule, ResponseRule, SpecNode, TrialNode } from "./types.ts";
-import { isPlainObject, slotsOf } from "./variables.ts";
+import type { AccuracyRule, ResponseRule, SpecNode } from "./types.ts";
+import { isPlainObject, trialsOf } from "./variables.ts";
 
 export function accuracyComparison(rule: AccuracyRule) {
   return rule.accuracy_at_least === undefined
@@ -38,21 +38,15 @@ function compileResponsePredicate(rule: ResponseRule) {
   );
 }
 
-function taggedTrials(nodes: SpecNode[], tag: string): TrialNode[] {
-  return nodes.flatMap((node) => {
-    if (node.kind === "trial") return node.tag === tag ? [node] : [];
-    if (node.kind === "block" || node.kind === "loop") return taggedTrials(node.children, tag);
-    return (slotsOf(node) ?? []).flatMap((slot) => taggedTrials(slot.children, tag));
-  });
-}
-
 /**
  * The names the trials carrying a tag record their answers under, as a question step does: each
  * question's `name`, or `Q0`, `Q1`… for one without. Null when none of them asks questions; empty
  * when they do but their questions come from a column or code, so the names are not known here.
  */
 export function questionNames(nodes: SpecNode[], tag: string): string[] | null {
-  const asking = taggedTrials(nodes, tag).filter((trial) => "questions" in (trial.params ?? {}));
+  const asking = trialsOf(nodes).filter(
+    (trial) => trial.tag === tag && "questions" in (trial.params ?? {}),
+  );
   if (asking.length === 0) return null;
   const names = asking.flatMap((trial) => {
     const questions = trial.params?.questions;

@@ -7,6 +7,8 @@
   } from "@jspsych-studio/compiler";
   import type { AssignNode, CounterbalanceNode, ParameterValue } from "@jspsych-studio/compiler";
   import Field from "./Field.svelte";
+  import GazeSection from "./GazeSection.svelte";
+  import { offersGazeTracking, retargetGaze } from "./gaze.ts";
   import { earlyEndingNames } from "@jspsych-studio/compiler";
   import {
     accuracyComparisonOf,
@@ -112,6 +114,12 @@
       onchange={(event) => {
         const chosen = event.currentTarget.value;
         if (chosen === trial.plugin) return;
+        retargetGaze(
+          trial,
+          chosen,
+          pluginSchema(trial.plugin)?.stimulusSelector,
+          pluginSchema(chosen)?.stimulusSelector,
+        );
         trial.params = paramsForPlugin(trial.params, trial.plugin, chosen) as typeof trial.params;
         trial.plugin = chosen;
         // A step that scores itself takes no scoring rule over its own, and only a step that can
@@ -198,6 +206,10 @@
   >
     {showAllParameters ? "show only what is set" : `show all ${parameters.length} parameters`}
   </button>
+
+  {#if offersGazeTracking(project.spec, trial)}
+    <GazeSection {trial} stimulus={trialSchema?.stimulusSelector} />
+  {/if}
 
   {#if scoresItself || columns.length > 0}
     <h3>Scoring and data</h3>

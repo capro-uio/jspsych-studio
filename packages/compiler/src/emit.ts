@@ -7,6 +7,11 @@ export function literal(value: unknown) {
     .replace(/\u2029/g, "\\u2029");
 }
 
+/** Escapes text for HTML, inside an element or a double-quoted attribute such as a description. */
 export function escapeHtmlText(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }

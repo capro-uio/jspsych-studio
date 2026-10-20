@@ -1,3 +1,11 @@
+/** Where a jsPsych package's browser build, which defines its global, sits inside the package. */
+export const BROWSER_BUNDLE = "dist/index.browser.min.js";
+
+/** The global an extension's browser bundle defines, such as jsPsychExtensionWebgazer. */
+export function extensionIdentifier(extension: string) {
+  return pluginIdentifier(`extension-${extension}`);
+}
+
 /** The global a plugin's browser bundle defines, such as jsPsychHtmlKeyboardResponse. */
 export function pluginIdentifier(plugin: string) {
   const camelCased = plugin

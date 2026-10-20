@@ -142,6 +142,29 @@ The preview cannot reach a camera or microphone: browsers give none to a sandbox
 origin of its own, which is what keeps study code away from the builder. Download the experiment to
 try those steps.
 
+## Eye tracking
+
+Eye tracking estimates where the participant looks from their webcam, with
+[WebGazer](https://webgazer.cs.brown.edu/). A study sets it up in three steps: _Set up eye tracking_
+starts the webcam and has the participant centre their face; _Calibrate eye tracking_ shows points
+to click or look at, so the eye tracker learns where they look; and _Check eye-tracking accuracy_,
+which is optional, records how close its estimates fall to points shown. The validator says so if a
+step comes before the one it needs, on any path a participant can take.
+
+Once a study has an eye-tracking step, every other step offers _track where the participant
+looks_. A tracked
+step's row holds its gaze estimates in `webgazer_data`, each `x` and `y` in pixels from the top
+left of the screen with `t` in milliseconds since the step began, and in `webgazer_targets` the
+place on the screen of each element asked for: the stimulus, for the plugins that give it an id,
+and any other named by CSS selector.
+
+Webcam eye tracking is far coarser than a lab eye tracker and needs good light and a still head;
+it suits which part of the screen someone looks at more than which word. The video never leaves
+the participant's computer: only the gaze coordinates are kept, and WebGazer is told not to store
+what it learns in the browser, where the next person at a shared computer would inherit it. WebGazer is GPL-3.0
+licensed, and an exported study loads it from unpkg, as it does jsPsych. Like recording, it cannot
+run in the preview.
+
 ## Ending early
 
 A study can end before its last step, for a participant who declines consent or is screened out.

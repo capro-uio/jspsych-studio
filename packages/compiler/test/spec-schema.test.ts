@@ -157,6 +157,23 @@ describe("what the schema catches before anything runs", () => {
     expect(problems(spec)).toEqual([]);
   });
 
+  it("gaze tracking with anything but its targets", () => {
+    const spec = flanker();
+    (spec.timeline[0] as { gaze?: unknown }).gaze = { targets: [""], every: 10 };
+    expect(problems(spec)).toEqual(
+      expect.arrayContaining([
+        "must NOT have additional properties",
+        "must NOT have fewer than 1 characters",
+      ]),
+    );
+  });
+
+  it("but accepts a step that tracks gaze and records where its stimulus is", () => {
+    const spec = flanker();
+    (spec.timeline[0] as { gaze?: unknown }).gaze = { targets: ["#stimulus"] };
+    expect(problems(spec)).toEqual([]);
+  });
+
   it("an end step that names no ending", () => {
     const spec = flanker();
     spec.timeline.push({ kind: "end" } as never);
