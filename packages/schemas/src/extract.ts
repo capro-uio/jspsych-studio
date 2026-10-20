@@ -1,8 +1,7 @@
-import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "./files.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET, integrityOf } from "./files.ts";
 import type {
   ExtensionSchema,
   ExtractionReport,
@@ -101,17 +100,14 @@ function packageRoot(packageName: string) {
   }
 }
 
-/** A file's subresource-integrity hash, as a browser checks a script against it. */
-export function integrityOf(bytes: Uint8Array) {
-  return `sha384-${createHash("sha384").update(bytes).digest("base64")}`;
-}
-
 interface Manifest {
   version: string;
   license?: string;
   repository?: string | { url?: string; directory?: string };
   homepage?: string;
 }
+
+const WEB_ADDRESS = /^https:\/\/[^\s<>|"]+$/;
 
 /**
  * Where a package's source can be read: its repository, at the folder that holds it when it
@@ -124,19 +120,28 @@ export function sourceOf(packageName: string, manifest: Manifest) {
     ?.replace(/^git\+/, "")
     .replace(/^github:/, "https://github.com/")
     .replace(/\.git$/, "");
-  if (url?.startsWith("https://")) {
+  // The address is written into a download's notice, so only a plain web address is taken.
+  if (url && WEB_ADDRESS.test(url)) {
     return repository?.directory ? `${url}/tree/HEAD/${repository.directory}` : url;
   }
-  return manifest.homepage ?? `https://www.npmjs.com/package/${packageName}`;
+  if (manifest.homepage && WEB_ADDRESS.test(manifest.homepage)) return manifest.homepage;
+  return `https://www.npmjs.com/package/${packageName}`;
 }
 
 /** The installed version of a package, its licence and source, and the hash of each file named. */
-export function packageFiles(packageName: string, paths: string[]): PackageFiles {
+export async function packageFiles(packageName: string, paths: string[]): Promise<PackageFiles> {
   const root = packageRoot(packageName);
   const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Manifest;
   if (!manifest.license) throw new Error(`${packageName} names no licence`);
   const files = Object.fromEntries(
-    [...paths].sort().map((path) => [path, integrityOf(readFileSync(join(root, path)))]),
+    await Promise.all(
+      [...paths]
+        .sort()
+        .map(async (path) => [
+          path,
+          await integrityOf(new Uint8Array(readFileSync(join(root, path)))),
+        ]),
+    ),
   );
   return {
     version: manifest.version,
@@ -147,7 +152,10 @@ export function packageFiles(packageName: string, paths: string[]): PackageFiles
 }
 
 /** Every file a page can load: jsPsych and its stylesheet, each plugin, each extension and library. */
-export function filesFor(plugins: PluginSchemas, extensions: Record<string, ExtensionSchema>) {
+export async function filesFor(
+  plugins: PluginSchemas,
+  extensions: Record<string, ExtensionSchema>,
+): Promise<Record<string, PackageFiles>> {
   const wanted = new Map<string, Set<string>>();
   const want = (packageName: string, ...paths: string[]) => {
     const files = wanted.get(packageName) ?? new Set<string>();
@@ -163,7 +171,11 @@ export function filesFor(plugins: PluginSchemas, extensions: Record<string, Exte
     }
   }
   return Object.fromEntries(
-    [...wanted.keys()].sort().map((name) => [name, packageFiles(name, [...wanted.get(name)!])]),
+    await Promise.all(
+      [...wanted.keys()]
+        .sort()
+        .map(async (name) => [name, await packageFiles(name, [...wanted.get(name)!])] as const),
+    ),
   );
 }
 
@@ -519,7 +531,7 @@ export async function extractBundle(
     families: PLUGIN_FAMILIES,
     plugins: report.schemas,
     extensions,
-    packages: filesFor(report.schemas, extensions),
+    packages: await filesFor(report.schemas, extensions),
   };
   return { bundle, report };
 }
