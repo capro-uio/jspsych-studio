@@ -175,8 +175,15 @@ function entriesExpression(entries: unknown[], item: ParameterSchema, hasAssets:
   return bound ? `() => ${list}` : list;
 }
 
-function dataExpression(trial: TrialNode) {
+/**
+ * The data column a traced build writes each step's place in the timeline to, so whatever runs
+ * the study can tell which step is on screen. Only the builder's preview asks for it.
+ */
+export const STEP_COLUMN = "tachisto_step";
+
+function dataExpression(trial: TrialNode, step: string | undefined) {
   const entries = [
+    ...(step !== undefined ? [`${STEP_COLUMN}: ${literal(step)}`] : []),
     ...(trial.tag ? [`tag: ${literal(trial.tag)}`] : []),
     ...Object.entries(trial.record ?? {}).map(
       ([key, value]) => `${literal(key)}: ${parameterExpression(value)}`,
@@ -212,7 +219,7 @@ function compileTrial(trial: TrialNode, context: CompileContext) {
       context.hasAssets && isMediaParameter(trial.plugin, name, properties[name]?.jspsychType);
     entries.push(`${name}: ${parameterExpression(value, shapeOf(properties[name], media))}`);
   }
-  const data = dataExpression(trial);
+  const data = dataExpression(trial, context.stepIds?.get(trial));
   if (data) entries.push(`data: ${data}`);
   const score = scoreExpression(trial);
   if (score) entries.push(`on_finish: ${score}`);
@@ -254,6 +261,7 @@ interface CompileContext {
   usesCounterbalance: boolean;
   /** Plugins whose excluding form the study defines, for steps that send excluded people on. */
   excludingPlugins: Set<string>;
+  stepIds?: Map<TrialNode, string>;
 }
 
 function callFunctionStep(step: { async: boolean; body: string }) {
@@ -322,6 +330,8 @@ export interface CompileOptions {
   initEntries?: string;
   /** `"inline"` embeds media in the page; `"files"` points at files beside it. */
   assets?: "inline" | "files";
+  /** Names for steps, written to each one's data under {@link STEP_COLUMN} as it runs. */
+  stepIds?: Map<TrialNode, string>;
 }
 
 const SETTING_KEYS = [
@@ -357,6 +367,7 @@ export function compileSpec(
     usesGroups: false,
     usesCounterbalance: false,
     excludingPlugins: new Set(),
+    stepIds: options.stepIds,
   };
   const steps = spec.timeline.map((node) => compileNode(node, context));
 

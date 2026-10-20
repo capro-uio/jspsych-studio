@@ -1,0 +1,246 @@
+import { describe, expect, it } from "vitest";
+import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
+import { pluginSchema } from "../src/lib/schemas.ts";
+import {
+  segmentFor,
+  segmentHolds,
+  sequenceAt,
+  timingText,
+  UNTIMED_WEIGHT,
+  type Segment,
+} from "../src/lib/sequence.ts";
+
+const keyTrial = (params: TrialNode["params"], tag?: string): TrialNode => ({
+  kind: "trial",
+  plugin: "html-keyboard-response",
+  ...(tag && { tag }),
+  params,
+});
+
+const segment = (trial: TrialNode, rows: Record<string, unknown>[] = []) =>
+  segmentFor(trial, [0], rows, pluginSchema);
+
+describe("segmentFor", () => {
+  it("draws a timed plus sign as a fixation that lasts its duration", () => {
+    const fixation = segment(
+      keyTrial({
+        stimulus: "<p style='font-size:48px'>+</p>",
+        choices: "NO_KEYS",
+        trial_duration: 500,
+      }),
+    );
+    expect(fixation).toMatchObject({
+      role: "fixation",
+      title: "Fixation",
+      timing: { kind: "fixed", ms: { min: 500, max: 500 } },
+      weight: 500,
+    });
+    expect(fixation.answer).toBeUndefined();
+    expect(timingText(fixation)).toBe("500 ms");
+  });
+
+  it("shows a step waiting for a key as the stimulus, with the keys that answer it", () => {
+    const word = segment(keyTrial({ stimulus: "RED", choices: ["r", "b"] }, "stroop"));
+    expect(word).toMatchObject({
+      role: "stimulus",
+      title: "stroop",
+      timing: { kind: "response" },
+      answer: "r or b",
+      weight: UNTIMED_WEIGHT,
+    });
+    expect(timingText(word)).toBe("until response");
+  });
+
+  it("gives a response a deadline when the step also has a duration", () => {
+    const limited = segment(keyTrial({ stimulus: "RED", trial_duration: 1500 }));
+    expect(limited.timing).toEqual({ kind: "limit", ms: { min: 1500, max: 1500 } });
+    expect(limited.answer).toBe("any key");
+    expect(timingText(limited)).toBe("up to 1500 ms");
+  });
+
+  it("runs the full duration when a response does not end the step", () => {
+    const fixed = segment(
+      keyTrial({ stimulus: "RED", trial_duration: 800, response_ends_trial: false }),
+    );
+    expect(fixed.timing.kind).toBe("fixed");
+    expect(fixed.role).toBe("stimulus");
+  });
+
+  it("calls a timed screen without responses a screen", () => {
+    const blank = segment(keyTrial({ stimulus: "", choices: "NO_KEYS", trial_duration: 250 }));
+    expect(blank.role).toBe("screen");
+  });
+
+  it("reads a duration from a column as the range of its rows", () => {
+    const rows = [{ soa: 200 }, { soa: "600" }, { soa: 400 }];
+    const timed = segment(
+      keyTrial({ stimulus: "+", choices: "NO_KEYS", trial_duration: { var: "soa" } }),
+      rows,
+    );
+    expect(timed.timing).toEqual({ kind: "fixed", ms: { min: 200, max: 600 } });
+    expect(timed.weight).toBe(400);
+    expect(timingText(timed)).toBe("200–600 ms");
+  });
+
+  it("says a duration varies when its column holds something other than durations", () => {
+    const rows = [{ soa: 200 }, { soa: "long" }];
+    const varied = segment(keyTrial({ stimulus: "x", trial_duration: { var: "soa" } }), rows);
+    expect(varied.timing).toEqual({ kind: "varies", column: "soa" });
+    expect(timingText(varied)).toBe("from soa");
+  });
+
+  it("notes when the stimulus disappears before the step ends", () => {
+    const flashed = segment(
+      keyTrial({ stimulus: "RED", stimulus_duration: 200, trial_duration: 1500 }),
+    );
+    expect(flashed.shownFor).toEqual({ min: 200, max: 200 });
+  });
+
+  it("names keys from a column, a long list of keys, and buttons", () => {
+    expect(segment(keyTrial({ stimulus: "x", choices: { var: "keys" } })).answer).toBe(
+      "keys from keys",
+    );
+    expect(segment(keyTrial({ stimulus: "x", choices: ["a", "s", "d", "f"] })).answer).toBe(
+      "one of 4 keys",
+    );
+    const button = segmentFor(
+      {
+        kind: "trial",
+        plugin: "html-button-response",
+        params: { stimulus: "x", choices: ["Yes", "No"] },
+      },
+      [0],
+      [],
+      pluginSchema,
+    );
+    expect(button.answer).toBe("a button");
+  });
+
+  it("leaves a step with no set length, such as instructions, until the participant is done", () => {
+    const pages = segmentFor(
+      { kind: "trial", plugin: "instructions", params: { pages: ["<p>hi</p>"] } },
+      [0],
+      [],
+      pluginSchema,
+    );
+    expect(pages.role).toBe("other");
+    expect(timingText(pages)).toBe("until done");
+  });
+
+  it("uses the plugin's own name for a plugin the schemas do not know", () => {
+    const unknown = segmentFor({ kind: "trial", plugin: "made-up" }, [0], [], pluginSchema);
+    expect(unknown.title).toBe("made-up");
+    expect(unknown.timing.kind).toBe("untimed");
+  });
+});
+
+const fixation = keyTrial({ stimulus: "+", choices: "NO_KEYS", trial_duration: 300 });
+const word = keyTrial({ stimulus: { var: "word" }, choices: ["r", "b"] }, "word");
+
+const study = (extra: Partial<Spec> = {}, inner: SpecNode[] = [fixation, word]): Spec => ({
+  name: "study",
+  conditions: { words: [{ word: "RED" }, { word: "BLUE" }] },
+  timeline: [
+    keyTrial({ stimulus: "Welcome" }),
+    { kind: "block", conditions: "words", children: inner },
+    {
+      kind: "branch",
+      when: { scope: "word", accuracy_below: 0.5 },
+      then: [
+        { kind: "loop", repeat_while: { scope: "word", accuracy_below: 0.5 }, children: [word] },
+      ],
+    },
+  ],
+  ...extra,
+});
+
+describe("sequenceAt", () => {
+  it("lays out the block around a selected step, one segment for each of its steps", () => {
+    const sequence = sequenceAt(study(), [1, 1], pluginSchema)!;
+    expect(sequence.path).toEqual([1]);
+    expect(sequence.kind).toBe("block");
+    expect(sequence.segments.map((part) => [part.path, part.role])).toEqual([
+      [[1, 0], "fixation"],
+      [[1, 1], "stimulus"],
+    ]);
+  });
+
+  it("lays out a selected block itself", () => {
+    expect(sequenceAt(study(), [1], pluginSchema)?.path).toEqual([1]);
+  });
+
+  it("follows a branch's path to a loop inside it", () => {
+    const sequence = sequenceAt(study(), [2, 0, 0, 0], pluginSchema)!;
+    expect(sequence).toMatchObject({ path: [2, 0, 0], kind: "loop" });
+    expect(sequence.segments[0].path).toEqual([2, 0, 0, 0]);
+  });
+
+  it("shows nothing for a step outside any block or loop, or for no selection", () => {
+    expect(sequenceAt(study(), [0], pluginSchema)).toBeNull();
+    expect(sequenceAt(study(), [2], pluginSchema)).toBeNull();
+    expect(sequenceAt(study(), null, pluginSchema)).toBeNull();
+    expect(sequenceAt(study(), [9, 0], pluginSchema)).toBeNull();
+  });
+
+  it("puts the pause between steps after each one, when the study has one", () => {
+    const sequence = sequenceAt(study({ settings: { default_iti: 250 } }), [1], pluginSchema)!;
+    expect(sequence.segments.map((part) => part.role)).toEqual([
+      "fixation",
+      "gap",
+      "stimulus",
+      "gap",
+    ]);
+    expect(timingText(sequence.segments[1])).toBe("250 ms");
+  });
+
+  it("shows a block inside the block as one segment that can be selected", () => {
+    const nested = study({}, [fixation, { kind: "block", conditions: "words", children: [word] }]);
+    const inner = sequenceAt(nested, [1], pluginSchema)!.segments[1];
+    expect(inner).toMatchObject({ path: [1, 1], role: "group", title: "Block · 1 step" });
+    expect(timingText(inner)).toBe("");
+  });
+
+  it("names the other kinds of step it can hold", () => {
+    const titles = sequenceAt(
+      study({}, [
+        {
+          kind: "loop",
+          repeat_while: { scope: "word", accuracy_below: 0.5 },
+          children: [word, word],
+        },
+        { kind: "checkpoint", name: "half" },
+        { kind: "end", ending: "done" },
+        { kind: "assign", method: "random", groups: [] },
+        { kind: "counterbalance", method: "random", tasks: [] },
+        { kind: "branch", when: { scope: "word", accuracy_below: 0.5 }, then: [] },
+      ]),
+      [1],
+      pluginSchema,
+    )!.segments.map((part) => part.title);
+    expect(titles).toEqual([
+      "Repeat · 2 steps",
+      "Checkpoint “half”",
+      "End",
+      "Groups",
+      "Tasks in turn",
+      "Branch",
+    ]);
+  });
+});
+
+describe("segmentHolds", () => {
+  const group: Segment = {
+    path: [1, 2],
+    role: "group",
+    title: "Block",
+    timing: { kind: "untimed" },
+    weight: 1,
+  };
+
+  it("holds its own step and the steps inside it, but not a neighbour that shares a prefix", () => {
+    expect(segmentHolds(group, "1.2")).toBe(true);
+    expect(segmentHolds(group, "1.2.0")).toBe(true);
+    expect(segmentHolds(group, "1.20")).toBe(false);
+    expect(segmentHolds({ ...group, path: null }, "1.2")).toBe(false);
+  });
+});
