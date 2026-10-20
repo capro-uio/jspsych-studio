@@ -363,6 +363,11 @@ describe("rowLabels", () => {
     expect(rowLabels(spec, [0, 0])).toEqual(["1: BLUE · red · BLUE", "2: RED · red · RED"]);
   });
 
+  it("takes out a tag split around another, however it is nested", () => {
+    const spec = specWithTable([{ stimulus: "<scr<b>ipt>x</scr</b>ipt> &lt;i&gt;y" }]);
+    expect(rowLabels(spec, [0, 0])).toEqual(["1: x y"]);
+  });
+
   it("leaves text that only looks like markup, and reads the entities written in it", () => {
     const spec = specWithTable([{ stimulus: "<<<>>", answer: "a &lt; b &amp;&nbsp;c" }]);
     expect(rowLabels(spec, [0, 0])).toEqual(["1: <<<>> · a < b & c"]);
