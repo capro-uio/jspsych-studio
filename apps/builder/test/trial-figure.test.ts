@@ -4,7 +4,9 @@ import type { Spec } from "@tachisto/compiler";
 import stroop from "../../../examples/stroop.json";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import { sequenceAt, type Segment, type Sequence } from "../src/lib/sequence.ts";
+import { CHAR_WIDTH } from "../src/lib/figure.ts";
 import {
+  LINE_HEIGHT,
   labelLines,
   layoutTrialFigure,
   SCREEN,
@@ -40,7 +42,7 @@ function parse(svg: string) {
   return document.documentElement;
 }
 
-const labelHeight = 3 * 15;
+const labelHeight = 3 * LINE_HEIGHT;
 
 function inside(figure: TrialFigure) {
   return figure.screens.every(
@@ -113,7 +115,7 @@ describe("layoutTrialFigure", () => {
   it("runs a row's time arrow level, under the labels, across every screen", () => {
     const { arrow, screens } = layoutTrialFigure(trial, "row");
     expect(arrow.from.y).toBe(arrow.to.y);
-    expect(arrow.from.y).toBeGreaterThan(screens[0].label.at.y + 2 * 15);
+    expect(arrow.from.y).toBeGreaterThan(screens[0].label.at.y + 2 * LINE_HEIGHT);
     expect(arrow.to.x).toBeGreaterThanOrEqual(screens.at(-1)!.x + SCREEN.width);
   });
 
@@ -124,10 +126,19 @@ describe("layoutTrialFigure", () => {
     expect(figure.arrow.to.y).toBeLessThan(figure.height);
   });
 
+  it.each(["stack", "row"] as const)("draws an empty block as a finite %s figure", (way) => {
+    const figure = layoutTrialFigure(sequenceOf(), way);
+    for (const value of [figure.width, figure.height, figure.arrow.to.x, figure.arrow.to.y]) {
+      expect(Number.isFinite(value)).toBe(true);
+    }
+    expect(figure.arrow.to.x).toBeGreaterThan(figure.arrow.from.x);
+    parse(trialFigureSvg(figure, "empty", undefined));
+  });
+
   it("widens a row's columns to fit a label longer than a screen", () => {
     const long = sequenceOf(segment("screen", "A".repeat(60)), segment("screen", "B"));
     const [first, second] = layoutTrialFigure(long, "row").screens;
-    expect(second.label.at.x - first.label.at.x).toBeGreaterThan(60 * 6.6);
+    expect(second.label.at.x - first.label.at.x).toBeGreaterThan(60 * CHAR_WIDTH);
   });
 });
 
@@ -148,6 +159,22 @@ describe("trialFigureSvg", () => {
     expect(groups[1].querySelector("path")).toBeNull();
     expect(groups[1].querySelectorAll(":scope > text")).toHaveLength(1);
     expect(groups[2].textContent).toContain("Target");
+  });
+
+  it("paints a colour that is not a colour as the default, so it cannot break the file", () => {
+    const root = svgOf({ background_color: 'red"/><script>alert(1)</script><rect x="' });
+    expect(root.querySelector("script")).toBeNull();
+    expect(root.querySelector(`rect[width="${SCREEN.width}"]`)?.getAttribute("fill")).toBe(
+      "#ffffff",
+    );
+  });
+
+  it("shortens a name too long to fit across its screen", () => {
+    const long = sequenceOf(segment("screen", "a very long name for a single screen of the task"));
+    const root = parse(trialFigureSvg(layoutTrialFigure(long, "row"), "t", undefined));
+    const centre = root.querySelector(":scope > g > text[opacity]")?.textContent ?? "";
+    expect(centre.endsWith("…")).toBe(true);
+    expect(centre.length * CHAR_WIDTH).toBeLessThan(SCREEN.width);
   });
 
   it("carries every label and an arrow marked as time", () => {

@@ -6,6 +6,7 @@ import {
   slotsOf,
 } from "@tachisto/compiler";
 import type { Retention, Slot, Spec, SpecNode } from "@tachisto/compiler";
+import { CHAR_WIDTH, textWidth } from "./figure.ts";
 import { describeAccuracy, describeBranchRule } from "./rules.ts";
 import { pluginTitle } from "./schemas.ts";
 
@@ -64,7 +65,6 @@ type KindLayouts = { [Kind in SpecNode["kind"]]?: KindLayout<NodeOfKind<Kind>> }
 
 export const STEP_WIDTH = 220;
 export const LINE_HEIGHT = 16;
-const CHAR_WIDTH = 6.6;
 export const PAD_X = 12;
 export const PAD_Y = 8;
 export const DECISION_INSET = 14;
@@ -260,9 +260,9 @@ function shifted(fragment: Fragment, dx: number, dy: number): Fragment {
 function textBox(
   fields: Omit<FlowBox, "x" | "y" | "height" | "title" | "details" | "label">,
   description: Description,
-  textWidth = fields.width,
+  wrapWidth = fields.width,
 ): FlowBox {
-  const chars = charsWithin(textWidth);
+  const chars = charsWithin(wrapWidth);
   const title = wrapText(description.title, chars);
   const details = description.details.flatMap((detail) => wrapText(detail, chars));
   return {
@@ -395,14 +395,14 @@ function layoutContainer(
 }
 
 function layoutLane(slot: Slot, path: FlowPath, kind: string, spec: Spec): Fragment {
-  const textWidth = Math.ceil(slot.name.length * CHAR_WIDTH + 2 * PAD_X);
+  const labelWidth = Math.ceil(textWidth(slot.name) + 2 * PAD_X);
   const label = textBox(
     {
       key: `lane-${path.join("-")}`,
       path,
       kind,
       shape: "lane",
-      width: Math.min(STEP_WIDTH, Math.max(STEP_WIDTH * 0.4, textWidth)),
+      width: Math.min(STEP_WIDTH, Math.max(STEP_WIDTH * 0.4, labelWidth)),
     },
     { title: slot.name || "unnamed", details: [] },
   );

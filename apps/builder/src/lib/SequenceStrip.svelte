@@ -67,7 +67,10 @@
         <button
           type="button"
           onclick={downloadFigure}
-          title="An SVG of these steps as screens, for a paper or poster"
+          disabled={sequence.segments.length === 0}
+          title={sequence.segments.length === 0
+            ? "Add a step to this block to draw its figure"
+            : "An SVG of these steps as screens, for a paper or poster"}
           data-testid="download-sequence-svg">Download figure</button
         >
       </div>

@@ -1,12 +1,7 @@
-import {
-  backgroundColor,
-  escapeHtmlText,
-  textColor,
-  type ExperimentSettings,
-  type Spec,
-} from "@tachisto/compiler";
-import { ARROW_ID, FIGURE_CHAR_WIDTH, figureSvg, ink } from "./figure.ts";
+import { backgroundColor, textColor, type ExperimentSettings, type Spec } from "@tachisto/compiler";
+import { ARROW_ID, CHAR_WIDTH, figureSvg, ink, svgText, textWidth } from "./figure.ts";
 import { specFilename } from "./files.ts";
+import type { Point } from "./flow.ts";
 import { detailText, timingText, type Segment, type Sequence } from "./sequence.ts";
 
 /** A diagonal stack of screens, each stepping down and right from the last, or a single row. */
@@ -17,17 +12,12 @@ export const SCREEN = { width: 160, height: 100 };
 const STACK_STEP = 0.62;
 const MARGIN = 20;
 const LABEL_GAP = 10;
-const LINE_HEIGHT = 15;
+export const LINE_HEIGHT = 15;
 const FIRST_BASELINE = 12;
 const ROW_GAP = 24;
 const ARROW_OFFSET = 18;
 const TIME_LABEL = "Time";
 const TIME_LABEL_GAP = 6;
-
-export interface Point {
-  x: number;
-  y: number;
-}
 
 export type Emphasis = "title" | "timing" | "detail";
 
@@ -60,10 +50,10 @@ export function labelLines(segment: Segment): LabelLine[] {
   return lines;
 }
 
-const textWidth = (lines: LabelLine[]) =>
-  Math.max(0, ...lines.map((line) => line.text.length)) * FIGURE_CHAR_WIDTH;
+const labelWidth = (lines: LabelLine[]) =>
+  Math.max(0, ...lines.map((line) => textWidth(line.text)));
 
-const timeLabelWidth = TIME_LABEL.length * FIGURE_CHAR_WIDTH + TIME_LABEL_GAP;
+const timeLabelWidth = textWidth(TIME_LABEL) + TIME_LABEL_GAP;
 
 function layoutStack(segments: Segment[]): TrialFigure {
   const step = { x: SCREEN.width * STACK_STEP, y: SCREEN.height * STACK_STEP };
@@ -82,11 +72,12 @@ function layoutStack(segments: Segment[]): TrialFigure {
     };
   });
   // The arrow runs below and left of the screens, parallel to the way they step.
-  const reach = segments.length - 1 + STACK_STEP;
+  const reach = Math.max(segments.length - 1, 0) + STACK_STEP;
   const from = { x: MARGIN, y: MARGIN + SCREEN.height + ARROW_OFFSET };
   const to = { x: from.x + reach * step.x, y: from.y + reach * step.y };
   const labelsRight = Math.max(
-    ...screens.map((screen) => screen.label.at.x + textWidth(screen.label.lines)),
+    0,
+    ...screens.map((screen) => screen.label.at.x + labelWidth(screen.label.lines)),
   );
   return {
     width: Math.ceil(Math.max(labelsRight, to.x + timeLabelWidth) + MARGIN),
@@ -98,8 +89,8 @@ function layoutStack(segments: Segment[]): TrialFigure {
 
 function layoutRow(segments: Segment[]): TrialFigure {
   const labels = segments.map(labelLines);
-  const column = Math.max(SCREEN.width, ...labels.map(textWidth));
-  const tallest = Math.max(...labels.map((lines) => lines.length));
+  const column = Math.max(SCREEN.width, ...labels.map(labelWidth));
+  const tallest = Math.max(0, ...labels.map((lines) => lines.length));
   const screens = segments.map((segment, index): FigureScreen => {
     const left = MARGIN + index * (column + ROW_GAP);
     return {
@@ -115,7 +106,8 @@ function layoutRow(segments: Segment[]): TrialFigure {
   });
   const arrowY = MARGIN + SCREEN.height + LABEL_GAP + tallest * LINE_HEIGHT + ARROW_OFFSET;
   const from = { x: MARGIN, y: arrowY };
-  const to = { x: MARGIN + segments.length * (column + ROW_GAP) - ROW_GAP, y: arrowY };
+  const across = Math.max(segments.length * (column + ROW_GAP) - ROW_GAP, SCREEN.width);
+  const to = { x: MARGIN + across, y: arrowY };
   return {
     width: Math.ceil(to.x + timeLabelWidth + MARGIN),
     height: Math.ceil(arrowY + MARGIN),
@@ -135,6 +127,12 @@ const LABEL_STYLE: Record<Emphasis, string> = {
   detail: `fill="${ink("ink-muted")}"`,
 };
 
+/** As many characters of a screen's name as fit across it. */
+const SCREEN_CHARS = Math.floor((SCREEN.width - 16) / CHAR_WIDTH);
+
+const fitted = (text: string) =>
+  text.length <= SCREEN_CHARS ? text : `${text.slice(0, SCREEN_CHARS - 1)}…`;
+
 function crossSvg(centre: Point, colour: string) {
   const arm = 9;
   return `<path d="M ${centre.x - arm} ${centre.y} H ${centre.x + arm} M ${centre.x} ${centre.y - arm} V ${centre.y + arm}" stroke="${colour}" stroke-width="2.5"/>`;
@@ -149,7 +147,7 @@ function screenContent(screen: FigureScreen, colour: string) {
   const { role, title } = screen.segment;
   if (role === "fixation") return crossSvg(centre, colour);
   if (role === "gap") return "";
-  return `<text x="${centre.x}" y="${centre.y + 4}" text-anchor="middle" font-size="11" fill="${colour}" opacity="0.6">${escapeHtmlText(title)}</text>`;
+  return `<text x="${centre.x}" y="${centre.y + 4}" text-anchor="middle" font-size="11" fill="${colour}" opacity="0.6">${svgText(fitted(title))}</text>`;
 }
 
 function screenSvg(screen: FigureScreen, settings: ExperimentSettings | undefined) {
@@ -159,7 +157,7 @@ function screenSvg(screen: FigureScreen, settings: ExperimentSettings | undefine
   const label = lines
     .map(
       (line, index) =>
-        `<tspan x="${at.x}" y="${at.y + index * LINE_HEIGHT}" ${LABEL_STYLE[line.emphasis]}>${escapeHtmlText(line.text)}</tspan>`,
+        `<tspan x="${at.x}" y="${at.y + index * LINE_HEIGHT}" ${LABEL_STYLE[line.emphasis]}>${svgText(line.text)}</tspan>`,
     )
     .join("");
   return `<g>${frame}${screenContent(screen, textColor(settings))}<text text-anchor="${anchor}">${label}</text></g>`;

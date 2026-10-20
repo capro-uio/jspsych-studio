@@ -1,5 +1,5 @@
-import { escapeHtmlText, type Spec } from "@tachisto/compiler";
-import { ARROW_ID, figureSvg, ink } from "./figure.ts";
+import type { Spec } from "@tachisto/compiler";
+import { ARROW_ID, figureSvg, ink, svgText } from "./figure.ts";
 import { specFilename } from "./files.ts";
 import {
   centred,
@@ -72,7 +72,7 @@ function boxSvg(box: FlowBox) {
   const text = lines
     .map(
       ({ line, weight, colour }, index) =>
-        `<tspan x="${textX(box)}" y="${lineY(box, index)}" font-weight="${weight}" fill="${colour}">${escapeHtmlText(line)}</tspan>`,
+        `<tspan x="${textX(box)}" y="${lineY(box, index)}" font-weight="${weight}" fill="${colour}">${svgText(line)}</tspan>`,
     )
     .join("");
   const anchor = centred(box) ? "middle" : "start";
@@ -90,7 +90,7 @@ export function flowFigureSvg(layout: FlowLayout, title: string) {
       const path = `<path d="${edgePath(edge)}" fill="none" stroke="${stroke}" stroke-width="1.25"${dash}${arrow}/>`;
       const label =
         edge.label && edge.labelAt
-          ? `<text x="${edge.labelAt.x}" y="${edge.labelAt.y}" text-anchor="middle" font-size="11" font-weight="600" fill="${ink("flow-loop")}">${escapeHtmlText(edge.label)}</text>`
+          ? `<text x="${edge.labelAt.x}" y="${edge.labelAt.y}" text-anchor="middle" font-size="11" font-weight="600" fill="${ink("flow-loop")}">${svgText(edge.label)}</text>`
           : "";
       return path + label;
     })
