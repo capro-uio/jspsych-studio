@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "@tachisto/compiler";
 import type { Spec } from "@tachisto/compiler";
-import { previewSpec, readStepEvent, tracedPreview } from "../src/lib/preview.ts";
+import { readStepEvent, tracedPreview, type PreviewOptions } from "../src/lib/preview.ts";
 import { schemas } from "../src/lib/schemas.ts";
+
+const previewSpec = (spec: Spec, options?: PreviewOptions) => tracedPreview(spec, options).spec;
 
 const trial = (stimulus: string, tag?: string) => ({
   kind: "trial" as const,

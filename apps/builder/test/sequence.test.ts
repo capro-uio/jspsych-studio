@@ -2,13 +2,16 @@ import { describe, expect, it } from "vitest";
 import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import {
+  activeSegment,
   detailText,
   segmentFor,
   segmentHolds,
   sequenceAt,
+  sweepMs,
   timingText,
   UNTIMED_WEIGHT,
   type Segment,
+  type Sequence,
 } from "../src/lib/sequence.ts";
 
 const keyTrial = (params: TrialNode["params"], tag?: string): TrialNode => ({
@@ -108,6 +111,18 @@ describe("segmentFor", () => {
     const varied = segment(keyTrial({ stimulus: "x", trial_duration: { var: "soa" } }), rows);
     expect(varied.timing).toEqual({ kind: "varies", column: "soa" });
     expect(timingText(varied)).toBe("from soa");
+  });
+
+  it("does not take a blank or missing cell for a duration of nothing", () => {
+    const trial = keyTrial({ stimulus: "x", choices: "NO_KEYS", trial_duration: { var: "isi" } });
+    for (const blank of ["", "  ", null, false, undefined]) {
+      const rows = [{ isi: 500 }, { isi: blank }];
+      expect(segment(trial, rows).timing).toEqual({ kind: "varies", column: "isi" });
+    }
+    expect(segment(trial, [{ isi: "200" }, { isi: 400 }]).timing).toEqual({
+      kind: "fixed",
+      ms: { min: 200, max: 400 },
+    });
   });
 
   it("notes when the stimulus disappears before the step ends", () => {
@@ -264,5 +279,57 @@ describe("segmentHolds", () => {
     expect(segmentHolds(group, "1.2.0")).toBe(true);
     expect(segmentHolds(group, "1.20")).toBe(false);
     expect(segmentHolds({ ...group, path: null }, "1.2")).toBe(false);
+  });
+});
+
+const timed = (path: number[] | null, role: Segment["role"], ms: number): Segment => ({
+  path,
+  role,
+  title: role,
+  timing: { kind: "fixed", ms: { min: ms, max: ms } },
+  weight: ms,
+});
+
+const playing: Sequence = {
+  path: [1],
+  kind: "block",
+  segments: [
+    timed([1, 0], "fixation", 500),
+    timed(null, "gap", 250),
+    timed([1, 1], "group", 1000),
+    timed([1, 2], "stimulus", 800),
+  ],
+};
+
+describe("activeSegment", () => {
+  it("is the running step's own segment, or a group holding it", () => {
+    expect(activeSegment(playing, { step: "1.0", phase: "step" })).toBe(0);
+    expect(activeSegment(playing, { step: "1.1.0.2", phase: "step" })).toBe(2);
+  });
+
+  it("moves to the pause after a step once it finishes, and to nothing when no pause follows", () => {
+    expect(activeSegment(playing, { step: "1.0", phase: "after" })).toBe(1);
+    expect(activeSegment(playing, { step: "1.2", phase: "after" })).toBe(-1);
+  });
+
+  it("is nothing when the preview is idle or running a step elsewhere", () => {
+    expect(activeSegment(playing, { step: null, phase: "step" })).toBe(-1);
+    expect(activeSegment(playing, { step: "0", phase: "step" })).toBe(-1);
+  });
+});
+
+describe("sweepMs", () => {
+  it("crosses a step in the time the running study reported for it", () => {
+    expect(sweepMs(playing.segments[3], 650)).toBe(650);
+  });
+
+  it("falls back on a segment's own length, and a pause always keeps its own", () => {
+    expect(sweepMs(playing.segments[3], null)).toBe(800);
+    expect(sweepMs(playing.segments[1], 650)).toBe(250);
+  });
+
+  it("holds the playhead on a step with no set length", () => {
+    const waiting: Segment = { ...playing.segments[3], timing: { kind: "response" } };
+    expect(sweepMs(waiting, null)).toBeNull();
   });
 });
