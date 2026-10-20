@@ -16,7 +16,8 @@ import {
   sourceHeader,
   type MetadataOptions,
 } from "../metadata.ts";
-import { emitHtml } from "./html.ts";
+import { packageFileKey, thirdPartyNotice, type PackageFile } from "../package-files.ts";
+import { emitHtml, filesLoadedWhileRunning } from "./html.ts";
 import type { Retention, Spec } from "../types.ts";
 
 export type ProjectFile = string | Uint8Array;
@@ -25,10 +26,18 @@ const SOURCE_FILE = "experiment.js";
 const PROJECT_FILE = "experiment.json";
 const METADATA_FILE = "dataset_description.json";
 const FIGURES_DIR = "figures";
+const PACKAGES_DIR = "lib";
+const NOTICE_FILE = "THIRD-PARTY.md";
 
 export interface ProjectOptions extends Partial<MetadataOptions> {
   /** Figures of the study by file name, such as the builder's flow diagram, saved under figures/. */
   figures?: Record<string, string>;
+  /**
+   * Gets copies of the files the study loads from jsPsych and its plugins, keyed by
+   * {@link packageFileKey}, so the download carries them under lib/ and loads nothing from
+   * elsewhere. It is asked once the study is compiled, for exactly the files it needs.
+   */
+  packageSources?: (files: PackageFile[]) => Promise<Record<string, ProjectFile>>;
 }
 
 function decodeDataUrl(url: string) {
@@ -46,7 +55,35 @@ function figuresLine(names: string[]) {
   return `- \`${FIGURES_DIR}/\` — figures of the study for a paper or poster, as SVG: ${listed}\n`;
 }
 
-function readme(spec: Spec, assetCount: number, figureNames: string[], options: MetadataOptions) {
+function packagesLine(selfContained: boolean) {
+  return selfContained
+    ? `- \`${PACKAGES_DIR}/\` — jsPsych and the plugins this study uses, so it loads nothing from elsewhere; \`${PACKAGES_DIR}/${NOTICE_FILE}\` lists them with their licences\n`
+    : "";
+}
+
+function runningNote(selfContained: boolean, loadsFilesWhileRunning: boolean) {
+  if (!selfContained) {
+    return "jsPsych and its plugins load from unpkg.com at the versions this study was built with.";
+  }
+  const online =
+    "It carries its own copy of jsPsych and its plugins, so it runs without internet; only " +
+    "sending results to a server or participants back to a recruitment platform needs a connection.";
+  return loadsFilesWhileRunning
+    ? `${online} Eye tracking loads its model from \`${PACKAGES_DIR}/\` as it starts, which a browser ` +
+        "only allows over a web server: to try it on this computer, serve the folder locally, " +
+        "for example with `python3 -m http.server`, rather than opening the file."
+    : online;
+}
+
+interface ReadmeContents {
+  assetCount: number;
+  figureNames: string[];
+  selfContained: boolean;
+  loadsFilesWhileRunning: boolean;
+}
+
+function readme(spec: Spec, contents: ReadmeContents, options: MetadataOptions) {
+  const { assetCount, figureNames, selfContained, loadsFilesWhileRunning } = contents;
   return `# ${spec.name}
 
 Built with ${generatorLabel(options.tachisto)}.
@@ -57,13 +94,15 @@ Open \`index.html\` in a browser to try it on this computer. To collect data, pu
 these files on any web host — a university server, GitHub Pages, or whatever your
 department uses — and give participants the address.
 
+${runningNote(selfContained, loadsFilesWhileRunning)}
+
 ## What is here
 
 - \`index.html\` — the page participants open
 - \`${SOURCE_FILE}\` — the experiment itself, as jsPsych. Yours to read and change
 - \`${PROJECT_FILE}\` — the project file; open this in the builder to keep editing
 - \`${METADATA_FILE}\` — what the data will contain, in [Psych-DS](https://psych-ds.github.io/) form
-${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment shows\n` : ""}${figuresLine(figureNames)}
+${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment shows\n` : ""}${figuresLine(figureNames)}${packagesLine(selfContained)}
 ## Where the data goes
 
 ${
@@ -120,14 +159,23 @@ function earlyEndingsNote(spec: Spec) {
 export async function projectFiles(
   spec: Spec,
   bundle: SchemaBundle,
-  { figures = {}, ...options }: ProjectOptions = {},
+  { figures = {}, packageSources: gather, ...options }: ProjectOptions = {},
 ) {
   const compiled = compileSpec(spec, bundle, { assets: "files" });
   const metadata: MetadataOptions = { jspsych: compiled.jspsych, ...options };
+  const packageSources = gather ? await gather(compiled.files) : undefined;
+  const selfContained = packageSources !== undefined;
+  const missing = packageSources
+    ? compiled.files.map(packageFileKey).filter((key) => packageSources[key] === undefined)
+    : [];
+  if (missing.length > 0) {
+    throw new Error(`no copy of ${missing.join(", ")} to carry in the download`);
+  }
   const { html } = await emitHtml(compiled, {
     title: spec.name,
     sourceFile: SOURCE_FILE,
     tachisto: metadata.tachisto,
+    ...(selfContained && { base: `./${PACKAGES_DIR}` }),
   });
 
   const files: Record<string, ProjectFile> = {
@@ -135,8 +183,24 @@ export async function projectFiles(
     [SOURCE_FILE]: sourceHeader(spec, metadata) + (await formatSource(compiled.source)),
     [PROJECT_FILE]: `${JSON.stringify(spec, null, 2)}\n`,
     [METADATA_FILE]: `${JSON.stringify(datasetDescription(spec, compiled.columns, metadata), null, 2)}\n`,
-    "README.md": readme(spec, spec.assets?.length ?? 0, Object.keys(figures), metadata),
+    "README.md": readme(
+      spec,
+      {
+        assetCount: spec.assets?.length ?? 0,
+        figureNames: Object.keys(figures),
+        selfContained,
+        loadsFilesWhileRunning: filesLoadedWhileRunning(compiled).length > 0,
+      },
+      metadata,
+    ),
   };
+
+  if (packageSources) {
+    for (const key of compiled.files.map(packageFileKey)) {
+      files[`${PACKAGES_DIR}/${key}`] = packageSources[key];
+    }
+    files[`${PACKAGES_DIR}/${NOTICE_FILE}`] = thirdPartyNotice(compiled.files);
+  }
 
   for (const [name, contents] of Object.entries(figures)) {
     files[`${FIGURES_DIR}/${name}`] = contents;

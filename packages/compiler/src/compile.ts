@@ -1,5 +1,6 @@
 import type { ParameterSchema, SchemaBundle } from "@tachisto/schemas";
 import { compileAppearance } from "./appearance.ts";
+import { filesOfPackages } from "./package-files.ts";
 import {
   NAME_FILES_IN_DATA,
   compileAssetMap,
@@ -401,6 +402,12 @@ export function compileSpec(
       { message: `the schema bundle has no entry for extension "${EYE_TRACKER}"` },
     ]);
   }
+  const scripts = eyeTracker
+    ? [
+        ...eyeTracker.libraries,
+        { package: eyeTracker.package, version: eyeTracker.version, file: BROWSER_BUNDLE },
+      ]
+    : [];
   const columns = dataColumns(spec, [
     // Every plugin has a schema by now: one without stopped the compile above.
     ...[...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
@@ -429,11 +436,11 @@ export function compileSpec(
     columns,
     jspsych: bundle.jspsych,
     packages,
-    scripts: eyeTracker
-      ? [
-          ...eyeTracker.libraries,
-          { package: eyeTracker.package, version: eyeTracker.version, file: BROWSER_BUNDLE },
-        ]
-      : [],
+    scripts,
+    files: filesOfPackages(bundle, [
+      { name: "jspsych", version: bundle.jspsych },
+      ...scripts.map((script) => ({ name: script.package, version: script.version })),
+      ...Object.values(packages),
+    ]),
   };
 }
