@@ -32,7 +32,7 @@
   function downloadFigure() {
     download(
       `${specFilename(project.spec)}-flow.svg`,
-      studyFlowFigure(project.spec),
+      studyFlowFigure(project.spec, layout),
       "image/svg+xml",
     );
   }

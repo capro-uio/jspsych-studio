@@ -5,8 +5,12 @@ import { describe, expect, it } from "vitest";
 import type { Spec } from "@tachisto/compiler";
 import flanker from "../../../examples/flanker.json";
 import stroop from "../../../examples/stroop.json";
-import { FLOW_HUES, flowFigureSvg } from "../src/lib/flow-figure.ts";
+import tokens from "@tachisto/brand/tokens.json" with { type: "json" };
+import { FLOW_TINT, flowFigureSvg } from "../src/lib/flow-figure.ts";
 import { layoutFlow } from "../src/lib/flow.ts";
+
+const light = (name: string) =>
+  tokens.color.tokens.find((token) => token.name === name)?.value.light;
 
 const figureOf = (spec: Spec, title = "study flow") => flowFigureSvg(layoutFlow(spec), title);
 
@@ -44,7 +48,7 @@ describe("flowFigureSvg", () => {
 
   it("dashes the repeat edge of a loop in the loop's hue and keeps its arrowheads", () => {
     const root = parse(figureOf(flanker as Spec));
-    const dashed = root.querySelectorAll(`path[stroke="${FLOW_HUES.loop}"][stroke-dasharray]`);
+    const dashed = root.querySelectorAll(`path[stroke="${light("flow-loop")}"][stroke-dasharray]`);
     expect(dashed).toHaveLength(1);
     expect(root.querySelectorAll('path[marker-end="url(#arrow)"]').length).toBeGreaterThan(0);
     expect(root.querySelector("marker#arrow")).not.toBeNull();
@@ -52,7 +56,7 @@ describe("flowFigureSvg", () => {
 
   it("tints a block in its hue, mixed into white the way app.css mixes it", () => {
     const root = parse(figureOf(flanker as Spec));
-    const block = root.querySelector(`rect[stroke="${FLOW_HUES.block}"]`);
+    const block = root.querySelector(`rect[stroke="${light("flow-block")}"]`);
     expect(block?.getAttribute("fill")).toBe("#eef2f6");
   });
 
@@ -67,16 +71,12 @@ describe("flowFigureSvg", () => {
   });
 });
 
-describe("FLOW_HUES", () => {
+describe("FLOW_TINT", () => {
   const css = readFileSync(join(import.meta.dirname, "..", "src", "app.css"), "utf8");
 
-  it.each(Object.entries(FLOW_HUES))(
-    "%s is the light ink app.css gives the diagram",
-    (kind, hex) => {
-      expect(css).toContain(`--flow-${kind}-stroke: light-dark(${hex},`);
-      expect(css).toContain(
-        `--flow-${kind}-fill: color-mix(in srgb, var(--flow-${kind}-stroke) 9%,`,
-      );
-    },
-  );
+  it.each(["block", "loop"])("is how much of the %s hue app.css mixes into its fill", (kind) => {
+    expect(css).toContain(
+      `--flow-${kind}-fill: color-mix(in srgb, var(--flow-${kind}-stroke) ${FLOW_TINT * 100}%,`,
+    );
+  });
 });
