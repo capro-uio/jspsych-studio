@@ -81,10 +81,6 @@ export function tracedPreview(spec: Spec, options: PreviewOptions = {}) {
   return { spec: previewed, stepIds };
 }
 
-export function previewSpec(spec: Spec, options: PreviewOptions = {}): Spec {
-  return tracedPreview(spec, options).spec;
-}
-
 const MESSAGE_SOURCE = "tachisto-preview";
 
 /** Hooks for the running study that tell the builder each time a step starts and finishes. */

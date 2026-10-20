@@ -1,6 +1,7 @@
 import { isVariableReference, slotsOf } from "@tachisto/compiler";
 import type { ParameterValue, Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import type { PluginSchema } from "@tachisto/schemas";
+import type { Playback } from "./playback.svelte.ts";
 
 /** The shortest and longest a value can be, across the rows of a conditions table. */
 export interface Span {
@@ -80,10 +81,17 @@ function rowsFor(spec: Spec, along: { node: SpecNode }[]): Row[] {
   return [];
 }
 
+// Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.
+function durationOf(cell: unknown) {
+  if (typeof cell === "number") return cell;
+  if (typeof cell === "string" && cell.trim() !== "") return Number(cell);
+  return Number.NaN;
+}
+
 function spanOf(value: ParameterValue | undefined, rows: Row[]): Span | string | null {
   if (typeof value === "number") return { min: value, max: value };
   if (value === undefined || !isVariableReference(value)) return null;
-  const cells = rows.map((row) => Number(row[value.var]));
+  const cells = rows.map((row) => durationOf(row[value.var]));
   if (cells.length === 0 || cells.some((cell) => !Number.isFinite(cell) || cell < 0)) {
     return value.var;
   }
@@ -157,6 +165,12 @@ function groupTitle(node: SpecNode) {
   return node.kind;
 }
 
+type Along = ReturnType<typeof nodesAlong>[number];
+type Container = Extract<SpecNode, { kind: "block" | "loop" }>;
+
+const isContainer = (entry: Along): entry is Along & { node: Container } =>
+  entry.node.kind === "block" || entry.node.kind === "loop";
+
 /**
  * The block or loop around the selection, laid out step by step, with the pause between steps
  * where the study has one. A selection outside any block or loop has no sequence to show.
@@ -164,15 +178,11 @@ function groupTitle(node: SpecNode) {
 export function sequenceAt(spec: Spec, selection: number[] | null, lookup: Lookup) {
   if (!selection) return null;
   const along = nodesAlong(spec.timeline, selection);
-  let index = along.length - 1;
-  while (index >= 0 && along[index].node.kind !== "block" && along[index].node.kind !== "loop") {
-    index -= 1;
-  }
-  if (index === -1) return null;
-  const { node: container, path } = along[index];
-  if (container.kind !== "block" && container.kind !== "loop") return null;
+  const around = [...along].reverse().find(isContainer);
+  if (!around) return null;
+  const { node: container, path } = around;
 
-  const rows = rowsFor(spec, along.slice(0, index + 1));
+  const rows = rowsFor(spec, along.slice(0, along.indexOf(around) + 1));
   const gap = spec.settings?.default_iti ?? 0;
   const segments: Segment[] = [];
   container.children.forEach((child, childIndex) => {
@@ -225,4 +235,23 @@ export function segmentHolds(segment: Segment, step: string) {
 export function detailText(segment: Segment) {
   const shown = segment.shownFor && `shown ${ms(segment.shownFor)}`;
   return [shown, segment.answer].filter(Boolean).join(" · ");
+}
+
+/** The segment the preview is in: the running step's own, or the pause after it once it ends. */
+export function activeSegment(sequence: Sequence, playing: Pick<Playback, "step" | "phase">) {
+  const { step, phase } = playing;
+  if (!step) return -1;
+  const own = sequence.segments.findIndex((segment) => segmentHolds(segment, step));
+  if (own === -1 || phase === "step") return own;
+  return sequence.segments[own + 1]?.role === "gap" ? own + 1 : -1;
+}
+
+/**
+ * How long the playhead takes to cross a segment: what the running step reported, or else the
+ * segment's own length. A step with no set length holds the playhead until the participant acts.
+ */
+export function sweepMs(segment: Segment, reported: number | null) {
+  if (segment.role !== "gap" && reported !== null) return reported;
+  const { timing } = segment;
+  return timing.kind === "fixed" || timing.kind === "limit" ? timing.ms.max : null;
 }

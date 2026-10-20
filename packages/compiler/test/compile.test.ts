@@ -305,7 +305,7 @@ describe("tracing steps", () => {
     const traced = spec();
     const stepIds = new Map([[traced.timeline[1] as TrialNode, "1"]]);
     const { source } = compileSpec(traced, schemas, { stepIds });
-    expect(source).toContain(`data: { ${STEP_COLUMN}: "1", tag: "word" }`);
+    expect(source).toContain(`data: { tag: "word", ${STEP_COLUMN}: "1" }`);
     expect(source.match(new RegExp(STEP_COLUMN, "g"))).toHaveLength(1);
   });
 

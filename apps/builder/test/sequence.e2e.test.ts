@@ -83,12 +83,23 @@ describe("the timing strip", () => {
     await expect.poll(() => activeSegment(page), { timeout: 10_000 }).toBe("sequence-2-0");
     await expect.poll(() => activeSegment(page), { timeout: 10_000 }).toBe("sequence-2-1");
     await expect(page.getByTestId("sequence-live").count()).resolves.toBe(1);
+    await expect.poll(() => page.getByTestId("sequence-now").textContent()).toMatch(/Now: stroop/);
 
     // Answering ends the word, and the next row starts with its fixation again.
     const frame = page.frameLocator('[data-testid="preview"]');
     await frame.locator("body").click();
     await page.keyboard.press("r");
     await expect.poll(() => activeSegment(page), { timeout: 10_000 }).toBe("sequence-2-0");
+    await page.close();
+  }, 120_000);
+
+  it("says when a block has no steps yet", async () => {
+    const page = await openStroop();
+    page.on("dialog", (dialog) => void dialog.accept());
+    await page.getByTestId("delete-2-1").click();
+    await page.getByTestId("delete-2-0").click();
+    await page.getByTestId("node-2").click();
+    await expect.poll(() => page.getByTestId("sequence-empty").count()).toBe(1);
     await page.close();
   }, 120_000);
 

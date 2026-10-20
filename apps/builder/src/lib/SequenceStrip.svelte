@@ -3,30 +3,23 @@
   import { playback } from "./playback.svelte.ts";
   import { project } from "./project.svelte.ts";
   import { pluginSchema } from "./schemas.ts";
-  import { detailText, segmentHolds, sequenceAt, timingText, type Segment } from "./sequence.ts";
+  import {
+    activeSegment,
+    detailText,
+    sequenceAt,
+    sweepMs,
+    timingText,
+    type Segment,
+  } from "./sequence.ts";
   import { sequenceFigure, type Arrangement } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
   const selectedKey = $derived(project.selection?.join(".") ?? "");
 
-  // The segment the preview is in: the running step's own, or the pause after it once it ends.
-  const active = $derived.by(() => {
-    const step = playback.step;
-    if (!sequence || !step) return -1;
-    const own = sequence.segments.findIndex((segment) => segmentHolds(segment, step));
-    if (own === -1 || playback.phase === "step") return own;
-    return sequence.segments[own + 1]?.role === "gap" ? own + 1 : -1;
-  });
-
-  // How long the playhead takes to cross the active segment; a step with no set length holds it
-  // at the start until the participant moves on.
-  const sweep = $derived.by(() => {
-    if (!sequence || active === -1) return null;
-    const segment = sequence.segments[active];
-    if (segment.role !== "gap" && playback.duration !== null) return playback.duration;
-    const { timing } = segment;
-    return timing.kind === "fixed" || timing.kind === "limit" ? timing.ms.max : null;
-  });
+  const active = $derived(sequence ? activeSegment(sequence, playback) : -1);
+  const sweep = $derived(
+    sequence && active !== -1 ? sweepMs(sequence.segments[active], playback.duration) : null,
+  );
 
   const isSelected = (segment: Segment) => segment.path?.join(".") === selectedKey;
 
@@ -75,11 +68,22 @@
         >
       </div>
     </div>
+    <p class="visually-hidden" aria-live="polite" data-testid="sequence-now">
+      {active !== -1 ? `Now: ${sequence.segments[active].title}` : ""}
+    </p>
+    {#if sequence.segments.length === 0}
+      <p class="empty" data-testid="sequence-empty">
+        No steps in this {sequence.kind} yet.
+      </p>
+    {/if}
     <ol class="track">
       {#each sequence.segments as segment, index (index)}
+        {@const timing = timingText(segment)}
+        {@const detail = detailText(segment)}
+        {@const selected = isSelected(segment)}
         <li
           class="segment {segment.role}"
-          class:selected={isSelected(segment)}
+          class:selected
           class:active={index === active}
           style={`flex-grow: ${segment.weight}`}
           data-testid={segment.path ? `sequence-${segment.path.join("-")}` : "sequence-gap"}
@@ -88,8 +92,8 @@
             {@const path = segment.path}
             <button
               class="block"
-              title={`${segment.title}: ${timingText(segment) || "select to edit"}`}
-              aria-current={isSelected(segment) ? "step" : undefined}
+              title={`${segment.title}: ${timing || "select to edit"}`}
+              aria-current={selected ? "true" : undefined}
               onclick={() => (project.selection = path)}
             >
               {#if segment.role === "fixation"}<span class="cross" aria-hidden="true"></span>{/if}
@@ -109,9 +113,9 @@
               {/key}
             </span>
           {/if}
-          <span class="timing">{timingText(segment)}</span>
-          {#if detailText(segment)}
-            <span class="detail">{detailText(segment)}</span>
+          <span class="timing">{timing}</span>
+          {#if detail}
+            <span class="detail">{detail}</span>
           {/if}
         </li>
       {/each}
@@ -139,6 +143,19 @@
     display: flex;
     gap: var(--space-1);
     font-size: 12px;
+  }
+  .empty {
+    margin: 0;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
   .caption {
     margin: 0;

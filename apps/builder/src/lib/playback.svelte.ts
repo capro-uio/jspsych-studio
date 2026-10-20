@@ -29,6 +29,7 @@ export function followPreview(event: StepEvent) {
 }
 
 /** A new or restarted preview has nothing on screen yet. */
+// Only written, never read: it runs inside an effect, which would otherwise rerun on every step.
 export function resetPlayback() {
   playback.step = null;
   playback.phase = "step";
