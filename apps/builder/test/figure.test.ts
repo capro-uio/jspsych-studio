@@ -27,3 +27,10 @@ describe("svgText", () => {
     expect(svgText("bell\u0007 form\u000c tab\t line\n")).toBe("bell form tab\t line\n");
   });
 });
+
+describe("a figure made for a page", () => {
+  it("states its printed size in millimetres, keeping its shape", () => {
+    const svg = figureSvg({ width: 400, height: 100, title: "t", body: [], widthMm: 89 });
+    expect(svg).toMatch(/width="89mm" height="22.25mm" viewBox="0 0 400 100"/);
+  });
+});

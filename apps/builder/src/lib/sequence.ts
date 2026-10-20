@@ -92,6 +92,30 @@ export function tableAt(spec: Spec, path: number[]) {
   return tableFor(nodesAlong(spec.timeline, path));
 }
 
+const ROW_LABEL_LENGTH = 40;
+
+/**
+ * Each row of the table the steps at a path read, named by its number and the first few values
+ * in it, so one can be picked from a list: "2: BLUE · red · b".
+ */
+export function rowLabels(spec: Spec, path: number[]) {
+  const table = tableAt(spec, path);
+  const rows = table === null ? [] : (spec.conditions?.[table] ?? []);
+  return rows.map((row, index) => {
+    const values = Object.values(row)
+      .filter((value) => typeof value === "string" || typeof value === "number")
+      .map((value) =>
+        String(value)
+          .replace(/<[^>]*>/g, "")
+          .trim(),
+      )
+      .filter(Boolean)
+      .join(" · ");
+    const label = `${index + 1}: ${values}`;
+    return label.length > ROW_LABEL_LENGTH ? `${label.slice(0, ROW_LABEL_LENGTH - 1)}…` : label;
+  });
+}
+
 // Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.
 function durationOf(cell: unknown) {
   if (typeof cell === "number") return cell;

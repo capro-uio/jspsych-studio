@@ -6,8 +6,12 @@ import { pluginSchema } from "../src/lib/schemas.ts";
 import { sequenceAt, type Segment, type Sequence } from "../src/lib/sequence.ts";
 import { CHAR_WIDTH } from "../src/lib/figure.ts";
 import {
+  COLUMN_WIDTH_MM,
+  fitTrialFigure,
   LINE_HEIGHT,
   labelLines,
+  MIN_SCREEN_WIDTH,
+  MM_PER_UNIT,
   layoutTrialFigure,
   SCREEN,
   sequenceFigure,
@@ -210,9 +214,72 @@ describe("sequenceFigure", () => {
   it("draws an example's block from the timing strip, named after the study", () => {
     const spec = stroop as Spec;
     const sequence = sequenceAt(spec, [2, 1], pluginSchema)!;
-    const root = parse(sequenceFigure(spec, sequence, "row"));
+    const { svg } = sequenceFigure(spec, sequence, { arrangement: "row", size: "screen" });
+    const root = parse(svg);
     expect(root.querySelector("title")?.textContent).toMatch(/one pass through the block$/);
     expect(root.textContent).toContain("300 ms");
     expect(root.textContent).toContain("r or b");
+  });
+
+  it("is sized in pixels at screen size, and made twice over as a PNG", () => {
+    const { svg, pixelWidth } = sequenceFigure(
+      stroop as Spec,
+      sequenceAt(stroop as Spec, [2, 1], pluginSchema)!,
+      {
+        arrangement: "stack",
+        size: "screen",
+      },
+    );
+    const width = Number(parse(svg).getAttribute("width"));
+    expect(pixelWidth).toBe(width * 2);
+  });
+
+  it.each(["single", "double"] as const)(
+    "fits a %s column of a page in millimetres, and prints at 300 dpi",
+    (size) => {
+      const sequence = sequenceAt(stroop as Spec, [2, 1], pluginSchema)!;
+      const { svg, pixelWidth } = sequenceFigure(stroop as Spec, sequence, {
+        arrangement: "stack",
+        size,
+      });
+      const width = parseFloat(parse(svg).getAttribute("width") ?? "");
+      expect(parse(svg).getAttribute("width")).toMatch(/mm$/);
+      expect(width).toBeLessThanOrEqual(COLUMN_WIDTH_MM[size]);
+      expect(pixelWidth).toBe(Math.round((width / 25.4) * 300));
+    },
+  );
+});
+
+describe("fitTrialFigure", () => {
+  const four = sequenceOf(
+    segment("fixation", "Fixation"),
+    segment("screen", "Cue"),
+    segment("stimulus", "Target", { answer: "f or j" }),
+    segment("screen", "Feedback"),
+  );
+  const column = COLUMN_WIDTH_MM.single / MM_PER_UNIT;
+
+  it("draws the largest screens that let the figure fit the width", () => {
+    const fitted = fitTrialFigure(four, "stack", column);
+    expect(fitted.width).toBeLessThanOrEqual(column);
+    expect(fitted.screen.width).toBeLessThan(SCREEN.width);
+    const larger = layoutTrialFigure(four, "stack", fitted.screen.width + 4);
+    expect(larger.width).toBeGreaterThan(column);
+  });
+
+  it("keeps full-size screens when they already fit", () => {
+    expect(fitTrialFigure(trial, "stack", 10_000).screen).toEqual(SCREEN);
+  });
+
+  it("goes no smaller than its smallest screens, even when the figure will not fit", () => {
+    expect(fitTrialFigure(four, "row", 100).screen.width).toBe(MIN_SCREEN_WIDTH);
+  });
+
+  it("keeps each label in a stack clear of the next screen, however small the screens", () => {
+    const { screens } = layoutTrialFigure(trial, "stack", MIN_SCREEN_WIDTH);
+    for (const [index, screen] of screens.slice(0, -1).entries()) {
+      const lastBaseline = screen.label.at.y + (screen.label.lines.length - 1) * LINE_HEIGHT;
+      expect(lastBaseline).toBeLessThan(screens[index + 1].y);
+    }
   });
 });

@@ -6,12 +6,13 @@
   import {
     activeSegment,
     detailText,
+    rowLabels,
     sequenceAt,
     sweepMs,
     timingText,
     type Segment,
   } from "./sequence.ts";
-  import { sequenceFigure, type Arrangement } from "./trial-figure.ts";
+  import { sequenceFigure, type Arrangement, type FigureSize } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
   const selectedKey = $derived(project.selection?.join(".") ?? "");
@@ -24,6 +25,12 @@
   const isSelected = (segment: Segment) => segment.path?.join(".") === selectedKey;
 
   let arrangement = $state<Arrangement>("stack");
+  let size = $state<FigureSize>("screen");
+  let format = $state<"svg" | "png">("svg");
+  let row = $state(0);
+  const rows = $derived(sequence ? rowLabels(project.spec, sequence.path) : []);
+  // Another block may have fewer rows than the one a row was picked in.
+  const chosenRow = $derived(row < rows.length ? row : 0);
 
   let capturing = $state(false);
   let capture: AbortController | null = null;
@@ -31,8 +38,9 @@
   // A capture still running when the strip goes is stopped, and nothing is downloaded.
   $effect(() => () => capture?.abort());
 
-  // The screens are pictured from the running study, which takes a moment; a figure is still
-  // drawn, with plain screens, if they cannot be. The capture's code loads only when it is wanted.
+  // The screens are pictured from the running study, for the row chosen, which takes a moment; a
+  // figure is still drawn, with plain screens, if they cannot be. The capture's code loads only
+  // when it is wanted.
   async function downloadFigure() {
     if (!sequence) return;
     const drawn = sequence;
@@ -42,13 +50,18 @@
     capturing = true;
     try {
       const { captureScreens } = await import("./screen-capture.ts");
-      const pictures = await captureScreens(spec, drawn, { signal }).catch(() => []);
-      if (signal.aborted) return;
-      download(
-        `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}.svg`,
-        sequenceFigure(spec, drawn, arrangement, pictures),
-        "image/svg+xml",
+      const pictures = await captureScreens(spec, drawn, { row: chosenRow, signal }).catch(
+        () => [],
       );
+      if (signal.aborted) return;
+      const figure = sequenceFigure(spec, drawn, { arrangement, size }, pictures);
+      const name = `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}`;
+      if (format === "svg") {
+        download(`${name}.svg`, figure.svg, "image/svg+xml");
+      } else {
+        const { figurePng } = await import("./figure-png.ts");
+        download(`${name}.png`, await figurePng(figure.svg, figure.pixelWidth), "image/png");
+      }
     } finally {
       capturing = false;
       capture = null;
@@ -69,27 +82,54 @@
             >· following the preview</span
           >{/if}
       </p>
-      <div class="figure" role="group" aria-label="Figure for a paper">
-        <select
-          bind:value={arrangement}
-          aria-label="Figure layout"
-          data-testid="sequence-figure-layout"
-        >
-          <option value="stack">Screens stacked</option>
-          <option value="row">Screens in a row</option>
-        </select>
-        <button
-          type="button"
-          onclick={downloadFigure}
-          disabled={sequence.segments.length === 0 || capturing}
-          aria-busy={capturing}
-          title={sequence.segments.length === 0
-            ? "Add a step to this block to draw its figure"
-            : "An SVG of these steps as screens, for a paper or poster"}
-          data-testid="download-sequence-svg"
-          >{capturing ? "Drawing the screens…" : "Download figure"}</button
-        >
-      </div>
+      <details class="figure" data-testid="sequence-figure">
+        <summary>Figure for a paper</summary>
+        <div class="options" role="group" aria-label="Figure for a paper">
+          <label>
+            Layout
+            <select bind:value={arrangement} data-testid="sequence-figure-layout">
+              <option value="stack">Screens stacked</option>
+              <option value="row">Screens in a row</option>
+            </select>
+          </label>
+          {#if rows.length > 1}
+            <label>
+              Conditions row
+              <select bind:value={row} data-testid="sequence-figure-row">
+                {#each rows as label, index (index)}
+                  <option value={index}>{label}</option>
+                {/each}
+              </select>
+            </label>
+          {/if}
+          <label>
+            Size
+            <select bind:value={size} data-testid="sequence-figure-size">
+              <option value="screen">As drawn here</option>
+              <option value="single">One column, 89 mm</option>
+              <option value="double">Two columns, 183 mm</option>
+            </select>
+          </label>
+          <label>
+            Format
+            <select bind:value={format} data-testid="sequence-figure-format">
+              <option value="svg">SVG, to edit</option>
+              <option value="png">PNG{size === "screen" ? "" : ", 300 dpi"}</option>
+            </select>
+          </label>
+          <button
+            type="button"
+            onclick={downloadFigure}
+            disabled={sequence.segments.length === 0 || capturing}
+            aria-busy={capturing}
+            title={sequence.segments.length === 0
+              ? "Add a step to this block to draw its figure"
+              : "These steps as screens, as the participant sees them"}
+            data-testid="download-sequence-svg"
+            >{capturing ? "Drawing the screens…" : "Download figure"}</button
+          >
+        </div>
+      </details>
     </div>
     <p class="visually-hidden" aria-live="polite" data-testid="sequence-now">
       {active !== -1 ? `Now: ${sequence.segments[active].title}` : ""}
@@ -163,9 +203,37 @@
     flex-wrap: wrap;
   }
   .figure {
-    display: flex;
-    gap: var(--space-1);
+    position: relative;
     font-size: 12px;
+  }
+  .figure summary {
+    cursor: pointer;
+    color: var(--ink-muted);
+  }
+  .figure[open] summary {
+    color: var(--ink);
+  }
+  .options {
+    position: absolute;
+    right: 0;
+    top: calc(100% + var(--space-1));
+    z-index: 2;
+    display: grid;
+    gap: var(--space-2);
+    min-width: 16rem;
+    padding: var(--space-3);
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-pop);
+  }
+  .options label {
+    display: grid;
+    gap: 2px;
+    color: var(--ink-muted);
+  }
+  .options select {
+    color: var(--ink);
   }
   .empty {
     margin: 0;

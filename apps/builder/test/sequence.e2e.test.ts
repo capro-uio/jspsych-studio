@@ -50,6 +50,7 @@ describe("the timing strip", () => {
   it("downloads the block as a figure of its screens, in the layout chosen", async () => {
     const page = await openStroop();
     await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure").locator("summary").click();
     await page.getByTestId("sequence-figure-layout").selectOption("row");
 
     const [file] = await Promise.all([
@@ -66,6 +67,7 @@ describe("the timing strip", () => {
   it("draws each screen of the figure as the participant sees it", async () => {
     const page = await openStroop();
     await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure").locator("summary").click();
     const [file] = await Promise.all([
       page.waitForEvent("download", { timeout: 60_000 }),
       page.getByTestId("download-sequence-svg").click(),
@@ -83,6 +85,7 @@ describe("the timing strip", () => {
     await page.goto(appUrl);
     await page.getByTestId("example-shapes").click();
     await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure").locator("summary").click();
     const [file] = await Promise.all([
       page.waitForEvent("download", { timeout: 60_000 }),
       page.getByTestId("download-sequence-svg").click(),
@@ -90,6 +93,27 @@ describe("the timing strip", () => {
     const svg = readFileSync(await file.path(), "utf8");
     expect(svg.match(/<image /g) ?? []).toHaveLength(2);
     if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, svg);
+    await page.close();
+  }, 120_000);
+
+  it("downloads a PNG sized for one column of a page, for the row chosen", async () => {
+    const page = await openStroop();
+    await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure").locator("summary").click();
+    await page.getByTestId("sequence-figure-row").selectOption("1");
+    await page.getByTestId("sequence-figure-size").selectOption("single");
+    await page.getByTestId("sequence-figure-format").selectOption("png");
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      page.getByTestId("download-sequence-svg").click(),
+    ]);
+    expect(file.suggestedFilename()).toMatch(/-block-2\.png$/);
+    const png = readFileSync(await file.path());
+    expect(png.subarray(1, 4).toString()).toBe("PNG");
+    const width = png.readUInt32BE(16);
+    expect(width).toBeGreaterThan(900);
+    expect(width).toBeLessThanOrEqual(Math.round((89 / 25.4) * 300));
+    if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, png);
     await page.close();
   }, 120_000);
 
