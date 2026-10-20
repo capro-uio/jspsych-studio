@@ -62,6 +62,9 @@ function packagesAmong(files: PackageFile[]) {
   return [...seen.values()];
 }
 
+// A bar inside a cell would end it and shift every cell after it.
+const tableCell = (text: string) => text.replace(/\|/g, "\\|");
+
 /**
  * What a download that carries copies of these packages owes their authors: which packages they
  * are, the licence each is used under, and where its source and full licence text are, as the
@@ -69,7 +72,8 @@ function packagesAmong(files: PackageFile[]) {
  */
 export function thirdPartyNotice(files: PackageFile[]) {
   const rows = packagesAmong(files).map(
-    (file) => `| ${file.package} | ${file.version} | ${file.license} | <${file.source}> |`,
+    (file) =>
+      `| ${[file.package, file.version, file.license, file.source].map(tableCell).join(" | ")} |`,
   );
   return `# Software this study carries
 
@@ -86,9 +90,9 @@ ${rows.join("\n")}
 /** The same notice as a comment at the top of a page that carries the packages inside it. */
 export function thirdPartyComment(files: PackageFile[]) {
   const lines = packagesAmong(files).map(
-    // A comment ends at the first "--", so none may appear inside it.
+    // A comment ends at the first "--", so no dash may be followed by another inside it.
     (file) =>
-      `  ${file.package} ${file.version}, ${file.license}, ${file.source}`.replace(/--/g, "- -"),
+      `  ${file.package} ${file.version}, ${file.license}, ${file.source}`.replace(/-(?=-)/g, "- "),
   );
   return `<!--
   This page carries unchanged copies of these packages, each used under the licence named, with

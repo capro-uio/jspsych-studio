@@ -16,7 +16,7 @@ import {
   sourceHeader,
   type MetadataOptions,
 } from "../metadata.ts";
-import { packageFileKey, thirdPartyNotice } from "../package-files.ts";
+import { packageFileKey, thirdPartyNotice, type PackageFile } from "../package-files.ts";
 import { emitHtml, filesLoadedWhileRunning } from "./html.ts";
 import type { Retention, Spec } from "../types.ts";
 
@@ -33,10 +33,11 @@ export interface ProjectOptions extends Partial<MetadataOptions> {
   /** Figures of the study by file name, such as the builder's flow diagram, saved under figures/. */
   figures?: Record<string, string>;
   /**
-   * Copies of every file the study loads from jsPsych and its plugins, by {@link packageFileKey},
-   * so the download carries them under lib/ and loads nothing from elsewhere.
+   * Gets copies of the files the study loads from jsPsych and its plugins, keyed by
+   * {@link packageFileKey}, so the download carries them under lib/ and loads nothing from
+   * elsewhere. It is asked once the study is compiled, for exactly the files it needs.
    */
-  packageSources?: Record<string, ProjectFile>;
+  packageSources?: (files: PackageFile[]) => Promise<Record<string, ProjectFile>>;
 }
 
 function decodeDataUrl(url: string) {
@@ -158,12 +159,13 @@ function earlyEndingsNote(spec: Spec) {
 export async function projectFiles(
   spec: Spec,
   bundle: SchemaBundle,
-  { figures = {}, packageSources, ...options }: ProjectOptions = {},
+  { figures = {}, packageSources: gather, ...options }: ProjectOptions = {},
 ) {
   const compiled = compileSpec(spec, bundle, { assets: "files" });
   const metadata: MetadataOptions = { jspsych: compiled.jspsych, ...options };
+  const packageSources = gather ? await gather(compiled.files) : undefined;
   const selfContained = packageSources !== undefined;
-  const missing = selfContained
+  const missing = packageSources
     ? compiled.files.map(packageFileKey).filter((key) => packageSources[key] === undefined)
     : [];
   if (missing.length > 0) {

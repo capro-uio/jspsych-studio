@@ -16,11 +16,14 @@ function sourceFiles(folder: string): string[] {
   );
 }
 
-// Type-only imports vanish when compiled, so only imports that bring values along count.
+// Type-only imports vanish when compiled, so only imports that bring values along count: named
+// ones, bare ones for their side effects, and ones made while running.
 const valueImports = (source: string) =>
-  [...source.matchAll(/^(?:import|export)\s+(?!type\b)[^;]*?from\s+"([^"]+)"/gm)].map(
-    (match) => match[1],
-  );
+  [
+    ...source.matchAll(/^(?:import|export)\s+(?!type\b)[^;]*?from\s+["']([^"']+)["']/gm),
+    ...source.matchAll(/^import\s+["']([^"']+)["']/gm),
+    ...source.matchAll(/\bimport\s*\(\s*["']([^"']+)["']\s*\)/g),
+  ].map((match) => match[1]);
 
 describe("the compiler", () => {
   const files = sourceFiles(SOURCE).filter((file) => !NODE_ONLY.has(relative(SOURCE, file)));
@@ -28,7 +31,10 @@ describe("the compiler", () => {
   it.each(files.map((file) => [relative(SOURCE, file), file]))(
     "runs in a browser: %s brings in nothing that needs Node",
     (_name, file) => {
-      for (const specifier of valueImports(readFileSync(file, "utf8"))) {
+      const source = readFileSync(file, "utf8");
+      // Node's own globals are not there in a browser either.
+      expect(source).not.toMatch(/\b(?:process|Buffer|__dirname|require)\s*[.(]/);
+      for (const specifier of valueImports(source)) {
         expect(specifier).not.toMatch(/^node:/);
         // The schemas package's main entry holds the extraction code, which reads the disk.
         expect(specifier).not.toBe("@tachisto/schemas");
