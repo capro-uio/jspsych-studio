@@ -272,7 +272,21 @@ describe("fitTrialFigure", () => {
   });
 
   it("goes no smaller than its smallest screens, even when the figure will not fit", () => {
-    expect(fitTrialFigure(four, "row", 100).screen.width).toBe(MIN_SCREEN_WIDTH);
+    const figure = fitTrialFigure(four, "stack", 100);
+    expect(figure.screen.width).toBe(MIN_SCREEN_WIDTH);
+    expect(figure.width).toBeGreaterThan(100);
+  });
+
+  it("stops shrinking screens once the labels, not the screens, set the width", () => {
+    const wordy = sequenceOf(
+      ...["One", "Two", "Three", "Four"].map((name) =>
+        segment("screen", `${name} screen with a long name`),
+      ),
+    );
+    const figure = fitTrialFigure(wordy, "row", 100);
+    const smallest = layoutTrialFigure(wordy, "row", MIN_SCREEN_WIDTH);
+    expect(figure.width).toBe(smallest.width);
+    expect(figure.screen.width).toBeGreaterThan(MIN_SCREEN_WIDTH);
   });
 
   it("keeps each label in a stack clear of the next screen, however small the screens", () => {

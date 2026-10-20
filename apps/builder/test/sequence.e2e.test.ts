@@ -55,7 +55,7 @@ describe("the timing strip", () => {
 
     const [file] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByTestId("download-sequence-svg").click(),
+      page.getByTestId("download-sequence-figure").click(),
     ]);
     expect(file.suggestedFilename()).toMatch(/-block-2\.svg$/);
     const svg = readFileSync(await file.path(), "utf8");
@@ -70,7 +70,7 @@ describe("the timing strip", () => {
     await page.getByTestId("sequence-figure").locator("summary").click();
     const [file] = await Promise.all([
       page.waitForEvent("download", { timeout: 60_000 }),
-      page.getByTestId("download-sequence-svg").click(),
+      page.getByTestId("download-sequence-figure").click(),
     ]);
     const svg = readFileSync(await file.path(), "utf8");
     const pictures = svg.match(/xlink:href="data:image\/png;base64,[A-Za-z0-9+/]+=*"/g) ?? [];
@@ -88,7 +88,7 @@ describe("the timing strip", () => {
     await page.getByTestId("sequence-figure").locator("summary").click();
     const [file] = await Promise.all([
       page.waitForEvent("download", { timeout: 60_000 }),
-      page.getByTestId("download-sequence-svg").click(),
+      page.getByTestId("download-sequence-figure").click(),
     ]);
     const svg = readFileSync(await file.path(), "utf8");
     expect(svg.match(/<image /g) ?? []).toHaveLength(2);
@@ -105,7 +105,7 @@ describe("the timing strip", () => {
     await page.getByTestId("sequence-figure-format").selectOption("png");
     const [file] = await Promise.all([
       page.waitForEvent("download", { timeout: 60_000 }),
-      page.getByTestId("download-sequence-svg").click(),
+      page.getByTestId("download-sequence-figure").click(),
     ]);
     expect(file.suggestedFilename()).toMatch(/-block-2\.png$/);
     const png = readFileSync(await file.path());
@@ -114,6 +114,22 @@ describe("the timing strip", () => {
     expect(width).toBeGreaterThan(900);
     expect(width).toBeLessThanOrEqual(Math.round((89 / 25.4) * 300));
     if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, png);
+    await page.close();
+  }, 120_000);
+
+  it("closes the figure's options on Escape and on a click elsewhere", async () => {
+    const page = await openStroop();
+    await page.getByTestId("node-2-1").click();
+    const panel = page.getByTestId("sequence-figure");
+    const isOpen = () => panel.evaluate((details) => (details as HTMLDetailsElement).open);
+    await panel.locator("summary").click();
+    await expect.poll(isOpen).toBe(true);
+    await page.keyboard.press("Escape");
+    await expect.poll(isOpen).toBe(false);
+    await panel.locator("summary").click();
+    await expect.poll(isOpen).toBe(true);
+    await page.getByTestId("sequence-2-0").click();
+    await expect.poll(isOpen).toBe(false);
     await page.close();
   }, 120_000);
 

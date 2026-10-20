@@ -94,6 +94,15 @@ export function tableAt(spec: Spec, path: number[]) {
 
 const ROW_LABEL_LENGTH = 40;
 
+const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&amp;": "&", "&nbsp;": " " };
+
+// Only what reads as a tag goes: a "<" with a letter or "/" after it. A flanker's "<<<>>" stays.
+const plainText = (html: string) =>
+  html
+    .replace(/<\/?[a-zA-Z][^>]*>/g, "")
+    .replace(/&(lt|gt|amp|nbsp);/g, (entity) => ENTITIES[entity])
+    .trim();
+
 /**
  * Each row of the table the steps at a path read, named by its number and the first few values
  * in it, so one can be picked from a list: "2: BLUE · red · b".
@@ -104,11 +113,7 @@ export function rowLabels(spec: Spec, path: number[]) {
   return rows.map((row, index) => {
     const values = Object.values(row)
       .filter((value) => typeof value === "string" || typeof value === "number")
-      .map((value) =>
-        String(value)
-          .replace(/<[^>]*>/g, "")
-          .trim(),
-      )
+      .map((value) => plainText(String(value)))
       .filter(Boolean)
       .join(" · ");
     const label = `${index + 1}: ${values}`;

@@ -28,9 +28,32 @@
   let size = $state<FigureSize>("screen");
   let format = $state<"svg" | "png">("svg");
   let row = $state(0);
+  let figureError = $state("");
   const rows = $derived(sequence ? rowLabels(project.spec, sequence.path) : []);
-  // Another block may have fewer rows than the one a row was picked in.
-  const chosenRow = $derived(row < rows.length ? row : 0);
+  const sequenceKey = $derived(sequence?.path.join(".") ?? "");
+
+  // A row picked for one block means nothing for another, so each starts from its first.
+  $effect(() => {
+    void sequenceKey;
+    row = 0;
+    figureError = "";
+  });
+
+  // The options close as a menu does: on Escape, or once a click or focus lands elsewhere. The
+  // panel's own state is read, not a copy, which would lag a key pressed just after it opens.
+  let figurePanel = $state<HTMLDetailsElement>();
+
+  function closeFigureOnEscape(event: KeyboardEvent) {
+    if (event.key !== "Escape" || !figurePanel?.open) return;
+    figurePanel.open = false;
+    figurePanel.querySelector("summary")?.focus();
+  }
+
+  function closeFigureOutside(event: Event) {
+    if (figurePanel?.open && !figurePanel.contains(event.target as Node | null)) {
+      figurePanel.open = false;
+    }
+  }
 
   let capturing = $state(false);
   let capture: AbortController | null = null;
@@ -48,26 +71,34 @@
     capture = new AbortController();
     const { signal } = capture;
     capturing = true;
+    figureError = "";
     try {
       const { captureScreens } = await import("./screen-capture.ts");
-      const pictures = await captureScreens(spec, drawn, { row: chosenRow, signal }).catch(
-        () => [],
-      );
+      const pictures = await captureScreens(spec, drawn, { row, signal }).catch(() => []);
       if (signal.aborted) return;
       const figure = sequenceFigure(spec, drawn, { arrangement, size }, pictures);
       const name = `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}`;
       if (format === "svg") {
         download(`${name}.svg`, figure.svg, "image/svg+xml");
-      } else {
-        const { figurePng } = await import("./figure-png.ts");
-        download(`${name}.png`, await figurePng(figure.svg, figure.pixelWidth), "image/png");
+        return;
       }
+      const { figurePng } = await import("./figure-png.ts");
+      const png = await figurePng(figure.svg, figure.pixelWidth);
+      if (!signal.aborted) download(`${name}.png`, png, "image/png");
+    } catch (error) {
+      figureError = `The figure could not be made: ${(error as Error).message}`;
     } finally {
       capturing = false;
       capture = null;
     }
   }
 </script>
+
+<svelte:window
+  onkeydown={closeFigureOnEscape}
+  onpointerdown={closeFigureOutside}
+  onfocusin={closeFigureOutside}
+/>
 
 {#if sequence}
   <section
@@ -82,9 +113,9 @@
             >· following the preview</span
           >{/if}
       </p>
-      <details class="figure" data-testid="sequence-figure">
+      <details class="figure" data-testid="sequence-figure" bind:this={figurePanel}>
         <summary>Figure for a paper</summary>
-        <div class="options" role="group" aria-label="Figure for a paper">
+        <div class="options">
           <label>
             Layout
             <select bind:value={arrangement} data-testid="sequence-figure-layout">
@@ -125,9 +156,14 @@
             title={sequence.segments.length === 0
               ? "Add a step to this block to draw its figure"
               : "These steps as screens, as the participant sees them"}
-            data-testid="download-sequence-svg"
+            data-testid="download-sequence-figure"
             >{capturing ? "Drawing the screens…" : "Download figure"}</button
           >
+          {#if figureError}
+            <p class="figure-error" role="alert" data-testid="sequence-figure-error">
+              {figureError}
+            </p>
+          {/if}
         </div>
       </details>
     </div>
@@ -234,6 +270,10 @@
   }
   .options select {
     color: var(--ink);
+  }
+  .figure-error {
+    margin: 0;
+    color: var(--danger);
   }
   .empty {
     margin: 0;

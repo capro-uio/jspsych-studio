@@ -155,15 +155,18 @@ export function layoutTrialFigure(
 
 /**
  * The figure with the largest screens that let it fit a width, keeping its text the size it is:
- * screens shrink so the labels stay readable. A figure that will not fit even with the smallest
- * screens is laid out with them, and is scaled to the width as a whole.
+ * screens shrink so the labels stay readable. Where the labels, not the screens, set the width,
+ * as in a row of short screens with long labels, shrinking further gains nothing; the figure
+ * with the largest screens at its narrowest is used, and scaled to the width as a whole.
  */
 export function fitTrialFigure(sequence: Sequence, arrangement: Arrangement, maxWidth: number) {
-  for (let width = SCREEN.width; width > MIN_SCREEN_WIDTH; width -= 4) {
+  let narrowest = layoutTrialFigure(sequence, arrangement);
+  for (let width = SCREEN.width; width >= MIN_SCREEN_WIDTH; width -= 4) {
     const figure = layoutTrialFigure(sequence, arrangement, width);
     if (figure.width <= maxWidth) return figure;
+    if (figure.width < narrowest.width) narrowest = figure;
   }
-  return layoutTrialFigure(sequence, arrangement, MIN_SCREEN_WIDTH);
+  return narrowest;
 }
 
 const LABEL_STYLE: Record<Emphasis, string> = {
@@ -172,9 +175,12 @@ const LABEL_STYLE: Record<Emphasis, string> = {
   detail: `fill="${ink("ink-muted")}"`,
 };
 
-/** As much of a screen's name as fits across it, at the 11px it is written in. */
+/**
+ * As much of a screen's name as fits across it, at the 11px it is written in, with room to spare
+ * for capitals, which are wider than the average letter the width is reckoned from.
+ */
 function fitted(text: string, screen: Size) {
-  const chars = Math.max(1, Math.floor((screen.width - 16) / ((CHAR_WIDTH * 11) / 12)));
+  const chars = Math.max(1, Math.floor((screen.width - 16) / ((CHAR_WIDTH * 1.1 * 11) / 12)));
   return text.length <= chars ? text : `${text.slice(0, chars - 1)}…`;
 }
 
@@ -225,8 +231,11 @@ export type FigureSize = "screen" | "single" | "double";
 /** Column widths of a journal page, in millimetres: Nature's, which most journals are close to. */
 export const COLUMN_WIDTH_MM = { single: 89, double: 183 };
 
-/** At column size a unit is a quarter of a millimetre, so the 12-unit text prints at 3 mm, about
- * 8.5 pt, above the 8 pt APA asks for at the least. */
+/**
+ * At column size a unit is a quarter of a millimetre, so the 12-unit text prints at 3 mm, about
+ * 8.5 pt, above the 8 pt APA asks for at the least, unless the figure is too wide to fit even
+ * with its smallest screens and has to be scaled down as a whole.
+ */
 export const MM_PER_UNIT = 0.25;
 
 /** Print resolution for a PNG made for a page, as journals ask for at the least. */

@@ -344,6 +344,11 @@ describe("rowLabels", () => {
     expect(rowLabels(spec, [0, 0])).toEqual(["1: BLUE · red · BLUE", "2: RED · red · RED"]);
   });
 
+  it("leaves text that only looks like markup, and reads the entities written in it", () => {
+    const spec = specWithTable([{ stimulus: "<<<>>", answer: "a &lt; b &amp;&nbsp;c" }]);
+    expect(rowLabels(spec, [0, 0])).toEqual(["1: <<<>> · a < b & c"]);
+  });
+
   it("shortens a long row, and has none for a step outside any block", () => {
     const spec = specWithTable([{ text: "x".repeat(80) }]);
     const [label] = rowLabels(spec, [0, 0]);
