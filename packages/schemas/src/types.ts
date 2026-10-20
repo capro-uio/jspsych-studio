@@ -95,6 +95,19 @@ export interface ExtensionSchema {
   libraries: Library[];
 }
 
+/** Where a jsPsych package's browser build, which defines its global, sits inside the package. */
+export const BROWSER_BUNDLE = "dist/index.browser.min.js";
+
+/** jsPsych's own stylesheet, inside the jspsych package. */
+export const JSPSYCH_STYLESHEET = "css/jspsych.css";
+
+/** The files a study's page loads from one package, each with the hash a copy of it must match. */
+export interface PackageFiles {
+  version: string;
+  /** The subresource-integrity hash (sha384) of each file, by its path inside the package. */
+  files: Record<string, string>;
+}
+
 export interface SchemaBundle {
   /** The jsPsych release these schemas were extracted against. */
   jspsych: string;
@@ -102,6 +115,8 @@ export interface SchemaBundle {
   families: Record<PluginFamily, string>;
   plugins: PluginSchemas;
   extensions: Record<string, ExtensionSchema>;
+  /** Every file a page can load, by package, so a download can carry its own verified copies. */
+  packages: Record<string, PackageFiles>;
 }
 
 export interface ExtractionReport {

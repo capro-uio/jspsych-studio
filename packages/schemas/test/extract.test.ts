@@ -1,6 +1,9 @@
+import { readFileSync } from "node:fs";
+import { createRequire } from "node:module";
 import { describe, expect, it } from "vitest";
 import { CURATED_PLUGINS } from "../src/curated.ts";
 import { PLUGIN_FAMILIES, PLUGIN_LABELS } from "../src/titles.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "../src/types.ts";
 import {
   assertExtracted,
   curateParameters,
@@ -9,7 +12,10 @@ import {
   extractBundle,
   extractExtensions,
   extractSchemas,
+  filesFor,
   functionSource,
+  integrityOf,
+  packageFiles,
   pluginPackages,
   toParameterSchema,
 } from "../src/extract.ts";
@@ -341,5 +347,62 @@ describe("functionSource", () => {
   it("re-indents a body written deeper in its file", () => {
     const fn = { toString: () => "function(a) {\n        return a;\n      }" };
     expect(functionSource(fn as unknown as () => unknown)).toBe("function(a) {\n  return a;\n}");
+  });
+});
+
+describe("integrityOf", () => {
+  it("writes the sha384 hash a browser checks a script against", () => {
+    expect(integrityOf(new TextEncoder().encode("abc"))).toBe(
+      "sha384-ywB1P0WjXou1oD1pmsZQBycsMqsO3tFjGotgWkP/W+2AhgcroefMI1i67KE0yCWn",
+    );
+  });
+});
+
+describe("packageFiles", () => {
+  it("hashes each file as it is installed, under the installed version", () => {
+    const { version, files } = packageFiles("jspsych", [JSPSYCH_STYLESHEET]);
+    const require = createRequire(import.meta.url);
+    const css = readFileSync(require.resolve(`jspsych/${JSPSYCH_STYLESHEET}`));
+    expect(version).toBe(report.jspsych);
+    expect(files).toEqual({ [JSPSYCH_STYLESHEET]: integrityOf(css) });
+  });
+
+  it("refuses a file the package does not have", () => {
+    expect(() => packageFiles("jspsych", ["dist/not-there.js"])).toThrow(/not-there/);
+  });
+
+  it("refuses a package that is not installed", () => {
+    expect(() => packageFiles("@jspsych/plugin-not-a-plugin", [BROWSER_BUNDLE])).toThrow();
+  });
+});
+
+const extensions = await extractExtensions(["@jspsych/extension-webgazer"]);
+
+describe("filesFor", () => {
+  const files = filesFor(report.schemas, extensions);
+
+  it("carries jsPsych's browser build and its stylesheet", () => {
+    expect(Object.keys(files.jspsych.files)).toEqual([JSPSYCH_STYLESHEET, BROWSER_BUNDLE]);
+  });
+
+  it("carries every plugin's browser build, at the version its schema names", () => {
+    for (const schema of Object.values(report.schemas)) {
+      expect(files[schema.package].version, schema.package).toBe(schema.version);
+      expect(Object.keys(files[schema.package].files), schema.package).toContain(BROWSER_BUNDLE);
+    }
+  });
+
+  it("carries an extension, its library, and the files the library loads as it runs", () => {
+    expect(Object.keys(files["@jspsych/extension-webgazer"].files)).toEqual([BROWSER_BUNDLE]);
+    const webgazer = Object.keys(files.webgazer.files);
+    expect(webgazer).toContain("dist/webgazer.js");
+    expect(webgazer).toContain("dist/mediapipe/face_mesh/face_mesh_solution_simd_wasm_bin.wasm");
+    expect(webgazer).toContain("dist/mediapipe/face_mesh/face_mesh_solution_packed_assets.data");
+  });
+
+  it("hashes every file it lists", () => {
+    for (const { files: hashes } of Object.values(files)) {
+      for (const hash of Object.values(hashes)) expect(hash).toMatch(/^sha384-[A-Za-z0-9+/]{64}$/);
+    }
   });
 });

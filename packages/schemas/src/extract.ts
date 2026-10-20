@@ -1,6 +1,8 @@
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "./types.ts";
 import type {
   ExtensionSchema,
   ExtractionReport,
@@ -8,12 +10,14 @@ import type {
   ParameterTypeName,
   PluginSchema,
   PluginSchemas,
+  PackageFiles,
   SchemaBundle,
 } from "./types.ts";
 import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
   EXTENSION_LIBRARIES,
+  LIBRARY_RUNTIME_FILES,
   FIXED_CHOICES,
   DECIMAL_PARAMETERS,
   GRID_WIDTHS,
@@ -80,6 +84,59 @@ function declarationsPath(packageName: string) {
 function installedVersion(packageName: string) {
   const manifest = join(dirname(resolveFrom.resolve(packageName)), "..", "package.json");
   return (JSON.parse(readFileSync(manifest, "utf8")) as { version: string }).version;
+}
+
+/** The folder a package is installed in: the nearest above its entry point that names it. */
+function packageRoot(packageName: string) {
+  let folder = dirname(resolveFrom.resolve(packageName));
+  for (;;) {
+    const manifest = join(folder, "package.json");
+    if (existsSync(manifest)) {
+      const { name } = JSON.parse(readFileSync(manifest, "utf8")) as { name?: string };
+      if (name === packageName) return folder;
+    }
+    const parent = dirname(folder);
+    if (parent === folder) throw new Error(`cannot find where ${packageName} is installed`);
+    folder = parent;
+  }
+}
+
+/** A file's subresource-integrity hash, as a browser checks a script against it. */
+export function integrityOf(bytes: Uint8Array) {
+  return `sha384-${createHash("sha384").update(bytes).digest("base64")}`;
+}
+
+/** The installed version of a package and the hash of each of the files named inside it. */
+export function packageFiles(packageName: string, paths: string[]): PackageFiles {
+  const root = packageRoot(packageName);
+  const { version } = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as {
+    version: string;
+  };
+  const files = Object.fromEntries(
+    [...paths].sort().map((path) => [path, integrityOf(readFileSync(join(root, path)))]),
+  );
+  return { version, files };
+}
+
+/** Every file a page can load: jsPsych and its stylesheet, each plugin, each extension and library. */
+export function filesFor(plugins: PluginSchemas, extensions: Record<string, ExtensionSchema>) {
+  const wanted = new Map<string, Set<string>>();
+  const want = (packageName: string, ...paths: string[]) => {
+    const files = wanted.get(packageName) ?? new Set<string>();
+    for (const path of paths) files.add(path);
+    wanted.set(packageName, files);
+  };
+  want("jspsych", BROWSER_BUNDLE, JSPSYCH_STYLESHEET);
+  for (const plugin of Object.values(plugins)) want(plugin.package, BROWSER_BUNDLE);
+  for (const extension of Object.values(extensions)) {
+    want(extension.package, BROWSER_BUNDLE);
+    for (const library of extension.libraries) {
+      want(library.package, library.file, ...(LIBRARY_RUNTIME_FILES[library.package] ?? []));
+    }
+  }
+  return Object.fromEntries(
+    [...wanted.keys()].sort().map((name) => [name, packageFiles(name, [...wanted.get(name)!])]),
+  );
 }
 
 export function readDescriptions(packageName: string) {
@@ -434,6 +491,7 @@ export async function extractBundle(
     families: PLUGIN_FAMILIES,
     plugins: report.schemas,
     extensions,
+    packages: filesFor(report.schemas, extensions),
   };
   return { bundle, report };
 }
