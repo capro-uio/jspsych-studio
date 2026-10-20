@@ -1,4 +1,4 @@
-import type { ParameterSchema, PluginSchema, PluginSchemas } from "@jspsych-studio/schemas";
+import type { ParameterSchema, PluginSchema, PluginSchemas } from "@tachisto/schemas";
 import {
   ENDING_NAME_PATTERN,
   RECRUITMENT_PLATFORMS,
@@ -12,7 +12,7 @@ import { takesFunction } from "./code.ts";
 import type { SpecNode } from "./types.ts";
 
 /** Where the schema is published, so a spec can name it in `$schema` and editors can fetch it. */
-export const SPEC_SCHEMA_ID = "https://www.capro.dev/jspsych-studio/spec-schema.json";
+export const SPEC_SCHEMA_ID = "https://www.capro.dev/tachisto/spec-schema.json";
 
 // Draft-07 rather than a later draft: it is the dialect VS Code, Positron and the JetBrains IDEs
 // implement completely, and the newer keywords buy nothing a spec needs.
@@ -334,17 +334,17 @@ function trialDefinition(schemas: PluginSchemas): JsonSchema {
 }
 
 /**
- * The JSON Schema for a Studio project spec, built against the plugins the schemas package
+ * The JSON Schema for a Tachisto project spec, built against the plugins the schemas package
  * extracted, so a spec file gets completion and parameter documentation in any editor.
  */
 export function specSchema(schemas: PluginSchemas): JsonSchema {
   return {
     $schema: DIALECT,
     $id: SPEC_SCHEMA_ID,
-    title: "jsPsych Studio experiment spec",
+    title: "Tachisto experiment spec",
     description:
-      "A declarative experiment the Studio compiler turns into jsPsych source. Edit it here or " +
-      "open it in the builder at https://www.capro.dev/jspsych-studio/.",
+      "A declarative experiment the Tachisto compiler turns into jsPsych source. Edit it here or " +
+      "open it in the builder at https://www.capro.dev/tachisto/app/.",
     type: "object",
     required: ["name", "timeline"],
     properties: {

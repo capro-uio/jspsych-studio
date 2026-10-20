@@ -12,7 +12,7 @@ import { schemas } from "./schemas.ts";
 const PAGE_NAME = "tasks.e2e.html";
 const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const square = readFileSync(
-  fileURLToPath(new URL("../../../apps/studio/test/fixtures/square.png", import.meta.url)),
+  fileURLToPath(new URL("../../../apps/builder/test/fixtures/square.png", import.meta.url)),
 ).toString("base64");
 
 const step = (plugin: string, params: Record<string, unknown>): TrialNode => ({

@@ -1,4 +1,4 @@
-import type { SchemaBundle } from "@jspsych-studio/schemas";
+import type { SchemaBundle } from "@tachisto/schemas";
 import { assetPath } from "../assets.ts";
 import { compileSpec } from "../compile.ts";
 import { ENDING_COLUMN } from "../data.ts";
@@ -37,7 +37,7 @@ function decodeDataUrl(url: string) {
 function readme(spec: Spec, assetCount: number, options: MetadataOptions) {
   return `# ${spec.name}
 
-Built with ${generatorLabel(options.studio)}.
+Built with ${generatorLabel(options.tachisto)}.
 
 ## Running it
 
@@ -115,7 +115,7 @@ export async function projectFiles(
   const { html } = await emitHtml(compiled, {
     title: spec.name,
     sourceFile: SOURCE_FILE,
-    studio: metadata.studio,
+    tachisto: metadata.tachisto,
   });
 
   const files: Record<string, ProjectFile> = {

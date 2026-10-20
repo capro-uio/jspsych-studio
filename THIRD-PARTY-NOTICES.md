@@ -1,6 +1,6 @@
 # Third-party notices
 
-jsPsych Studio is MIT licensed (see [LICENSE](LICENSE)). It also carries material from the
+Tachisto is MIT licensed (see [LICENSE](LICENSE)). It also carries material from the
 projects below, which are themselves MIT licensed.
 
 ## jsPsych
@@ -14,7 +14,7 @@ Two things here come from jsPsych:
   packages, and the parameter titles and descriptions in it are jsPsych's own documentation text,
   copied verbatim. Where a plugin's parameter defaults to a function, such as a button's
   `button_html`, that function's source is copied in too, as the code an author starts from.
-- Experiments produced by Studio are jsPsych experiments. They call the jsPsych API and load
+- Experiments produced by Tachisto are jsPsych experiments. They call the jsPsych API and load
   jsPsych and its plugins from a CDN at the pinned versions. No jsPsych code is copied into the
   generated files, except a default function an author started from and kept as their own code.
 
@@ -27,3 +27,8 @@ experiment by hand.
 The builder bundles [Svelte](https://svelte.dev), [Prettier](https://prettier.io) and
 [fflate](https://github.com/101arrowz/fflate), all MIT licensed, each retaining its own copyright
 notice. Everything else in `node_modules` is a build or test dependency and ships in nothing.
+
+The builder and the website bundle the fonts [Jost](https://github.com/indestructible-type/Jost),
+[Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) and
+[IBM Plex Mono](https://github.com/IBM/plex), through Fontsource. All three are licensed under the
+SIL Open Font License 1.1, which lets them be bundled and served with other software.

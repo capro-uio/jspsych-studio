@@ -1,0 +1,732 @@
+@import "@tachisto/brand/fonts.css";
+@import "@tachisto/brand/tokens.css";
+@import "@tachisto/brand/base.css";
+@import "@tachisto/brand/type.css";
+@import "@tachisto/brand/logos.css";
+
+/* One trial of the hero animation, in the same proportions as the blocks on its track. */
+:root {
+  --trial: 4400ms;
+  --gutter: var(--space-4);
+  --section-pad: calc(var(--space-12) * 1.5);
+}
+
+@media (min-width: 48rem) {
+  :root {
+    --gutter: var(--space-8);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+dl,
+dd,
+ol,
+ul,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+a {
+  text-underline-offset: 0.18em;
+}
+
+.wrap {
+  width: 100%;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+.skip {
+  position: absolute;
+  left: var(--space-4);
+  top: -4rem;
+  padding: var(--space-2) var(--space-4);
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: var(--radius-md);
+  z-index: 10;
+}
+
+.skip:focus {
+  top: var(--space-4);
+}
+
+/* Buttons */
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 24px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-ui),
+    border-color var(--duration-ui);
+}
+
+.button.large {
+  padding: var(--space-3) var(--space-6);
+  font-size: 16px;
+}
+
+.button.primary {
+  background: var(--stimulus-fill);
+  color: var(--on-stimulus);
+}
+
+.button.primary:hover {
+  background: color-mix(in srgb, var(--stimulus-fill) 86%, var(--ink));
+}
+
+.button.secondary {
+  border-color: var(--line-strong);
+  color: var(--ink);
+}
+
+.button.secondary:hover {
+  background: var(--paper-sunk);
+}
+
+/* Header */
+
+.site-header {
+  border-bottom: 1px solid var(--line);
+  background: var(--paper);
+}
+
+.header-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  min-height: 64px;
+}
+
+.brand {
+  display: block;
+  line-height: 0;
+  padding: var(--space-1);
+  margin-left: calc(-1 * var(--space-1));
+}
+
+.brand img {
+  height: 32px;
+  width: auto;
+}
+
+.site-header nav {
+  display: none;
+  gap: var(--space-6);
+  margin-left: auto;
+}
+
+.site-header nav a {
+  color: var(--ink-muted);
+  text-decoration: none;
+  font-size: 15px;
+}
+
+.site-header nav a:hover {
+  color: var(--ink);
+}
+
+.header-row > .button {
+  margin-left: auto;
+}
+
+@media (min-width: 56rem) {
+  .site-header nav {
+    display: flex;
+  }
+  .header-row > .button {
+    margin-left: 0;
+  }
+}
+
+/* Hero */
+
+.hero {
+  display: grid;
+  gap: var(--space-12);
+  padding-top: var(--space-12);
+  padding-bottom: var(--section-pad);
+  align-items: center;
+}
+
+@media (min-width: 60rem) {
+  .hero {
+    grid-template-columns: 1.05fr 1fr;
+    padding-top: calc(var(--space-12) * 2);
+    padding-bottom: calc(var(--space-12) * 2);
+  }
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.eyebrow {
+  color: var(--ink-muted);
+}
+
+.hero h1 {
+  font-size: clamp(2.5rem, 2rem + 2.4vw, 3.6rem);
+  line-height: 1.08;
+  max-width: 16ch;
+}
+
+.lede {
+  font-size: 18px;
+  color: var(--ink-muted);
+  max-width: 34rem;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.fine {
+  font-size: 14px;
+  color: var(--ink-muted);
+}
+
+/* The bench: a participant's screen above the trial's timeline. */
+
+.bench {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.screen {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.frame {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  visibility: hidden;
+  animation: var(--trial) step-end infinite;
+}
+
+.frame-fixation {
+  animation-name: fixation-frame;
+}
+.frame-stimulus {
+  animation-name: stimulus-frame;
+}
+.frame-mask {
+  animation-name: mask-frame;
+}
+.frame-response {
+  animation-name: response-frame;
+}
+
+/* Frames switch like a shutter: on, then off, with nothing in between. */
+@keyframes fixation-frame {
+  0% {
+    visibility: visible;
+  }
+  22.7% {
+    visibility: hidden;
+  }
+}
+@keyframes stimulus-frame {
+  0% {
+    visibility: hidden;
+  }
+  22.7% {
+    visibility: visible;
+  }
+  59.1% {
+    visibility: hidden;
+  }
+}
+@keyframes mask-frame {
+  0% {
+    visibility: hidden;
+  }
+  59.1% {
+    visibility: visible;
+  }
+  72.7% {
+    visibility: hidden;
+  }
+}
+@keyframes response-frame {
+  0% {
+    visibility: hidden;
+  }
+  72.7% {
+    visibility: visible;
+  }
+}
+
+.cross {
+  position: relative;
+  width: 44px;
+  height: 44px;
+}
+
+.cross::before,
+.cross::after,
+.mini-cross::before,
+.mini-cross::after {
+  content: "";
+  position: absolute;
+  background: currentColor;
+}
+
+.cross::before {
+  left: 50%;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  translate: -50% 0;
+}
+
+.cross::after {
+  top: 50%;
+  left: 0;
+  height: 8px;
+  width: 100%;
+  translate: 0 -50%;
+}
+
+.word,
+.mask-text {
+  font-size: clamp(2.4rem, 6vw, 3.6rem);
+  letter-spacing: 0.04em;
+}
+
+.word {
+  font-weight: 700;
+  color: var(--stimulus);
+}
+
+.mask-text {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  color: var(--mask);
+}
+
+.keys {
+  font-size: 15px;
+  color: var(--ink-muted);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+kbd {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  min-width: 28px;
+  padding: 2px var(--space-2);
+  border: 1px solid var(--line-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-md);
+  color: var(--ink);
+  text-align: center;
+}
+
+.keys kbd:nth-of-type(2) {
+  margin-left: var(--space-3);
+}
+
+.track {
+  position: relative;
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background: var(--paper-sunk);
+  border-radius: var(--radius-md);
+}
+
+.block {
+  flex: var(--span) 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.block-name {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 40px;
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.block .timing {
+  color: var(--ink-muted);
+  padding-left: 2px;
+  white-space: nowrap;
+}
+
+.fixation .block-name {
+  background: var(--paper-raised);
+  color: var(--ink);
+}
+
+.stimulus .block-name {
+  background: var(--stimulus-fill);
+  color: var(--on-stimulus);
+}
+
+.mask .block-name {
+  background: var(--mask);
+  color: var(--ink);
+}
+
+.response .block-name {
+  background: var(--paper-raised);
+  border: 1px dashed var(--line-strong);
+  color: var(--ink);
+}
+
+.mini-cross {
+  position: relative;
+  flex: none;
+  width: 10px;
+  height: 10px;
+}
+
+.mini-cross::before {
+  left: 4px;
+  top: 0;
+  width: 2px;
+  height: 10px;
+}
+
+.mini-cross::after {
+  top: 4px;
+  left: 0;
+  height: 2px;
+  width: 10px;
+}
+
+/* The playhead is as wide as the lane and draws its line at its right edge, so moving it by its
+   own width carries the line across the blocks with a transform alone, at any window size. */
+.lane {
+  position: absolute;
+  inset: var(--space-2) var(--space-3) calc(var(--space-2) + 22px);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.playhead {
+  position: absolute;
+  inset: 0;
+  border-right: 2px solid var(--stimulus);
+  translate: calc(2px - 100%);
+  animation: playhead var(--trial) linear infinite;
+}
+
+@keyframes playhead {
+  to {
+    translate: 0;
+  }
+}
+
+.bench figcaption {
+  color: var(--ink-muted);
+}
+
+/* Without motion the bench holds still on the stimulus, which is the point of the picture. */
+@media (prefers-reduced-motion: reduce) {
+  .frame {
+    animation: none;
+  }
+  .frame-stimulus {
+    visibility: visible;
+  }
+  .playhead {
+    animation: none;
+    translate: calc(2px - 17 / 22 * 100%);
+  }
+}
+
+/* Sections */
+
+.band {
+  background: var(--paper-sunk);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  padding: var(--section-pad) 0;
+}
+
+section > .wrap > h2,
+.trust > h2 {
+  margin-bottom: var(--space-8);
+}
+
+.steps {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-8);
+}
+
+@media (min-width: 52rem) {
+  .steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.steps li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-4);
+  border-top: 2px solid var(--ink);
+}
+
+.step-number {
+  color: var(--stimulus-text);
+}
+
+.steps p,
+.features p,
+.facts dd,
+.why-copy p,
+.closing p {
+  color: var(--ink-muted);
+  max-width: 65ch;
+}
+
+.why {
+  display: grid;
+  gap: var(--space-8);
+  padding-top: var(--section-pad);
+  padding-bottom: var(--section-pad);
+  align-items: center;
+}
+
+@media (min-width: 56rem) {
+  .why {
+    grid-template-columns: 1.2fr 1fr;
+    gap: var(--space-12);
+  }
+}
+
+.why-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.why-copy h2 {
+  margin-bottom: var(--space-2);
+}
+
+.problem-card {
+  background: var(--paper-raised);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.problem-card .label {
+  color: var(--danger);
+}
+
+.problem-text {
+  display: flex;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 20px;
+  color: var(--ink);
+}
+
+.problem-icon {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--danger);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+.features {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 40rem) {
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64rem) {
+  .features {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.features li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
+.features p {
+  font-size: 15px;
+  line-height: 24px;
+}
+
+.trust {
+  padding-top: var(--section-pad);
+  padding-bottom: var(--section-pad);
+}
+
+.facts {
+  display: grid;
+  gap: var(--space-8) var(--space-12);
+}
+
+@media (min-width: 48rem) {
+  .facts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.facts > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.status {
+  margin-top: var(--space-12);
+  padding: var(--space-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  color: var(--ink-muted);
+  max-width: 48rem;
+}
+
+.status strong {
+  color: var(--ink);
+}
+
+.closing-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-6);
+}
+
+.closing-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+/* Footer */
+
+.site-footer {
+  padding: var(--space-8) 0 var(--space-12);
+}
+
+.footer-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+  color: var(--ink-muted);
+}
+
+.footer-row p {
+  flex: 1 1 24rem;
+  max-width: 60ch;
+}
+
+.footer-mark {
+  width: 28px;
+  height: 28px;
+}
+
+@media (max-width: 30rem) {
+  .track {
+    padding: var(--space-2);
+  }
+  .block-name {
+    padding: 0 var(--space-1);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+  }
+  .block .timing {
+    font-size: 11px;
+    overflow: hidden;
+  }
+  .fixation .mini-cross,
+  .wide-only {
+    display: none;
+  }
+  .lane {
+    inset-inline: var(--space-2);
+  }
+}

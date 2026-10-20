@@ -1,0 +1,22 @@
+/* Logo files have fixed inks, so a page carries both and the theme shows the one for its ground:
+   `.on-light` for the light files, `.on-dark` for the dark ones. */
+.on-dark {
+  display: none;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .on-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .on-dark {
+    display: revert;
+  }
+}
+
+:root[data-theme="dark"] .on-light {
+  display: none;
+}
+
+:root[data-theme="dark"] .on-dark {
+  display: revert;
+}

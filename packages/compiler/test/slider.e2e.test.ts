@@ -27,7 +27,7 @@ const slider = (plugin: string, stimulus: unknown): TrialNode => ({
 const spec: Spec = {
   name: "sliders",
   assets: [
-    fixture("square.png", "../../../apps/studio/test/fixtures/square.png", "image/png"),
+    fixture("square.png", "../../../apps/builder/test/fixtures/square.png", "image/png"),
     fixture("tone.wav", "./fixtures/tone.wav", "audio/wav"),
     fixture("clip.webm", "./fixtures/clip.webm", "video/webm"),
   ],

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://www.capro.dev/jspsych-studio/spec-schema.json",
-  "title": "jsPsych Studio experiment spec",
-  "description": "A declarative experiment the Studio compiler turns into jsPsych source. Edit it here or open it in the builder at https://www.capro.dev/jspsych-studio/.",
+  "$id": "https://www.capro.dev/tachisto/spec-schema.json",
+  "title": "Tachisto experiment spec",
+  "description": "A declarative experiment the Tachisto compiler turns into jsPsych source. Edit it here or open it in the builder at https://www.capro.dev/tachisto/app/.",
   "type": "object",
   "required": [
     "name",

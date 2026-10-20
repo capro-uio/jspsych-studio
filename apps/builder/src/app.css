@@ -1,0 +1,76 @@
+/* The flow diagram gives each kind of block a hue of its own so it reads at a glance, on a fill
+   mixed from the brand's raised paper so it follows the theme. */
+:root {
+  --flow-block-stroke: light-dark(#3f6a9a, #86a5e3);
+  --flow-loop-stroke: light-dark(#7a4f9c, #c09be3);
+  --flow-split-stroke: var(--caution);
+  --flow-checkpoint-stroke: var(--signal);
+  --flow-block-fill: color-mix(in srgb, var(--flow-block-stroke) 9%, var(--paper-raised));
+  --flow-loop-fill: color-mix(in srgb, var(--flow-loop-stroke) 9%, var(--paper-raised));
+  --flow-split-fill: color-mix(in srgb, var(--flow-split-stroke) 9%, var(--paper-raised));
+  --flow-checkpoint-fill: color-mix(in srgb, var(--flow-checkpoint-stroke) 9%, var(--paper-raised));
+}
+
+body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius-md);
+  padding: 0.25rem 0.4rem;
+  transition:
+    background-color var(--duration-ui),
+    border-color var(--duration-ui),
+    color var(--duration-ui);
+}
+
+input,
+select,
+textarea {
+  background: var(--paper-raised);
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  color: var(--ink-subtle);
+  border-color: var(--line);
+  background: none;
+  cursor: not-allowed;
+}
+
+textarea {
+  resize: vertical;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
+}
+
+/* Svelte mounts into #app, so that element — not body — is the shell the layout sizes against.
+   The page scrolls normally by default; paired with the breakpoint in App.svelte, a viewport with
+   room for three columns pins the shell so each column scrolls on its own instead. */
+#app {
+  display: flex;
+  flex-direction: column;
+  min-height: 100dvh;
+}
+
+@media (min-width: 60rem) and (min-height: 34rem) {
+  #app {
+    height: 100dvh;
+    overflow: hidden;
+  }
+}

@@ -84,7 +84,7 @@ describe("downloading the whole project", () => {
     // The tools are what the data is based on; they are not authors. jsPsych is named in its own
     // right, with its version, because it is what wrote the rows.
     expect(metadata.isBasedOn).toMatchObject([
-      { "@type": "SoftwareApplication", name: "jsPsych Studio" },
+      { "@type": "SoftwareApplication", name: "Tachisto" },
       { "@type": "SoftwareApplication", name: "jsPsych" },
     ]);
     expect(metadata.isBasedOn[1].softwareVersion).toMatch(/^\d+\.\d+\.\d+/);
@@ -107,14 +107,14 @@ describe("downloading the whole project", () => {
     const source = files["experiment.js"] as string;
 
     expect(source.startsWith("/*")).toBe(true);
-    expect(source).toContain(`Built with jsPsych Studio ${manifest.version} on 2026-10-16`);
+    expect(source).toContain(`Built with Tachisto ${manifest.version} on 2026-10-16`);
     expect(source).toContain("generated from experiment.json");
     expect(files["index.html"]).toContain(
-      `<meta name="generator" content="jsPsych Studio ${manifest.version}" />`,
+      `<meta name="generator" content="Tachisto ${manifest.version}" />`,
     );
   });
 
-  it("names the Studio version that built it", async () => {
+  it("names the Tachisto version that built it", async () => {
     const files = await projectFiles(spec, schemas);
     const metadata = describedDataset(files);
 
@@ -122,8 +122,8 @@ describe("downloading the whole project", () => {
     expect(metadata.isBasedOn[1].softwareVersion).toEqual(expect.any(String));
   });
 
-  it("leaves the Studio version out of an unreleased build", async () => {
-    // A dataset built by "jsPsych Studio 0.0.0" names a build nobody can obtain.
+  it("leaves the Tachisto version out of an unreleased build", async () => {
+    // A dataset built by "Tachisto 0.0.0" names a build nobody can obtain.
     vi.resetModules();
     vi.doMock("../package.json", () => ({ default: { ...manifest, version: "0.0.0" } }));
     try {
@@ -132,31 +132,29 @@ describe("downloading the whole project", () => {
       const metadata = describedDataset(files);
 
       expect(metadata.isBasedOn[0].softwareVersion).toBeUndefined();
-      expect(files["experiment.js"]).toContain("Built with jsPsych Studio on 2026-10-16");
-      expect(files["index.html"]).toContain('<meta name="generator" content="jsPsych Studio" />');
-      expect(files["README.md"]).toContain("Built with jsPsych Studio.");
+      expect(files["experiment.js"]).toContain("Built with Tachisto on 2026-10-16");
+      expect(files["index.html"]).toContain('<meta name="generator" content="Tachisto" />');
+      expect(files["README.md"]).toContain("Built with Tachisto.");
     } finally {
       vi.doUnmock("../package.json");
       vi.resetModules();
     }
   });
 
-  it("says which Studio built it, once there is a version", async () => {
+  it("says which Tachisto built it, once there is a version", async () => {
     const files = await projectFiles(spec, schemas, {
       generatedAt: "2026-10-16",
-      studio: "1.2.0",
+      tachisto: "1.2.0",
     });
     const metadata = describedDataset(files);
 
     expect(metadata.isBasedOn[0]).toMatchObject({
-      name: "jsPsych Studio",
+      name: "Tachisto",
       softwareVersion: "1.2.0",
     });
-    expect(files["experiment.js"]).toContain("Built with jsPsych Studio 1.2.0 on 2026-10-16");
-    expect(files["index.html"]).toContain(
-      '<meta name="generator" content="jsPsych Studio 1.2.0" />',
-    );
-    expect(files["README.md"]).toContain("Built with jsPsych Studio 1.2.0.");
+    expect(files["experiment.js"]).toContain("Built with Tachisto 1.2.0 on 2026-10-16");
+    expect(files["index.html"]).toContain('<meta name="generator" content="Tachisto 1.2.0" />');
+    expect(files["README.md"]).toContain("Built with Tachisto 1.2.0.");
   });
 
   it("lists the platform's id parameter among the columns", async () => {

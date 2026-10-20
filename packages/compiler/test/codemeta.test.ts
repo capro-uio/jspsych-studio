@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import bundle from "@jspsych-studio/schemas/plugin-schemas.json" with { type: "json" };
+import bundle from "@tachisto/schemas/plugin-schemas.json" with { type: "json" };
 import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta } from "../src/codemeta.ts";
 import { GENERATOR_URL } from "../src/metadata.ts";
@@ -17,17 +17,17 @@ const readRoot = <T>(file: string) =>
 
 const handWritten = {
   "@context": "https://w3id.org/codemeta/3.0",
-  name: "jsPsych Studio",
+  name: "Tachisto",
   author: [{ "@type": "Person", familyName: "Mowinckel" }],
 };
 
 const packageJson = {
   description: "A builder.",
   license: "MIT",
-  homepage: "https://www.capro.dev/jspsych-studio/",
+  homepage: "https://www.capro.dev/tachisto/",
   keywords: ["jsPsych"],
-  repository: { type: "git", url: "git+https://github.com/capro-uio/jspsych-studio.git" },
-  bugs: { url: "https://github.com/capro-uio/jspsych-studio/issues" },
+  repository: { type: "git", url: "git+https://github.com/capro-uio/tachisto.git" },
+  bugs: { url: "https://github.com/capro-uio/tachisto/issues" },
 };
 
 const release = { version: "0.0.2", jspsych: "8.3.0", date: "2026-11-01" };
@@ -36,9 +36,9 @@ describe("codemeta for a release", () => {
   it("takes what package.json already says from there", () => {
     expect(updateCodemeta(handWritten, packageJson, release)).toMatchObject({
       description: "A builder.",
-      codeRepository: "https://github.com/capro-uio/jspsych-studio",
-      issueTracker: "https://github.com/capro-uio/jspsych-studio/issues",
-      url: "https://www.capro.dev/jspsych-studio/",
+      codeRepository: "https://github.com/capro-uio/tachisto",
+      issueTracker: "https://github.com/capro-uio/tachisto/issues",
+      url: "https://www.capro.dev/tachisto/",
       license: "https://spdx.org/licenses/MIT",
       keywords: ["jsPsych"],
     });
@@ -55,7 +55,7 @@ describe("codemeta for a release", () => {
     expect(updateCodemeta(handWritten, packageJson, release)).toMatchObject({
       version: "0.0.2",
       dateModified: "2026-11-01",
-      downloadUrl: "https://github.com/capro-uio/jspsych-studio/releases/tag/v0.0.2",
+      downloadUrl: "https://github.com/capro-uio/tachisto/releases/tag/v0.0.2",
       softwareRequirements: [{ name: "jsPsych", version: "8.3.0" }],
     });
     expect(updateCodemeta(handWritten, {}, release)).not.toHaveProperty("downloadUrl");

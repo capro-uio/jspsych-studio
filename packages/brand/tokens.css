@@ -1,0 +1,50 @@
+/* Each colour is written once, for both themes. The page follows the system setting unless
+   data-theme on <html> names a theme. */
+:root {
+  color-scheme: light dark;
+  --paper: light-dark(#f6f4ee, #121d1f);
+  --paper-sunk: light-dark(#ece9e0, #0d1617);
+  --paper-raised: light-dark(#ffffff, #1c2b2d);
+  --ink: light-dark(#1c2b2d, #f6f4ee);
+  --ink-muted: light-dark(#4a5759, #b4bebf);
+  --ink-subtle: light-dark(#66726f, #8d999a);
+  --line: light-dark(#dad6cb, #2a3c3f);
+  --line-strong: light-dark(#7a8687, #6e8588);
+  --stimulus: light-dark(#e4572e, #f06a43);
+  --stimulus-text: light-dark(#b8401a, #ff8a65);
+  --stimulus-fill: light-dark(#c2461f, #f06a43);
+  --on-stimulus: light-dark(#ffffff, #121d1f);
+  --stimulus-tint: light-dark(#fbe3da, #3a2420);
+  --mask: light-dark(#b7bfc0, #4a5f62);
+  --signal: light-dark(#1f6e7f, #5fb8c9);
+  --caution: light-dark(#8a5a00, #e0a84a);
+  --danger: light-dark(#a3243b, #f4a3b4);
+  --shadow-pop: 0 4px 16px light-dark(rgba(28, 43, 45, 0.12), rgba(0, 0, 0, 0.45));
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --duration-flash: 560ms;
+  --duration-cycle: 1400ms;
+  --duration-ui: 120ms;
+  --font-display: Jost, "Futura", "Century Gothic", system-ui, sans-serif;
+  --font-sans: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
