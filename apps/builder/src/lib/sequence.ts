@@ -74,11 +74,22 @@ function nodesAlong(timeline: SpecNode[], path: number[]) {
 }
 
 /** The rows a step reads from: those of the innermost block around it. */
-function rowsFor(spec: Spec, along: { node: SpecNode }[]): Row[] {
+/** The conditions table a step reads from: that of the innermost block around it. */
+function tableFor(along: { node: SpecNode }[]) {
   for (const { node } of [...along].reverse()) {
-    if (node.kind === "block") return spec.conditions?.[node.conditions] ?? [];
+    if (node.kind === "block") return node.conditions;
   }
-  return [];
+  return null;
+}
+
+function rowsFor(spec: Spec, along: { node: SpecNode }[]): Row[] {
+  const table = tableFor(along);
+  return table === null ? [] : (spec.conditions?.[table] ?? []);
+}
+
+/** The conditions table the steps at a path read their columns from, if any. */
+export function tableAt(spec: Spec, path: number[]) {
+  return tableFor(nodesAlong(spec.timeline, path));
 }
 
 // Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.

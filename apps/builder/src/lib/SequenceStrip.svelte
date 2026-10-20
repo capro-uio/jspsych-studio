@@ -11,6 +11,7 @@
     timingText,
     type Segment,
   } from "./sequence.ts";
+  import { captureScreens } from "./screen-capture.ts";
   import { sequenceFigure, type Arrangement } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
@@ -25,13 +26,25 @@
 
   let arrangement = $state<Arrangement>("stack");
 
-  function downloadFigure() {
+  let capturing = $state(false);
+
+  // The screens are pictured from the running study, which takes a moment; a figure is still
+  // drawn, with plain screens, if they cannot be.
+  async function downloadFigure() {
     if (!sequence) return;
-    download(
-      `${specFilename(project.spec)}-${sequence.kind}-${sequence.path.join("-")}.svg`,
-      sequenceFigure(project.spec, sequence, arrangement),
-      "image/svg+xml",
-    );
+    const drawn = sequence;
+    const spec = $state.snapshot(project.spec);
+    capturing = true;
+    try {
+      const pictures = await captureScreens(spec, drawn).catch(() => []);
+      download(
+        `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}.svg`,
+        sequenceFigure(spec, drawn, arrangement, pictures),
+        "image/svg+xml",
+      );
+    } finally {
+      capturing = false;
+    }
   }
 </script>
 
@@ -60,11 +73,13 @@
         <button
           type="button"
           onclick={downloadFigure}
-          disabled={sequence.segments.length === 0}
+          disabled={sequence.segments.length === 0 || capturing}
+          aria-busy={capturing}
           title={sequence.segments.length === 0
             ? "Add a step to this block to draw its figure"
             : "An SVG of these steps as screens, for a paper or poster"}
-          data-testid="download-sequence-svg">Download figure</button
+          data-testid="download-sequence-svg"
+          >{capturing ? "Drawing the screens…" : "Download figure"}</button
         >
       </div>
     </div>

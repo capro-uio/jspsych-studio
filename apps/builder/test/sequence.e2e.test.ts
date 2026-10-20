@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -60,6 +60,36 @@ describe("the timing strip", () => {
     const svg = readFileSync(await file.path(), "utf8");
     expect(svg).toContain("Fixation");
     expect(svg).toContain("until response");
+    await page.close();
+  }, 120_000);
+
+  it("draws each screen of the figure as the participant sees it", async () => {
+    const page = await openStroop();
+    await page.getByTestId("node-2-1").click();
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      page.getByTestId("download-sequence-svg").click(),
+    ]);
+    const svg = readFileSync(await file.path(), "utf8");
+    const pictures = svg.match(/xlink:href="data:image\/png;base64,[A-Za-z0-9+/]+=*"/g) ?? [];
+    expect(pictures).toHaveLength(2);
+    if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, svg);
+    expect(await page.locator("iframe[aria-hidden='true']").count()).toBe(0);
+    await page.close();
+  }, 120_000);
+
+  it("pictures a step that shows an image, after a preload step it does not draw", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await page.goto(appUrl);
+    await page.getByTestId("example-shapes").click();
+    await page.getByTestId("node-2-1").click();
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 60_000 }),
+      page.getByTestId("download-sequence-svg").click(),
+    ]);
+    const svg = readFileSync(await file.path(), "utf8");
+    expect(svg.match(/<image /g) ?? []).toHaveLength(2);
+    if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, svg);
     await page.close();
   }, 120_000);
 

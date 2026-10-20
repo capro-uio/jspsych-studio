@@ -41,7 +41,7 @@ export interface FigureFrame {
  */
 export function figureSvg({ width, height, title, body }: FigureFrame) {
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="${FONT}" font-size="12" role="img">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="${FONT}" font-size="12" role="img">`,
     `<title>${svgText(title)}</title>`,
     `<defs><marker id="${ARROW_ID}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${ink("ink-muted")}"/></marker></defs>`,
     `<rect width="100%" height="100%" fill="#ffffff"/>`,
