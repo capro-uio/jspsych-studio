@@ -1,7 +1,7 @@
 import { escapeHtmlText } from "../emit.ts";
 import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
 import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "@tachisto/schemas/files";
-import { packageFileKey } from "../package-files.ts";
+import { cdnUrl, packageFileKey } from "../package-files.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
@@ -22,8 +22,6 @@ export interface HtmlTargetOptions {
   /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
   headScripts?: string[];
 }
-
-const CDN = "https://unpkg.com";
 
 interface PageFile {
   package: string;
@@ -67,9 +65,7 @@ const insideElement = (text: string, tag: string) =>
   text.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1").replace(/<!--/g, "<\\!--");
 
 function urlOf(file: PageFile, base: string) {
-  return base === "cdn"
-    ? `${CDN}/${file.package}@${file.version}/${file.path}`
-    : `${base}/${packageFileKey(file)}`;
+  return base === "cdn" ? cdnUrl(file) : `${base}/${packageFileKey(file)}`;
 }
 
 function tagFor(file: PageFile, result: CompileResult, options: HtmlTargetOptions) {
