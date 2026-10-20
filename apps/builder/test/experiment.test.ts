@@ -2,7 +2,11 @@ import { strFromU8, unzipSync } from "fflate";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Spec } from "@tachisto/compiler";
 import flanker from "../../../examples/flanker.json";
-import { buildExperimentHtml, buildProjectZip } from "../src/lib/experiment.svelte.ts";
+import {
+  buildExperimentHtml,
+  buildProjectZip,
+  studyFigures,
+} from "../src/lib/experiment.svelte.ts";
 import { studyFlowFigure } from "../src/lib/flow-figure.ts";
 import { exportedSpec, loadSpec } from "../src/lib/project.svelte.ts";
 import { installedFetch } from "./installed.ts";
@@ -10,10 +14,31 @@ import { installedFetch } from "./installed.ts";
 describe("buildProjectZip", () => {
   it("carries the study's flow figure beside the experiment", async () => {
     loadSpec(flanker as Spec);
-    const files = unzipSync(await buildProjectZip({ selfContained: false }));
+    const files = unzipSync(await buildProjectZip({ selfContained: false, capture: pictureFirst }));
     expect(strFromU8(files["figures/flow.svg"])).toBe(studyFlowFigure(exportedSpec()));
-    expect(strFromU8(files["README.md"])).toContain("`flow.svg`");
+    expect(strFromU8(files["figures/block-1-0.svg"])).toContain("<image");
+    expect(strFromU8(files["README.md"])).toContain("`flow.svg`, `loop-1.svg`, `block-1-0.svg`");
     expect(files["index.html"]).toBeDefined();
+  });
+});
+
+const PNG = "data:image/png;base64,iVBORw0KGgo=";
+const pictureFirst = vi.fn((_spec: Spec, sequence: { segments: unknown[] }) =>
+  Promise.resolve(sequence.segments.map((_, index) => (index === 0 ? PNG : undefined))),
+);
+
+describe("studyFigures", () => {
+  it("draws the flow and each block and loop, pictured", async () => {
+    const figures = await studyFigures(flanker as Spec, pictureFirst);
+    expect(Object.keys(figures)).toEqual(["flow.svg", "loop-1.svg", "block-1-0.svg"]);
+    expect(figures["block-1-0.svg"]).toContain(`xlink:href="${PNG}"`);
+  });
+
+  it("still draws a block whose screens could not be pictured", async () => {
+    const failing = () => Promise.reject(new Error("no frame"));
+    const figures = await studyFigures(flanker as Spec, failing);
+    expect(figures["block-1-0.svg"]).toContain("<svg");
+    expect(figures["block-1-0.svg"]).not.toContain("<image");
   });
 });
 
@@ -23,7 +48,7 @@ describe("a self-contained download", () => {
   it("carries checked copies of jsPsych and its plugins under lib/, loading nothing from unpkg", async () => {
     vi.stubGlobal("fetch", installedFetch);
     loadSpec(flanker as Spec);
-    const files = unzipSync(await buildProjectZip({ selfContained: true }));
+    const files = unzipSync(await buildProjectZip({ selfContained: true, capture: pictureFirst }));
     expect(files["lib/jspsych/dist/index.browser.min.js"]).toBeDefined();
     expect(
       files["lib/@jspsych/plugin-html-keyboard-response/dist/index.browser.min.js"],
