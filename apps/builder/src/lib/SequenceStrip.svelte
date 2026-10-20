@@ -11,7 +11,6 @@
     timingText,
     type Segment,
   } from "./sequence.ts";
-  import { captureScreens } from "./screen-capture.ts";
   import { sequenceFigure, type Arrangement } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
@@ -27,16 +26,24 @@
   let arrangement = $state<Arrangement>("stack");
 
   let capturing = $state(false);
+  let capture: AbortController | null = null;
+
+  // A capture still running when the strip goes is stopped, and nothing is downloaded.
+  $effect(() => () => capture?.abort());
 
   // The screens are pictured from the running study, which takes a moment; a figure is still
-  // drawn, with plain screens, if they cannot be.
+  // drawn, with plain screens, if they cannot be. The capture's code loads only when it is wanted.
   async function downloadFigure() {
     if (!sequence) return;
     const drawn = sequence;
     const spec = $state.snapshot(project.spec);
+    capture = new AbortController();
+    const { signal } = capture;
     capturing = true;
     try {
-      const pictures = await captureScreens(spec, drawn).catch(() => []);
+      const { captureScreens } = await import("./screen-capture.ts");
+      const pictures = await captureScreens(spec, drawn, { signal }).catch(() => []);
+      if (signal.aborted) return;
       download(
         `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}.svg`,
         sequenceFigure(spec, drawn, arrangement, pictures),
@@ -44,6 +51,7 @@
       );
     } finally {
       capturing = false;
+      capture = null;
     }
   }
 </script>

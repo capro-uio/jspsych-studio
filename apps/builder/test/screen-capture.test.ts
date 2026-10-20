@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { Spec } from "@tachisto/compiler";
+import { STEP_COLUMN, type Spec } from "@tachisto/compiler";
 import flanker from "../../../examples/flanker.json";
 import stroop from "../../../examples/stroop.json";
 import { pluginSchema } from "../src/lib/schemas.ts";
@@ -50,10 +50,19 @@ describe("captureSpec", () => {
 });
 
 describe("capturePage", () => {
+  it("holds the study's timers before jsPsych loads, so no step ends before it is pictured", async () => {
+    const html = await capturePage(spec, sequence);
+    const hold = html.indexOf("window.setTimeout = ");
+    expect(hold).toBeGreaterThan(-1);
+    expect(hold).toBeLessThan(html.indexOf('<script src="https://unpkg.com/jspsych@'));
+    expect(html).toContain("this.muted = true");
+  });
+
   it("carries the picturing library and the hooks that picture each step", async () => {
     const html = await capturePage(spec, sequence);
     expect(html).toContain("htmlToImage");
-    expect(html).toContain("window.tachistoCapture(trial.data?.tachisto_step");
+    expect(html).toContain(`trial.data?.${STEP_COLUMN}`);
+    expect(html).toContain("window.tachistoCapture(step)");
     expect(html).toContain('"tachisto-capture"');
   });
 });
@@ -82,9 +91,23 @@ describe("readCaptureMessage", () => {
     ).toBeNull();
   });
 
+  it("refuses a picture far larger than any screen", () => {
+    const huge = `data:image/png;base64,${"A".repeat(4_000_001)}`;
+    expect(readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: huge })).toBeNull();
+  });
+
+  it("reads a step that could not be pictured", () => {
+    expect(readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: null })).toEqual({
+      done: false,
+      step: "2.1",
+      png: null,
+    });
+  });
+
   it("ignores messages from anything else, and steps that are not places in the timeline", () => {
     expect(readCaptureMessage({ source: "tachisto-preview", step: "2.1", png: PNG })).toBeNull();
     expect(readCaptureMessage({ source: "tachisto-capture", step: "2.x", png: PNG })).toBeNull();
+    expect(readCaptureMessage({ source: "tachisto-capture", step: null, png: PNG })).toBeNull();
     expect(readCaptureMessage("tachisto-capture")).toBeNull();
   });
 });
@@ -101,14 +124,14 @@ describe("placeCapture", () => {
 
   it("gives a picture to the segment holding the step, and only the first one it gets", () => {
     const screens: (string | undefined)[] = [undefined, undefined, undefined];
-    placeCapture(withPause, screens, "2.1.0", PNG);
-    placeCapture(withPause, screens, "2.1.1", "data:image/png;base64,later");
+    expect(placeCapture(withPause, screens, "2.1.0", PNG)).toBe(true);
+    expect(placeCapture(withPause, screens, "2.1.1", "data:image/png;base64,later")).toBe(false);
     expect(screens).toEqual([undefined, undefined, PNG]);
   });
 
   it("never gives one to a pause, or to a step outside the sequence", () => {
     const screens: (string | undefined)[] = [undefined, undefined, undefined];
-    placeCapture(withPause, screens, "7", PNG);
+    expect(placeCapture(withPause, screens, "7", PNG)).toBe(false);
     expect(screens).toEqual([undefined, undefined, undefined]);
   });
 });

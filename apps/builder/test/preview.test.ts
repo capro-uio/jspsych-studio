@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "@tachisto/compiler";
 import type { Spec } from "@tachisto/compiler";
-import { readStepEvent, tracedPreview, type PreviewOptions } from "../src/lib/preview.ts";
+import { isStepId, readStepEvent, tracedPreview, type PreviewOptions } from "../src/lib/preview.ts";
 import { schemas } from "../src/lib/schemas.ts";
 
 const previewSpec = (spec: Spec, options?: PreviewOptions) => tracedPreview(spec, options).spec;
@@ -227,5 +227,15 @@ describe("readStepEvent", () => {
     ["a duration in words", { ...message, duration: "300" }],
   ])("ignores %s", (_case, data) => {
     expect(readStepEvent(data)).toBeNull();
+  });
+});
+
+describe("isStepId", () => {
+  it("takes a place in the timeline, and nothing else", () => {
+    expect(isStepId("2")).toBe(true);
+    expect(isStepId("2.1.0")).toBe(true);
+    for (const other of ["", "2.", ".2", "2.x", "2 1", 2, null, undefined]) {
+      expect(isStepId(other)).toBe(false);
+    }
   });
 });

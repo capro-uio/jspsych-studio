@@ -1,8 +1,14 @@
 <script lang="ts">
-  import { compileSpec, emitHtml, formatSource, SpecError, usesDevices } from "@tachisto/compiler";
+  import { compileSpec, formatSource, SpecError, usesDevices } from "@tachisto/compiler";
   import type { Spec } from "@tachisto/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
-  import { FOCUS_GUARD, readStepEvent, TRACE_HOOKS, tracedPreview } from "./preview.ts";
+  import {
+    compilePreview,
+    previewPage,
+    readStepEvent,
+    TRACE_HOOKS,
+    tracedPreview,
+  } from "./preview.ts";
   import { followPreview, resetPlayback } from "./playback.svelte.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
@@ -45,14 +51,13 @@
       // The experiment as it will be exported decides what is valid and what the code view shows.
       // What runs in the frame is a preview of it, which never saves data.
       const exported = compileSpec(spec, schemas);
-      const preview = tracedPreview(spec, { from });
-      const running = compileSpec(preview.spec, schemas, {
-        initEntries: `on_finish: () => { window.studioExperiment.finished = true; }, ${TRACE_HOOKS}`,
-        stepIds: preview.stepIds,
-      });
+      const running = compilePreview(
+        tracedPreview(spec, { from }),
+        `on_finish: () => { window.studioExperiment.finished = true; }, ${TRACE_HOOKS}`,
+      );
       error = "";
       exportedSource = exported.source;
-      emitHtml(running, { title: spec.name, headScripts: [FOCUS_GUARD] }).then(
+      previewPage(running, spec.name).then(
         (output) => {
           if (compileId !== latestCompile) return;
           html = output.html;

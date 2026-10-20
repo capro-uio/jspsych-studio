@@ -73,7 +73,6 @@ function nodesAlong(timeline: SpecNode[], path: number[]) {
   return found;
 }
 
-/** The rows a step reads from: those of the innermost block around it. */
 /** The conditions table a step reads from: that of the innermost block around it. */
 function tableFor(along: { node: SpecNode }[]) {
   for (const { node } of [...along].reverse()) {
@@ -82,6 +81,7 @@ function tableFor(along: { node: SpecNode }[]) {
   return null;
 }
 
+/** The rows a step reads from: those of the innermost block around it. */
 function rowsFor(spec: Spec, along: { node: SpecNode }[]): Row[] {
   const table = tableFor(along);
   return table === null ? [] : (spec.conditions?.[table] ?? []);

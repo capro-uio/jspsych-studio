@@ -1,12 +1,16 @@
 import {
+  compileSpec,
+  emitHtml,
   escapeHtmlText,
   slotsOf,
   STEP_COLUMN,
+  type CompileResult,
   type Ending,
   type Spec,
   type SpecNode,
   type TrialNode,
 } from "@tachisto/compiler";
+import { schemas } from "./schemas.ts";
 
 /**
  * The steps leading to `path`, keeping the containers that give a step its context — a block still
@@ -83,6 +87,20 @@ export function tracedPreview(spec: Spec, options: PreviewOptions = {}) {
 
 const MESSAGE_SOURCE = "tachisto-preview";
 
+/** A step's place in the timeline as a frame reports it, such as "2.1". */
+export const isStepId = (step: unknown): step is string =>
+  typeof step === "string" && /^\d+(\.\d+)*$/.test(step);
+
+/** A narrowed study compiled to run in a frame, reporting each step through the hooks given. */
+export function compilePreview(traced: ReturnType<typeof tracedPreview>, hooks: string) {
+  return compileSpec(traced.spec, schemas, { initEntries: hooks, stepIds: traced.stepIds });
+}
+
+/** The page a frame runs, with the focus guard ahead of anything else it is given. */
+export function previewPage(compiled: CompileResult, title: string, headScripts: string[] = []) {
+  return emitHtml(compiled, { title, headScripts: [FOCUS_GUARD, ...headScripts] });
+}
+
 /** Hooks for the running study that tell the builder each time a step starts and finishes. */
 export const TRACE_HOOKS =
   `on_trial_start: (trial) => { const step = trial.data?.${STEP_COLUMN}; ` +
@@ -108,7 +126,7 @@ export function readStepEvent(message: unknown): StepEvent | null {
   const { source, event, step, duration } = message as Record<string, unknown>;
   if (source !== MESSAGE_SOURCE) return null;
   if (event !== "start" && event !== "finish") return null;
-  if (typeof step !== "string" || !/^\d+(\.\d+)*$/.test(step)) return null;
+  if (!isStepId(step)) return null;
   const known = typeof duration === "number" && Number.isFinite(duration) && duration >= 0;
   if (duration !== null && !known) return null;
   return { event, step, duration: known ? duration : null };
