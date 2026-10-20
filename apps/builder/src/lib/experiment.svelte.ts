@@ -1,5 +1,6 @@
 import { compileSpec, emitHtml, projectFiles } from "@tachisto/compiler";
 import { zipSync, strToU8 } from "fflate";
+import { studyFlowFigure } from "./flow-figure.ts";
 import { exportedSpec } from "./project.svelte.ts";
 import { schemas } from "./schemas.ts";
 
@@ -10,10 +11,15 @@ export async function buildExperimentHtml() {
   return html;
 }
 
-/** Everything needed to host the experiment, as a zip: page, source, media, project file, readme. */
+/**
+ * Everything needed to host the experiment, as a zip: page, source, media, project file, readme,
+ * and the figures that describe it in a paper.
+ */
 export async function buildProjectZip() {
   const spec = exportedSpec();
-  const files = await projectFiles(spec, schemas);
+  const files = await projectFiles(spec, schemas, {
+    figures: { "flow.svg": studyFlowFigure(spec) },
+  });
   const entries = Object.fromEntries(
     Object.entries(files).map(([path, contents]) => [
       path,

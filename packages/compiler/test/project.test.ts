@@ -59,6 +59,21 @@ describe("downloading the whole project", () => {
     expect(files["experiment.js"]).toContain("jsPsych.run");
   });
 
+  it("saves the figures it is given under figures/ and lists them in the readme", async () => {
+    const flow = '<svg xmlns="http://www.w3.org/2000/svg"></svg>';
+    const files = await projectFiles(spec, schemas, { figures: { "flow.svg": flow } });
+    expect(files["figures/flow.svg"]).toBe(flow);
+    expect(files["README.md"]).toContain(
+      "- `figures/` — figures of the study for a paper or poster, as SVG: `flow.svg`",
+    );
+  });
+
+  it("has no figures folder when it is given none", async () => {
+    const files = await projectFiles(spec, schemas);
+    expect(Object.keys(files).some((path) => path.startsWith("figures/"))).toBe(false);
+    expect(files["README.md"]).not.toContain("figures/");
+  });
+
   it("can be opened again in the builder", async () => {
     const files = await projectFiles(spec, schemas);
     const reopened = JSON.parse(files["experiment.json"] as string) as Spec;
