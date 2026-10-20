@@ -177,6 +177,18 @@ describe("trialFigureSvg", () => {
     expect(centre.length * CHAR_WIDTH).toBeLessThan(SCREEN.width);
   });
 
+  it("draws a captured screen inside its outline, and a placeholder where there is none", () => {
+    const png = "data:image/png;base64,iVBORw0KGgo=";
+    const root = parse(
+      trialFigureSvg(layoutTrialFigure(trial, "stack"), "t", undefined, [png, undefined, png]),
+    );
+    const groups = [...root.querySelectorAll(":scope > g")];
+    expect(groups[0].querySelector("image")?.getAttribute("xlink:href")).toBe(png);
+    expect(groups[1].querySelector("image")).toBeNull();
+    expect(groups[2].querySelector("image")).not.toBeNull();
+    expect(groups[0].querySelector("path")).toBeNull();
+  });
+
   it("carries every label and an arrow marked as time", () => {
     const root = svgOf();
     const text = root.textContent ?? "";

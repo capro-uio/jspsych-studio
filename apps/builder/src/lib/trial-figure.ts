@@ -150,9 +150,19 @@ function screenContent(screen: FigureScreen, colour: string) {
   return `<text x="${centre.x}" y="${centre.y + 4}" text-anchor="middle" font-size="11" fill="${colour}" opacity="0.6">${svgText(fitted(title))}</text>`;
 }
 
-function screenSvg(screen: FigureScreen, settings: ExperimentSettings | undefined) {
+function screenSvg(
+  screen: FigureScreen,
+  settings: ExperimentSettings | undefined,
+  picture: string | undefined,
+) {
+  const { x, y } = screen;
   const dash = screen.segment.role === "group" ? ` stroke-dasharray="4 3"` : "";
-  const frame = `<rect x="${screen.x}" y="${screen.y}" width="${SCREEN.width}" height="${SCREEN.height}" rx="2" fill="${backgroundColor(settings)}" stroke="${ink("line-strong")}" stroke-width="1.25"${dash}/>`;
+  const box = `x="${x}" y="${y}" width="${SCREEN.width}" height="${SCREEN.height}"`;
+  const outline = `stroke="${ink("line-strong")}" stroke-width="1.25"${dash}`;
+  // A captured screen is the participant's page itself, drawn inside the screen's outline.
+  const face = picture
+    ? `<rect ${box} fill="${backgroundColor(settings)}"/><image ${box} preserveAspectRatio="xMidYMid meet" xlink:href="${picture}"/><rect ${box} rx="2" fill="none" ${outline}/>`
+    : `<rect ${box} rx="2" fill="${backgroundColor(settings)}" ${outline}/>${screenContent(screen, textColor(settings))}`;
   const { at, anchor, lines } = screen.label;
   const label = lines
     .map(
@@ -160,7 +170,7 @@ function screenSvg(screen: FigureScreen, settings: ExperimentSettings | undefine
         `<tspan x="${at.x}" y="${at.y + index * LINE_HEIGHT}" ${LABEL_STYLE[line.emphasis]}>${svgText(line.text)}</tspan>`,
     )
     .join("");
-  return `<g>${frame}${screenContent(screen, textColor(settings))}<text text-anchor="${anchor}">${label}</text></g>`;
+  return `<g>${face}<text text-anchor="${anchor}">${label}</text></g>`;
 }
 
 /** A block's or loop's trial, screen by screen, as a standalone SVG figure. */
@@ -168,6 +178,8 @@ export function trialFigureSvg(
   figure: TrialFigure,
   title: string,
   settings: ExperimentSettings | undefined,
+  /** A picture of each screen, by segment, where one was captured. */
+  pictures: (string | undefined)[] = [],
 ) {
   const { from, to } = figure.arrow;
   const arrow = `<path d="M ${from.x} ${from.y} L ${to.x} ${to.y}" fill="none" stroke="${ink("ink-muted")}" stroke-width="1.25" marker-end="url(#${ARROW_ID})"/>`;
@@ -176,12 +188,21 @@ export function trialFigureSvg(
     width: figure.width,
     height: figure.height,
     title,
-    body: [...figure.screens.map((screen) => screenSvg(screen, settings)), arrow, time],
+    body: [
+      ...figure.screens.map((screen, index) => screenSvg(screen, settings, pictures[index])),
+      arrow,
+      time,
+    ],
   });
 }
 
 /** The figure of the block or loop a sequence describes, as the timing strip downloads it. */
-export function sequenceFigure(spec: Spec, sequence: Sequence, arrangement: Arrangement) {
+export function sequenceFigure(
+  spec: Spec,
+  sequence: Sequence,
+  arrangement: Arrangement,
+  pictures: (string | undefined)[] = [],
+) {
   const title = `${specFilename(spec)}: one pass through the ${sequence.kind}`;
-  return trialFigureSvg(layoutTrialFigure(sequence, arrangement), title, spec.settings);
+  return trialFigureSvg(layoutTrialFigure(sequence, arrangement), title, spec.settings, pictures);
 }

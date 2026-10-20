@@ -25,13 +25,34 @@
 
   let arrangement = $state<Arrangement>("stack");
 
-  function downloadFigure() {
+  let capturing = $state(false);
+  let capture: AbortController | null = null;
+
+  // A capture still running when the strip goes is stopped, and nothing is downloaded.
+  $effect(() => () => capture?.abort());
+
+  // The screens are pictured from the running study, which takes a moment; a figure is still
+  // drawn, with plain screens, if they cannot be. The capture's code loads only when it is wanted.
+  async function downloadFigure() {
     if (!sequence) return;
-    download(
-      `${specFilename(project.spec)}-${sequence.kind}-${sequence.path.join("-")}.svg`,
-      sequenceFigure(project.spec, sequence, arrangement),
-      "image/svg+xml",
-    );
+    const drawn = sequence;
+    const spec = $state.snapshot(project.spec);
+    capture = new AbortController();
+    const { signal } = capture;
+    capturing = true;
+    try {
+      const { captureScreens } = await import("./screen-capture.ts");
+      const pictures = await captureScreens(spec, drawn, { signal }).catch(() => []);
+      if (signal.aborted) return;
+      download(
+        `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}.svg`,
+        sequenceFigure(spec, drawn, arrangement, pictures),
+        "image/svg+xml",
+      );
+    } finally {
+      capturing = false;
+      capture = null;
+    }
   }
 </script>
 
@@ -60,11 +81,13 @@
         <button
           type="button"
           onclick={downloadFigure}
-          disabled={sequence.segments.length === 0}
+          disabled={sequence.segments.length === 0 || capturing}
+          aria-busy={capturing}
           title={sequence.segments.length === 0
             ? "Add a step to this block to draw its figure"
             : "An SVG of these steps as screens, for a paper or poster"}
-          data-testid="download-sequence-svg">Download figure</button
+          data-testid="download-sequence-svg"
+          >{capturing ? "Drawing the screens…" : "Download figure"}</button
         >
       </div>
     </div>
