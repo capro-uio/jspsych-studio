@@ -1,6 +1,7 @@
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET, integrityOf } from "./files.ts";
 import type {
   ExtensionSchema,
   ExtractionReport,
@@ -8,12 +9,14 @@ import type {
   ParameterTypeName,
   PluginSchema,
   PluginSchemas,
+  PackageFiles,
   SchemaBundle,
 } from "./types.ts";
 import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
   EXTENSION_LIBRARIES,
+  LIBRARY_RUNTIME_FILES,
   FIXED_CHOICES,
   DECIMAL_PARAMETERS,
   GRID_WIDTHS,
@@ -80,6 +83,100 @@ function declarationsPath(packageName: string) {
 function installedVersion(packageName: string) {
   const manifest = join(dirname(resolveFrom.resolve(packageName)), "..", "package.json");
   return (JSON.parse(readFileSync(manifest, "utf8")) as { version: string }).version;
+}
+
+/** The folder a package is installed in: the nearest above its entry point that names it. */
+function packageRoot(packageName: string) {
+  let folder = dirname(resolveFrom.resolve(packageName));
+  for (;;) {
+    const manifest = join(folder, "package.json");
+    if (existsSync(manifest)) {
+      const { name } = JSON.parse(readFileSync(manifest, "utf8")) as { name?: string };
+      if (name === packageName) return folder;
+    }
+    const parent = dirname(folder);
+    if (parent === folder) throw new Error(`cannot find where ${packageName} is installed`);
+    folder = parent;
+  }
+}
+
+interface Manifest {
+  version: string;
+  license?: string;
+  repository?: string | { url?: string; directory?: string };
+  homepage?: string;
+}
+
+const WEB_ADDRESS = /^https:\/\/[^\s<>|"]+$/;
+
+/**
+ * Where a package's source can be read: its repository, at the folder that holds it when it
+ * shares one with others, as jsPsych's plugins do; else its home page; else its npm page.
+ */
+export function sourceOf(packageName: string, manifest: Manifest) {
+  const repository =
+    typeof manifest.repository === "string" ? { url: manifest.repository } : manifest.repository;
+  const url = repository?.url
+    ?.replace(/^git\+/, "")
+    .replace(/^github:/, "https://github.com/")
+    .replace(/\.git$/, "");
+  // The address is written into a download's notice, so only a plain web address is taken.
+  if (url && WEB_ADDRESS.test(url)) {
+    return repository?.directory ? `${url}/tree/HEAD/${repository.directory}` : url;
+  }
+  if (manifest.homepage && WEB_ADDRESS.test(manifest.homepage)) return manifest.homepage;
+  return `https://www.npmjs.com/package/${packageName}`;
+}
+
+/** The installed version of a package, its licence and source, and the hash of each file named. */
+export async function packageFiles(packageName: string, paths: string[]): Promise<PackageFiles> {
+  const root = packageRoot(packageName);
+  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Manifest;
+  if (!manifest.license) throw new Error(`${packageName} names no licence`);
+  const files = Object.fromEntries(
+    await Promise.all(
+      [...paths]
+        .sort()
+        .map(
+          async (path) =>
+            [path, await integrityOf(new Uint8Array(readFileSync(join(root, path))))] as const,
+        ),
+    ),
+  );
+  return {
+    version: manifest.version,
+    license: manifest.license,
+    source: sourceOf(packageName, manifest),
+    files,
+  };
+}
+
+/** Every file a page can load: jsPsych and its stylesheet, each plugin, each extension and library. */
+export async function filesFor(
+  plugins: PluginSchemas,
+  extensions: Record<string, ExtensionSchema>,
+): Promise<Record<string, PackageFiles>> {
+  const wanted = new Map<string, Set<string>>();
+  const want = (packageName: string, ...paths: string[]) => {
+    const files = wanted.get(packageName) ?? new Set<string>();
+    for (const path of paths) files.add(path);
+    wanted.set(packageName, files);
+  };
+  want("jspsych", BROWSER_BUNDLE, JSPSYCH_STYLESHEET);
+  for (const plugin of Object.values(plugins)) want(plugin.package, BROWSER_BUNDLE);
+  for (const extension of Object.values(extensions)) {
+    want(extension.package, BROWSER_BUNDLE);
+    for (const library of extension.libraries) {
+      want(library.package, library.file, ...(LIBRARY_RUNTIME_FILES[library.package] ?? []));
+    }
+  }
+  return Object.fromEntries(
+    await Promise.all(
+      [...wanted.keys()]
+        .sort()
+        .map(async (name) => [name, await packageFiles(name, [...wanted.get(name)!])] as const),
+    ),
+  );
 }
 
 export function readDescriptions(packageName: string) {
@@ -434,6 +531,7 @@ export async function extractBundle(
     families: PLUGIN_FAMILIES,
     plugins: report.schemas,
     extensions,
+    packages: await filesFor(report.schemas, extensions),
   };
   return { bundle, report };
 }

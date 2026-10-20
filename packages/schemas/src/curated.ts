@@ -206,6 +206,23 @@ export const EXTENSION_LIBRARIES: Record<string, { package: string; file: string
   "@jspsych/extension-webgazer": [{ package: "webgazer", file: "dist/webgazer.js" }],
 };
 
+// Files a library fetches from beside its own script while it runs, which a page that carries its
+// own copies has to carry too. WebGazer's face mesh loads its model and either WebAssembly build.
+const FACE_MESH = "dist/mediapipe/face_mesh";
+export const LIBRARY_RUNTIME_FILES: Record<string, string[]> = {
+  webgazer: [
+    "face_mesh.js",
+    "face_mesh.binarypb",
+    "face_mesh_solution_packed_assets_loader.js",
+    "face_mesh_solution_packed_assets.data",
+    "face_mesh_solution_simd_wasm_bin.js",
+    "face_mesh_solution_simd_wasm_bin.wasm",
+    "face_mesh_solution_simd_wasm_bin.data",
+    "face_mesh_solution_wasm_bin.js",
+    "face_mesh_solution_wasm_bin.wasm",
+  ].map((file) => `${FACE_MESH}/${file}`),
+};
+
 /** Plugins from outside jsPsych's own set, each with what its declared parameters leave out. */
 export const CURATED_PLUGINS: Record<string, (schema: PluginSchema) => PluginSchema> = {
   "@kurokida/jspsych-psychophysics": curatePsychophysics,
