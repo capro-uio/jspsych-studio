@@ -92,6 +92,44 @@ export function tableAt(spec: Spec, path: number[]) {
   return tableFor(nodesAlong(spec.timeline, path));
 }
 
+const ROW_LABEL_LENGTH = 40;
+
+const ENTITIES: Record<string, string> = { "&lt;": "<", "&gt;": ">", "&amp;": "&", "&nbsp;": " " };
+
+const TAG = /<\/?[a-zA-Z][^<>]*>/g;
+
+/**
+ * A cell as plain words for a list of rows, which shows it as text: entities are read first, then
+ * whatever reads as a tag (a "<" with a letter or "/" after it) is taken out until none is left,
+ * so a flanker's "<<<>>" stays and a tag split around another cannot come back together.
+ */
+function plainText(html: string) {
+  let text = html.replace(/&(lt|gt|amp|nbsp);/g, (entity) => ENTITIES[entity]);
+  for (let previous = ""; previous !== text;) {
+    previous = text;
+    text = text.replace(TAG, "");
+  }
+  return text.trim();
+}
+
+/**
+ * Each row of the table the steps at a path read, named by its number and the first few values
+ * in it, so one can be picked from a list: "2: BLUE · red · b".
+ */
+export function rowLabels(spec: Spec, path: number[]) {
+  const table = tableAt(spec, path);
+  const rows = table === null ? [] : (spec.conditions?.[table] ?? []);
+  return rows.map((row, index) => {
+    const values = Object.values(row)
+      .filter((value) => typeof value === "string" || typeof value === "number")
+      .map((value) => plainText(String(value)))
+      .filter(Boolean)
+      .join(" · ");
+    const label = `${index + 1}: ${values}`;
+    return label.length > ROW_LABEL_LENGTH ? `${label.slice(0, ROW_LABEL_LENGTH - 1)}…` : label;
+  });
+}
+
 // Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.
 function durationOf(cell: unknown) {
   if (typeof cell === "number") return cell;

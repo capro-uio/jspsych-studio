@@ -32,16 +32,23 @@ export interface FigureFrame {
   height: number;
   title: string;
   body: string[];
+  /** How wide it prints, when it is made for a page rather than a screen. */
+  widthMm?: number;
 }
+
+const round = (value: number) => Math.round(value * 100) / 100;
 
 /**
  * A figure as a standalone SVG for a paper or a poster: every colour and font is written on the
  * element it paints, so it opens the same in a browser, Inkscape, Illustrator or a journal's
  * system, and stays in the light inks whatever theme the builder is in.
  */
-export function figureSvg({ width, height, title, body }: FigureFrame) {
+export function figureSvg({ width, height, title, body, widthMm }: FigureFrame) {
+  const size = widthMm
+    ? `width="${round(widthMm)}mm" height="${round((height * widthMm) / width)}mm"`
+    : `width="${width}" height="${height}"`;
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="${FONT}" font-size="12" role="img">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" ${size} viewBox="0 0 ${width} ${height}" font-family="${FONT}" font-size="12" role="img">`,
     `<title>${svgText(title)}</title>`,
     `<defs><marker id="${ARROW_ID}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="${ink("ink-muted")}"/></marker></defs>`,
     `<rect width="100%" height="100%" fill="#ffffff"/>`,

@@ -4,6 +4,7 @@ import { pluginSchema } from "../src/lib/schemas.ts";
 import {
   activeSegment,
   detailText,
+  rowLabels,
   segmentFor,
   segmentHolds,
   sequenceAt,
@@ -333,3 +334,39 @@ describe("sweepMs", () => {
     expect(sweepMs(waiting, null)).toBeNull();
   });
 });
+
+describe("rowLabels", () => {
+  it("names each row of the block's table by its number and its values, markup left out", () => {
+    const spec = specWithTable([
+      { word: "BLUE", ink: "red", stimulus: "<p style='color:red'>BLUE</p>" },
+      { word: "RED", ink: "red", stimulus: "<p>RED</p>" },
+    ]);
+    expect(rowLabels(spec, [0, 0])).toEqual(["1: BLUE · red · BLUE", "2: RED · red · RED"]);
+  });
+
+  it("takes out a tag split around another, however it is nested", () => {
+    const spec = specWithTable([{ stimulus: "<scr<b>ipt>x</scr</b>ipt> &lt;i&gt;y" }]);
+    expect(rowLabels(spec, [0, 0])).toEqual(["1: x y"]);
+  });
+
+  it("leaves text that only looks like markup, and reads the entities written in it", () => {
+    const spec = specWithTable([{ stimulus: "<<<>>", answer: "a &lt; b &amp;&nbsp;c" }]);
+    expect(rowLabels(spec, [0, 0])).toEqual(["1: <<<>> · a < b & c"]);
+  });
+
+  it("shortens a long row, and has none for a step outside any block", () => {
+    const spec = specWithTable([{ text: "x".repeat(80) }]);
+    const [label] = rowLabels(spec, [0, 0]);
+    expect(label.length).toBe(40);
+    expect(label.endsWith("…")).toBe(true);
+    expect(rowLabels({ name: "n", timeline: [keyTrial({ stimulus: "x" })] }, [0])).toEqual([]);
+  });
+});
+
+function specWithTable(rows: Record<string, unknown>[]): Spec {
+  return {
+    name: "rows",
+    conditions: { words: rows },
+    timeline: [{ kind: "block", conditions: "words", children: [keyTrial({ stimulus: "x" })] }],
+  };
+}
