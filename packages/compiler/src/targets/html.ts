@@ -1,6 +1,7 @@
 import { escapeHtmlText } from "../emit.ts";
 import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
-import { BROWSER_BUNDLE } from "../identifiers.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "@tachisto/schemas/files";
+import { packageFileKey } from "../package-files.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
 import type { CompileResult } from "../types.ts";
@@ -9,8 +10,13 @@ export interface HtmlTargetOptions {
   title: string;
   /** Load the experiment from this file instead of writing it into the page. */
   sourceFile?: string;
-  /** `"cdn"` emits unpkg URLs; any other value is a base path serving the npm packages. */
+  /**
+   * Where the page loads jsPsych and its plugins from: `"cdn"` for unpkg, checked against each
+   * file's recorded hash, or a path to a folder holding them as `<package>/<path>`.
+   */
   base?: string;
+  /** The packages' files by {@link packageFileKey}, to write into the page instead of linking. */
+  inline?: Record<string, string>;
   /** Which Tachisto built the page; defaults to this build's own version. */
   tachisto?: string;
   /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
@@ -19,25 +25,75 @@ export interface HtmlTargetOptions {
 
 const CDN = "https://unpkg.com";
 
-// CDN URLs pin exact versions: a floating range would let a plugin update change the behaviour of
-// an experiment that is already collecting data.
-function packageUrl(name: string, version: string, file: string, base: string) {
-  return base === "cdn" ? `${CDN}/${name}@${version}/${file}` : `${base}/${name}/${file}`;
+interface PageFile {
+  package: string;
+  version: string;
+  path: string;
+  /** Extras say which package they are, so the experiment can find files beside them. */
+  named?: boolean;
 }
 
-function scriptUrls(result: CompileResult, base: string) {
-  const core = packageUrl("jspsych", result.jspsych, BROWSER_BUNDLE, base);
-  // Each extra script says which package it is, so the experiment can find files beside it.
-  const extras = result.scripts.map(({ package: name, version, file }) => ({
-    url: packageUrl(name, version, file, base),
-    name,
-  }));
-  const pluginUrls = result.plugins.map((plugin) => {
-    const { name, version } = result.packages[plugin];
-    return packageUrl(name, version, BROWSER_BUNDLE, base);
-  });
-  const stylesheet = packageUrl("jspsych", result.jspsych, "css/jspsych.css", base);
-  return { core, extras, pluginUrls, stylesheet };
+/** The files the page itself names, in the order it loads them; the stylesheet comes first. */
+function pageFiles(result: CompileResult): PageFile[] {
+  return [
+    { package: "jspsych", version: result.jspsych, path: JSPSYCH_STYLESHEET },
+    { package: "jspsych", version: result.jspsych, path: BROWSER_BUNDLE },
+    ...result.scripts.map(({ package: name, version, file }) => ({
+      package: name,
+      version,
+      path: file,
+      named: true,
+    })),
+    ...result.plugins.map((plugin) => {
+      const { name, version } = result.packages[plugin];
+      return { package: name, version, path: BROWSER_BUNDLE };
+    }),
+  ];
+}
+
+/**
+ * Files the study loads while it runs rather than naming in the page, such as the eye tracker's
+ * model. A page that carries its scripts inside it has no folder for these to be found in.
+ */
+export function filesLoadedWhileRunning(result: CompileResult) {
+  const named = new Set(pageFiles(result).map(packageFileKey));
+  return result.files.filter((file) => !named.has(packageFileKey(file)));
+}
+
+// Text written inside a script or style element ends it wherever it spells the closing tag, so
+// that spelling is broken up; inside the JavaScript and CSS these files hold, the escape is
+// harmless.
+const insideElement = (text: string, tag: string) =>
+  text.replace(new RegExp(`</(${tag})`, "gi"), "<\\/$1").replace(/<!--/g, "<\\!--");
+
+function urlOf(file: PageFile, base: string) {
+  return base === "cdn"
+    ? `${CDN}/${file.package}@${file.version}/${file.path}`
+    : `${base}/${packageFileKey(file)}`;
+}
+
+function tagFor(file: PageFile, result: CompileResult, options: HtmlTargetOptions) {
+  const isStylesheet = file.path === JSPSYCH_STYLESHEET;
+  const name = file.named ? ` ${PACKAGE_ATTRIBUTE}="${escapeHtmlText(file.package)}"` : "";
+  if (options.inline) {
+    const text = options.inline[packageFileKey(file)];
+    if (text === undefined) throw new Error(`no copy of ${packageFileKey(file)} to write in`);
+    return isStylesheet
+      ? `<style>\n${insideElement(text, "style")}\n</style>`
+      : `<script${name}>\n${insideElement(text, "script")}\n</script>`;
+  }
+  const base = options.base ?? "cdn";
+  const url = urlOf(file, base);
+  // A CDN file is checked against the hash recorded for it, so a changed copy is refused rather
+  // than run; files beside the page are the author's own.
+  const integrity =
+    base === "cdn"
+      ? result.files.find((each) => packageFileKey(each) === packageFileKey(file))?.integrity
+      : undefined;
+  const check = integrity ? ` integrity="${integrity}" crossorigin="anonymous"` : "";
+  return isStylesheet
+    ? `<link rel="stylesheet" href="${url}"${check} />`
+    : `<script${name} src="${url}"${check}></script>`;
 }
 
 export interface HtmlOutput {
@@ -50,15 +106,18 @@ export async function emitHtml(
   result: CompileResult,
   options: HtmlTargetOptions,
 ): Promise<HtmlOutput> {
-  const { core, extras, pluginUrls, stylesheet } = scriptUrls(result, options.base ?? "cdn");
+  if (options.inline && filesLoadedWhileRunning(result).length > 0) {
+    throw new Error(
+      "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
+        "carried in one page; download the project folder instead",
+    );
+  }
+  const [stylesheet, ...packageScripts] = pageFiles(result).map((file) =>
+    tagFor(file, result, options),
+  );
   const scripts = [
     ...(options.headScripts ?? []).map((script) => `    <script>${script}</script>`),
-    `    <script src="${core}"></script>`,
-    ...extras.map(
-      ({ url, name }) =>
-        `    <script ${PACKAGE_ATTRIBUTE}="${escapeHtmlText(name)}" src="${url}"></script>`,
-    ),
-    ...pluginUrls.map((url) => `    <script src="${url}"></script>`),
+    ...packageScripts.map((tag) => `    ${tag}`),
   ].join("\n");
 
   // The jsPsych browser bundle already declares a global `initJsPsych`, so the experiment body
@@ -74,7 +133,7 @@ window.studioExperiment = { jsPsych };
     <meta name="generator" content="${generatorLabel(options.tachisto)}" />
     <meta name="description" content="${escapeHtmlText(options.title)}, a behavioural experiment." />
     <title>${escapeHtmlText(options.title)}</title>
-    <link rel="stylesheet" href="${stylesheet}" />
+    ${stylesheet}
 ${result.styles ? `    <style>\n${result.styles.replace(/^/gm, "      ").trimEnd()}\n    </style>` : ""}
 ${scripts}
   </head>

@@ -1,4 +1,5 @@
 import type { Library } from "@tachisto/schemas";
+import type { PackageFile } from "./package-files.ts";
 
 export interface VariableReference {
   var: string;
@@ -232,6 +233,8 @@ export interface CompileResult {
   packages: Record<string, { name: string; version: string }>;
   /** Scripts loaded after jsPsych and before the plugins, such as an extension and its library. */
   scripts: Library[];
+  /** Every file the page loads from those packages, and any they load as they run. */
+  files: PackageFile[];
   /** Every column the experiment's data will have, from its plugins and its own additions. */
   columns: string[];
 }
