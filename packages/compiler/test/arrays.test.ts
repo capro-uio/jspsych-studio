@@ -83,7 +83,12 @@ describe("lists of choices", () => {
     },
     packages: {
       ...schemas.packages,
-      pick: { version: "1.0.0", files: { "dist/index.browser.min.js": "sha384-pick" } },
+      pick: {
+        version: "1.0.0",
+        license: "MIT",
+        source: "https://example.org/pick",
+        files: { "dist/index.browser.min.js": "sha384-pick" },
+      },
     },
   };
   const pick = (colours: ParameterValue): Spec => ({

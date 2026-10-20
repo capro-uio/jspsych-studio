@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { filesOfPackages, packageFileKey } from "../src/package-files.ts";
+import {
+  filesOfPackages,
+  packageFileKey,
+  thirdPartyComment,
+  thirdPartyNotice,
+  type PackageFile,
+} from "../src/package-files.ts";
 import { emitHtml, filesLoadedWhileRunning } from "../src/targets/html.ts";
 import { projectFiles } from "../src/targets/project.ts";
 import type { Spec, SpecNode } from "../src/types.ts";
@@ -100,6 +106,18 @@ describe("a page that loads from a folder beside it", () => {
 });
 
 describe("a page that carries its files inside it", () => {
+  it("says at its top which packages it carries, under which licence", async () => {
+    const { html } = await emitHtml(compileSpec(plain, schemas), {
+      title: "plain",
+      inline: copiesOf(plain),
+    });
+    const head = html.slice(0, html.indexOf("<title>"));
+    expect(head).toContain("This page carries unchanged copies of these packages");
+    expect(head).toContain(
+      `jspsych ${schemas.jspsych}, MIT, https://github.com/jspsych/jsPsych/tree/HEAD/packages/jspsych`,
+    );
+  });
+
   it("writes every file into the page and links nothing", async () => {
     const { html } = await emitHtml(compileSpec(plain, schemas), {
       title: "plain",
@@ -146,6 +164,16 @@ describe("a project download that carries its files", () => {
     expect(files["README.md"]).toContain("so it runs without internet");
   });
 
+  it("lists what it carries, with each licence and source, beside the copies", async () => {
+    const files = await projectFiles(tracking, schemas, { packageSources: copiesOf(tracking) });
+    const notice = files["lib/THIRD-PARTY.md"] as string;
+    expect(notice).toContain(`| jspsych | ${schemas.jspsych} | MIT |`);
+    expect(notice).toMatch(
+      /\| webgazer \| [\d.]+ \| GPL-3\.0-or-later \| <https:\/\/github\.com\/brownhci\/WebGazer> \|/,
+    );
+    expect(files["README.md"]).toContain("`lib/THIRD-PARTY.md` lists them with their licences");
+  });
+
   it("carries the eye tracker's model, and says to serve the folder to try it", async () => {
     const files = await projectFiles(tracking, schemas, { packageSources: copiesOf(tracking) });
     expect(
@@ -166,5 +194,32 @@ describe("a project download that carries its files", () => {
     const files = await projectFiles(plain, schemas);
     expect(Object.keys(files).some((path) => path.startsWith("lib/"))).toBe(false);
     expect(files["README.md"]).toContain("load from unpkg.com");
+  });
+});
+
+describe("the notice of what a download carries", () => {
+  const file = (
+    name: string,
+    path: string,
+    source = `https://example.org/${name}`,
+  ): PackageFile => ({
+    package: name,
+    version: "1.0.0",
+    path,
+    integrity: "sha384-x",
+    license: "MIT",
+    source,
+  });
+
+  it("names each package once, however many of its files are carried", () => {
+    const notice = thirdPartyNotice([file("a", "one.js"), file("a", "two.js"), file("b", "b.js")]);
+    expect(notice.match(/^\| a \|/gm)).toHaveLength(1);
+    expect(notice.match(/^\| b \|/gm)).toHaveLength(1);
+  });
+
+  it("cannot end the comment it is written in early", () => {
+    const comment = thirdPartyComment([file("a", "a.js", "https://example.org/a--b")]);
+    expect(comment.slice(4, -3)).not.toContain("--");
+    expect(comment.endsWith("-->")).toBe(true);
   });
 });

@@ -98,6 +98,10 @@ export interface ExtensionSchema {
 /** The files a study's page loads from one package, each with the hash a copy of it must match. */
 export interface PackageFiles {
   version: string;
+  /** The package's licence, as its manifest names it, such as MIT. */
+  license: string;
+  /** Where the package's source and full licence text are published. */
+  source: string;
   /** The subresource-integrity hash (sha384) of each file, by its path inside the package. */
   files: Record<string, string>;
 }

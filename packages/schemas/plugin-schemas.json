@@ -6076,306 +6076,408 @@
   "packages": {
     "@jspsych/extension-webgazer": {
       "version": "1.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/extension-webgazer",
       "files": {
         "dist/index.browser.min.js": "sha384-zSVKeSjX12X0+h28vG77Mbbt93iN8U9Hpng3Q6i3ZM5DuRXL/hzuOUhxJ6bjP3PT"
       }
     },
     "@jspsych/plugin-animation": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-animation",
       "files": {
         "dist/index.browser.min.js": "sha384-qGyw5dmaUJLMUP0yLJXFuDZbptZO1k5VsNlS7HcDaNkXoz+hhG9b6q+T5GTicxgj"
       }
     },
     "@jspsych/plugin-audio-button-response": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-audio-button-response",
       "files": {
         "dist/index.browser.min.js": "sha384-c8WB2Dj2cD0RQubD9vvJfCuksYzvQqgAoYju377oNFcaZkPHFv2rZAsMffGnjHsD"
       }
     },
     "@jspsych/plugin-audio-keyboard-response": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-audio-keyboard-response",
       "files": {
         "dist/index.browser.min.js": "sha384-tCdOLAinENegChUTdt6FHFtsGMyfMeSMx9RD6nIyrjCMmG3e8jCUkPyhfhbVsaSq"
       }
     },
     "@jspsych/plugin-audio-slider-response": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-audio-slider-response",
       "files": {
         "dist/index.browser.min.js": "sha384-fB87JUwlAO3Zo3YFXYSPuY8yWWz5PtQpbx6JuZ48CYdcZvXzszspwml3f1hZemUB"
       }
     },
     "@jspsych/plugin-browser-check": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-keyboard-response",
       "files": {
         "dist/index.browser.min.js": "sha384-Gl0MJHqvNsA2o6d5nmuYB+ZkBYb4rJxX2mchuwVS9FkG2umKfV0eVflpWbKMdy/f"
       }
     },
     "@jspsych/plugin-call-function": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-call-function",
       "files": {
         "dist/index.browser.min.js": "sha384-BVr1nz/RHTxhTNYxljuPzwi9lv13rxrwuPOjJPeL1zMaK37Oww0PnTeg972NuR9O"
       }
     },
     "@jspsych/plugin-categorize-animation": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-categorize-animation",
       "files": {
         "dist/index.browser.min.js": "sha384-KhDXhPK6ZiUIiru86CQOtwO2KUGR3zNr2oAqZ/XtYR85pBAagqmbuOXcxEzu0Xqp"
       }
     },
     "@jspsych/plugin-categorize-html": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-categorize-html",
       "files": {
         "dist/index.browser.min.js": "sha384-F5qQ1H4TqJdJZewVlDLeOyZE3PaSB2WGpPqkF3MPaHMZzsAf36Y+CMgdqGH5aGPO"
       }
     },
     "@jspsych/plugin-categorize-image": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-categorize-image",
       "files": {
         "dist/index.browser.min.js": "sha384-F6rnXoEtkhD+lRLtt3p05bcbIVZX1vlm3MO63WDZOnGVnYoaNPlHGU2utX8jzJm3"
       }
     },
     "@jspsych/plugin-cloze": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-cloze",
       "files": {
         "dist/index.browser.min.js": "sha384-RipxMPHK6c0526KUas1FX4oz5XTGc6oJdTh+CkjyJ/z06pBFsXZWDgHJbbUbHwRr"
       }
     },
     "@jspsych/plugin-external-html": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-external-html",
       "files": {
         "dist/index.browser.min.js": "sha384-ivq0g22dDVRiv8/ohJg/AOJ6xKxMoyPCwE6MzDo0KTc3mghYf/e5tmchN6aHPn0g"
       }
     },
     "@jspsych/plugin-free-sort": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-free-sort",
       "files": {
         "dist/index.browser.min.js": "sha384-FZLQgtZPGaKH1Wdewf1Hr/+jhVCaqUDxG6oHWx2INhNwc6y4ETAxOhINbW2Wf16Y"
       }
     },
     "@jspsych/plugin-fullscreen": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-fullscreen",
       "files": {
         "dist/index.browser.min.js": "sha384-JQEV9wMXFDbTpp1eYJSU9G7uQeyZcLGabno5ZHQJGytUBG19mTZ+ZBV5dsm7m6Mf"
       }
     },
     "@jspsych/plugin-html-audio-response": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-audio-response",
       "files": {
         "dist/index.browser.min.js": "sha384-XSPNbpJw+qS7nJIXJ0ffOMSVk9YXwqG334nLGE61d4TxPF3XIuSsAToCvVW5DgtZ"
       }
     },
     "@jspsych/plugin-html-button-response": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-button-response",
       "files": {
         "dist/index.browser.min.js": "sha384-tPGtXEC8xEbInWvarnxvJ3fyzeXwRDS0QjGUts+TGQ9I8OCxiqsv9lxTS3mEN6um"
       }
     },
     "@jspsych/plugin-html-keyboard-response": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-keyboard-response",
       "files": {
         "dist/index.browser.min.js": "sha384-nazmsslHjLyP2P00IhO151BuH6B/BV+Qtzc3l1h4kFvS9nRP7TuLknK45FN6VzZi"
       }
     },
     "@jspsych/plugin-html-slider-response": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-slider-response",
       "files": {
         "dist/index.browser.min.js": "sha384-CMS7Zvc8BG4kmvjs8PCxgC0zdlUVXKrUWGh1k7+ssWSo50pA3SeWoWsB1+FWYly5"
       }
     },
     "@jspsych/plugin-html-video-response": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-html-video-response",
       "files": {
         "dist/index.browser.min.js": "sha384-j98l33HtNgX59Glny2mfDATkD4edRM1UYf6nfznowEviNw0i420pPz5WWP7AT/Gd"
       }
     },
     "@jspsych/plugin-iat-html": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-iat-html",
       "files": {
         "dist/index.browser.min.js": "sha384-uiQCY8ODgn5oRpRMnl6SaczWU+zEKooIyrzDCVjJ7z8b41NiszpipjoqrHTJrI00"
       }
     },
     "@jspsych/plugin-iat-image": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-iat-image",
       "files": {
         "dist/index.browser.min.js": "sha384-UlYB8pn7zA6r53HdLm8izO2dop5N2IfEQgsOd8Qu4B84MN7gIZvy8SDkSGUaBxTe"
       }
     },
     "@jspsych/plugin-image-button-response": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-image-button-response",
       "files": {
         "dist/index.browser.min.js": "sha384-EdH96/se55AUXMiZFyeyeYN0MQ8XArNwEwicBiMGFs4qi7/6qRUje0U1E94PWvMb"
       }
     },
     "@jspsych/plugin-image-keyboard-response": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-image-keyboard-response",
       "files": {
         "dist/index.browser.min.js": "sha384-OIQSBFwE/VfeZNe7FSpGb2v7QgJPojQKbbueTn4Yn7dqjEDwzHmruTtLVW5QVds1"
       }
     },
     "@jspsych/plugin-image-slider-response": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-image-slider-response",
       "files": {
         "dist/index.browser.min.js": "sha384-N+2r9BQayknNq8Ja3+3qebSpAMLUBATZo5fk6j3p5p7fo4QJ7QzQrsQqPoLWVo5H"
       }
     },
     "@jspsych/plugin-initialize-camera": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-initialize-camera",
       "files": {
         "dist/index.browser.min.js": "sha384-CNg06w+Yvm4LL+VU9Nr0yoc4841t9tsHC5D9ptElIU+05VKPpuNB1hCp7BurHTPm"
       }
     },
     "@jspsych/plugin-initialize-microphone": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-initialize-microphone",
       "files": {
         "dist/index.browser.min.js": "sha384-BTKNX7R9RGOR3Mj0SUU01aeXZwDoTEvRsOhkjg8Dm8p4OD2HLfiSScEHRvOgASbc"
       }
     },
     "@jspsych/plugin-instructions": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-instructions",
       "files": {
         "dist/index.browser.min.js": "sha384-wjSYNsw41Zo3TlpW5giDpSwTK0q3Un1NGPsh6gEqlAAKamdt7+TQ5gAL4dat+lT1"
       }
     },
     "@jspsych/plugin-maxdiff": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-maxdiff",
       "files": {
         "dist/index.browser.min.js": "sha384-AkS2GSiJELJ6n2kNpJWbh2MJ2ICHZjMmHATxLKpnoWP84Sd+okJsMZxZ3pQBdNzq"
       }
     },
     "@jspsych/plugin-mirror-camera": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-mirror-camera",
       "files": {
         "dist/index.browser.min.js": "sha384-hKdED/37MFItlhtsZzqRJlLVPBgIaH556hNdekX7puKrxM1RnznBse5yo0V9v1kA"
       }
     },
     "@jspsych/plugin-preload": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-preload",
       "files": {
         "dist/index.browser.min.js": "sha384-BiUYHx4tdTYToceth936qf4Wkf+Ho2VZti/5bB5/nDiPRuTaZ37hrxkLsANkHGdp"
       }
     },
     "@jspsych/plugin-resize": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-resize",
       "files": {
         "dist/index.browser.min.js": "sha384-9C+bVT5Ta5lJG2zDLm0IW2mJ+Y4IHQmhKA8eFBpznOPElISIIKIGy79VgF6tXQSg"
       }
     },
     "@jspsych/plugin-same-different-html": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-same-different-html",
       "files": {
         "dist/index.browser.min.js": "sha384-Yu9fbunfU07xv290VVaE9P0QUgDqiF895Stk2be4kP6d/seaxpMZXNT1So0qT9r1"
       }
     },
     "@jspsych/plugin-same-different-image": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-same-different-image",
       "files": {
         "dist/index.browser.min.js": "sha384-Q/Gbsu4LuoaiwlGr85K1wetOO246yWIqzKRdN/NhODheHYcTj/4UPm3q936SRzJP"
       }
     },
     "@jspsych/plugin-serial-reaction-time": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-serial-reaction-time",
       "files": {
         "dist/index.browser.min.js": "sha384-kSRR2NNmAgIySWzsoZZqaEJI0bldsapppc/ewgU/JF6hKe+EX6tZBZMCu6k4HR5g"
       }
     },
     "@jspsych/plugin-serial-reaction-time-mouse": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-serial-reaction-time-mouse",
       "files": {
         "dist/index.browser.min.js": "sha384-CykQirF1mNPs4CoNpigo0TGH++13tyExy33/I+DakntDQCp+XyG7zescOWlZR/J6"
       }
     },
     "@jspsych/plugin-sketchpad": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-sketchpad",
       "files": {
         "dist/index.browser.min.js": "sha384-ijfbs3x78eR0LuaRigz+qfR0mDEQO5qbZvZUceZIyY89lDgqQidU+2RTot/uaby0"
       }
     },
     "@jspsych/plugin-survey-html-form": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-survey-html-form",
       "files": {
         "dist/index.browser.min.js": "sha384-60fiNESvg3n32x9sx0QAOyIlVkUgaC20Fsuo/ROTm0DeXCwEfaJ0FfE674kO0F9n"
       }
     },
     "@jspsych/plugin-survey-likert": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-survey-likert",
       "files": {
         "dist/index.browser.min.js": "sha384-88dibDOm9kxaXAwTWWQWZa1+0RBPA6WNU0lrWYLfeMEIQgovura7DxPG9kPXrBRc"
       }
     },
     "@jspsych/plugin-survey-multi-choice": {
       "version": "2.2.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-survey-multi-choice",
       "files": {
         "dist/index.browser.min.js": "sha384-F//ncl62Y95Tg5F6mHYrWG6Z/0Jrb3o6gzQaiL3sft30nzLlse1QZkGCUAQwQxcA"
       }
     },
     "@jspsych/plugin-survey-multi-select": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-survey-multi-select",
       "files": {
         "dist/index.browser.min.js": "sha384-i68BHdAbimogebJo2zVWaiEgQELCpv7c0oG5c5sW7xsIlSfC043HZNJf3WVDUsZC"
       }
     },
     "@jspsych/plugin-survey-text": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-survey-text",
       "files": {
         "dist/index.browser.min.js": "sha384-zsqp5G+ns0FQC22XQVyTA7zUWUP0trh2p9cvQlQhqen2al1J+llHID217LltT/WJ"
       }
     },
     "@jspsych/plugin-video-button-response": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-video-button-response",
       "files": {
         "dist/index.browser.min.js": "sha384-EzTLpOPKkUdmj0L6ueQzRV1TLRFgve84vNAlFZZxx8oc2p6GVHL6Mt8lH229p+yi"
       }
     },
     "@jspsych/plugin-video-keyboard-response": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-video-keyboard-response",
       "files": {
         "dist/index.browser.min.js": "sha384-vR3TTCavonbcgWOpY8Chj0JLGETSjpqCF1vQKC6wVCWwUau0Ca4EHYddrQbFSLtV"
       }
     },
     "@jspsych/plugin-video-slider-response": {
       "version": "2.1.1",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-video-slider-response",
       "files": {
         "dist/index.browser.min.js": "sha384-Yg/zgbVdTz5XeXaNB9VScBDwtTqvZSVWSyzmsCXyZk8sniUyPWV0ng5t/a/9Luyo"
       }
     },
     "@jspsych/plugin-virtual-chinrest": {
       "version": "3.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-virtual-chinrest",
       "files": {
         "dist/index.browser.min.js": "sha384-5ydHDiinI8s/5e4XsUa9BFojC1jXRzPLCU8R5eBZ49kHLCLv4+d3cwZiV0npNnSZ"
       }
     },
     "@jspsych/plugin-visual-search-circle": {
       "version": "2.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-visual-search-circle",
       "files": {
         "dist/index.browser.min.js": "sha384-mlOeCLobncmWQoZ+QK6gnZZdiMEHPfiqHq0KqWCPxN/zcN0gfR8jqjJAt3niiHcR"
       }
     },
     "@jspsych/plugin-webgazer-calibrate": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-webgazer-calibrate",
       "files": {
         "dist/index.browser.min.js": "sha384-c0VWIGbvaWjB2B4Mg1h3aVDf/8brpL/lC449afa0ZXdgLeeiHl6LhoD6BquOiNLz"
       }
     },
     "@jspsych/plugin-webgazer-init-camera": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-webgazer-init-camera",
       "files": {
         "dist/index.browser.min.js": "sha384-QJd5XC+dR3g196RsH3Jm2tU7ypZBhyGDWrXyKXqcDvEArlm6KSejcD5qCpx4NEjn"
       }
     },
     "@jspsych/plugin-webgazer-validate": {
       "version": "2.1.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/plugin-webgazer-validate",
       "files": {
         "dist/index.browser.min.js": "sha384-+OMtE3HMgTZ45eCGSA+XltTkPIl5hilg6KQL1eoK3eacCWDGWnXR/Rn3GoiCf4ui"
       }
     },
     "@kurokida/jspsych-psychophysics": {
       "version": "5.1.0",
+      "license": "MIT",
+      "source": "https://github.com/kurokida/jspsych-psychophysics",
       "files": {
         "dist/index.browser.min.js": "sha384-b20qC13OOW+IQX0yNLGRA7GiPsZ4b9Mwf2bHrKLps1HWjN+MNqehxVKC6cIBGnRc"
       }
     },
     "jspsych": {
       "version": "8.3.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/jspsych",
       "files": {
         "css/jspsych.css": "sha384-+gGUkbtw2BJWSroKW2jzIEXGe7KxdycJ0Bo+CqzpIOSBHOYEHHRWETaV+v2mpdWX",
         "dist/index.browser.min.js": "sha384-PPMNzYQfqrWFhrOxhpwxXmKK+LDH//fBCLsvA/JIRHOfiuOcZ2j8wJhqo87V4R4B"
@@ -6383,6 +6485,8 @@
     },
     "webgazer": {
       "version": "3.5.3",
+      "license": "GPL-3.0-or-later",
+      "source": "https://github.com/brownhci/WebGazer",
       "files": {
         "dist/mediapipe/face_mesh/face_mesh.binarypb": "sha384-sNmIZds5ZzO/zzldn8fl0aoGI8HfK1XfnwO+kIkBGAx1wYP1gwBmlHVXnfgzA1Ak",
         "dist/mediapipe/face_mesh/face_mesh.js": "sha384-y8o2Z4e40pAHUYZ4LJhmMM9klYIKmz0ak4SHZIiLhHdT8TIGAZ86G1nuoClzOXQb",
