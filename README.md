@@ -8,7 +8,7 @@ conditions table generated from a design, generated parameter forms (questionnai
 included), rich stimulus text, image and sound files, group assignment and branching on
 performance or on an answer, a psychophysics canvas step whose objects you drag into place, live
 preview of the whole experiment or a single step, a choice of where results go, a guided tour of the
-builder, and export to a self-contained HTML file or a zipped project. Participants recruited on Prolific,
+builder, and export to a single HTML file or a zipped project. Participants recruited on Prolific,
 SONA or CloudResearch Connect are identified by the platform's id and sent back to it when done.
 Tasks can run in a counterbalanced order. There is no hosting or consent flow yet. 0.0.1 is the
 first release, and every export names the version that built it.
@@ -38,7 +38,7 @@ maintainable by a small team.
 | Package              | What it does                                                                                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `@tachisto/schemas`  | Turns every plugin's `info.parameters` plus the JSDoc in its shipped `.d.ts` into JSON Schema, so the builder's forms are generated rather than hand-written |
-| `@tachisto/compiler` | Compiles a declarative spec to jsPsych source and emits a self-contained HTML experiment                                                                     |
+| `@tachisto/compiler` | Compiles a declarative spec to jsPsych source and emits an HTML experiment                                                                                   |
 | `@tachisto/brand`    | Colours, type, logos and the brand book (`packages/brand/BRAND.md`), shared by the builder and the website                                                   |
 
 The builder lives in `apps/builder`, and the website that introduces it in `apps/site`.
@@ -283,8 +283,10 @@ frame has nothing of yours to send.
   upload falls back to a download so a participant's data is never lost silently. Balanced group
   assignment and Latin-square task order ask that same service for the next participant's
   condition, since only it can count participants.
-- **Self-contained exports.** Media is embedded in the project and in the exported file, so an
-  experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB each).
+- **Media travels with the experiment.** Media is embedded in the project and in the exported file,
+  so an experiment is one HTML file with nothing to upload alongside it (files are capped at 5 MB
+  each). jsPsych and its plugins still load from unpkg at pinned versions; downloads that carry
+  them too are tracked in #87.
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a
   collaborator. The builder shows the generated code as you edit.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the
