@@ -16,6 +16,7 @@ import {
   functionSource,
   integrityOf,
   packageFiles,
+  sourceOf,
   pluginPackages,
   toParameterSchema,
 } from "../src/extract.ts";
@@ -367,6 +368,17 @@ describe("packageFiles", () => {
     expect(files).toEqual({ [JSPSYCH_STYLESHEET]: integrityOf(css) });
   });
 
+  it("says what licence a package is under and where its source is", () => {
+    expect(packageFiles("jspsych", [JSPSYCH_STYLESHEET])).toMatchObject({
+      license: "MIT",
+      source: "https://github.com/jspsych/jsPsych/tree/HEAD/packages/jspsych",
+    });
+    expect(packageFiles("webgazer", ["dist/webgazer.js"])).toMatchObject({
+      license: "GPL-3.0-or-later",
+      source: "https://github.com/brownhci/WebGazer",
+    });
+  });
+
   it("refuses a file the package does not have", () => {
     expect(() => packageFiles("jspsych", ["dist/not-there.js"])).toThrow(/not-there/);
   });
@@ -404,5 +416,23 @@ describe("filesFor", () => {
     for (const { files: hashes } of Object.values(files)) {
       for (const hash of Object.values(hashes)) expect(hash).toMatch(/^sha384-[A-Za-z0-9+/]{64}$/);
     }
+  });
+});
+
+describe("sourceOf", () => {
+  it("reads a repository however the manifest writes it", () => {
+    expect(sourceOf("a", { version: "1", repository: "github:someone/a" })).toBe(
+      "https://github.com/someone/a",
+    );
+    expect(sourceOf("a", { version: "1", repository: { url: "git+https://x.org/a.git" } })).toBe(
+      "https://x.org/a",
+    );
+  });
+
+  it("falls back on the home page, then the npm page, without a web address for the source", () => {
+    expect(
+      sourceOf("a", { version: "1", repository: "git@x.org:a.git", homepage: "https://a.org" }),
+    ).toBe("https://a.org");
+    expect(sourceOf("@s/a", { version: "1" })).toBe("https://www.npmjs.com/package/@s/a");
   });
 });
