@@ -3,6 +3,8 @@ import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import {
   activeSegment,
+  containerName,
+  containerPaths,
   detailText,
   rowLabels,
   segmentFor,
@@ -190,6 +192,32 @@ const study = (extra: Partial<Spec> = {}, inner: SpecNode[] = [fixation, word]):
     },
   ],
   ...extra,
+});
+
+describe("containerPaths", () => {
+  it("finds every block and loop, inside each other and down a branch's paths", () => {
+    const nested: SpecNode = {
+      kind: "loop",
+      repeat_while: { scope: "word", accuracy_below: 0.5 },
+      children: [{ kind: "block", conditions: "words", children: [word] }],
+    };
+    const paths = containerPaths([...study().timeline, nested]);
+    expect(paths).toEqual([[1], [2, 0, 0], [3], [3, 0]]);
+  });
+
+  it("names paths a selection can be laid out from", () => {
+    for (const path of containerPaths(study().timeline)) {
+      expect(sequenceAt(study(), path, pluginSchema)?.path).toEqual(path);
+    }
+  });
+});
+
+describe("containerName", () => {
+  it("names a block by its table, a loop by its id or as a loop", () => {
+    expect(containerName(study(), [1])).toBe("words");
+    expect(containerName(study(), [2, 0, 0])).toBe("loop");
+    expect(containerName(study(), [0])).toBe("steps");
+  });
 });
 
 describe("sequenceAt", () => {

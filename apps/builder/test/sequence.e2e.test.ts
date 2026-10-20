@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "node:fs";
+import { strFromU8, unzipSync } from "fflate";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -132,6 +133,19 @@ describe("the timing strip", () => {
     await expect.poll(isOpen).toBe(false);
     await page.close();
   }, 120_000);
+
+  it("carries each block's figure, pictured, in the project download", async () => {
+    const page = await openStroop();
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 90_000 }),
+      page.getByTestId("download-zip").click(),
+    ]);
+    const files = unzipSync(readFileSync(await file.path()));
+    const figure = strFromU8(files["figures/block-stroop_trials.svg"]);
+    expect(figure.match(/<image /g) ?? []).toHaveLength(2);
+    expect(strFromU8(files["README.md"])).toContain("`block-stroop_trials.svg`");
+    await page.close();
+  }, 150_000);
 
   it("selects a step when its segment is clicked", async () => {
     const page = await openStroop();

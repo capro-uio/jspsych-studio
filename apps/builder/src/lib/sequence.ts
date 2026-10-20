@@ -73,6 +73,37 @@ function nodesAlong(timeline: SpecNode[], path: number[]) {
   return found;
 }
 
+/**
+ * The path of every block and loop in a timeline, outermost first, written as a selection is, so
+ * each can be handed to {@link sequenceAt}: a step's index, and a slot's index after the step
+ * that holds it.
+ */
+export function containerPaths(timeline: SpecNode[], path: number[] = []): number[][] {
+  return timeline.flatMap((node, index) => {
+    const here = [...path, index];
+    const slots = slotsOf(node);
+    if (slots)
+      return slots.flatMap((slot, slotIndex) =>
+        containerPaths(slot.children, [...here, slotIndex]),
+      );
+    if (node.kind === "block" || node.kind === "loop") {
+      return [here, ...containerPaths(node.children, here)];
+    }
+    return [];
+  });
+}
+
+/**
+ * What a block or loop at a path is called, for naming its figure: a block by the conditions
+ * table it runs, a loop by its id, or by what it is.
+ */
+export function containerName(spec: Spec, path: number[]) {
+  const node = nodesAlong(spec.timeline, path).at(-1)?.node;
+  if (node?.kind === "block") return node.conditions;
+  if (node?.kind === "loop") return node.id ?? "loop";
+  return "steps";
+}
+
 /** The conditions table a step reads from: that of the innermost block around it. */
 function tableFor(along: { node: SpecNode }[]) {
   for (const { node } of [...along].reverse()) {
