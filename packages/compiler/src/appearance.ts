@@ -7,12 +7,14 @@ export const COLOR_PATTERN =
 
 const COLOR = new RegExp(COLOR_PATTERN);
 
+const isColor = (value: unknown): value is string => typeof value === "string" && COLOR.test(value);
+
 /** Settings whose colours could not be written into the page's stylesheet as they are. */
 export function appearanceProblems(settings: ExperimentSettings | undefined) {
   return (["background_color", "text_color"] as const)
     .filter((key) => {
       const color = settings?.[key];
-      return color !== undefined && (typeof color !== "string" || !COLOR.test(color));
+      return color !== undefined && !isColor(color);
     })
     .map((key) => ({
       message: `${key} is ${JSON.stringify(settings?.[key])}, which is not a colour`,
@@ -22,12 +24,16 @@ export function appearanceProblems(settings: ExperimentSettings | undefined) {
 export const DEFAULT_BACKGROUND = "#ffffff";
 export const DEFAULT_TEXT = "#000000";
 
+// Every place a colour is written — the page's stylesheet, the builder's styles, a figure's
+// attributes — reads it through these, so one that is not a colour never reaches any of them.
 export function backgroundColor(settings: ExperimentSettings | undefined) {
-  return settings?.background_color ?? DEFAULT_BACKGROUND;
+  const color = settings?.background_color;
+  return isColor(color) ? color : DEFAULT_BACKGROUND;
 }
 
 export function textColor(settings: ExperimentSettings | undefined) {
-  return settings?.text_color ?? DEFAULT_TEXT;
+  const color = settings?.text_color;
+  return isColor(color) ? color : DEFAULT_TEXT;
 }
 
 /** jsPsych's stylesheet sets its own colours, so these have to be stated rather than inherited. */

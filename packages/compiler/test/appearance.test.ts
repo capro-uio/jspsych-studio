@@ -36,6 +36,16 @@ describe("how the experiment looks", () => {
     expect(html.indexOf("<style>")).toBeLessThan(html.indexOf("<script"));
   });
 
+  it("falls back to the defaults for a colour that could break out of where it is written", () => {
+    const settings = {
+      background_color: 'red;}</style><script>alert(1)</script><style>{"',
+      text_color: '#fff" onload="alert(1)',
+    };
+    expect(backgroundColor(settings)).toBe(DEFAULT_BACKGROUND);
+    expect(textColor(settings)).toBe("#000000");
+    expect(textColor({ text_color: "rgb(10, 20, 30)" })).toBe("rgb(10, 20, 30)");
+  });
+
   it("states the text colour on the element jsPsych colours itself", () => {
     const compiled = compileSpec(spec({ text_color: "#eeeeee" }), schemas);
     expect(compiled.styles).toContain(".jspsych-content");

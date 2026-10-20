@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -43,6 +44,22 @@ describe("the timing strip", () => {
     expect(await page.getByTestId("sequence-2-1").innerText()).toMatch(
       /stroop\s+until response\s+r or b/i,
     );
+    await page.close();
+  }, 120_000);
+
+  it("downloads the block as a figure of its screens, in the layout chosen", async () => {
+    const page = await openStroop();
+    await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure-layout").selectOption("row");
+
+    const [file] = await Promise.all([
+      page.waitForEvent("download"),
+      page.getByTestId("download-sequence-svg").click(),
+    ]);
+    expect(file.suggestedFilename()).toMatch(/-block-2\.svg$/);
+    const svg = readFileSync(await file.path(), "utf8");
+    expect(svg).toContain("Fixation");
+    expect(svg).toContain("until response");
     await page.close();
   }, 120_000);
 
