@@ -67,6 +67,26 @@ describe("segmentFor", () => {
     expect(fixed.role).toBe("stimulus");
   });
 
+  it.each([
+    ["a bare plus", "+"],
+    ["a styled plus", "<p style='font-size:48px'>+</p>"],
+    ["a spaced plus", "<div>&nbsp; + </div>"],
+  ])("knows %s for a fixation", (_case, stimulus) => {
+    expect(segment(keyTrial({ stimulus, choices: "NO_KEYS", trial_duration: 300 })).role).toBe(
+      "fixation",
+    );
+  });
+
+  it.each([
+    ["a sum", "<p>2 + 2</p>"],
+    ["a plus inside markup", "<p title='+'>x</p>"],
+    ["two crosses", "<p>+</p><p>+</p>"],
+  ])("does not take %s for a fixation", (_case, stimulus) => {
+    expect(segment(keyTrial({ stimulus, choices: "NO_KEYS", trial_duration: 300 })).role).toBe(
+      "screen",
+    );
+  });
+
   it("calls a timed screen without responses a screen", () => {
     const blank = segment(keyTrial({ stimulus: "", choices: "NO_KEYS", trial_duration: 250 }));
     expect(blank.role).toBe("screen");

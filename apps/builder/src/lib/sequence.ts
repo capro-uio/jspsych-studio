@@ -99,11 +99,8 @@ function answerOf(choices: ParameterValue | undefined, plugin: string) {
   return labels.length <= 3 ? labels.join(" or ") : `one of ${labels.length} keys`;
 }
 
-const textOf = (html: string) =>
-  html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&nbsp;/g, " ")
-    .trim();
+// A plus sign with nothing around it but markup and space: a fixation cross, however it is styled.
+const FIXATION = /^(?:\s|&nbsp;|<[^<>]*>)*\+(?:\s|&nbsp;|<[^<>]*>)*$/;
 
 /** One step, as the strip shows it. */
 export function segmentFor(trial: TrialNode, path: number[], rows: Row[], lookup: Lookup): Segment {
@@ -125,7 +122,7 @@ export function segmentFor(trial: TrialNode, path: number[], rows: Row[], lookup
 
   const shown = spanOf(valueOf("stimulus_duration"), rows);
   const stimulus = valueOf("stimulus");
-  const isFixation = typeof stimulus === "string" && textOf(stimulus) === "+";
+  const isFixation = typeof stimulus === "string" && FIXATION.test(stimulus);
   const role: Role = isFixation
     ? "fixation"
     : takesResponse
