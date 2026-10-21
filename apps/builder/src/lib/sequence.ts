@@ -166,7 +166,9 @@ function withRow(value: unknown, row: Row): unknown {
   if (isVariableReference(value as ParameterValue)) return row[(value as { var: string }).var];
   if (Array.isArray(value)) return value.map((item) => withRow(item, row));
   if (value && typeof value === "object") {
-    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, withRow(item, row)]));
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, withRow(item, row)]),
+    );
   }
   return value;
 }
