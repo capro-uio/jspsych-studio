@@ -3,7 +3,7 @@ import {
   isCode,
   isVariableReference,
   takesFunction,
-  walkNodes,
+  trialsOf,
   type ParameterValue,
   type SpecNode,
 } from "@tachisto/compiler";
@@ -37,11 +37,5 @@ export function codeHint(parameter: ParameterSchema) {
 
 /** Whether a step, or any step inside it, runs code its author wrote. */
 export function usesCode(node: SpecNode): boolean {
-  let found = false;
-  walkNodes([node], (inner) => {
-    if (inner.kind === "trial" && Object.values(inner.params ?? {}).some(containsCode)) {
-      found = true;
-    }
-  });
-  return found;
+  return trialsOf([node]).some((trial) => Object.values(trial.params ?? {}).some(containsCode));
 }

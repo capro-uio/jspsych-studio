@@ -79,18 +79,17 @@ export function nodesAlongPath(timeline: SpecNode[], path: number[]): PlacedNode
     if (!node) return [];
     found.push({ node, path: path.slice(0, position + 1) });
     const slots = slotsOf(node);
-    const children = childrenOf(node);
     if (slots) {
       position += 1;
       if (position >= path.length) break;
       const slot = slots[path[position]];
       if (!slot) return [];
       nodes = slot.children;
-    } else if (children) {
-      nodes = children;
-    } else if (position < path.length - 1) {
-      return [];
+      continue;
     }
+    const children = childrenOf(node);
+    if (children) nodes = children;
+    else if (position < path.length - 1) return [];
   }
   return found;
 }

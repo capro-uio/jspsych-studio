@@ -48,6 +48,7 @@ export {
   isVariableReference,
   nodesAlongPath,
   slotsOf,
+  trialsOf,
   walkNodes,
 } from "./variables.ts";
 export type { PlacedNode } from "./variables.ts";

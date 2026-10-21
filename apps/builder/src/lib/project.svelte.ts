@@ -4,7 +4,7 @@ import {
   earlyEndingNames,
   nodesAlongPath,
   slotsOf,
-  walkNodes,
+  trialsOf,
 } from "@tachisto/compiler";
 import { NODE_KINDS, SPEC_SCHEMA_ID } from "@tachisto/compiler";
 import { unique } from "./lists.ts";
@@ -189,11 +189,7 @@ export function newLoop(first: SpecNode): SpecNode {
 
 /** Tags already used earlier in the experiment, which is what a branch can judge. */
 export function tagsInUse(): string[] {
-  const found: string[] = [];
-  walkNodes(project.spec.timeline, (node) => {
-    if (node.kind === "trial" && node.tag) found.push(node.tag);
-  });
-  return unique(found);
+  return unique(trialsOf(project.spec.timeline).flatMap((trial) => (trial.tag ? [trial.tag] : [])));
 }
 
 export function conditionTableNames() {

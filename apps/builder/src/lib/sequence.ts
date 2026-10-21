@@ -1,4 +1,4 @@
-import { isVariableReference, nodesAlongPath, walkNodes } from "@tachisto/compiler";
+import { isVariableReference, nodesAlongPath, trialsOf, walkNodes } from "@tachisto/compiler";
 import type { ParameterValue, PlacedNode, Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import type { PluginSchema } from "@tachisto/schemas";
 import type { Playback } from "./playback.svelte.ts";
@@ -147,14 +147,6 @@ function withRow(value: unknown, row: Row): unknown {
   return value;
 }
 
-function trialsUnder(node: SpecNode | undefined): TrialNode[] {
-  const trials: TrialNode[] = [];
-  walkNodes(node ? [node] : [], (inner) => {
-    if (inner.kind === "trial") trials.push(inner);
-  });
-  return trials;
-}
-
 /**
  * What each segment's steps are given for one row of the table: their plugins and settings, with
  * the row's values in place of the columns they name. Two rows that give a segment the same show
@@ -165,7 +157,8 @@ export function segmentInputs(spec: Spec, sequence: Sequence, row: number) {
   const cells = (table === null ? [] : (spec.conditions?.[table] ?? []))[row] ?? {};
   return sequence.segments.map((segment) => {
     if (!segment.path) return "";
-    const trials = trialsUnder(nodesAlongPath(spec.timeline, segment.path).at(-1)?.node);
+    const step = nodesAlongPath(spec.timeline, segment.path).at(-1)?.node;
+    const trials = step ? trialsOf([step]) : [];
     return JSON.stringify(
       trials.map((trial) => ({ plugin: trial.plugin, params: withRow(trial.params ?? {}, cells) })),
     );
