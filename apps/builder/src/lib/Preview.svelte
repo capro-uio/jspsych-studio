@@ -1,6 +1,12 @@
 <script lang="ts">
-  import { compileSpec, formatSource, SpecError, usesDevices } from "@tachisto/compiler";
-  import type { Spec } from "@tachisto/compiler";
+  import {
+    checksDevices,
+    compileSpec,
+    formatSource,
+    SpecError,
+    usesDevices,
+  } from "@tachisto/compiler";
+  import type { Problem, Spec } from "@tachisto/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
   import {
     compilePreview,
@@ -10,7 +16,7 @@
     tracedPreview,
   } from "./preview.ts";
   import { followPreview, resetPlayback } from "./playback.svelte.ts";
-  import { currentProblems, overallProblems } from "./problems.svelte.ts";
+  import { errorsOf, overallProblems, stepCount, warningsOf } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
   import Figures from "./Figures.svelte";
   import Flow from "./Flow.svelte";
@@ -39,6 +45,12 @@
   // The preview's frame has no origin of its own, which keeps study code away from the builder,
   // and browsers give such a frame no camera or microphone.
   const needsDevices = $derived(usesDevices(project.spec));
+  const looksForDevices = $derived(checksDevices(project.spec));
+
+  // The rebuild compiles the experiment anyway, so its problems are kept from there.
+  let problems = $state<Problem[]>([]);
+  const errors = $derived(errorsOf(problems));
+  const warnings = $derived(warningsOf(problems));
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
   const selectionKey = $derived(project.selection?.join(".") ?? "");
@@ -58,6 +70,7 @@
         `on_finish: () => { window.studioExperiment.finished = true; }, ${TRACE_HOOKS}`,
       );
       error = "";
+      problems = exported.warnings;
       exportedSource = exported.source;
       previewPage(running, spec.name).then(
         (output) => {
@@ -74,6 +87,7 @@
     } catch (problem) {
       if (!(problem instanceof SpecError)) throw problem;
       error = problem.message;
+      problems = problem.problems;
       html = "";
       exportedSource = "";
     }
@@ -177,21 +191,41 @@
     </p>
   {/if}
 
+  {#if view === "experiment" && looksForDevices}
+    <p class="device-note" data-testid="device-check-note">
+      The preview cannot reach a camera or microphone, so a browser check there records both as
+      missing. Download the experiment and open it to check them.
+    </p>
+  {/if}
+
   {#if error}
-    {@const problems = currentProblems()}
-    {@const overall = overallProblems(problems)}
+    {@const steps = stepCount(errors)}
     <div class="error" data-testid="compile-error">
-      {#if problems.length === 0}
+      {#if errors.length === 0}
         <p>{error}</p>
       {/if}
-      {#each overall as problem (problem.message)}
+      {#each overallProblems(errors) as problem (problem.message)}
         <p>{problem.message}</p>
       {/each}
-      {#if problems.length > overall.length}
+      {#if steps > 0}
         <p data-testid="steps-need-attention">
-          {problems.length - overall.length === 1
-            ? "1 step needs"
-            : `${problems.length - overall.length} steps need`} attention; each one says what it needs.
+          {steps === 1 ? "1 step needs" : `${steps} steps need`} attention; each one says what it needs.
+        </p>
+      {/if}
+    </div>
+  {/if}
+
+  {#if warnings.length > 0}
+    {@const steps = stepCount(warnings)}
+    <div class="warnings" data-testid="compile-warnings">
+      <p class="warnings-title"><span aria-hidden="true">⚠</span> Worth checking</p>
+      {#each overallProblems(warnings) as problem (problem.message)}
+        <p>{problem.message}</p>
+      {/each}
+      {#if steps > 0}
+        <p data-testid="steps-worth-checking">
+          {steps === 1 ? "1 step has" : `${steps} steps have`} settings that may not do what you meant;
+          each one says why. The experiment still runs.
         </p>
       {/if}
     </div>
@@ -332,6 +366,23 @@
   }
   .error p {
     margin: 0 0 0.25rem;
+  }
+  .warnings {
+    flex: 0 0 auto;
+    max-height: 9rem;
+    overflow: auto;
+    margin-bottom: 0.4rem;
+    padding: 0.5rem;
+    border: 1px solid var(--caution);
+    border-radius: var(--radius-md);
+    color: var(--ink);
+  }
+  .warnings p {
+    margin: 0 0 0.25rem;
+  }
+  .warnings-title {
+    color: var(--caution);
+    font-weight: 600;
   }
   .placeholder {
     color: var(--ink-muted);

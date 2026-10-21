@@ -38,17 +38,27 @@ function compileResponsePredicate(rule: ResponseRule) {
   );
 }
 
+const SIDES = ["left", "right"];
+
+/** Most and least records the alternative chosen at each end of its scale, as left and right. */
+export function answersBySide(plugin: string) {
+  return plugin === "maxdiff";
+}
+
 /**
  * The names the trials carrying a tag record their answers under, as a question step does: each
- * question's `name`, or `Q0`, `Q1`… for one without. Null when none of them asks questions; empty
- * when they do but their questions come from a column or code, so the names are not known here.
+ * question's `name`, or `Q0`, `Q1`… for one without, and `left` and `right` for most and least.
+ * Null when none of them asks questions; empty when they do but their questions come from a
+ * column or code, so the names are not known here.
  */
 export function questionNames(nodes: SpecNode[], tag: string): string[] | null {
   const asking = trialsOf(nodes).filter(
-    (trial) => trial.tag === tag && "questions" in (trial.params ?? {}),
+    (trial) =>
+      trial.tag === tag && ("questions" in (trial.params ?? {}) || answersBySide(trial.plugin)),
   );
   if (asking.length === 0) return null;
   const names = asking.flatMap((trial) => {
+    if (answersBySide(trial.plugin)) return SIDES;
     const questions = trial.params?.questions;
     if (!Array.isArray(questions)) return [];
     return questions.map((question, index) =>

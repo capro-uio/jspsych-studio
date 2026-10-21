@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { assetsOfType, preloadListOf } from "../src/assets.ts";
+import { assetAddress, assetPath, assetsOfType, preloadListOf } from "../src/assets.ts";
 import type { Asset, Spec, TrialNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
@@ -161,6 +161,30 @@ describe("assetsOfType", () => {
 
   it("keeps none for a parameter that is not media", () => {
     expect(assetsOfType(assets, "STRING")).toEqual([]);
+  });
+});
+
+describe("files beside the page", () => {
+  const card = { name: "bank card (1).png", url: PIXEL };
+
+  it("are addressed with spaces and brackets escaped, so CSS without quotes reads them", () => {
+    expect(assetAddress(card)).toBe("assets/bank%20card%20%281%29.png");
+  });
+
+  it("are addressed by the name they are saved under when it needs no escaping", () => {
+    expect(assetAddress({ name: "face.png", url: PIXEL })).toBe(
+      assetPath({ name: "face.png", url: PIXEL }),
+    );
+  });
+
+  it("are found by their escaped address in a project's page", () => {
+    const spec: Spec = {
+      name: "chinrest",
+      assets: [card],
+      timeline: [{ kind: "trial", plugin: "virtual-chinrest", params: { item_path: card.name } }],
+    };
+    const { source } = compileSpec(spec, schemas, { assets: "files" });
+    expect(source).toContain('"bank card (1).png": "assets/bank%20card%20%281%29.png"');
   });
 });
 

@@ -247,7 +247,9 @@ describe("what counterbalancing refuses", () => {
         return (error as SpecError).problems;
       }
     })();
-    expect(problems).toEqual([{ message: 'unknown plugin "no-such-plugin"', path: [0, 1, 0] }]);
+    expect(problems).toEqual([
+      { message: 'unknown plugin "no-such-plugin"', path: [0, 1, 0], severity: "error" },
+    ]);
   });
 
   it("a task name holding the separator the recorded order uses", () => {

@@ -1,5 +1,6 @@
 import type { Library } from "@tachisto/schemas";
 import type { PackageFile } from "./package-files.ts";
+import type { Problem } from "./validate.ts";
 
 export interface VariableReference {
   var: string;
@@ -242,4 +243,6 @@ export interface CompileResult {
   files: PackageFile[];
   /** Every column the experiment's data will have, from its plugins and its own additions. */
   columns: string[];
+  /** Settings that run but may not do what was meant; errors stop the compile instead. */
+  warnings: Problem[];
 }

@@ -1,5 +1,6 @@
 import { slotsOf, trialsOf } from "./variables.ts";
 import type { Spec, SpecNode, TrialNode } from "./types.ts";
+import type { Problem } from "./validate.ts";
 
 interface SetUpStep {
   plugin: string;
@@ -48,7 +49,25 @@ export function usesDevices(spec: Spec) {
   return trialsOf(spec.timeline).some((trial) => DEVICE_PLUGINS.has(trial.plugin));
 }
 
-type Problems = { message: string; path: number[] }[];
+const DEVICE_FEATURES = ["webcam", "microphone"];
+
+// The browser check records every feature unless told which, and a list read from a column or
+// computed may hold either device.
+function checksForDevices(trial: TrialNode) {
+  const features = trial.params?.features;
+  return (
+    features === undefined ||
+    !Array.isArray(features) ||
+    features.some((feature) => DEVICE_FEATURES.includes(String(feature)))
+  );
+}
+
+/** Whether a browser check looks for a camera or microphone, which a frame without either lacks. */
+export function checksDevices(spec: Spec) {
+  return trialsOf(spec.timeline).some(
+    (trial) => trial.plugin === "browser-check" && checksForDevices(trial),
+  );
+}
 
 function intersection(sets: Set<string>[]) {
   return new Set([...sets[0]].filter((step) => sets.every((set) => set.has(step))));
@@ -57,7 +76,7 @@ function intersection(sets: Set<string>[]) {
 // What is certainly set up after a list of steps, given what was before them. Only one path of a
 // branch runs, and only one group of a split, so after either only what every path set up counts;
 // counterbalanced tasks run in any order, so within one only what came before them counts.
-function setUpAfter(nodes: SpecNode[], before: Set<string>, path: number[], problems: Problems) {
+function setUpAfter(nodes: SpecNode[], before: Set<string>, path: number[], problems: Problem[]) {
   let ready = new Set(before);
   nodes.forEach((node, index) => {
     const here = [...path, index];
@@ -67,6 +86,7 @@ function setUpAfter(nodes: SpecNode[], before: Set<string>, path: number[], prob
         problems.push({
           message: `plugin "${node.plugin}" ${why} a "${step.title}" step (${step.plugin}) that every participant reaches before it`,
           path: here,
+          severity: "error",
         });
       }
       ready.add(node.plugin);
@@ -89,7 +109,7 @@ function setUpAfter(nodes: SpecNode[], before: Set<string>, path: number[], prob
 
 /** Steps that some participants reach before the step that sets up what they use. */
 export function setupOrderProblems(spec: Spec) {
-  const problems: Problems = [];
+  const problems: Problem[] = [];
   setUpAfter(spec.timeline, new Set(), [], problems);
   return problems;
 }

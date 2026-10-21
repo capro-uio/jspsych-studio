@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { slotsOf } from "@tachisto/compiler";
+  import { isError, slotsOf } from "@tachisto/compiler";
   import AddStep from "./AddStep.svelte";
   import { usesCode } from "./code.ts";
   import { pluginTitle } from "./schemas.ts";
@@ -45,6 +45,9 @@
   {#each nodes as node, index (node)}
     <AddStep {path} {index} variant="between" />
     {@const childPath = [...path, index]}
+    {@const here = problemsAt(problems, childPath)}
+    {@const error = here.find(isError)}
+    {@const warning = here.find((problem) => !isError(problem))}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
         <button
@@ -57,11 +60,15 @@
           {#if usesCode(node)}
             <span class="code-badge" title="Runs code written for this study">code</span>
           {/if}
-          {#if problemsAt(problems, childPath).length > 0}
+          {#if error}
+            <span class="issue" data-testid={`issue-${childPath.join("-")}`} title={error.message}
+              >needs attention</span
+            >
+          {:else if warning}
             <span
-              class="issue"
-              data-testid={`issue-${childPath.join("-")}`}
-              title={problemsAt(problems, childPath)[0].message}>needs attention</span
+              class="caution"
+              data-testid={`caution-${childPath.join("-")}`}
+              title={warning.message}><span aria-hidden="true">⚠</span> worth checking</span
             >
           {/if}
         </button>
@@ -125,6 +132,11 @@
     display: block;
     font-size: 0.7rem;
     color: var(--danger);
+  }
+  .caution {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--caution);
   }
   .group {
     border-left: 2px solid var(--line);
