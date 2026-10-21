@@ -38,9 +38,12 @@ function compileResponsePredicate(rule: ResponseRule) {
   );
 }
 
-// Most and least records the alternative chosen at each end of its scale, as left and right.
-const ANSWERS_BY_SIDE = new Set(["maxdiff"]);
 const SIDES = ["left", "right"];
+
+/** Most and least records the alternative chosen at each end of its scale, as left and right. */
+export function answersBySide(plugin: string) {
+  return plugin === "maxdiff";
+}
 
 /**
  * The names the trials carrying a tag record their answers under, as a question step does: each
@@ -51,12 +54,11 @@ const SIDES = ["left", "right"];
 export function questionNames(nodes: SpecNode[], tag: string): string[] | null {
   const asking = trialsOf(nodes).filter(
     (trial) =>
-      trial.tag === tag &&
-      ("questions" in (trial.params ?? {}) || ANSWERS_BY_SIDE.has(trial.plugin)),
+      trial.tag === tag && ("questions" in (trial.params ?? {}) || answersBySide(trial.plugin)),
   );
   if (asking.length === 0) return null;
   const names = asking.flatMap((trial) => {
-    if (ANSWERS_BY_SIDE.has(trial.plugin)) return SIDES;
+    if (answersBySide(trial.plugin)) return SIDES;
     const questions = trial.params?.questions;
     if (!Array.isArray(questions)) return [];
     return questions.map((question, index) =>

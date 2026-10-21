@@ -191,24 +191,24 @@ describe("drawing", () => {
 
   describe("drawing on an image", () => {
     it.each(["https://example.com/map.png", "//example.com/map.png"])(
-      "rejects an image from another site, which stops the drawing saving: %s",
+      "warns that an image from another site stops the drawing saving: %s",
       (background_image) => {
-        expect(compiles(study("sketchpad", { background_image }))).toThrow(
-          /an image from another site, which stops the drawing being saved/,
-        );
+        expect(warningsOf(study("sketchpad", { background_image }))).toEqual([
+          expect.stringMatching(/an image from any site but the study's own stops the drawing/),
+        ]);
       },
     );
 
-    it("takes an image from another site when the drawing is not saved as an image", () => {
+    it("says nothing of a full address when the drawing is not saved as an image", () => {
       const spec = study("sketchpad", {
         background_image: "https://example.com/map.png",
         save_final_image: false,
       });
-      expect(compiles(spec)).not.toThrow();
+      expect(warningsOf(spec)).toEqual([]);
     });
 
-    it("takes a file added to the study", () => {
-      expect(compiles(study("sketchpad", { background_image: "a.png" }))).not.toThrow();
+    it("says nothing of a file added to the study", () => {
+      expect(warningsOf(study("sketchpad", { background_image: "a.png" }))).toEqual([]);
     });
   });
 });

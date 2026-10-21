@@ -37,6 +37,8 @@
   const stepProblems = $derived(
     project.selection ? problemsAt(currentProblems(), project.selection) : [],
   );
+  const stepErrors = $derived(errorsOf(stepProblems));
+  const stepWarnings = $derived(warningsOf(stepProblems));
   const trial = $derived(node?.kind === "trial" ? node : null);
   const block = $derived(node?.kind === "block" ? node : null);
   const loop = $derived(node?.kind === "loop" ? node : null);
@@ -90,18 +92,18 @@
   }
 </script>
 
-{#if errorsOf(stepProblems).length > 0}
+{#if stepErrors.length > 0}
   <ul class="problems" data-testid="step-problems">
-    {#each errorsOf(stepProblems) as problem (problem.message)}
+    {#each stepErrors as problem (problem.message)}
       <li>{problem.message}</li>
     {/each}
   </ul>
 {/if}
-{#if warningsOf(stepProblems).length > 0}
+{#if stepWarnings.length > 0}
   <div class="warnings" data-testid="step-warnings">
     <p class="warnings-title"><span aria-hidden="true">⚠</span> Worth checking</p>
     <ul>
-      {#each warningsOf(stepProblems) as problem (problem.message)}
+      {#each stepWarnings as problem (problem.message)}
         <li>{problem.message}</li>
       {/each}
     </ul>

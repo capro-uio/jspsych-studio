@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 import { extractBundle } from "@tachisto/schemas";
 import manifest from "../package.json" with { type: "json" };
 import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
+import { compileReport } from "./cli-report.ts";
 import { compileSpec } from "./compile.ts";
 import { emitHtml } from "./targets/html.ts";
 import { specSchema } from "./spec-schema.ts";
@@ -67,11 +68,12 @@ const spec = JSON.parse(readFileSync(specPath, "utf8")) as Spec;
 
 try {
   const result = compileSpec(spec, schemas);
-  for (const warning of result.warnings) console.warn(`warning: ${warning.message}`);
   const { html } = await emitHtml(result, { title: spec.name, base: optionValue("base", "cdn") });
   const outputPath = optionValue("out", `${basename(specPath, ".json")}.html`);
   writeFileSync(outputPath, html);
-  console.log(`${spec.name}: ${result.plugins.length} plugin(s) -> ${outputPath}`);
+  const report = compileReport(spec.name, result, outputPath);
+  for (const warning of report.warnings) console.warn(warning);
+  console.log(report.summary);
 } catch (error) {
   if (!(error instanceof SpecError)) throw error;
   console.error(error.message);

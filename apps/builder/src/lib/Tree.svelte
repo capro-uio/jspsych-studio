@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { slotsOf } from "@tachisto/compiler";
+  import { isError, slotsOf } from "@tachisto/compiler";
   import AddStep from "./AddStep.svelte";
   import { usesCode } from "./code.ts";
   import { pluginTitle } from "./schemas.ts";
-  import { currentProblems, errorsOf, problemsAt, warningsOf } from "./problems.svelte.ts";
+  import { currentProblems, problemsAt } from "./problems.svelte.ts";
   import type { SpecNode } from "@tachisto/compiler";
   import Tree from "./Tree.svelte";
   import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
@@ -45,8 +45,9 @@
   {#each nodes as node, index (node)}
     <AddStep {path} {index} variant="between" />
     {@const childPath = [...path, index]}
-    {@const errors = errorsOf(problemsAt(problems, childPath))}
-    {@const warnings = warningsOf(problemsAt(problems, childPath))}
+    {@const here = problemsAt(problems, childPath)}
+    {@const error = here.find(isError)}
+    {@const warning = here.find((problem) => !isError(problem))}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
         <button
@@ -59,17 +60,15 @@
           {#if usesCode(node)}
             <span class="code-badge" title="Runs code written for this study">code</span>
           {/if}
-          {#if errors.length > 0}
-            <span
-              class="issue"
-              data-testid={`issue-${childPath.join("-")}`}
-              title={errors[0].message}>needs attention</span
+          {#if error}
+            <span class="issue" data-testid={`issue-${childPath.join("-")}`} title={error.message}
+              >needs attention</span
             >
-          {:else if warnings.length > 0}
+          {:else if warning}
             <span
               class="caution"
               data-testid={`caution-${childPath.join("-")}`}
-              title={warnings[0].message}><span aria-hidden="true">⚠</span> worth checking</span
+              title={warning.message}><span aria-hidden="true">⚠</span> worth checking</span
             >
           {/if}
         </button>

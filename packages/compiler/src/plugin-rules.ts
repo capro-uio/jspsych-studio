@@ -27,9 +27,11 @@ function visualSearchProblems(params: Record<string, ParameterValue>) {
   return [];
 }
 
+const percentSigns = (text: string) => text.split("%").length - 1;
+
 /** How many gaps a cloze text makes, one for each pair of percent signs; null for no written text. */
 export function gapCount(text: ParameterValue | undefined) {
-  return typeof text === "string" ? Math.floor((text.split("%").length - 1) / 2) : null;
+  return typeof text === "string" ? Math.floor(percentSigns(text) / 2) : null;
 }
 
 // Cloze makes a gap of every word between percent signs. Text with none makes the plugin fail as
@@ -37,7 +39,7 @@ export function gapCount(text: ParameterValue | undefined) {
 function clozeProblems(params: Record<string, ParameterValue>) {
   const text = params.text;
   if (typeof text !== "string") return [];
-  const signs = text.split("%").length - 1;
+  const signs = percentSigns(text);
   if (signs >= 2 && signs % 2 === 0) return [];
   return [
     'needs each gap written between two percent signs, as in "the %cat% sat", ' +
@@ -111,19 +113,6 @@ function gridProblems(params: Record<string, ParameterValue>, keyed: boolean) {
   return problems;
 }
 
-// A canvas showing an image from another site cannot be read back, so a drawing saved as an image,
-// as it is unless told otherwise, fails to save and the step never ends. A file added to the
-// study comes from the study's own site, or from inside the page.
-function sketchpadProblems(params: Record<string, ParameterValue>) {
-  const image = params.background_image;
-  if (typeof image !== "string" || !/^(https?:)?\/\//i.test(image)) return [];
-  if (params.save_final_image === false) return [];
-  return [
-    `draws on "${image}", an image from another site, which stops the drawing being saved; ` +
-      "add the image to the study's files instead, or turn off saving the drawing (save_final_image)",
-  ];
-}
-
 type Rule = (params: Record<string, ParameterValue>) => string[];
 
 const RULES: Record<string, Rule> = {
@@ -133,7 +122,6 @@ const RULES: Record<string, Rule> = {
   cloze: clozeProblems,
   "external-html": externalPageProblems,
   "virtual-chinrest": viewingDistanceProblems,
-  sketchpad: sketchpadProblems,
 };
 
 // Only a time limit ends a step whose response does not. A setting read from a column or computed
@@ -158,7 +146,7 @@ function iatWarnings(params: Record<string, ParameterValue>) {
 }
 
 // A drawing ends with its finished button, a key among its choices, or its time limit.
-function sketchpadWarnings(params: Record<string, ParameterValue>) {
+function endlessDrawing(params: Record<string, ParameterValue>) {
   const choices = params.choices ?? "NO_KEYS";
   const noKeys = choices === "NO_KEYS" || (Array.isArray(choices) && choices.length === 0);
   if (params.show_finished_button !== false || !noKeys || isGiven(params.trial_duration)) {
@@ -168,6 +156,25 @@ function sketchpadWarnings(params: Record<string, ParameterValue>) {
     "has nothing to end it: no finished button (show_finished_button), no key that ends it " +
       "(choices) and no time limit (trial_duration), so the participant stays on it",
   ];
+}
+
+// A canvas showing an image from another site cannot be read back, so a drawing saved as an image,
+// as it is unless told otherwise, fails to save and the step never ends. A full address may still
+// name the study's own site, where it works, so this is a warning; a file added to the study is
+// always served from the study's own site, or from inside the page.
+function drawingOnAnotherSite(params: Record<string, ParameterValue>) {
+  const image = params.background_image;
+  if (typeof image !== "string" || !/^(https?:)?\/\//i.test(image)) return [];
+  if (params.save_final_image === false) return [];
+  return [
+    `draws on "${image}", and an image from any site but the study's own stops the drawing ` +
+      "being saved; add the image to the study's files instead, or turn off saving the drawing " +
+      "(save_final_image)",
+  ];
+}
+
+function sketchpadWarnings(params: Record<string, ParameterValue>) {
+  return [...endlessDrawing(params), ...drawingOnAnotherSite(params)];
 }
 
 const WARNINGS: Record<string, Rule> = {

@@ -15,7 +15,7 @@ import type {
 import { STUDY_COLUMNS, streamingProblems } from "./data.ts";
 import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
-import { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
+import { accuracyComparison, answersBySide, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
 import {
   conditionColumns,
@@ -153,10 +153,9 @@ function answerKeyProblems(trial: TrialNode, schema: PluginSchema) {
 // A scoring rule compares the whole response with one answer, as text. A step that keeps an answer
 // for each question, each end of a scale, or each gap records them together, so its response as
 // text equals no single answer, except where a list holds just one.
-const ANSWERS_BY_NAME = new Set(["maxdiff", "survey-html-form"]);
-
 function scoringProblem(trial: TrialNode, schema: PluginSchema) {
-  if (ANSWERS_BY_NAME.has(trial.plugin) || "questions" in schema.properties) {
+  const answersByName = trial.plugin === "survey-html-form" || "questions" in schema.properties;
+  if (answersByName || answersBySide(trial.plugin)) {
     return "records several answers together, so a scoring rule, which compares a single answer, never matches";
   }
   if (trial.plugin === "cloze" && (gapCount(trial.params?.text) ?? 0) > 1) {

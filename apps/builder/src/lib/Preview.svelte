@@ -6,7 +6,7 @@
     SpecError,
     usesDevices,
   } from "@tachisto/compiler";
-  import type { Spec } from "@tachisto/compiler";
+  import type { Problem, Spec } from "@tachisto/compiler";
   import { exportedSpec, project } from "./project.svelte.ts";
   import {
     compilePreview,
@@ -16,13 +16,7 @@
     tracedPreview,
   } from "./preview.ts";
   import { followPreview, resetPlayback } from "./playback.svelte.ts";
-  import {
-    currentProblems,
-    errorsOf,
-    overallProblems,
-    stepCount,
-    warningsOf,
-  } from "./problems.svelte.ts";
+  import { errorsOf, overallProblems, stepCount, warningsOf } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
   import Figures from "./Figures.svelte";
   import Flow from "./Flow.svelte";
@@ -53,7 +47,9 @@
   const needsDevices = $derived(usesDevices(project.spec));
   const looksForDevices = $derived(checksDevices(project.spec));
 
-  const problems = $derived(currentProblems());
+  // The rebuild compiles the experiment anyway, so its problems are kept from there.
+  let problems = $state<Problem[]>([]);
+  const errors = $derived(errorsOf(problems));
   const warnings = $derived(warningsOf(problems));
 
   const specJson = $derived(JSON.stringify(exportedSpec(), null, 2));
@@ -74,6 +70,7 @@
         `on_finish: () => { window.studioExperiment.finished = true; }, ${TRACE_HOOKS}`,
       );
       error = "";
+      problems = exported.warnings;
       exportedSource = exported.source;
       previewPage(running, spec.name).then(
         (output) => {
@@ -90,6 +87,7 @@
     } catch (problem) {
       if (!(problem instanceof SpecError)) throw problem;
       error = problem.message;
+      problems = problem.problems;
       html = "";
       exportedSource = "";
     }
@@ -201,7 +199,6 @@
   {/if}
 
   {#if error}
-    {@const errors = errorsOf(problems)}
     {@const steps = stepCount(errors)}
     <div class="error" data-testid="compile-error">
       {#if errors.length === 0}

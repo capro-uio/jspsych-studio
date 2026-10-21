@@ -1,4 +1,5 @@
-import { compileSpec, SpecError, type Problem } from "@tachisto/compiler";
+import { compileSpec, isError, SpecError, type Problem } from "@tachisto/compiler";
+import { unique } from "./lists.ts";
 import { exportedSpec } from "./project.svelte.ts";
 import { schemas } from "./schemas.ts";
 
@@ -26,15 +27,15 @@ export function overallProblems(problems: Problem[]) {
 }
 
 export function errorsOf(problems: Problem[]) {
-  return problems.filter((problem) => problem.severity === "error");
+  return problems.filter(isError);
 }
 
 export function warningsOf(problems: Problem[]) {
-  return problems.filter((problem) => problem.severity === "warning");
+  return problems.filter((problem) => !isError(problem));
 }
 
 /** How many steps have a problem among these, counting a step once however many it has. */
 export function stepCount(problems: Problem[]) {
-  const steps = problems.flatMap((problem) => (problem.path ? [problem.path.join(".")] : []));
-  return steps.filter((step, index) => steps.indexOf(step) === index).length;
+  return unique(problems.flatMap((problem) => (problem.path ? [problem.path.join(".")] : [])))
+    .length;
 }
