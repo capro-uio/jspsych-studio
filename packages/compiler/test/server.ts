@@ -1,5 +1,6 @@
 import { createReadStream, existsSync, statSync } from "node:fs";
 import { createServer, type Server } from "node:http";
+import { gunzipSync } from "node:zlib";
 import { extname, join, normalize } from "node:path";
 
 const CONTENT_TYPES: Record<string, string> = {
@@ -10,13 +11,21 @@ const CONTENT_TYPES: Record<string, string> = {
   ".wasm": "application/wasm",
 };
 
+/** A body as DataPipe reads it, and how it came: gzipped, or as it is. */
+export interface Upload {
+  experimentID: string;
+  filename: string;
+  data: string;
+  encoding: string;
+}
+
 export interface StaticServer {
   url: string;
   close: () => Promise<void>;
   /** Bodies posted to /api/data/, so a test can see what an experiment uploaded. */
-  uploads: { experimentID: string; filename: string; data: string }[];
+  uploads: Upload[];
   /** Bodies posted to /api/base64/: recordings, each sent as a file of its own. */
-  recordings: { experimentID: string; filename: string; data: string }[];
+  recordings: Upload[];
   /** Set to make the upload route fail, exercising the fallback path. */
   failUploads: boolean;
   /** Set to make only /api/base64/ fail, as an experiment without base64 data switched on does. */
@@ -63,7 +72,11 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
           response.writeHead(500).end("nope");
           return;
         }
-        received.push(JSON.parse(Buffer.concat(chunks).toString()) as (typeof uploads)[number]);
+        // DataPipe unpacks a gzipped body, so this does too.
+        const encoding = request.headers["content-encoding"] ?? "identity";
+        const body = Buffer.concat(chunks);
+        const json = encoding === "gzip" ? gunzipSync(body) : body;
+        received.push({ ...(JSON.parse(json.toString()) as Omit<Upload, "encoding">), encoding });
         response.writeHead(200, { "content-type": "application/json" }).end("{}");
       });
       return;

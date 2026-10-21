@@ -35,7 +35,7 @@ describe("ending the study early", () => {
   it("writes a row naming the ending, then saves and shows its message", () => {
     const { source } = compileSpec(study(), schemas);
     const end = source.slice(source.indexOf('ending: "no_consent"'));
-    expect(end.indexOf('ending: "no_consent"')).toBeLessThan(end.indexOf("fetch("));
+    expect(end.indexOf('ending: "no_consent"')).toBeLessThan(end.indexOf("postToDataPipe("));
     expect(end).toContain('jsPsych.abortExperiment("\\u003cp>Thank you anyway.\\u003c/p>");');
   });
 
@@ -166,7 +166,7 @@ describe("what an early ending keeps", () => {
     ["downloading", { save: "download" as const }],
   ])("saves and sends nothing when it keeps nothing, even a study %s", (_, data) => {
     const step = endStep(keeping({ ...THANKS, keep: "nothing" }, data));
-    expect(step).not.toContain("fetch(");
+    expect(step).not.toContain("postToDataPipe(");
     expect(step).not.toContain("localSave");
     expect(step).not.toContain(".csv()");
     expect(step).toContain('jsPsych.abortExperiment("\\u003cp>Thank you anyway.\\u003c/p>");');
@@ -174,7 +174,7 @@ describe("what an early ending keeps", () => {
 
   it("sends the participant back without saving when it keeps nothing", () => {
     const step = endStep(keeping({ url: `${PROLIFIC}&pid={participant_id}`, keep: "nothing" }));
-    expect(step).not.toContain("fetch(");
+    expect(step).not.toContain("postToDataPipe(");
     expect(step).toContain("async: true");
     expect(step).toContain(
       `window.location.assign(${JSON.stringify(`${PROLIFIC}&pid=`)} + encodeURIComponent(participantId));`,
