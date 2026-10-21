@@ -2,9 +2,9 @@ import manifest from "../package.json" with { type: "json" };
 import { orderColumn } from "./counterbalance.ts";
 import { ENDING_COLUMN } from "./data.ts";
 import { linkParamsOf, needsParticipantId } from "./recruitment.ts";
-import { slotsOf } from "./variables.ts";
+import { walkNodes } from "./variables.ts";
 import { EXCLUDED_COLUMN } from "./exclusions.ts";
-import type { Author, Spec, SpecNode } from "./types.ts";
+import type { Author, Spec } from "./types.ts";
 
 /** The version every workspace carries until a release sets a real one. */
 const UNRELEASED = "0.0.0";
@@ -43,34 +43,21 @@ export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
     for (const param of linkParamsOf(spec.recruitment)) columns.add(param);
   }
 
-  const walk = (nodes: SpecNode[]) => {
-    for (const node of nodes) {
-      if (node.kind === "trial") {
-        if (node.tag) columns.add("tag");
-        if (node.score) columns.add("correct");
-        for (const field of Object.keys(node.record ?? {})) columns.add(field);
-        if (node.exclusion_ending !== undefined) {
-          columns.add(EXCLUDED_COLUMN);
-          columns.add(ENDING_COLUMN);
-        }
-        continue;
-      }
-      if (node.kind === "checkpoint") {
-        columns.add("checkpoint");
-        continue;
-      }
-      if (node.kind === "end") {
+  walkNodes(spec.timeline, (node) => {
+    if (node.kind === "trial") {
+      if (node.tag) columns.add("tag");
+      if (node.score) columns.add("correct");
+      for (const field of Object.keys(node.record ?? {})) columns.add(field);
+      if (node.exclusion_ending !== undefined) {
+        columns.add(EXCLUDED_COLUMN);
         columns.add(ENDING_COLUMN);
-        continue;
       }
-      if (node.kind === "assign") columns.add(node.record_as ?? "group");
-      if (node.kind === "counterbalance") columns.add(orderColumn(node));
-      const slots = slotsOf(node);
-      if (slots) slots.forEach((slot) => walk(slot.children));
-      else if (node.kind === "block" || node.kind === "loop") walk(node.children);
     }
-  };
-  walk(spec.timeline);
+    if (node.kind === "checkpoint") columns.add("checkpoint");
+    if (node.kind === "end") columns.add(ENDING_COLUMN);
+    if (node.kind === "assign") columns.add(node.record_as ?? "group");
+    if (node.kind === "counterbalance") columns.add(orderColumn(node));
+  });
   return [...columns].sort();
 }
 

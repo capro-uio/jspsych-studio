@@ -1,5 +1,5 @@
 import captureLibrary from "html-to-image/dist/html-to-image.js?raw";
-import { slotsOf, STEP_COLUMN, type Spec, type SpecNode } from "@tachisto/compiler";
+import { STEP_COLUMN, walkNodes, type Spec, type SpecNode } from "@tachisto/compiler";
 import { compilePreview, isStepId, previewPage, tracedPreview } from "./preview.ts";
 import { segmentHolds, tableAt, type Segment, type Sequence } from "./sequence.ts";
 
@@ -18,7 +18,7 @@ const CAPTURE_TIMEOUT = 20_000;
 const MAX_PICTURE_LENGTH = 4_000_000;
 
 function onePass(nodes: SpecNode[]) {
-  for (const node of nodes) {
+  walkNodes(nodes, (node) => {
     if (node.kind === "block") {
       node.repetitions = 1;
       node.randomize_order = false;
@@ -28,9 +28,7 @@ function onePass(nodes: SpecNode[]) {
     if (node.kind === "loop") {
       node.repeat_while = { scope: node.repeat_while.scope, accuracy_below: 0 };
     }
-    if (node.kind === "block" || node.kind === "loop") onePass(node.children);
-    for (const slot of slotsOf(node) ?? []) onePass(slot.children);
-  }
+  });
 }
 
 /**

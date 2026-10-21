@@ -17,7 +17,13 @@ import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./ass
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems } from "./recruitment.ts";
-import { conditionColumns, isVariableReference, slotsOf, trialsOf } from "./variables.ts";
+import {
+  conditionColumns,
+  isVariableReference,
+  slotsOf,
+  trialsOf,
+  walkNodes,
+} from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { pluginRuleProblems } from "./plugin-rules.ts";
 import { gridShape, type GridPlace } from "./grids.ts";
@@ -496,12 +502,11 @@ function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: nu
 }
 
 function collectOrderColumns(nodes: SpecNode[]): string[] {
-  return nodes.flatMap((node) => {
-    const own = node.kind === "counterbalance" ? [orderColumn(node)] : [];
-    if (node.kind === "block" || node.kind === "loop") return collectOrderColumns(node.children);
-    const slots = slotsOf(node) ?? [];
-    return [...own, ...slots.flatMap((slot) => collectOrderColumns(slot.children))];
+  const columns: string[] = [];
+  walkNodes(nodes, (node) => {
+    if (node.kind === "counterbalance") columns.push(orderColumn(node));
   });
+  return columns;
 }
 
 function checkCounterbalance(

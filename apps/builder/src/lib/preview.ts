@@ -3,6 +3,7 @@ import {
   emitHtml,
   escapeHtmlText,
   slotsOf,
+  walkNodes,
   STEP_COLUMN,
   type CompileResult,
   type Ending,
@@ -40,11 +41,9 @@ function trim(nodes: SpecNode[], path: number[]): SpecNode[] {
  * and orders the service would hand out are drawn in the browser instead.
  */
 function drawLocally(nodes: SpecNode[]) {
-  for (const node of nodes) {
+  walkNodes(nodes, (node) => {
     if (node.kind === "assign" || node.kind === "counterbalance") node.method = "random";
-    if (node.kind === "block" || node.kind === "loop") drawLocally(node.children);
-    for (const slot of slotsOf(node) ?? []) drawLocally(slot.children);
-  }
+  });
 }
 
 export interface PreviewOptions {
@@ -53,16 +52,12 @@ export interface PreviewOptions {
 }
 
 /** Each step in a timeline, named by the path the builder selects it with. */
-function stepPaths(nodes: SpecNode[], path: number[], into: Map<TrialNode, string>) {
-  nodes.forEach((node, index) => {
-    const here = [...path, index];
-    if (node.kind === "trial") into.set(node, here.join("."));
-    if (node.kind === "block" || node.kind === "loop") stepPaths(node.children, here, into);
-    slotsOf(node)?.forEach((slot, slotIndex) =>
-      stepPaths(slot.children, [...here, slotIndex], into),
-    );
+function stepPaths(timeline: SpecNode[]) {
+  const paths = new Map<TrialNode, string>();
+  walkNodes(timeline, (node, path) => {
+    if (node.kind === "trial") paths.set(node, path.join("."));
   });
-  return into;
+  return paths;
 }
 
 /**
@@ -74,7 +69,7 @@ function stepPaths(nodes: SpecNode[], path: number[], into: Map<TrialNode, strin
 export function tracedPreview(spec: Spec, options: PreviewOptions = {}) {
   const { data: _data, recruitment, ...rest } = spec;
   const whole = structuredClone(spec.timeline);
-  const stepIds = stepPaths(whole, [], new Map());
+  const stepIds = stepPaths(whole);
   const timeline = options.from?.length ? trim(whole, options.from) : whole;
   drawLocally(timeline);
   const previewed: Spec = {

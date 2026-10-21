@@ -41,12 +41,65 @@ export function childrenOf(node: SpecNode): SpecNode[] | null {
   return node.kind === "block" || node.kind === "loop" ? node.children : null;
 }
 
+/**
+ * A step and where it sits, written as a selection is: a step's index, and a slot's index after the
+ * step that holds it.
+ */
+export interface PlacedNode {
+  node: SpecNode;
+  path: number[];
+}
+
+/** Every step in a timeline, however deep, each visited before the steps inside it. */
+export function walkNodes(
+  timeline: SpecNode[],
+  visit: (node: SpecNode, path: number[]) => void,
+): void {
+  const walk = (nodes: SpecNode[], path: number[]) => {
+    nodes.forEach((node, index) => {
+      const here = [...path, index];
+      visit(node, here);
+      const children = childrenOf(node);
+      if (children) walk(children, here);
+      slotsOf(node)?.forEach((slot, slotIndex) => walk(slot.children, [...here, slotIndex]));
+    });
+  };
+  walk(timeline, []);
+}
+
+/**
+ * The steps a path passes through, outermost first; empty if the path leads nowhere. A path may end
+ * on a slot's index, which names a list rather than a step, so the last step found holds that slot.
+ */
+export function nodesAlongPath(timeline: SpecNode[], path: number[]): PlacedNode[] {
+  const found: PlacedNode[] = [];
+  let nodes = timeline;
+  for (let position = 0; position < path.length; position += 1) {
+    const node = nodes[path[position]];
+    if (!node) return [];
+    found.push({ node, path: path.slice(0, position + 1) });
+    const slots = slotsOf(node);
+    const children = childrenOf(node);
+    if (slots) {
+      position += 1;
+      if (position >= path.length) break;
+      const slot = slots[path[position]];
+      if (!slot) return [];
+      nodes = slot.children;
+    } else if (children) {
+      nodes = children;
+    } else if (position < path.length - 1) {
+      return [];
+    }
+  }
+  return found;
+}
+
 /** Every trial in a list of steps, however deep, in the order they are written. */
 export function trialsOf(nodes: SpecNode[]): TrialNode[] {
-  return nodes.flatMap((node): TrialNode[] => {
-    if (node.kind === "trial") return [node];
-    const children = childrenOf(node);
-    if (children) return trialsOf(children);
-    return (slotsOf(node) ?? []).flatMap((slot) => trialsOf(slot.children));
+  const trials: TrialNode[] = [];
+  walkNodes(nodes, (node) => {
+    if (node.kind === "trial") trials.push(node);
   });
+  return trials;
 }
