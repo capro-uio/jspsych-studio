@@ -470,6 +470,8 @@
   .start h2,
   .examples h2 {
     margin: 0;
+  }
+  .start h2 {
     font-size: 1rem;
   }
   .examples {
@@ -483,7 +485,6 @@
   }
   .tour {
     align-self: flex-start;
-    border-color: var(--line-strong);
     font-size: 0.8rem;
   }
   .example {

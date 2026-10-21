@@ -29,6 +29,7 @@
   const testId = $derived(`slot-${[...path, index].join("-")}`);
 
   let open = $state(false);
+  const active = $derived(isInsertionAt(path, index) || open);
 
   const tables = $derived(conditionTableNames());
   const trial = () => newTrial(DEFAULT_PLUGIN, startingParams(DEFAULT_PLUGIN));
@@ -96,22 +97,22 @@
   <div class="slot-row">
     <button
       class="slot"
-      class:active={isInsertionAt(path, index) || open}
+      class:active
       data-testid={testId}
       title="Add a step here"
       aria-label="Add a step here"
       aria-expanded={open}
-      onclick={toggle}><span class="slot-mark" aria-hidden="true">+</span></button
+      onclick={toggle}><span class="mark slot-mark" aria-hidden="true">+</span></button
     >
   </div>
 {:else}
   <button
     class="add"
     class:primary={variant === "first"}
-    class:active={isInsertionAt(path, index) || open}
+    class:active
     data-testid={testId}
     aria-expanded={open}
-    onclick={toggle}><span class="add-mark" aria-hidden="true">+</span>Add step</button
+    onclick={toggle}><span class="mark add-mark" aria-hidden="true">+</span>Add step</button
   >
 {/if}
 
@@ -150,20 +151,22 @@
     padding: 0;
     border-top: 2px solid transparent;
   }
+  .mark {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--stimulus-fill);
+    color: var(--on-stimulus);
+    line-height: 1;
+  }
   .slot-mark {
     position: absolute;
     left: 0;
     top: 50%;
     transform: translateY(-60%);
-    display: grid;
-    place-items: center;
     width: 1.1rem;
     height: 1.1rem;
-    border-radius: 50%;
-    background: var(--stimulus-fill);
-    color: var(--on-stimulus);
     font-size: 0.8rem;
-    line-height: 1;
     opacity: 0;
   }
   .slot:hover,
@@ -187,7 +190,7 @@
     min-height: 2rem;
     margin: var(--space-3) 0 var(--space-1);
     padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
-    border: 1px dashed var(--line-strong);
+    border-style: dashed;
     color: var(--stimulus-text);
     font-size: 0.85rem;
     font-weight: 600;
@@ -199,15 +202,9 @@
     background: var(--stimulus-tint);
   }
   .add-mark {
-    display: grid;
-    place-items: center;
     width: 1.2rem;
     height: 1.2rem;
-    border-radius: 50%;
-    background: var(--stimulus-fill);
-    color: var(--on-stimulus);
     font-size: 0.95rem;
-    line-height: 1;
   }
   .add.primary {
     border: 1px solid var(--stimulus-fill);

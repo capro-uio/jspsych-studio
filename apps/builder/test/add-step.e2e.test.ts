@@ -1,6 +1,7 @@
 import { chromium, type Browser, type Locator } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { addStep } from "./steps.ts";
 
 let browser: Browser;
 let server: PreviewServer;
@@ -71,9 +72,7 @@ describe("a timeline with steps in it", () => {
     await page.goto(appUrl);
     await page.getByTestId("example-stroop").click();
 
-    const steps = await page.evaluate(
-      () => document.querySelectorAll("aside .panel > ul > li").length,
-    );
+    const steps = await page.getByTestId(/^node-\d+$/).count();
     const end = page.getByTestId(`slot-${steps}`);
     expect(await end.innerText()).toContain("Add step");
     expect(await end.isVisible()).toBe(true);
@@ -84,8 +83,7 @@ describe("a timeline with steps in it", () => {
     const endOfBlock = page.locator('[data-testid^="slot-2-"]', { hasText: "Add step" });
     expect(await endOfBlock.count()).toBe(1);
 
-    await end.click();
-    await page.getByTestId(`slot-${steps}-checkpoint`).click();
+    await addStep(page, `slot-${steps}`, "checkpoint");
     expect(await page.getByTestId(`node-${steps}`).innerText()).toContain("checkpoint");
 
     await page.close();
