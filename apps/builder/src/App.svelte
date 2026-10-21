@@ -249,14 +249,19 @@
     <div class="panel" role="tabpanel" id={`panel-${ui.tab}`} aria-labelledby={`tab-${ui.tab}`}>
       {#if ui.tab === "timeline"}
         {#if project.spec.timeline.length === 0}
-          <p class="muted">
-            Nothing here yet. Open an example to see how one fits together, or use the + above to
-            add your first step.
-          </p>
-          <button class="tour" data-testid="start-tour" onclick={startTour}>
-            New here? Take a one-minute tour
-          </button>
-          <div class="examples">
+          <section class="start" aria-labelledby="start-heading" data-testid="start-blank">
+            <h2 id="start-heading">Your timeline is empty</h2>
+            <p class="muted">
+              An experiment is a list of steps that run in order. Add the first one to begin.
+            </p>
+            <AddStep path={[]} index={0} variant="first" />
+          </section>
+          <section class="examples" aria-labelledby="examples-heading" data-testid="examples">
+            <h2 id="examples-heading">Or open an example</h2>
+            <p class="muted">
+              Optional. Each one is a finished study to look through or adapt; opening it replaces
+              this empty timeline.
+            </p>
             {#each examples as example (example.id)}
               <button
                 class="example"
@@ -267,8 +272,10 @@
                 <span class="muted">{example.description}</span>
               </button>
             {/each}
-          </div>
-          <AddStep path={[]} index={0} />
+            <button class="tour" data-testid="start-tour" onclick={startTour}>
+              New here? Take a one-minute tour
+            </button>
+          </section>
         {:else}
           <Tree nodes={project.spec.timeline} />
         {/if}
@@ -454,26 +461,47 @@
     min-height: 0;
     overflow: auto;
   }
-  .tour {
-    align-self: flex-start;
-    border-color: var(--line-strong);
-    font-size: 0.85rem;
-  }
+  .start,
   .examples {
     display: flex;
     flex-direction: column;
-    gap: 0.4rem;
+    gap: var(--space-2);
+  }
+  .start h2,
+  .examples h2 {
+    margin: 0;
+  }
+  .start h2 {
+    font-size: 1rem;
+  }
+  .examples {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--line);
+  }
+  .examples h2 {
+    font-size: 0.85rem;
+    color: var(--ink-muted);
+  }
+  .tour {
+    align-self: flex-start;
+    font-size: 0.8rem;
   }
   .example {
     display: flex;
     flex-direction: column;
     gap: 0.15rem;
     text-align: left;
-    padding: 0.5rem;
-    border: 1px dashed var(--line);
+    padding: 0.4rem 0.5rem;
+    border: 1px solid var(--line);
+    background: var(--paper-sunk);
+    font-size: 0.85rem;
+  }
+  .example:hover {
+    border-color: var(--line-strong);
   }
   .example .muted {
-    font-size: 0.78rem;
+    font-size: 0.75rem;
   }
   .preview {
     /* Stacked, the preview has no column height to fill, so give it one worth looking at. */

@@ -20,14 +20,16 @@
   interface Props {
     path: NodePath;
     index: number;
+    variant?: "between" | "end" | "first";
   }
 
-  const { path, index }: Props = $props();
+  const { path, index, variant = "end" }: Props = $props();
 
   const DEFAULT_PLUGIN = "html-keyboard-response";
   const testId = $derived(`slot-${[...path, index].join("-")}`);
 
   let open = $state(false);
+  const active = $derived(isInsertionAt(path, index) || open);
 
   const tables = $derived(conditionTableNames());
   const trial = () => newTrial(DEFAULT_PLUGIN, startingParams(DEFAULT_PLUGIN));
@@ -79,6 +81,11 @@
     },
   ]);
 
+  function toggle() {
+    setInsertion(path, index);
+    open = !open;
+  }
+
   function add(make: () => SpecNode) {
     setInsertion(path, index);
     addAtInsertion(make());
@@ -86,20 +93,28 @@
   }
 </script>
 
-<div class="slot-row">
+{#if variant === "between"}
+  <div class="slot-row">
+    <button
+      class="slot"
+      class:active
+      data-testid={testId}
+      title="Add a step here"
+      aria-label="Add a step here"
+      aria-expanded={open}
+      onclick={toggle}><span class="mark slot-mark" aria-hidden="true">+</span></button
+    >
+  </div>
+{:else}
   <button
-    class="slot"
-    class:active={isInsertionAt(path, index) || open}
+    class="add"
+    class:primary={variant === "first"}
+    class:active
     data-testid={testId}
-    title="Add a step here"
-    aria-label="Add a step here"
     aria-expanded={open}
-    onclick={() => {
-      setInsertion(path, index);
-      open = !open;
-    }}>+</button
+    onclick={toggle}><span class="mark add-mark" aria-hidden="true">+</span>Add step</button
   >
-</div>
+{/if}
 
 {#if open}
   <div class="menu" data-testid={`${testId}-menu`}>
@@ -126,24 +141,87 @@
     align-items: center;
   }
   .slot {
+    position: relative;
     flex: 1;
     height: 100%;
     border: 0;
+    border-radius: 0;
     background: none;
     cursor: copy;
     padding: 0;
-    color: transparent;
-    font-size: 0.75rem;
-    line-height: 1;
     border-top: 2px solid transparent;
   }
+  .mark {
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: var(--stimulus-fill);
+    color: var(--on-stimulus);
+    line-height: 1;
+  }
+  .slot-mark {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-60%);
+    width: 1.1rem;
+    height: 1.1rem;
+    font-size: 0.8rem;
+    opacity: 0;
+  }
   .slot:hover,
+  .slot:focus-visible,
   .slot.active {
-    color: var(--stimulus-text);
     border-top-color: color-mix(in srgb, var(--stimulus) 45%, transparent);
   }
   .slot.active {
     border-top-color: var(--stimulus);
+  }
+  .slot:hover .slot-mark,
+  .slot:focus-visible .slot-mark,
+  .slot.active .slot-mark {
+    opacity: 1;
+  }
+  .add {
+    display: inline-flex;
+    align-self: flex-start;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 2rem;
+    margin: var(--space-3) 0 var(--space-1);
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
+    border-style: dashed;
+    color: var(--stimulus-text);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .add:hover,
+  .add.active {
+    border-style: solid;
+    border-color: var(--stimulus);
+    background: var(--stimulus-tint);
+  }
+  .add-mark {
+    width: 1.2rem;
+    height: 1.2rem;
+    font-size: 0.95rem;
+  }
+  .add.primary {
+    border: 1px solid var(--stimulus-fill);
+    background: var(--stimulus-fill);
+    color: var(--on-stimulus);
+    min-height: 2.5rem;
+    margin-top: var(--space-1);
+    padding-inline: var(--space-3) var(--space-4);
+    font-size: 0.95rem;
+  }
+  .add.primary .add-mark {
+    background: var(--on-stimulus);
+    color: var(--stimulus-fill);
+  }
+  .add.primary:hover,
+  .add.primary.active {
+    background: color-mix(in srgb, var(--stimulus-fill) 85%, var(--ink));
   }
   .menu {
     display: flex;

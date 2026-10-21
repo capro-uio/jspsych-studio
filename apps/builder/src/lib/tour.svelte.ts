@@ -32,10 +32,11 @@ export const TOUR_STEPS: TourStep[] = [
     tab: "timeline",
     title: "The timeline",
     body:
-      "Steps run from top to bottom. Use + to add one: a trial shows something and collects a " +
-      "response, a block repeats its steps once per row of a conditions table, a loop repeats " +
-      "until performance is good enough, and splits and branches send participants down " +
-      "different paths. The arrows move a step; clicking one opens it.",
+      "Steps run from top to bottom. Use Add step, or the + that appears between two steps, to " +
+      "add one: a trial shows something and collects a response, a block repeats its steps " +
+      "once per row of a conditions table, a loop repeats until performance is good enough, " +
+      "and splits and branches send participants down different paths. The arrows move a " +
+      "step; clicking one opens it.",
   },
   {
     id: "form",
