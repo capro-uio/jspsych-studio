@@ -11,8 +11,9 @@ import { asText, fetchPackageSources } from "./package-sources.ts";
 import { exportedSpec } from "./project.svelte.ts";
 import { pluginSchema, schemas } from "./schemas.ts";
 import type { captureScreens } from "./screen-capture.ts";
-import { containerName, containerPaths, sequenceAt, type Sequence } from "./sequence.ts";
-import { sequenceFigure } from "./trial-figure.ts";
+import { blockKey, type FigureChoicesState } from "./figure-choices.svelte.ts";
+import { figureName, makeFigure, NO_CONDITIONS } from "./figure-making.ts";
+import { containerPaths, sequenceAt, type Sequence } from "./sequence.ts";
 
 export interface DownloadOptions {
   /** Carry jsPsych and its plugins in the download rather than loading them from unpkg. */
@@ -46,22 +47,31 @@ export interface StudyFigureOptions {
   /** How each block's screens are pictured; the hidden capture frame by default. */
   capture?: typeof captureScreens;
   onProgress?: (progress: FigureProgress) => void;
+  /** How the figures are made, as chosen in the Figures view; stacked, as drawn, SVG otherwise. */
+  choices?: FigureChoicesState;
+  /** Draws a figure as a PNG, when PNGs are chosen; the browser's canvas by default. */
+  toPng?: (svg: string, pixelWidth: number) => Promise<Blob>;
 }
 
-const fileSafe = (name: string) =>
-  name
-    .toLowerCase()
-    .replace(/[^a-z0-9_-]+/g, "-")
-    .replace(/^-+|-+$/g, "") || "steps";
+const PLAIN_CHOICES: FigureChoicesState = {
+  arrangement: "stack",
+  size: "screen",
+  format: "svg",
+  blocks: {},
+};
 
 /**
  * The figures that describe a study in a paper: its flow, and each block and loop as screens, as
- * the participant sees them for its first row, named after the block's conditions or the loop.
- * Each figure stands alone: one whose screens cannot be pictured is drawn with plain screens, and
- * one that cannot be drawn is left out rather than costing the rest.
+ * the participant sees them, made as chosen in the Figures view and named after the block's
+ * conditions or the loop. Each is an SVG, and a PNG beside it when PNGs are chosen. Each figure
+ * stands alone: one whose screens cannot be pictured is drawn with plain screens, and one that
+ * cannot be drawn is left out rather than costing the rest.
  */
-export async function studyFigures(spec: Spec, { capture, onProgress }: StudyFigureOptions = {}) {
-  const figures: Record<string, string> = { "flow.svg": studyFlowFigure(spec) };
+export async function studyFigures(
+  spec: Spec,
+  { capture, onProgress, choices = PLAIN_CHOICES, toPng }: StudyFigureOptions = {},
+) {
+  const figures: Record<string, string | Uint8Array> = { "flow.svg": studyFlowFigure(spec) };
   const sequences = containerPaths(spec.timeline)
     .map((path) => sequenceAt(spec, path, pluginSchema))
     .filter((sequence): sequence is Sequence => sequence !== null && sequence.segments.length > 0);
@@ -71,29 +81,38 @@ export async function studyFigures(spec: Spec, { capture, onProgress }: StudyFig
       (module) => module.captureScreens,
       () => null,
     ));
+  // Not one screen pictured means the study could not run, as when jsPsych cannot be reached;
+  // the blocks after it would only wait as long, so they are drawn plain.
+  const watched: typeof captureScreens = async (...args) => {
+    if (!pictureScreens) return [];
+    const pictures = await pictureScreens(...args);
+    if (!pictures.some(Boolean)) pictureScreens = null;
+    return pictures;
+  };
+  const drawPng = toPng ?? (await import("./figure-png.ts")).figurePng;
   const deadline = new AbortController();
   const timer = setTimeout(() => deadline.abort(), FIGURES_DEADLINE);
   try {
     for (const [index, sequence] of sequences.entries()) {
       onProgress?.({ done: index, total: sequences.length });
-      let pictures: (string | undefined)[] = [];
-      if (pictureScreens && !deadline.signal.aborted) {
-        pictures = await pictureScreens(spec, sequence, { signal: deadline.signal }).catch(
-          () => [],
-        );
-        // Not one screen pictured means the study could not run, as when jsPsych cannot be
-        // reached; the blocks after it would only wait as long, so they are drawn plain.
-        if (!pictures.some(Boolean)) pictureScreens = null;
-      }
       try {
-        const base = `${sequence.kind}-${fileSafe(containerName(spec, sequence.path))}`;
-        const name = `${base}.svg` in figures ? `${base}-${sequence.path.join("-")}` : base;
-        figures[`${name}.svg`] = sequenceFigure(
+        const made = await makeFigure(
           spec,
           sequence,
-          { arrangement: "stack", size: "screen" },
-          pictures,
-        ).svg;
+          choices,
+          choices.blocks[blockKey(sequence.path)] ?? NO_CONDITIONS,
+          {
+            capture: pictureScreens && !deadline.signal.aborted ? watched : undefined,
+            signal: deadline.signal,
+          },
+        );
+        const base = figureName(spec, sequence);
+        const name = `${base}.svg` in figures ? `${base}-${sequence.path.join("-")}` : base;
+        figures[`${name}.svg`] = made.svg;
+        if (choices.format === "png") {
+          const png = await drawPng(made.svg, made.pixelWidth);
+          figures[`${name}.png`] = new Uint8Array(await png.arrayBuffer());
+        }
       } catch {
         // A figure that cannot be drawn is left out; the download is worth more than it.
       }

@@ -64,7 +64,7 @@ describe("downloading the whole project", () => {
     const files = await projectFiles(spec, schemas, { figures: { "flow.svg": flow } });
     expect(files["figures/flow.svg"]).toBe(flow);
     expect(files["README.md"]).toContain(
-      "- `figures/` — figures of the study for a paper or poster, as SVG: `flow.svg`",
+      "- `figures/` — figures of the study for a paper or poster: `flow.svg`",
     );
   });
 

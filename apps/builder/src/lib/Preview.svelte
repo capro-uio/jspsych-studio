@@ -12,13 +12,15 @@
   import { followPreview, resetPlayback } from "./playback.svelte.ts";
   import { currentProblems, overallProblems } from "./problems.svelte.ts";
   import { schemas } from "./schemas.ts";
+  import Figures from "./Figures.svelte";
   import Flow from "./Flow.svelte";
 
-  type View = "experiment" | "flow" | "code" | "spec";
+  type View = "experiment" | "flow" | "figures" | "code" | "spec";
 
   const VIEWS = [
     { id: "experiment", label: "Experiment", hint: "What a participant sees" },
     { id: "flow", label: "Flow", hint: "How the study runs, step by step" },
+    { id: "figures", label: "Figures", hint: "The study's flow and trials, for a paper" },
     { id: "code", label: "Code", hint: "The jsPsych this builds, as it will be exported" },
     { id: "spec", label: "Project file", hint: "What the download and import use" },
   ] as const;
@@ -212,6 +214,8 @@
     {/if}
   {:else if view === "flow"}
     <Flow />
+  {:else if view === "figures"}
+    <Figures />
   {:else if view === "code"}
     <pre data-testid="generated-code">{source}</pre>
   {:else}
