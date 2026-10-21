@@ -157,7 +157,7 @@ describe("the timing strip", () => {
       page.getByTestId("download-sequence-figure").click(),
     ]);
     const svg = readFileSync(await file.path(), "utf8");
-    expect(svg).toContain("By congruency");
+    expect(svg).toContain("Conditions by congruency");
     expect(svg).toContain(">congruent<");
     expect(svg).toContain(">incongruent<");
     expect(svg.match(/<image /g) ?? []).toHaveLength(4);

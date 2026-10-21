@@ -52,10 +52,12 @@ export interface TrialFigure {
   conditions?: ConditionPanel;
 }
 
-/** One condition's pictures of the sequence's screens, named by its value. */
+/** One condition of the sequence: its value, its pictures, and what each screen is given. */
 export interface ConditionPictures {
   label: string;
   pictures: (string | undefined)[];
+  /** What each segment's steps are given in this condition, to tell which screens differ. */
+  inputs: string[];
 }
 
 export interface ConditionCell {
@@ -63,14 +65,14 @@ export interface ConditionCell {
   y: number;
   picture: string;
   caption: string;
+  /** Where the caption's middle sits below its screen. */
+  captionY: number;
 }
 
 export interface ConditionPanel {
   heading: { at: Point; text: string };
   screen: Size;
   cells: ConditionCell[];
-  /** Where each caption's middle sits below its screen. */
-  captionY: number;
 }
 
 /** What a figure writes beside a screen: its name, how long it lasts, and how it is answered. */
@@ -253,62 +255,82 @@ const CONDITION_SCALE = 0.75;
 const HEADING_GAP = 6;
 
 /**
- * Which of a sequence's screens look different from one condition to another: those pictured in
- * every condition, and not alike in all of them. A screen that was not pictured cannot be told.
+ * Which of a sequence's screens differ from one condition to another: those whose steps are given
+ * something different. Read from what the steps are given rather than from their pictures, which
+ * an animation, a random layout or a font arriving late could make differ between alike screens.
  */
 export function varyingScreens(sequence: Sequence, conditions: ConditionPictures[]) {
-  return sequence.segments.flatMap((_, index) => {
-    const pictures = conditions.map((condition) => condition.pictures[index]);
-    if (pictures.some((picture) => picture === undefined)) return [];
-    return new Set(pictures).size > 1 ? [index] : [];
-  });
+  return sequence.segments.flatMap((segment, index) =>
+    segment.path && new Set(conditions.map((condition) => condition.inputs[index])).size > 1
+      ? [index]
+      : [],
+  );
 }
+
+const CAPTION_LENGTH = 28;
+
+const shortened = (text: string) =>
+  text.length <= CAPTION_LENGTH ? text : `${text.slice(0, CAPTION_LENGTH - 1)}…`;
 
 /**
  * The figure with a panel beneath it showing, for each screen that differs between conditions,
- * that screen in each condition, captioned with the condition: "congruent", "incongruent". A
- * figure where no screen differs, or with fewer than two conditions, is left as it is.
+ * that screen in each condition, captioned with the condition: "congruent", "incongruent". The
+ * panel wraps onto as many rows as keep it within `maxWidth`, so it never forces the figure to be
+ * scaled down. A screen not pictured in every condition is left out; a figure with nothing left
+ * to show, or fewer than two conditions, is returned as it is.
  */
 export function withConditions(
   figure: TrialFigure,
   sequence: Sequence,
   column: string,
   conditions: ConditionPictures[],
+  maxWidth: number = figure.width,
 ): TrialFigure {
-  const varying = varyingScreens(sequence, conditions);
-  if (conditions.length < 2 || varying.length === 0) return figure;
+  const shown = varyingScreens(sequence, conditions).filter((index) =>
+    conditions.every((condition) => condition.pictures[index] !== undefined),
+  );
+  if (conditions.length < 2 || shown.length === 0) return figure;
   const screen = {
     width: figure.screen.width * CONDITION_SCALE,
     height: figure.screen.height * CONDITION_SCALE,
   };
-  const entries = varying.flatMap((index) =>
+  const entries = shown.flatMap((index) =>
     conditions.map((condition) => ({
       picture: condition.pictures[index]!,
-      caption:
-        varying.length > 1
+      caption: shortened(
+        shown.length > 1
           ? `${sequence.segments[index].title}: ${condition.label}`
           : condition.label,
+      ),
     })),
   );
   const cellWidth = Math.max(screen.width, ...entries.map((entry) => textWidth(entry.caption)));
+  const perRow = Math.max(
+    1,
+    Math.floor((Math.max(maxWidth, figure.width) - 2 * MARGIN + ROW_GAP) / (cellWidth + ROW_GAP)),
+  );
+  const rowHeight = screen.height + LABEL_GAP + FIRST_BASELINE + ROW_GAP;
   const top = figure.height;
-  const cellsY = top + FIRST_BASELINE + HEADING_GAP;
-  const cells = entries.map((entry, index) => ({
-    ...entry,
-    x: MARGIN + index * (cellWidth + ROW_GAP) + (cellWidth - screen.width) / 2,
-    y: cellsY,
-  }));
-  const right = MARGIN + entries.length * (cellWidth + ROW_GAP) - ROW_GAP + MARGIN;
-  const captionY = cellsY + screen.height + LABEL_GAP + FIRST_BASELINE;
+  const cellsTop = top + FIRST_BASELINE + HEADING_GAP;
+  const cells = entries.map((entry, index) => {
+    const y = cellsTop + Math.floor(index / perRow) * rowHeight;
+    return {
+      ...entry,
+      x: MARGIN + (index % perRow) * (cellWidth + ROW_GAP) + (cellWidth - screen.width) / 2,
+      y,
+      captionY: y + screen.height + LABEL_GAP + FIRST_BASELINE,
+    };
+  });
+  const across = Math.min(perRow, entries.length);
+  const right = MARGIN + across * (cellWidth + ROW_GAP) - ROW_GAP + MARGIN;
   return {
     ...figure,
     width: Math.ceil(Math.max(figure.width, right)),
-    height: Math.ceil(captionY + MARGIN),
+    height: Math.ceil(Math.max(...cells.map((cell) => cell.captionY)) + MARGIN),
     conditions: {
-      heading: { at: { x: MARGIN, y: top + FIRST_BASELINE }, text: `By ${column}` },
+      heading: { at: { x: MARGIN, y: top + FIRST_BASELINE }, text: `Conditions by ${column}` },
       screen,
       cells,
-      captionY,
     },
   };
 }
@@ -322,7 +344,7 @@ function conditionsSvg(panel: ConditionPanel, settings: ExperimentSettings | und
       `<g><rect ${box} fill="${backgroundColor(settings)}"/>` +
       `<image ${box} preserveAspectRatio="xMidYMid meet" xlink:href="${cell.picture}"/>` +
       `<rect ${box} rx="2" fill="none" stroke="${ink("line-strong")}" stroke-width="1.25"/>` +
-      `<text x="${middle}" y="${panel.captionY}" text-anchor="middle" ${LABEL_STYLE.timing}>${svgText(cell.caption)}</text></g>`
+      `<text x="${middle}" y="${cell.captionY}" text-anchor="middle" ${LABEL_STYLE.timing}>${svgText(cell.caption)}</text></g>`
     );
   });
   return [heading, ...cells];
@@ -393,8 +415,10 @@ export function sequenceFigure(
   byColumn?: { column: string; conditions: ConditionPictures[] },
 ) {
   const title = `${specFilename(spec)}: one pass through the ${sequence.kind}`;
-  const addConditions = (figure: TrialFigure) =>
-    byColumn ? withConditions(figure, sequence, byColumn.column, byColumn.conditions) : figure;
+  const addConditions = (figure: TrialFigure, maxWidth?: number) =>
+    byColumn
+      ? withConditions(figure, sequence, byColumn.column, byColumn.conditions, maxWidth)
+      : figure;
   if (size === "screen") {
     const figure = addConditions(layoutTrialFigure(sequence, arrangement));
     return {
@@ -403,7 +427,10 @@ export function sequenceFigure(
     };
   }
   const column = COLUMN_WIDTH_MM[size];
-  const figure = addConditions(fitTrialFigure(sequence, arrangement, column / MM_PER_UNIT));
+  const figure = addConditions(
+    fitTrialFigure(sequence, arrangement, column / MM_PER_UNIT),
+    column / MM_PER_UNIT,
+  );
   const widthMm = Math.min(figure.width * MM_PER_UNIT, column);
   return {
     svg: trialFigureSvg(figure, title, spec.settings, pictures, widthMm),

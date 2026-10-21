@@ -161,6 +161,43 @@ export function rowLabels(spec: Spec, path: number[]) {
   });
 }
 
+/** A value with each column it names replaced by that column's cell in the row. */
+function withRow(value: unknown, row: Row): unknown {
+  if (isVariableReference(value as ParameterValue)) return row[(value as { var: string }).var];
+  if (Array.isArray(value)) return value.map((item) => withRow(item, row));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, item]) => [key, withRow(item, row)]));
+  }
+  return value;
+}
+
+function trialsUnder(node: SpecNode | undefined): TrialNode[] {
+  if (!node) return [];
+  if (node.kind === "trial") return [node];
+  const children = [
+    ...(node.kind === "block" || node.kind === "loop" ? node.children : []),
+    ...(slotsOf(node) ?? []).flatMap((slot) => slot.children),
+  ];
+  return children.flatMap(trialsUnder);
+}
+
+/**
+ * What each segment's steps are given for one row of the table: their plugins and settings, with
+ * the row's values in place of the columns they name. Two rows that give a segment the same show
+ * the same screen, however a picture of it might come out.
+ */
+export function segmentInputs(spec: Spec, sequence: Sequence, row: number) {
+  const table = tableAt(spec, sequence.path);
+  const cells = (table === null ? [] : (spec.conditions?.[table] ?? []))[row] ?? {};
+  return sequence.segments.map((segment) => {
+    if (!segment.path) return "";
+    const trials = trialsUnder(nodesAlong(spec.timeline, segment.path).at(-1)?.node);
+    return JSON.stringify(
+      trials.map((trial) => ({ plugin: trial.plugin, params: withRow(trial.params ?? {}, cells) })),
+    );
+  });
+}
+
 /** The most conditions a figure shows side by side; a column with more is not a condition. */
 export const MAX_CONDITIONS = 4;
 

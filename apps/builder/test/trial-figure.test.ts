@@ -305,19 +305,27 @@ describe("conditions side by side", () => {
   const B = "data:image/png;base64,Qg==";
   const C = "data:image/png;base64,Qw==";
   const conditions = [
-    { label: "congruent", pictures: [A, undefined, B] },
-    { label: "incongruent", pictures: [A, undefined, C] },
+    { label: "congruent", pictures: [A, undefined, B], inputs: ["fix", "", "red"] },
+    { label: "incongruent", pictures: [A, undefined, C], inputs: ["fix", "", "blue"] },
   ];
 
-  it("finds the screens that differ, and not those alike or not pictured", () => {
+  it("finds the screens whose steps are given something different, never a pause", () => {
     expect(varyingScreens(trial, conditions)).toEqual([2]);
+  });
+
+  it("does not take pictures that differ for screens that differ", () => {
+    const flickering = conditions.map((condition, index) => ({
+      ...condition,
+      pictures: [index ? B : A, undefined, condition.pictures[2]],
+    }));
+    expect(varyingScreens(trial, flickering)).toEqual([2]);
   });
 
   it("shows each differing screen in each condition beneath the sequence, captioned", () => {
     const figure = layoutTrialFigure(trial, "stack");
     const shown = withConditions(figure, trial, "congruency", conditions);
     const panel = shown.conditions!;
-    expect(panel.heading.text).toBe("By congruency");
+    expect(panel.heading.text).toBe("Conditions by congruency");
     expect(panel.cells.map((cell) => [cell.picture, cell.caption])).toEqual([
       [B, "congruent"],
       [C, "incongruent"],
@@ -325,14 +333,14 @@ describe("conditions side by side", () => {
     expect(panel.cells[0].y).toBeGreaterThan(figure.height);
     expect(panel.cells[1].x).toBeGreaterThan(panel.cells[0].x + panel.screen.width);
     expect(panel.screen.width).toBeLessThan(figure.screen.width);
-    expect(shown.height).toBeGreaterThan(panel.captionY);
+    expect(shown.height).toBeGreaterThan(panel.cells[0].captionY);
     expect(shown.screens).toEqual(figure.screens);
   });
 
   it("names the screen in each caption when more than one differs", () => {
     const two = [
-      { label: "a", pictures: [A, undefined, B] },
-      { label: "b", pictures: [B, undefined, C] },
+      { label: "a", pictures: [A, undefined, B], inputs: ["1", "", "1"] },
+      { label: "b", pictures: [B, undefined, C], inputs: ["2", "", "2"] },
     ];
     const panel = withConditions(layoutTrialFigure(trial, "row"), trial, "c", two).conditions!;
     expect(panel.cells.map((cell) => cell.caption)).toEqual([
@@ -341,6 +349,26 @@ describe("conditions side by side", () => {
       "Target: a",
       "Target: b",
     ]);
+  });
+
+  it("wraps onto more rows to stay within the width it is given", () => {
+    const four = ["one", "two", "three", "four"].map((label, index) => ({
+      label: `${label} condition`,
+      pictures: [A, undefined, B],
+      inputs: [`${index}`, "", `${index}`],
+    }));
+    const column = COLUMN_WIDTH_MM.single / MM_PER_UNIT;
+    const figure = fitTrialFigure(trial, "stack", column);
+    const shown = withConditions(figure, trial, "c", four, column);
+    expect(shown.width).toBeLessThanOrEqual(column);
+    expect(new Set(shown.conditions!.cells.map((cell) => cell.y)).size).toBeGreaterThan(1);
+  });
+
+  it("leaves out a differing screen not pictured in every condition", () => {
+    const missing = [conditions[0], { ...conditions[1], pictures: [A, undefined, undefined] }];
+    expect(withConditions(layoutTrialFigure(trial, "stack"), trial, "c", missing).conditions).toBe(
+      undefined,
+    );
   });
 
   it("leaves the figure alone when nothing differs or there is one condition", () => {
@@ -359,7 +387,7 @@ describe("conditions side by side", () => {
     );
     const root = parse(trialFigureSvg(shown, "t", undefined, conditions[0].pictures));
     const text = root.textContent ?? "";
-    expect(text).toContain("By congruency");
+    expect(text).toContain("Conditions by congruency");
     expect(text).toContain("incongruent");
     expect(root.querySelectorAll(`image[*|href="${C}"]`)).toHaveLength(1);
     expect(Number(root.getAttribute("height"))).toBe(shown.height);
