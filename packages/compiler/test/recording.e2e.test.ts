@@ -93,6 +93,7 @@ describe("a study that records", () => {
     ]);
     for (const file of server.recordings) {
       expect(file.experimentID).toBe("testExperiment");
+      expect(file.encoding).toBe("gzip");
       expect(Buffer.from(file.data, "base64").subarray(0, 4)).toEqual(
         Buffer.from([0x1a, 0x45, 0xdf, 0xa3]),
       );

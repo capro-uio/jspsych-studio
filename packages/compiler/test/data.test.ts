@@ -35,6 +35,16 @@ describe("data collection", () => {
     expect(source).toContain("async: true");
   });
 
+  it("compresses what it posts, and only when it posts", () => {
+    const posting = compileSpec(specWithData({ save: "post", experiment_id: "abc" }), schemas);
+    expect(posting.source).toContain("async function postToDataPipe(");
+    expect(posting.source).toContain('new CompressionStream("gzip")');
+    expect(posting.source).toContain(`await postToDataPipe("${DATAPIPE_URL}/api/data/", {`);
+    expect(compileSpec(specWithData({ save: "download" }), schemas).source).not.toContain(
+      "postToDataPipe",
+    );
+  });
+
   it("uses a custom endpoint without doubling its slashes", () => {
     const { source } = compileSpec(
       specWithData({

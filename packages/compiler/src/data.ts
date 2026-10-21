@@ -10,6 +10,32 @@ const PARTICIPANT_ID = "participantId";
 
 export const CALL_FUNCTION_PLUGIN = "call-function";
 
+// DataPipe refuses a request over 32 MB with a bare error, and gzip shrinks a CSV several times
+// over, so a long study still fits. Its server unpacks a gzipped body before reading it. A browser
+// that cannot compress sends the body as it is, as DataPipe's own client does.
+export const UPLOAD_HELPERS = `async function gzipForDataPipe(json) {
+  if (typeof CompressionStream === "undefined") return null;
+  try {
+    return await new Response(
+      new Blob([json]).stream().pipeThrough(new CompressionStream("gzip")),
+    ).blob();
+  } catch {
+    return null;
+  }
+}
+async function postToDataPipe(url, body) {
+  const json = JSON.stringify(body);
+  const compressed = await gzipForDataPipe(json);
+  return fetch(url, {
+    method: "POST",
+    headers: compressed
+      ? { "Content-Type": "application/json", "Content-Encoding": "gzip" }
+      : { "Content-Type": "application/json" },
+    body: compressed ?? json,
+  });
+}
+`;
+
 function savingScreen(message: string) {
   return `jsPsych.getDisplayElement().innerHTML = ${literal(`<p>${message}</p>`)};`;
 }
@@ -92,14 +118,10 @@ function uploadStep(
     ${ending.declaration}
     try {
       ${saveRecordings}
-      const response = await fetch(${literal(endpoint)}, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          experimentID: ${literal(settings.experiment_id ?? "")},
-          filename,
-          data: ${rows}.csv(),
-        }),
+      const response = await postToDataPipe(${literal(endpoint)}, {
+        experimentID: ${literal(settings.experiment_id ?? "")},
+        filename,
+        data: ${rows}.csv(),
       });
       if (!response.ok) throw new Error("the server responded with " + response.status);
       ${ending.saved}

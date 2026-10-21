@@ -45,11 +45,7 @@ async function uploadRecordings(rows, filename, endpoint, experimentID) {
       "<p>Saving recording " + (index + 1) + " of " + recordings.length + ", please do not close this window.</p>";
     const name = recordingName(filename, row);
     try {
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ experimentID, filename: name, data: row.response }),
-      });
+      const response = await postToDataPipe(endpoint, { experimentID, filename: name, data: row.response });
       if (response.ok) row.response = name;
     } catch {
       continue;

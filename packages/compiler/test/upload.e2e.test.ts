@@ -36,6 +36,7 @@ const spec = (endpoint: string, recruitment?: Spec["recruitment"]): Spec => ({
 async function runExperiment(
   recruitment?: Spec["recruitment"],
   query = "participant_id=p42",
+  { compression = "works" }: { compression?: "works" | "missing" | "broken" } = {},
 ): Promise<Page> {
   const compiled = compileSpec(spec(server.url, recruitment), schemas, {
     initEntries: "on_finish: () => { window.studioExperiment.finished = true; }",
@@ -44,6 +45,20 @@ async function runExperiment(
   writeFileSync(join(workspaceRoot, PAGE_NAME), html);
 
   const page = await browser.newPage();
+  if (compression === "missing") {
+    await page.addInitScript(() => {
+      delete (window as { CompressionStream?: unknown }).CompressionStream;
+    });
+  }
+  if (compression === "broken") {
+    await page.addInitScript(() => {
+      window.CompressionStream = class {
+        constructor() {
+          throw new Error("compression is broken");
+        }
+      } as unknown as typeof CompressionStream;
+    });
+  }
   // The platform is not really there; answering for it lets the test see where the page went.
   await page.route(`${PLATFORM}/**`, (route) => route.fulfill({ body: "back on the platform" }));
   await page.goto(`${server.url}/${PAGE_NAME}?${query}`);
@@ -80,6 +95,7 @@ describe("a compiled experiment that uploads its data", () => {
     expect(upload.data).toContain("participant_id");
     expect(upload.data).toContain("p42");
     expect(upload.data.split("\n").length).toBeGreaterThan(1);
+    expect(upload.encoding).toBe("gzip");
     // The saving step has to end its own trial, or anything placed after it never runs.
     await expect
       .poll(() => page.evaluate(() => window.studioExperiment?.finished === true), {
@@ -88,6 +104,21 @@ describe("a compiled experiment that uploads its data", () => {
       .toBe(true);
     await page.close();
   }, 120_000);
+
+  it.each(["missing", "broken"] as const)(
+    "sends the rows as they are when compression is %s",
+    async (compression) => {
+      const page = await runExperiment(undefined, "participant_id=p42", { compression });
+      await expect.poll(() => server.uploads.length, { timeout: 15_000 }).toBe(1);
+
+      const [upload] = server.uploads;
+      expect(upload.encoding).toBe("identity");
+      expect(upload.filename).toBe("uploading_p42.csv");
+      expect(upload.data).toContain("p42");
+      await page.close();
+    },
+    120_000,
+  );
 
   it("tells the participant and downloads instead when the upload fails", async () => {
     server.failUploads = true;

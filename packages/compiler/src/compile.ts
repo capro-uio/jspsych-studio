@@ -9,7 +9,7 @@ import {
   isMediaType,
 } from "./assets.ts";
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
-import { compileParticipantProperties } from "./data.ts";
+import { compileParticipantProperties, UPLOAD_HELPERS } from "./data.ts";
 import { compileCompletion, compileEndStep } from "./endings.ts";
 import { dataColumns, reservedLinkColumns } from "./metadata.ts";
 import { idParamOf, needsParticipantId } from "./recruitment.ts";
@@ -420,6 +420,7 @@ export function compileSpec(
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
+    (spec.data?.save === "post" ? `${UPLOAD_HELPERS}\n` : "") +
     (spec.data?.save === "post" && usesRecordings(spec) ? `${RECORDING_HELPERS}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({
