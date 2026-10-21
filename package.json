@@ -55,6 +55,7 @@
     "esbuild@0.28.2": true
   },
   "overrides": {
-    "vite": "$vite"
+    "vite": "$vite",
+    "@grpc/grpc-js": "^1.13.6"
   }
 }
