@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { download, specFilename } from "./files.ts";
+  import { saveFigure } from "./figure-download.ts";
+  import { specFilename } from "./files.ts";
   import {
     blockChoice,
     blockKey,
@@ -14,7 +15,6 @@
     resolveBlockChoice,
     type MadeFigure,
   } from "./figure-making.ts";
-  import { flowFigure } from "./flow-figure.ts";
   import { exportedSpec } from "./project.svelte.ts";
   import { pluginSchema } from "./schemas.ts";
   import {
@@ -29,7 +29,6 @@
 
   const spec = $derived($state.snapshot(exportedSpec()));
   const shared = $derived({ arrangement: figureChoices.arrangement, size: figureChoices.size });
-  const flow = $derived(flowFigure(spec, figureChoices.size));
 
   // Each block's card, worked out once for each change rather than on every look at it.
   const cards = $derived(
@@ -67,7 +66,7 @@
   // Previews are shown from object URLs rather than data URLs, which for a figure with its
   // screens in it would run to megabytes; each is let go once it is replaced.
   $effect(() => {
-    const made: Record<string, string> = { flow: flow.svg };
+    const made: Record<string, string> = {};
     for (const card of cards) made[card.key] = madeFor(card)?.svg ?? card.plain;
     const next = Object.fromEntries(
       Object.entries(made).map(([key, svg]) => [
@@ -110,36 +109,22 @@
     }
   }
 
-  async function save(name: string, svg: string, pixelWidth: number) {
-    if (figureChoices.format === "svg") {
-      download(`${name}.svg`, svg, "image/svg+xml");
-      return;
-    }
-    const { figurePng } = await import("./figure-png.ts");
-    download(`${name}.png`, await figurePng(svg, pixelWidth), "image/png");
-  }
-
   async function downloadFigure(card: Card) {
     const made = madeFor(card) ?? (await picture(card));
     if (!made || stop.signal.aborted) return;
     const name = `${specFilename(spec)}-${figureName(spec, card.sequence)}`;
-    await save(name, made.svg, made.pixelWidth).catch((error: Error) => {
-      errors[card.key] = `The figure could not be made: ${error.message}`;
-    });
-  }
-
-  async function downloadFlow() {
-    errors.flow = "";
-    await save(`${specFilename(spec)}-flow`, flow.svg, flow.pixelWidth).catch((error: Error) => {
-      errors.flow = `The figure could not be made: ${error.message}`;
-    });
+    await saveFigure(name, made.svg, made.pixelWidth, figureChoices.format).catch(
+      (error: Error) => {
+        errors[card.key] = `The figure could not be made: ${error.message}`;
+      },
+    );
   }
 </script>
 
 <div class="figures" data-testid="figures">
   <p class="hint">
-    Figures of the study for a paper or poster. The project download carries them too, made as
-    chosen here.
+    Each block and loop as a figure for a paper or poster. The study's flow is under Flow, made at
+    the size and in the format chosen here, and the project download carries them all.
   </p>
 
   <div class="choices" role="group" aria-label="How every figure is made">
@@ -178,22 +163,6 @@
       </select>
     </label>
   </div>
-
-  <article class="card" data-testid="figure-flow">
-    <header>
-      <h3>Study flow</h3>
-      <button
-        type="button"
-        onclick={downloadFlow}
-        aria-label="Download the study flow"
-        data-testid="figure-flow-download">Download</button
-      >
-    </header>
-    <img src={urls.flow} alt="The study's flow, as a figure" />
-    {#if errors.flow}
-      <p class="error" role="alert">{errors.flow}</p>
-    {/if}
-  </article>
 
   {#each cards as card (card.key)}
     {@const made = madeFor(card)}
