@@ -69,8 +69,8 @@ const EYE_TRACKER_DEFINITION = `class ${EYE_TRACKER_CLASS} extends ${extensionId
   }
 }`;
 
-/** The entry `initJsPsych` takes to start the eye tracker. */
-export const EYE_TRACKER_SETTING = `extensions: [{ type: ${EYE_TRACKER_CLASS} }]`;
+/** The extension `initJsPsych` is given to start the eye tracker. */
+export const EYE_TRACKER_EXTENSION = `{ type: ${EYE_TRACKER_CLASS} }`;
 
 // The extension reads the targets without checking they are there, so a step tracked without any
 // is given an empty list rather than none. It records each under its selector, so one named twice

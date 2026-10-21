@@ -507,12 +507,22 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             title: "`download` saves a CSV on the participant's machine, `post` uploads it.",
             enum: ["download", "post"],
           },
-          endpoint: { title: "Upload target; defaults to DataPipe.", type: "string" },
+          endpoint: {
+            title: "The address of the DataPipe to upload to; defaults to pipe.jspsych.org.",
+            type: "string",
+          },
           experiment_id: {
             title: "The experiment id the endpoint files the data under.",
             type: "string",
           },
           filename_prefix: { type: "string" },
+          stream: {
+            title: "Also send each step's row to DataPipe as it is recorded.",
+            description:
+              "A participant who leaves partway then still leaves a partial file, which DataPipe " +
+              "keeps. Only for uploaded data, and only when every ending keeps all of it.",
+            type: "boolean",
+          },
         },
         additionalProperties: false,
         allOf: [
@@ -521,6 +531,13 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             then: {
               title: "Uploading needs an experiment id from the service receiving the data.",
               required: ["experiment_id"],
+            },
+          },
+          {
+            if: { properties: { stream: { const: true } }, required: ["stream"] },
+            then: {
+              title: "Saving data as it goes needs it uploaded to DataPipe.",
+              properties: { save: { const: "post" } },
             },
           },
         ],

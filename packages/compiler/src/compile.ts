@@ -9,7 +9,13 @@ import {
   isMediaType,
 } from "./assets.ts";
 import { compileAccuracyPredicate, compileBranchPredicate } from "./conditions.ts";
-import { compileParticipantProperties, UPLOAD_HELPERS } from "./data.ts";
+import {
+  compileParticipantProperties,
+  compileStreaming,
+  DATA_PIPE,
+  savesAsItGoes,
+  UPLOAD_HELPERS,
+} from "./data.ts";
 import { compileCompletion, compileEndStep } from "./endings.ts";
 import { dataColumns, reservedLinkColumns } from "./metadata.ts";
 import { idParamOf, needsParticipantId } from "./recruitment.ts";
@@ -25,7 +31,7 @@ import { WAS_EXCLUDED, compileExcludingPlugin, excludingIdentifier } from "./exc
 import { RECORDING_HELPERS, usesRecordings } from "./recordings.ts";
 import {
   EYE_TRACKER,
-  EYE_TRACKER_SETTING,
+  EYE_TRACKER_EXTENSION,
   eyeTrackerSetup,
   gazeExtension,
   tracksGaze,
@@ -343,14 +349,24 @@ const SETTING_KEYS = [
   "progress_bar_message",
 ] as const;
 
-function initOptions(spec: Spec, eyeTracking: boolean, extra: string | undefined) {
+function initOptions(spec: Spec, extensions: string[], extra: string | undefined) {
   const entries = SETTING_KEYS.filter((key) => spec.settings?.[key] !== undefined).map(
     (key) => `${key}: ${literal(spec.settings![key])}`,
   );
   if ((spec.assets ?? []).length > 0) entries.push(NAME_FILES_IN_DATA);
-  if (eyeTracking) entries.push(EYE_TRACKER_SETTING);
+  if (extensions.length > 0) entries.push(`extensions: [${extensions.join(", ")}]`);
   if (extra) entries.push(extra);
   return entries.length > 0 ? `{ ${entries.join(", ")} }` : "";
+}
+
+function extensionOf(spec: Spec, bundle: SchemaBundle, name: string) {
+  const extension = bundle.extensions[name];
+  if (!extension) {
+    throw new SpecError(spec.name, [
+      { message: `the schema bundle has no entry for extension "${name}"` },
+    ]);
+  }
+  return extension;
 }
 
 export function compileSpec(
@@ -395,33 +411,42 @@ export function compileSpec(
       return [plugin, { name: schema.package, version: schema.version }];
     }),
   );
-  const eyeTracking = usesEyeTracking(spec);
-  const eyeTracker = eyeTracking ? bundle.extensions[EYE_TRACKER] : undefined;
-  if (eyeTracking && !eyeTracker) {
-    throw new SpecError(spec.name, [
-      { message: `the schema bundle has no entry for extension "${EYE_TRACKER}"` },
-    ]);
-  }
-  const scripts = eyeTracker
-    ? [
-        ...eyeTracker.libraries,
-        { package: eyeTracker.package, version: eyeTracker.version, file: BROWSER_BUNDLE },
-      ]
-    : [];
+  const eyeTracker = usesEyeTracking(spec) ? extensionOf(spec, bundle, EYE_TRACKER) : undefined;
+  const dataPipe = savesAsItGoes(spec) ? extensionOf(spec, bundle, DATA_PIPE) : undefined;
+  const streaming = dataPipe && compileStreaming(spec.data!, spec.name);
+  const scripts = [
+    ...(eyeTracker?.libraries ?? []),
+    ...[eyeTracker, dataPipe]
+      .filter((extension) => extension !== undefined)
+      .map((extension) => ({
+        package: extension.package,
+        version: extension.version,
+        file: BROWSER_BUNDLE,
+      })),
+  ];
+  const extensions = [
+    ...(eyeTracker ? [EYE_TRACKER_EXTENSION] : []),
+    ...(streaming ? [streaming.extension] : []),
+  ];
   const columns = dataColumns(spec, [
     // Every plugin has a schema by now: one without stopped the compile above.
     ...[...plugins].flatMap((plugin) => bundle.plugins[plugin].records),
     ...(eyeTracker && tracksGaze(spec) ? eyeTracker.records : []),
   ]);
+  const uploads = spec.data?.save === "post";
+  const recordings = uploads && usesRecordings(spec);
   const source =
     (eyeTracker ? `${eyeTrackerSetup(eyeTracker.libraries[0].package)}\n\n` : "") +
-    `const jsPsych = initJsPsych(${initOptions(spec, eyeTracking, options.initEntries)});\n\n` +
+    (streaming ? `${streaming.declaration}\n` : "") +
+    `const jsPsych = initJsPsych(${initOptions(spec, extensions, options.initEntries)});\n\n` +
     (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
-    (spec.data?.save === "post" ? `${UPLOAD_HELPERS}\n` : "") +
-    (spec.data?.save === "post" && usesRecordings(spec) ? `${RECORDING_HELPERS}\n` : "") +
+    // The DataPipe extension uploads the data itself, so a study that saves as it goes posts only
+    // its recordings.
+    (uploads && (!streaming || recordings) ? `${UPLOAD_HELPERS}\n` : "") +
+    (recordings ? `${RECORDING_HELPERS}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({
           experimentName: spec.name,

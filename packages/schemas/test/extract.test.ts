@@ -232,6 +232,16 @@ describe("extractExtensions", () => {
     expect(webgazer.libraries[0].version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
+  it("names the DataPipe extension, which adds no columns and needs nothing loaded first", async () => {
+    const { pipe } = await extractExtensions(["@jspsych/extension-pipe"]);
+    expect(pipe).toMatchObject({
+      extension: "pipe",
+      package: "@jspsych/extension-pipe",
+      records: [],
+      libraries: [],
+    });
+  });
+
   it("refuses a package that exports no extension", async () => {
     await expect(extractExtensions(["jspsych"])).rejects.toThrow(
       /jspsych exports no class with a static `info`/,
@@ -243,7 +253,7 @@ describe("extractBundle", () => {
   it("bundles the plugins asked for with every installed extension", async () => {
     const { bundle } = await extractBundle(["@jspsych/plugin-html-keyboard-response"]);
     expect(Object.keys(bundle.plugins)).toEqual(["html-keyboard-response"]);
-    expect(Object.keys(bundle.extensions)).toEqual(["webgazer"]);
+    expect(Object.keys(bundle.extensions)).toEqual(["pipe", "webgazer"]);
     expect(bundle.families).toEqual(PLUGIN_FAMILIES);
   });
 });

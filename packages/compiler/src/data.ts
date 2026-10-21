@@ -1,6 +1,8 @@
 import { literal } from "./emit.ts";
-import { PARTICIPANT_PLACEHOLDER } from "./recruitment.ts";
-import type { DataSettings, Ending } from "./types.ts";
+import { extensionIdentifier } from "./identifiers.ts";
+import { endingNames, endingOf, PARTICIPANT_PLACEHOLDER, retentionOf } from "./recruitment.ts";
+import type { DataSettings, Ending, Spec } from "./types.ts";
+import type { Problem } from "./validate.ts";
 
 export const DATAPIPE_URL = "https://pipe.jspsych.org";
 
@@ -37,8 +39,14 @@ async function postToDataPipe(url, body) {
 `;
 
 function savingScreen(message: string) {
-  return `jsPsych.getDisplayElement().innerHTML = ${literal(`<p>${message}</p>`)};`;
+  return showOnScreen(`<p>${message}</p>`);
 }
+
+function showOnScreen(html: string) {
+  return `jsPsych.getDisplayElement().innerHTML = ${literal(html)};`;
+}
+
+const SAVING_MESSAGE = "Saving your data, please do not close this window.";
 
 function urlExpression(template: string) {
   const pieces = template
@@ -59,14 +67,28 @@ function showMessage(message: string) {
   return `jsPsych.abortExperiment(${literal(message)});`;
 }
 
+/**
+ * How a saved study ends while its timeline still runs, as an upload step ends it, or once the
+ * timeline has stopped, as it has by the time a study that saves as it goes hears its data arrived.
+ */
+interface Finish {
+  /** Leaves the ending's message on screen. */
+  show: (message: string) => string;
+  /** Carries on once a study with no ending of its own is saved. */
+  carryOn: string;
+}
+
+const FINISH_WHILE_RUNNING: Finish = { show: showMessage, carryOn: "done();" };
+const FINISH_AFTER_TIMELINE: Finish = { show: showOnScreen, carryOn: "" };
+
 /** How the upload step ends: with the participant staying, or being sent back to a platform. */
-function uploadEnding(ending: Ending | undefined) {
+function uploadEnding(ending: Ending | undefined, finish: Finish = FINISH_WHILE_RUNNING) {
   if (ending?.message) {
     return {
       declaration: "",
       saved: "",
       failed: literal(UPLOAD_FAILED + ending.message),
-      finish: showMessage(ending.message),
+      finish: finish.show(ending.message),
     };
   }
   if (!ending?.url) {
@@ -74,7 +96,7 @@ function uploadEnding(ending: Ending | undefined) {
       declaration: "",
       saved: savingScreen("Your data has been saved. Thank you!"),
       failed: literal(UPLOAD_FAILED),
-      finish: "done();",
+      finish: finish.carryOn,
     };
   }
   const href = `completionUrl.replace(/&/g, "&amp;").replace(/"/g, "&quot;")`;
@@ -95,6 +117,17 @@ function withoutTrailingSlashes(url: string) {
   return url.slice(0, end);
 }
 
+function dataPipeAddress(settings: DataSettings) {
+  return withoutTrailingSlashes(settings.endpoint ?? DATAPIPE_URL);
+}
+
+// DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
+function recordingsUpload(settings: DataSettings, rows: string, recordings: boolean) {
+  if (!recordings) return "";
+  const endpoint = literal(`${dataPipeAddress(settings)}/api/base64/`);
+  return `await uploadRecordings(${rows}, filename, ${endpoint}, ${literal(settings.experiment_id ?? "")});`;
+}
+
 // Losing a participant's data because an upload failed is unrecoverable, so a failed upload falls
 // back to a download rather than ending the experiment as if the data had been stored.
 function uploadStep(
@@ -104,16 +137,12 @@ function uploadStep(
   rows: string,
   recordings: boolean,
 ) {
-  const base = withoutTrailingSlashes(settings.endpoint ?? DATAPIPE_URL);
-  const endpoint = `${base}/api/data/`;
-  // DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
-  const saveRecordings = recordings
-    ? `await uploadRecordings(${rows}, filename, ${literal(`${base}/api/base64/`)}, ${literal(settings.experiment_id ?? "")});`
-    : "";
+  const endpoint = `${dataPipeAddress(settings)}/api/data/`;
+  const saveRecordings = recordingsUpload(settings, rows, recordings);
   const ending = uploadEnding(studyEnding);
   // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
   return `async (done) => {
-    ${savingScreen("Saving your data, please do not close this window.")}
+    ${savingScreen(SAVING_MESSAGE)}
     const filename = ${filename};
     ${ending.declaration}
     try {
@@ -134,6 +163,95 @@ function uploadStep(
     }
     ${ending.finish}
   }`;
+}
+
+/** What a study that saves as it goes runs once DataPipe has answered its final upload. */
+const AFTER_SAVING = "afterSaving";
+
+// The DataPipe extension uploads everything once the timeline has stopped, so this step only
+// readies what comes after: it uploads the recordings, says how the study ends, and stops it.
+// Nothing is passed to abortExperiment, since jsPsych would write that message over the screen
+// saying whether the data arrived.
+function streamingStep(
+  settings: DataSettings,
+  filename: string,
+  studyEnding: Ending | undefined,
+  rows: string,
+  recordings: boolean,
+) {
+  return `async () => {
+    ${savingScreen(SAVING_MESSAGE)}
+    const filename = ${filename};
+    ${recordingsUpload(settings, rows, recordings)}
+    ${AFTER_SAVING} = ${afterSaving("filename", studyEnding, rows)};
+    jsPsych.abortExperiment();
+  }`;
+}
+
+function afterSaving(filename: string, studyEnding: Ending | undefined, rows: string) {
+  const ending = uploadEnding(studyEnding, FINISH_AFTER_TIMELINE);
+  return `(saved) => {
+    ${ending.declaration}
+    if (!saved) {
+      ${rows}.localSave("csv", ${filename});
+      jsPsych.getDisplayElement().innerHTML = ${ending.failed};
+      return;
+    }
+    ${ending.saved}
+    ${ending.finish}
+  }`;
+}
+
+function participantFilename(settings: DataSettings, experimentName: string) {
+  const prefix = settings.filename_prefix ?? experimentName;
+  return `${literal(prefix)} + "_" + ${PARTICIPANT_ID} + ".csv"`;
+}
+
+/** Whether the study sends each row to DataPipe as it is recorded, as well as all of them at the end. */
+export function savesAsItGoes(spec: Spec) {
+  return spec.data?.save === "post" && spec.data.stream === true;
+}
+
+/** The extension, as the schema bundle names it, that sends each row to DataPipe as it goes. */
+export const DATA_PIPE = "pipe";
+
+/**
+ * Readies the DataPipe extension: what it is told, and what happens once it has uploaded. Every
+ * step that ends the study says how it ends; should the timeline stop some other way, the study
+ * ends as one with no ending of its own does.
+ */
+export function compileStreaming(settings: DataSettings, experimentName: string) {
+  const filename = participantFilename(settings, experimentName);
+  const params = [
+    `experiment_id: ${literal(settings.experiment_id ?? "")}`,
+    `filename: () => ${filename}`,
+    ...(settings.endpoint ? [`base_url: ${literal(dataPipeAddress(settings))}`] : []),
+    `wait_message: ${literal(`<p>${SAVING_MESSAGE}</p>`)}`,
+    `on_save: (result) => ${AFTER_SAVING}(result.ok)`,
+  ];
+  return {
+    declaration: `let ${AFTER_SAVING} = ${afterSaving(filename, undefined, ALL_ROWS)};\n`,
+    extension: `{ type: ${extensionIdentifier(DATA_PIPE)}, params: { ${params.join(", ")} } }`,
+  };
+}
+
+// Rows already sent cannot be called back, so no ending may keep less than all of them.
+export function streamingProblems(spec: Spec): Problem[] {
+  const stream: unknown = spec.data?.stream;
+  if (stream === undefined || stream === false) return [];
+  if (stream !== true) {
+    return [{ message: `saving data as it goes is true or false, not ${JSON.stringify(stream)}` }];
+  }
+  if (spec.data?.save !== "post") {
+    return [{ message: "saving data as it goes needs data uploaded to DataPipe" }];
+  }
+  return endingNames(spec.recruitment)
+    .filter((name) => retentionOf(endingOf(spec.recruitment, name)) !== "all")
+    .map((name) => ({
+      message:
+        `the "${name}" ending keeps less than all the data, but data saved as it goes has ` +
+        "already been sent; keep all of it, or save the data only at the end",
+    }));
 }
 
 function downloadStep(filename: string, ending: Ending | undefined, rows: string) {
@@ -157,11 +275,11 @@ export function compileDataStep(
   rows = ALL_ROWS,
   recordings = false,
 ) {
-  const prefix = settings.filename_prefix ?? experimentName;
-  const filename = `${literal(prefix)} + "_" + ${PARTICIPANT_ID} + ".csv"`;
+  const filename = participantFilename(settings, experimentName);
+  const upload = settings.stream ? streamingStep : uploadStep;
   const func =
     settings.save === "post"
-      ? uploadStep(settings, filename, ending, rows, recordings)
+      ? upload(settings, filename, ending, rows, recordings)
       : downloadStep(filename, ending, rows);
   return {
     plugin: CALL_FUNCTION_PLUGIN,

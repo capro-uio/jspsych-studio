@@ -271,15 +271,23 @@ describe("the notice of what a download carries", () => {
 
 describe("the scripts and stylesheets Tachisto can carry in a page", () => {
   const nodeModules = join(import.meta.dirname, "..", "..", "..", "node_modules");
+  const dataPipe = "@jspsych/extension-pipe/dist/index.browser.min.js";
   const pageFiles = Object.entries(schemas.packages).flatMap(([name, { files }]) =>
     Object.keys(files)
       .filter((path) => /\.(js|css)$/.test(path) && !path.includes("/mediapipe/"))
-      .map((path) => `${name}/${path}`),
+      .map((path) => `${name}/${path}`)
+      .filter((key) => key !== dataPipe),
   );
 
   // A new release that spelled one of these would stop single-page downloads; this says so first.
   it.each(pageFiles)("%s can be written into a page as it is", (key) => {
     const element = key.endsWith(".css") ? "style" : "script";
     expect(breaksOut(readFileSync(join(nodeModules, key), "utf8"), element)).toBeNull();
+  });
+
+  // A study that saves as it goes is refused a single page for this; once a release no longer
+  // spells it, that refusal can go.
+  it("leaves out the DataPipe extension, whose Firebase builds a script tag", () => {
+    expect(breaksOut(readFileSync(join(nodeModules, dataPipe), "utf8"), "script")).toBe("<script");
   });
 });

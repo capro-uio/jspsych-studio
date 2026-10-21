@@ -58,15 +58,25 @@ export function filesLoadedWhileRunning(result: CompileResult) {
   return result.files.filter((file) => !named.has(packageFileKey(file)));
 }
 
+// The Firebase inside the DataPipe extension builds "<script" into a string, which a page cannot
+// hold inside a script element, so the extension is only ever loaded from a file.
+const DATA_PIPE_PACKAGE = "@jspsych/extension-pipe";
+
 /**
  * Refuses a study that loads files while it runs, such as the eye tracker's model, since a page
- * carrying its scripts inside it has no folder for them. Asked before gathering any copies, so
- * nobody waits for files that would only be thrown away.
+ * carrying its scripts inside it has no folder for them, or one that saves its data as it goes.
+ * Asked before gathering any copies, so nobody waits for files that would only be thrown away.
  */
 export function assertFitsInOnePage(result: CompileResult) {
   if (filesLoadedWhileRunning(result).length > 0) {
     throw new Error(
       "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
+        "carried in one page; download the project folder instead",
+    );
+  }
+  if (result.scripts.some((script) => script.package === DATA_PIPE_PACKAGE)) {
+    throw new Error(
+      "this study saves its data as it goes, and the DataPipe extension that does it cannot be " +
         "carried in one page; download the project folder instead",
     );
   }

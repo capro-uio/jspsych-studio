@@ -245,6 +245,19 @@ describe("the validator and the spec schema agree", () => {
     );
   });
 
+  it("on which studies can save their data as they go", () => {
+    agreeOn(
+      [
+        [{ save: "post", experiment_id: "abc", stream: true }, true],
+        [{ save: "post", experiment_id: "abc", stream: false }, true],
+        [{ save: "download", stream: false }, true],
+        [{ save: "download", stream: true }, false],
+        [{ save: "post", experiment_id: "abc", stream: "yes" }, false],
+      ],
+      (data) => study([practice], { data: data as Spec["data"] }),
+    );
+  });
+
   it("on the columns a study writes itself", () => {
     agreeOn(
       [["word_shown", true], ...STUDY_COLUMNS.map((column): [string, boolean] => [column, false])],

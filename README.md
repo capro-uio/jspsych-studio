@@ -103,6 +103,26 @@ do, and only works with `"save": "post"`. With data downloaded, only random orde
 Set the experiment's number of conditions on DataPipe to the number of orders the builder shows:
 as many as there are tasks, or twice that for an odd number of tasks.
 
+## Saving data as it goes
+
+A study that uploads its data sends it all to [DataPipe](https://pipe.jspsych.org) once, at the
+end, gzipped. `endpoint` points it at a DataPipe you host yourself instead of pipe.jspsych.org.
+With `"stream": true` it also sends each step's row as soon as it is recorded, through jsPsych's
+[DataPipe extension](https://www.jspsych.org/latest/extensions/pipe), so a participant who closes
+the page partway still leaves a partial file (`.partial.json`) on DataPipe:
+
+```json
+"data": { "save": "post", "experiment_id": "abc123DEF456", "stream": true }
+```
+
+It is off unless asked for. A participant who withdraws by closing the page leaves their partial
+data behind, recordings included, so the consent form has to say that data from an unfinished
+session is kept. Rows already sent cannot be called back, so a study that saves as it goes cannot
+have an ending that keeps less than everything. The full upload at the end still falls back to a
+download if it fails, and a participant is only sent back to a platform once it has arrived. The
+extension carries Firebase, about 240 KB, and cannot be written into a single-file download, so
+such a study is downloaded as a project folder. The builder's preview never loads it.
+
 ## Recruiting from a platform
 
 Prolific, SONA and CloudResearch Connect all pass the participant's id in the study URL and expect
@@ -208,7 +228,8 @@ participant's data to be discarded:
   for one. A balanced split that runs before the end step has still asked the data service for a
   group, which sends the experiment id and nothing about the participant.
 
-`complete` always keeps everything.
+`complete` always keeps everything, and so does every ending of a study that saves its data as it
+goes.
 
 A browser check can screen participants out on its own, by a minimum window size or a rule written
 as code. jsPsych would end the whole study there, unsaved and with no way back to the platform, so
@@ -280,8 +301,8 @@ frame has nothing of yours to send.
 - **Code is an option, not the route.** Authors may write code for any parameter, and must for the
   few that take a function, until a form can build that function for them.
 - **Generated forms.** No per-plugin UI code — ~115 plugins would bury a single maintainer.
-- **No backend.** Static tool. Results go to DataPipe or any compatible service, and a failed
-  upload falls back to a download so a participant's data is never lost silently. Balanced group
+- **No backend.** Static tool. Results go to DataPipe, at pipe.jspsych.org or self-hosted, and a
+  failed upload falls back to a download so a participant's data is never lost silently. Balanced group
   assignment and Latin-square task order ask that same service for the next participant's
   condition, since only it can count participants.
 - **Self-contained downloads.** Media is embedded in the project and in the exported file (files

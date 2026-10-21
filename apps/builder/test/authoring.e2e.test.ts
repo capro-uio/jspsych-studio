@@ -229,6 +229,38 @@ describe("choosing where data goes", () => {
 
     await page.close();
   }, 120_000);
+
+  it("saves each step as it goes only when asked, saying what that means for consent", async () => {
+    const page = await browser.newPage();
+    await page.goto(appUrl);
+    await addTrial(page, "html-keyboard-response", "slot-0");
+    await setFixed(page, "stimulus", "<p>hello</p>");
+
+    await openTab(page, "study");
+    await page.getByTestId("data-mode").selectOption("post");
+    await setText(page, "data-experiment-id", "abc123DEF456");
+    expect(await page.locator('label[for="data-endpoint"]').innerText()).toBe("DataPipe address");
+    expect(await page.getByTestId("data-stream").isChecked()).toBe(false);
+    expect(await page.getByTestId("data-stream-consent").count()).toBe(0);
+
+    await page.getByTestId("data-stream").check();
+    expect(await page.getByTestId("data-stream-consent").innerText()).toContain("consent form");
+    await page.getByTestId("view-spec").click();
+    expect((await authoredSpec(page)).data).toEqual({
+      save: "post",
+      experiment_id: "abc123DEF456",
+      stream: true,
+    });
+
+    await page.getByTestId("data-stream").uncheck();
+    expect(await page.getByTestId("data-stream-consent").count()).toBe(0);
+    await page.getByTestId("view-spec").click();
+    await expect
+      .poll(async () => (await authoredSpec(page)).data)
+      .toEqual({ save: "post", experiment_id: "abc123DEF456" });
+
+    await page.close();
+  }, 120_000);
 });
 
 describe("using an image file", () => {
