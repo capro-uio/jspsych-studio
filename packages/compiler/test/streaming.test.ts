@@ -20,6 +20,16 @@ const streaming = (data: Partial<DataSettings> = {}, extra: Partial<Spec> = {}):
   ...extra,
 });
 
+const recording = streaming(
+  {},
+  {
+    timeline: [
+      { kind: "trial", plugin: "initialize-microphone" },
+      { kind: "trial", plugin: "html-audio-response", params: { stimulus: "<p>say</p>" } },
+    ],
+  },
+);
+
 const PIPE_BUNDLE = "@jspsych/extension-pipe/dist/index.browser.min.js";
 
 describe("a study that saves its data as it goes", () => {
@@ -82,18 +92,7 @@ describe("a study that saves its data as it goes", () => {
   });
 
   it("still uploads each recording as a file of its own", () => {
-    const { source } = compileSpec(
-      streaming(
-        {},
-        {
-          timeline: [
-            { kind: "trial", plugin: "initialize-microphone" },
-            { kind: "trial", plugin: "html-audio-response", params: { stimulus: "<p>say</p>" } },
-          ],
-        },
-      ),
-      schemas,
-    );
+    const { source } = compileSpec(recording, schemas);
     expect(source).toContain("async function postToDataPipe(");
     expect(source).toContain(
       `await uploadRecordings(jsPsych.data.get(), filename, "${DATAPIPE_URL}/api/base64/"`,
@@ -121,9 +120,34 @@ describe("a study that saves its data as it goes", () => {
     );
   });
 
+  // Otherwise a recording that failed in an unforeseen way would leave the participant waiting
+  // on the saving screen, with nothing ever uploaded.
+  it("stops the study even when uploading a recording throws", () => {
+    const { source } = compileSpec(recording, schemas);
+    expect(source).toMatch(
+      /try \{\s*await uploadRecordings\([^;]*\);\s*\} finally \{\s*jsPsych\.abortExperiment\(\);\s*\}/,
+    );
+    expect(source.indexOf("afterSaving = (saved)")).toBeLessThan(
+      source.indexOf("await uploadRecordings("),
+    );
+  });
+
+  it("carries a Firebase credit beside the extension in a project folder", async () => {
+    const spec = streaming();
+    const copies = Object.fromEntries(
+      compileSpec(spec, schemas).files.map((file) => [packageFileKey(file), "copy"]),
+    );
+    const files = await projectFiles(spec, schemas, {
+      packageSources: () => Promise.resolve(copies),
+    });
+    expect(files["lib/THIRD-PARTY.md"]).toMatch(
+      /\| firebase \(inside @jspsych\/extension-pipe\) \| [\d.]+ \| Apache-2\.0 \| https:\/\/github\.com\/firebase\/firebase-js-sdk \|/,
+    );
+  });
+
   it("cannot be carried in one page, and points to the folder download", () => {
     expect(() => assertFitsInOnePage(compileSpec(streaming(), schemas))).toThrow(
-      /saves its data as it goes.*download the project folder instead/,
+      /extension-pipe\/dist\/index\.browser\.min\.js cannot be written into a page.*download the project folder instead/,
     );
   });
 

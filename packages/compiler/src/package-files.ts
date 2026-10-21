@@ -1,4 +1,4 @@
-import type { SchemaBundle } from "@tachisto/schemas";
+import type { PackageCredit, SchemaBundle } from "@tachisto/schemas";
 
 /** A file a study's page loads from a package, with the hash any copy of it must match. */
 export interface PackageFile {
@@ -12,6 +12,10 @@ export interface PackageFile {
   license: string;
   /** Where the package's source and full licence text are published. */
   source: string;
+  /** Packages built into the package's files, which a copy of them carries too. */
+  bundles?: PackageCredit[];
+  /** Set when the file holds text that would end the element a page writes it into. */
+  breaksOutOfPage?: true;
 }
 
 /** Where a package file goes in a download that carries its own copies: `<package>/<path>`. */
@@ -51,15 +55,26 @@ export function filesOfPackages(
       integrity,
       license: recorded.license,
       source: recorded.source,
+      ...(recorded.bundles && { bundles: recorded.bundles }),
+      ...(recorded.breaksOutOfPage?.includes(path) && { breaksOutOfPage: true as const }),
     }));
   });
 }
 
-/** Each package among the files, once, in the order they first appear. */
-function packagesAmong(files: PackageFile[]) {
+/**
+ * Each package among the files, once, in the order they first appear, each followed by any
+ * package built into its files, named as inside it.
+ */
+function packagesAmong(files: PackageFile[]): PackageCredit[] {
   const seen = new Map<string, PackageFile>();
   for (const file of files) if (!seen.has(file.package)) seen.set(file.package, file);
-  return [...seen.values()];
+  return [...seen.values()].flatMap((file) => [
+    file,
+    ...(file.bundles ?? []).map((bundled) => ({
+      ...bundled,
+      package: `${bundled.package} (inside ${file.package})`,
+    })),
+  ]);
 }
 
 // A bar inside a cell would end it and shift every cell after it, and a backslash before a bar
@@ -69,7 +84,7 @@ const tableCell = (text: string) => text.replace(/\\/g, "\\\\").replace(/\|/g, "
 /**
  * What a download that carries copies of these packages owes their authors: which packages they
  * are, the licence each is used under, and where its source and full licence text are, as the
- * MIT and GPL licences ask of anyone handing on a copy.
+ * MIT, GPL and Apache licences ask of anyone handing on a copy.
  */
 export function thirdPartyNotice(files: PackageFile[]) {
   const rows = packagesAmong(files).map(

@@ -413,7 +413,7 @@ export function compileSpec(
   );
   const eyeTracker = usesEyeTracking(spec) ? extensionOf(spec, bundle, EYE_TRACKER) : undefined;
   const dataPipe = savesAsItGoes(spec) ? extensionOf(spec, bundle, DATA_PIPE) : undefined;
-  const streaming = dataPipe && compileStreaming(spec.data!, spec.name);
+  const streaming = savesAsItGoes(spec) ? compileStreaming(spec.data, spec.name) : undefined;
   const scripts = [
     ...(eyeTracker?.libraries ?? []),
     ...[eyeTracker, dataPipe]
@@ -445,7 +445,7 @@ export function compileSpec(
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
     // The DataPipe extension uploads the data itself, so a study that saves as it goes posts only
     // its recordings.
-    (uploads && (!streaming || recordings) ? `${UPLOAD_HELPERS}\n` : "") +
+    ((uploads && !streaming) || recordings ? `${UPLOAD_HELPERS}\n` : "") +
     (recordings ? `${RECORDING_HELPERS}\n` : "") +
     (needsParticipantId(spec)
       ? `${compileParticipantProperties({

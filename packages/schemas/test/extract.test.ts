@@ -388,6 +388,36 @@ describe("packageFiles", () => {
     });
   });
 
+  it("credits the packages built into a package's files, such as the DataPipe extension's Firebase", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    expect(pipe.bundles).toEqual([
+      expect.objectContaining({
+        package: "firebase",
+        license: "Apache-2.0",
+        source: "https://github.com/firebase/firebase-js-sdk",
+      }),
+    ]);
+    expect((await packageFiles("jspsych", [JSPSYCH_STYLESHEET])).bundles).toBeUndefined();
+  });
+
+  it("records which scripts and stylesheets a page cannot write in as they are", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    expect(pipe.breaksOutOfPage).toEqual([BROWSER_BUNDLE]);
+    const jspsych = await packageFiles("jspsych", [BROWSER_BUNDLE, JSPSYCH_STYLESHEET]);
+    expect(jspsych.breaksOutOfPage).toBeUndefined();
+  });
+
+  // The installed Firebase is the one credited, so it has to be the release built into the file.
+  it("credits the Firebase release the DataPipe extension's file is built from", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    const nodeModules = new URL("../../../node_modules/", import.meta.url);
+    const bundle = readFileSync(
+      new URL(`@jspsych/extension-pipe/${BROWSER_BUNDLE}`, nodeModules),
+      "utf8",
+    );
+    expect(bundle).toContain(`"${pipe.bundles![0].version}"`);
+  });
+
   it("refuses a file the package does not have", async () => {
     await expect(packageFiles("jspsych", ["dist/not-there.js"])).rejects.toThrow(/not-there/);
   });

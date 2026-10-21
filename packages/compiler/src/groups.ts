@@ -1,5 +1,5 @@
 import { literal } from "./emit.ts";
-import { DATAPIPE_URL } from "./data.ts";
+import { dataPipeAddress } from "./data.ts";
 import type { AssignNode, CheckpointNode, DataSettings } from "./types.ts";
 
 export const GROUP_VARIABLE = "assignedGroup";
@@ -53,7 +53,7 @@ export function compileAssignmentStep(node: AssignNode, data: DataSettings | und
  * usable number comes back.
  */
 export function requestCondition(data: DataSettings | undefined, chosen: string, fallback: string) {
-  const endpoint = `${(data?.endpoint ?? DATAPIPE_URL).replace(/\/+$/, "")}/api/condition/`;
+  const endpoint = `${dataPipeAddress(data)}/api/condition/`;
   return `try {
       const response = await fetch(${literal(endpoint)}, {
         method: "POST",
