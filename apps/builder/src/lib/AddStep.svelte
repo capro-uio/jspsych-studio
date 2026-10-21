@@ -185,7 +185,7 @@
     align-items: center;
     gap: var(--space-2);
     min-height: 2rem;
-    margin: var(--space-1) 0;
+    margin: var(--space-3) 0 var(--space-1);
     padding: var(--space-1) var(--space-3) var(--space-1) var(--space-2);
     border: 1px dashed var(--line-strong);
     color: var(--stimulus-text);
@@ -214,6 +214,7 @@
     background: var(--stimulus-fill);
     color: var(--on-stimulus);
     min-height: 2.5rem;
+    margin-top: var(--space-1);
     padding-inline: var(--space-3) var(--space-4);
     font-size: 0.95rem;
   }
