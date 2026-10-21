@@ -38,9 +38,8 @@ async function downloaded(page: Page, click: () => Promise<void>) {
 const images = (svg: string) => svg.match(/<image /g) ?? [];
 
 describe("the Figures view", () => {
-  it("shows the flow and each block, and downloads a block pictured as the participant sees it", async () => {
+  it("shows each block, and downloads one pictured as the participant sees it", async () => {
     const page = await openFigures("stroop");
-    await page.getByTestId("figure-flow").waitFor();
     const block = page.getByTestId("figure-2");
     expect(await block.locator("h3").innerText()).toBe("Block · stroop_trials");
     expect(await block.getByTestId("figure-preview").getAttribute("data-pictured")).toBe("false");
@@ -103,13 +102,16 @@ describe("the Figures view", () => {
     await page.close();
   }, 150_000);
 
-  it("downloads the flow as a figure", async () => {
+  it("leaves the flow to the Flow view, whose download follows the format chosen here", async () => {
     const page = await openFigures("flanker");
-    const { name, body } = await downloaded(page, () =>
-      page.getByTestId("figure-flow-download").click(),
-    );
-    expect(name).toMatch(/-flow\.svg$/);
-    expect(body.toString()).toContain("block · flanker_trials");
+    expect(await page.getByTestId("figure-flow").count()).toBe(0);
+    await page.getByTestId("figures-format").selectOption("png");
+    await page.getByTestId("view-flow").click();
+    const button = page.getByTestId("download-flow-svg");
+    expect(await button.innerText()).toBe("Download as PNG");
+    const { name, body } = await downloaded(page, () => button.click());
+    expect(name).toMatch(/-flow\.png$/);
+    expect(body.subarray(1, 4).toString()).toBe("PNG");
     await page.close();
   }, 120_000);
 

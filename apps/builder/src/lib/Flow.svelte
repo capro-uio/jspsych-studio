@@ -9,9 +9,11 @@
     textX,
     type FlowBox,
   } from "./flow.ts";
-  import { download, specFilename } from "./files.ts";
-  import { studyFlowFigure } from "./flow-figure.ts";
-  import { project } from "./project.svelte.ts";
+  import { figureChoices } from "./figure-choices.svelte.ts";
+  import { saveFigure } from "./figure-download.ts";
+  import { specFilename } from "./files.ts";
+  import { flowFigure } from "./flow-figure.ts";
+  import { exportedSpec, project } from "./project.svelte.ts";
   import { ui } from "./ui.svelte.ts";
 
   const layout = $derived(layoutFlow(project.spec));
@@ -29,11 +31,15 @@
     select(box);
   }
 
-  function downloadFigure() {
-    download(
-      `${specFilename(project.spec)}-flow.svg`,
-      studyFlowFigure(project.spec, layout),
-      "image/svg+xml",
+  let downloadError = $state("");
+
+  // Made at the size and in the format chosen in the Figures view, like every other figure.
+  async function downloadFigure() {
+    downloadError = "";
+    const spec = $state.snapshot(exportedSpec());
+    const { svg, pixelWidth } = flowFigure(spec, figureChoices.size);
+    await saveFigure(`${specFilename(spec)}-flow`, svg, pixelWidth, figureChoices.format).catch(
+      (error: Error) => (downloadError = `The figure could not be made: ${error.message}`),
     );
   }
 </script>
@@ -44,10 +50,14 @@
     <button
       type="button"
       onclick={downloadFigure}
-      title="An SVG for a paper or poster, in print colours"
-      data-testid="download-flow-svg">Download as SVG</button
+      title="For a paper or poster, made at the size and in the format chosen under Figures"
+      data-testid="download-flow-svg"
+      >Download as {figureChoices.format === "svg" ? "SVG" : "PNG"}</button
     >
   </div>
+  {#if downloadError}
+    <p class="error" role="alert">{downloadError}</p>
+  {/if}
   <svg
     width={layout.width}
     height={layout.height}
@@ -162,6 +172,11 @@
   .bar button {
     flex: none;
     font-size: 0.78rem;
+  }
+  .error {
+    margin: 0 0 0.3rem;
+    font-size: 0.78rem;
+    color: var(--danger);
   }
   .hint {
     margin: 0;
