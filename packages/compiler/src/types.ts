@@ -147,11 +147,16 @@ export interface Slot {
 export interface DataSettings {
   /** `"download"` saves a CSV on the participant's machine, `"post"` uploads it. */
   save: "download" | "post";
-  /** Upload target; defaults to DataPipe. */
+  /** The address of the DataPipe to upload to; defaults to pipe.jspsych.org. */
   endpoint?: string;
   /** The experiment id the endpoint files the data under. */
   experiment_id?: string;
   filename_prefix?: string;
+  /**
+   * Also send each step's row to DataPipe as it is recorded, so a participant who leaves partway
+   * still leaves a partial file. Only with `"post"`, and only when every ending keeps all the data.
+   */
+  stream?: boolean;
 }
 
 export type RecruitmentPlatform = "prolific" | "sona" | "connect" | "custom";

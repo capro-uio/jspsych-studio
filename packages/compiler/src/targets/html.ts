@@ -1,6 +1,11 @@
 import { escapeHtmlText } from "../emit.ts";
 import { PACKAGE_ATTRIBUTE } from "../gaze.ts";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET } from "@tachisto/schemas/files";
+import {
+  BROWSER_BUNDLE,
+  JSPSYCH_STYLESHEET,
+  breaksOut,
+  type Element,
+} from "@tachisto/schemas/files";
 import { cdnUrl, packageFileKey, thirdPartyComment } from "../package-files.ts";
 import { generatorLabel } from "../metadata.ts";
 import { formatSource } from "../format.ts";
@@ -60,8 +65,9 @@ export function filesLoadedWhileRunning(result: CompileResult) {
 
 /**
  * Refuses a study that loads files while it runs, such as the eye tracker's model, since a page
- * carrying its scripts inside it has no folder for them. Asked before gathering any copies, so
- * nobody waits for files that would only be thrown away.
+ * carrying its scripts inside it has no folder for them, or one that loads a file that would break
+ * out of the element written around it, such as the DataPipe extension, which carries Firebase.
+ * Asked before gathering any copies, so nobody waits for files that would only be thrown away.
  */
 export function assertFitsInOnePage(result: CompileResult) {
   if (filesLoadedWhileRunning(result).length > 0) {
@@ -70,21 +76,16 @@ export function assertFitsInOnePage(result: CompileResult) {
         "carried in one page; download the project folder instead",
     );
   }
+  const unwritable = result.files.filter((file) => file.breaksOutOfPage);
+  if (unwritable.length > 0) {
+    throw new Error(
+      `${unwritable.map(packageFileKey).join(", ")} cannot be written into a page as it is, so ` +
+        "this study cannot be carried in one page; download the project folder instead",
+    );
+  }
 }
 
-// Text inside an element can end it, or for a script change how the rest is read: a script
-// element ends at "</script", and "<!--" or "<script" inside one shift the browser into reading
-// it differently; a style element ends at "</style". Rewriting these could change what a file
-// does, so a file that holds one is refused instead. Other tags are only text there, such as the
-// "</style>" several jsPsych plugins build into their own markup.
-const BREAKS_OUT = { script: /<\/script|<script|<!--/i, style: /<\/style/i };
-
-export type Element = keyof typeof BREAKS_OUT;
-
-/** What in a file would break out of the element it is written into, if anything. */
-export function breaksOut(text: string, element: Element) {
-  return BREAKS_OUT[element].exec(text)?.[0] ?? null;
-}
+export { breaksOut, type Element };
 
 function insideElement(text: string, element: Element, key: string) {
   const found = breaksOut(text, element);

@@ -6,6 +6,7 @@ export type {
   ExtensionSchema,
   ExtractionReport,
   Library,
+  PackageCredit,
   PackageFiles,
   ParameterSchema,
   ParameterTypeName,

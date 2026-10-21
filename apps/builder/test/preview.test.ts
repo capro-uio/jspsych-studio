@@ -1,7 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "@tachisto/compiler";
 import type { Spec } from "@tachisto/compiler";
-import { isStepId, readStepEvent, tracedPreview, type PreviewOptions } from "../src/lib/preview.ts";
+import {
+  compilePreview,
+  isStepId,
+  previewPage,
+  readStepEvent,
+  TRACE_HOOKS,
+  tracedPreview,
+  type PreviewOptions,
+} from "../src/lib/preview.ts";
 import { schemas } from "../src/lib/schemas.ts";
 
 const previewSpec = (spec: Spec, options?: PreviewOptions) => tracedPreview(spec, options).spec;
@@ -49,6 +57,17 @@ describe("what the preview runs", () => {
   it("never saves data, however the experiment is set up", () => {
     expect(previewSpec(spec).data).toBeUndefined();
     expect(previewSpec(spec, { from: [0] }).data).toBeUndefined();
+  });
+
+  it("never loads the DataPipe extension, so a study that saves as it goes sends nothing", async () => {
+    const streaming: Spec = {
+      ...spec,
+      data: { save: "post", experiment_id: "real", stream: true },
+    };
+    const compiled = compilePreview(tracedPreview(streaming), TRACE_HOOKS);
+    expect(compiled.scripts).toEqual([]);
+    expect(compiled.source).not.toContain("jsPsychExtensionPipe");
+    expect((await previewPage(compiled, "study")).html).not.toContain("extension-pipe");
   });
 
   // Redirecting needs uploaded data, so a preview that kept the hand-off would not even compile.

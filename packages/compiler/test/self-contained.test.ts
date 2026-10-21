@@ -9,7 +9,12 @@ import {
   thirdPartyNotice,
   type PackageFile,
 } from "../src/package-files.ts";
-import { breaksOut, emitHtml, filesLoadedWhileRunning } from "../src/targets/html.ts";
+import {
+  assertFitsInOnePage,
+  breaksOut,
+  emitHtml,
+  filesLoadedWhileRunning,
+} from "../src/targets/html.ts";
 import { projectFiles } from "../src/targets/project.ts";
 import type { Spec, SpecNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
@@ -252,6 +257,25 @@ describe("the notice of what a download carries", () => {
     expect(notice.match(/^\| b \|/gm)).toHaveLength(1);
   });
 
+  it("credits a package built into another's files, named as inside it", () => {
+    const firebase = {
+      package: "firebase",
+      version: "12.0.0",
+      license: "Apache-2.0",
+      source: "https://github.com/firebase/firebase-js-sdk",
+    };
+    const files = [{ ...file("a", "a.js"), bundles: [firebase] }, file("b", "b.js")];
+    const notice = thirdPartyNotice(files);
+    expect(notice).toContain(
+      "| a | 1.0.0 | MIT | https://example.org/a |\n" +
+        "| firebase (inside a) | 12.0.0 | Apache-2.0 | https://github.com/firebase/firebase-js-sdk |\n" +
+        "| b |",
+    );
+    expect(thirdPartyComment(files)).toContain(
+      "firebase (inside a) 12.0.0, Apache-2.0, https://github.com/firebase/firebase-js-sdk",
+    );
+  });
+
   it("keeps a bar in a package's details from breaking its row of the table", () => {
     const notice = thirdPartyNotice([{ ...file("a", "a.js"), license: "MIT|Apache" }]);
     expect(notice).toContain("| a | 1.0.0 | MIT\\|Apache | https://example.org/a |");
@@ -271,15 +295,33 @@ describe("the notice of what a download carries", () => {
 
 describe("the scripts and stylesheets Tachisto can carry in a page", () => {
   const nodeModules = join(import.meta.dirname, "..", "..", "..", "node_modules");
-  const pageFiles = Object.entries(schemas.packages).flatMap(([name, { files }]) =>
-    Object.keys(files)
-      .filter((path) => /\.(js|css)$/.test(path) && !path.includes("/mediapipe/"))
-      .map((path) => `${name}/${path}`),
-  );
+  const pageFiles = (writable: boolean) =>
+    Object.entries(schemas.packages).flatMap(([name, { files, breaksOutOfPage = [] }]) =>
+      Object.keys(files)
+        .filter((path) => /\.(js|css)$/.test(path) && !path.includes("/mediapipe/"))
+        .filter((path) => breaksOutOfPage.includes(path) !== writable)
+        .map((path) => `${name}/${path}`),
+    );
 
-  // A new release that spelled one of these would stop single-page downloads; this says so first.
-  it.each(pageFiles)("%s can be written into a page as it is", (key) => {
+  // Each file is checked when the bundle is built; this says so again from the installed copy.
+  it.each(pageFiles(true))("%s can be written into a page as it is", (key) => {
     const element = key.endsWith(".css") ? "style" : "script";
     expect(breaksOut(readFileSync(join(nodeModules, key), "utf8"), element)).toBeNull();
+  });
+
+  it("knows the DataPipe extension, whose Firebase builds a script tag, cannot be", () => {
+    expect(pageFiles(false)).toEqual(["@jspsych/extension-pipe/dist/index.browser.min.js"]);
+  });
+
+  it("refuses one page to a study that loads a file which cannot be written into it", () => {
+    const compiled = compileSpec(plain, schemas);
+    const [first, ...rest] = compiled.files;
+    expect(() =>
+      assertFitsInOnePage({
+        ...compiled,
+        files: [{ ...first, breaksOutOfPage: true }, ...rest],
+      }),
+    ).toThrow(/jspsych\/.* cannot be written into a page as it is.*download the project folder/);
+    expect(() => assertFitsInOnePage(compiled)).not.toThrow();
   });
 });

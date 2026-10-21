@@ -16,6 +16,12 @@
     if (value) project.spec.data[field] = value;
     else delete project.spec.data[field];
   }
+
+  function setStreaming(stream: boolean) {
+    if (!project.spec.data) return;
+    if (stream) project.spec.data.stream = true;
+    else delete project.spec.data.stream;
+  }
 </script>
 
 <section>
@@ -23,7 +29,7 @@
   <select data-testid="data-mode" value={mode} onchange={(e) => setMode(e.currentTarget.value)}>
     <option value="none">not saved anywhere</option>
     <option value="download">download a CSV to the participant's computer</option>
-    <option value="post">upload to DataPipe or another service</option>
+    <option value="post">upload to DataPipe</option>
   </select>
 
   {#if mode === "none"}
@@ -41,7 +47,7 @@
       value={project.spec.data?.experiment_id ?? ""}
       onchange={(e) => setField("experiment_id", e.currentTarget.value)}
     />
-    <label for="data-endpoint">Service</label>
+    <label for="data-endpoint">DataPipe address</label>
     <input
       id="data-endpoint"
       data-testid="data-endpoint"
@@ -53,6 +59,22 @@
       If the upload fails, the participant is asked to download the file and send it to you, so
       nothing is lost.
     </p>
+    <label class="check">
+      <input
+        type="checkbox"
+        data-testid="data-stream"
+        checked={project.spec.data?.stream === true}
+        onchange={(e) => setStreaming(e.currentTarget.checked)}
+      />
+      Save each step as it is recorded
+    </label>
+    {#if project.spec.data?.stream}
+      <p class="warn" data-testid="data-stream-consent">
+        A participant who closes the page partway, withdrawing included, still leaves a partial file
+        on DataPipe, recordings and all. Say so in your consent form. Every ending then keeps all
+        the data.
+      </p>
+    {/if}
     {#if records}
       <p class="muted" data-testid="data-recordings">
         Each recording is uploaded as a sound or video file of its own, and the data names it. Turn
@@ -80,6 +102,11 @@
   label {
     font-size: 0.85rem;
     color: var(--ink-muted);
+  }
+  .check {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
   }
   .muted,
   .warn {

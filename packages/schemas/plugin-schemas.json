@@ -6056,6 +6056,13 @@
     }
   },
   "extensions": {
+    "pipe": {
+      "extension": "pipe",
+      "package": "@jspsych/extension-pipe",
+      "version": "0.2.0",
+      "records": [],
+      "libraries": []
+    },
     "webgazer": {
       "extension": "webgazer",
       "package": "@jspsych/extension-webgazer",
@@ -6074,6 +6081,25 @@
     }
   },
   "packages": {
+    "@jspsych/extension-pipe": {
+      "version": "0.2.0",
+      "license": "MIT",
+      "source": "https://github.com/jspsych/jsPsych/tree/HEAD/packages/extension-pipe",
+      "files": {
+        "dist/index.browser.min.js": "sha384-ColAieV3R2q0n6eTKDskuqt/yOd9SkFNheqO3daEVgPt+yg0p49EuhCIrj1odqGh"
+      },
+      "bundles": [
+        {
+          "package": "firebase",
+          "version": "12.19.0",
+          "license": "Apache-2.0",
+          "source": "https://github.com/firebase/firebase-js-sdk"
+        }
+      ],
+      "breaksOutOfPage": [
+        "dist/index.browser.min.js"
+      ]
+    },
     "@jspsych/extension-webgazer": {
       "version": "1.2.0",
       "license": "MIT",

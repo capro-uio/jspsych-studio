@@ -206,6 +206,13 @@ export const EXTENSION_LIBRARIES: Record<string, { package: string; file: string
   "@jspsych/extension-webgazer": [{ package: "webgazer", file: "dist/webgazer.js" }],
 };
 
+// Packages built into another package's browser bundle, which a download carrying that bundle
+// carries too and has to credit. The DataPipe extension's bundle holds Firebase, which DataPipe
+// stages rows in.
+export const BUNDLED_PACKAGES: Record<string, string[]> = {
+  "@jspsych/extension-pipe": ["firebase"],
+};
+
 // Files a library fetches from beside its own script while it runs, which a page that carries its
 // own copies has to carry too. WebGazer's face mesh loads its model and either WebAssembly build.
 const FACE_MESH = "dist/mediapipe/face_mesh";

@@ -58,6 +58,16 @@ describe("capturePage", () => {
     expect(html).toContain("this.muted = true");
   });
 
+  it("never loads the DataPipe extension, so picturing a study that saves as it goes sends nothing", async () => {
+    const streaming: Spec = {
+      ...spec,
+      data: { save: "post", experiment_id: "real", stream: true },
+    };
+    const html = await capturePage(streaming, sequence);
+    expect(html).not.toContain("extension-pipe");
+    expect(html).not.toContain("jsPsychExtensionPipe");
+  });
+
   it("carries the picturing library and the hooks that picture each step", async () => {
     const html = await capturePage(spec, sequence);
     expect(html).toContain("htmlToImage");

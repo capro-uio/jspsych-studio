@@ -36,11 +36,18 @@ export interface StaticServer {
   failConditions: boolean;
   /** How many times /api/condition/ has been asked, so a test can see a participant counted once. */
   conditionRequests: number;
+  /**
+   * Bodies posted to /api/session/, where a study that saves as it goes asks to start sending its
+   * rows. None is started: that needs DataPipe's own database, so the study sends everything at
+   * the end, as it does whenever a session cannot start.
+   */
+  sessions: { experimentID: string; filename?: string }[];
 }
 
 export async function serveDirectory(root: string): Promise<StaticServer> {
   const uploads: StaticServer["uploads"] = [];
   const recordings: StaticServer["recordings"] = [];
+  const sessions: StaticServer["sessions"] = [];
   const state = {
     failUploads: false,
     failRecordings: false,
@@ -50,6 +57,18 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
   };
 
   const server: Server = createServer((request, response) => {
+    if (request.url?.startsWith("/api/session")) {
+      const chunks: Buffer[] = [];
+      request.on("data", (chunk: Buffer) => chunks.push(chunk));
+      request.on("end", () => {
+        sessions.push(JSON.parse(Buffer.concat(chunks).toString()) as StaticServer["sessions"][0]);
+        response.setHeader("access-control-allow-origin", "*");
+        response
+          .writeHead(503, { "content-type": "application/json" })
+          .end(JSON.stringify({ error: "no staging here" }));
+      });
+      return;
+    }
     if (request.url?.startsWith("/api/condition")) {
       state.conditionRequests += 1;
       response.setHeader("access-control-allow-origin", "*");
@@ -103,9 +122,15 @@ export async function serveDirectory(root: string): Promise<StaticServer> {
 
   return {
     url: `http://127.0.0.1:${address.port}`,
-    close: () => new Promise<void>((resolve) => server.close(() => resolve())),
+    // A browser keeps its connections open, and close() would wait for them to time out.
+    close: () =>
+      new Promise<void>((resolve) => {
+        server.close(() => resolve());
+        server.closeAllConnections();
+      }),
     uploads,
     recordings,
+    sessions,
     get failUploads() {
       return state.failUploads;
     },

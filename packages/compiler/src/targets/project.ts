@@ -75,6 +75,11 @@ function runningNote(selfContained: boolean, loadsFilesWhileRunning: boolean) {
     : online;
 }
 
+const STREAMING_NOTE =
+  " Each step's row is also sent to DataPipe as soon as it is recorded, so a participant who " +
+  "closes the page partway still leaves a partial file (`.partial.json`). Your consent form " +
+  "should say that data from an unfinished session is kept.";
+
 interface ReadmeContents {
   assetCount: number;
   figureNames: string[];
@@ -107,7 +112,7 @@ ${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment s
 
 ${
   spec.data?.save === "post"
-    ? `Results are uploaded to ${spec.data.endpoint ?? "DataPipe"} under the experiment id \`${spec.data.experiment_id}\`. If an upload fails, the participant is asked to download the file and send it to you.`
+    ? `Results are uploaded to ${spec.data.endpoint ?? "DataPipe"} under the experiment id \`${spec.data.experiment_id}\`. If an upload fails, the participant is asked to download the file and send it to you.${spec.data.stream ? STREAMING_NOTE : ""}`
     : spec.data?.save === "download"
       ? "Each participant's results download to their own computer at the end. You will need to collect those files from them."
       : "This experiment does not keep its results. Choose where data should go in the builder before recruiting anyone."

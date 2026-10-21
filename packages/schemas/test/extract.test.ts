@@ -232,6 +232,16 @@ describe("extractExtensions", () => {
     expect(webgazer.libraries[0].version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
+  it("names the DataPipe extension, which adds no columns and needs nothing loaded first", async () => {
+    const { pipe } = await extractExtensions(["@jspsych/extension-pipe"]);
+    expect(pipe).toMatchObject({
+      extension: "pipe",
+      package: "@jspsych/extension-pipe",
+      records: [],
+      libraries: [],
+    });
+  });
+
   it("refuses a package that exports no extension", async () => {
     await expect(extractExtensions(["jspsych"])).rejects.toThrow(
       /jspsych exports no class with a static `info`/,
@@ -243,7 +253,7 @@ describe("extractBundle", () => {
   it("bundles the plugins asked for with every installed extension", async () => {
     const { bundle } = await extractBundle(["@jspsych/plugin-html-keyboard-response"]);
     expect(Object.keys(bundle.plugins)).toEqual(["html-keyboard-response"]);
-    expect(Object.keys(bundle.extensions)).toEqual(["webgazer"]);
+    expect(Object.keys(bundle.extensions)).toEqual(["pipe", "webgazer"]);
     expect(bundle.families).toEqual(PLUGIN_FAMILIES);
   });
 });
@@ -376,6 +386,36 @@ describe("packageFiles", () => {
       license: "GPL-3.0-or-later",
       source: "https://github.com/brownhci/WebGazer",
     });
+  });
+
+  it("credits the packages built into a package's files, such as the DataPipe extension's Firebase", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    expect(pipe.bundles).toEqual([
+      expect.objectContaining({
+        package: "firebase",
+        license: "Apache-2.0",
+        source: "https://github.com/firebase/firebase-js-sdk",
+      }),
+    ]);
+    expect((await packageFiles("jspsych", [JSPSYCH_STYLESHEET])).bundles).toBeUndefined();
+  });
+
+  it("records which scripts and stylesheets a page cannot write in as they are", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    expect(pipe.breaksOutOfPage).toEqual([BROWSER_BUNDLE]);
+    const jspsych = await packageFiles("jspsych", [BROWSER_BUNDLE, JSPSYCH_STYLESHEET]);
+    expect(jspsych.breaksOutOfPage).toBeUndefined();
+  });
+
+  // The installed Firebase is the one credited, so it has to be the release built into the file.
+  it("credits the Firebase release the DataPipe extension's file is built from", async () => {
+    const pipe = await packageFiles("@jspsych/extension-pipe", [BROWSER_BUNDLE]);
+    const nodeModules = new URL("../../../node_modules/", import.meta.url);
+    const bundle = readFileSync(
+      new URL(`@jspsych/extension-pipe/${BROWSER_BUNDLE}`, nodeModules),
+      "utf8",
+    );
+    expect(bundle).toContain(`"${pipe.bundles![0].version}"`);
   });
 
   it("refuses a file the package does not have", async () => {

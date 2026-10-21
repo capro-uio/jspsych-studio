@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
-import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET, integrityOf } from "./files.ts";
+import { BROWSER_BUNDLE, JSPSYCH_STYLESHEET, breaksOut, elementFor, integrityOf } from "./files.ts";
 import type {
   ExtensionSchema,
   ExtractionReport,
@@ -9,12 +9,14 @@ import type {
   ParameterTypeName,
   PluginSchema,
   PluginSchemas,
+  PackageCredit,
   PackageFiles,
   SchemaBundle,
 } from "./types.ts";
 import {
   CURATED_PLUGINS,
   DISTINCT_KEYS,
+  BUNDLED_PACKAGES,
   EXTENSION_LIBRARIES,
   LIBRARY_RUNTIME_FILES,
   FIXED_CHOICES,
@@ -81,12 +83,26 @@ function declarationsPath(packageName: string) {
 }
 
 function installedVersion(packageName: string) {
-  const manifest = join(dirname(resolveFrom.resolve(packageName)), "..", "package.json");
-  return (JSON.parse(readFileSync(manifest, "utf8")) as { version: string }).version;
+  return manifestOf(packageRoot(packageName)).version;
 }
 
-/** The folder a package is installed in: the nearest above its entry point that names it. */
+function manifestOf(root: string) {
+  return JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Manifest;
+}
+
+/**
+ * The folder a package is installed in: where its manifest is, for a package that exports it, as
+ * Firebase does in place of an entry point; else the nearest above its entry point that names it.
+ */
 function packageRoot(packageName: string) {
+  try {
+    return dirname(resolveFrom.resolve(`${packageName}/package.json`));
+  } catch {
+    return rootAboveEntryPoint(packageName);
+  }
+}
+
+function rootAboveEntryPoint(packageName: string) {
   let folder = dirname(resolveFrom.resolve(packageName));
   for (;;) {
     const manifest = join(folder, "package.json");
@@ -128,26 +144,39 @@ export function sourceOf(packageName: string, manifest: Manifest) {
   return `https://www.npmjs.com/package/${packageName}`;
 }
 
-/** The installed version of a package, its licence and source, and the hash of each file named. */
-export async function packageFiles(packageName: string, paths: string[]): Promise<PackageFiles> {
-  const root = packageRoot(packageName);
-  const manifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8")) as Manifest;
+/** The installed version of a package, its licence and where its source is. */
+export function packageCredit(packageName: string, root = packageRoot(packageName)): PackageCredit {
+  const manifest = manifestOf(root);
   if (!manifest.license) throw new Error(`${packageName} names no licence`);
-  const files = Object.fromEntries(
-    await Promise.all(
-      [...paths]
-        .sort()
-        .map(
-          async (path) =>
-            [path, await integrityOf(new Uint8Array(readFileSync(join(root, path))))] as const,
-        ),
-    ),
-  );
   return {
+    package: packageName,
     version: manifest.version,
     license: manifest.license,
     source: sourceOf(packageName, manifest),
-    files,
+  };
+}
+
+/**
+ * The installed version of a package, its licence and source, the hash of each file named, the
+ * packages built into those files, and which of them a page cannot write in as they are.
+ */
+export async function packageFiles(packageName: string, paths: string[]): Promise<PackageFiles> {
+  const root = packageRoot(packageName);
+  const { package: _name, ...credit } = packageCredit(packageName, root);
+  const bundled = BUNDLED_PACKAGES[packageName] ?? [];
+  const sorted = [...paths].sort();
+  const contents = sorted.map((path) => new Uint8Array(readFileSync(join(root, path))));
+  const hashes = await Promise.all(contents.map((bytes) => integrityOf(bytes)));
+  const decoder = new TextDecoder();
+  const breaksOutOfPage = sorted.filter((path, index) => {
+    const element = elementFor(path);
+    return element !== null && breaksOut(decoder.decode(contents[index]), element) !== null;
+  });
+  return {
+    ...credit,
+    files: Object.fromEntries(sorted.map((path, index) => [path, hashes[index]])),
+    ...(bundled.length > 0 && { bundles: bundled.map((name) => packageCredit(name)) }),
+    ...(breaksOutOfPage.length > 0 && { breaksOutOfPage }),
   };
 }
 

@@ -18,6 +18,11 @@ Two things here come from jsPsych:
   jsPsych and its plugins from a CDN at the pinned versions. No jsPsych code is copied into the
   generated files, except a default function an author started from and kept as their own code.
 
+A study that saves its data to DataPipe as it goes also loads jsPsych's DataPipe extension, which
+has [Firebase](https://github.com/firebase/firebase-js-sdk) (Apache-2.0) built into it. A download
+that carries a copy of the extension credits Firebase in `lib/THIRD-PARTY.md`, beside jsPsych's
+packages.
+
 An exported experiment is yours, under whatever terms you choose. It depends on jsPsych at run
 time, so jsPsych's MIT terms apply to jsPsych itself, as they would if you had written the
 experiment by hand.
