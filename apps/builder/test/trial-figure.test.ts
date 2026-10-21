@@ -16,6 +16,8 @@ import {
   SCREEN,
   sequenceFigure,
   trialFigureSvg,
+  varyingScreens,
+  withConditions,
   type TrialFigure,
 } from "../src/lib/trial-figure.ts";
 
@@ -295,5 +297,71 @@ describe("fitTrialFigure", () => {
       const lastBaseline = screen.label.at.y + (screen.label.lines.length - 1) * LINE_HEIGHT;
       expect(lastBaseline).toBeLessThan(screens[index + 1].y);
     }
+  });
+});
+
+describe("conditions side by side", () => {
+  const A = "data:image/png;base64,QQ==";
+  const B = "data:image/png;base64,Qg==";
+  const C = "data:image/png;base64,Qw==";
+  const conditions = [
+    { label: "congruent", pictures: [A, undefined, B] },
+    { label: "incongruent", pictures: [A, undefined, C] },
+  ];
+
+  it("finds the screens that differ, and not those alike or not pictured", () => {
+    expect(varyingScreens(trial, conditions)).toEqual([2]);
+  });
+
+  it("shows each differing screen in each condition beneath the sequence, captioned", () => {
+    const figure = layoutTrialFigure(trial, "stack");
+    const shown = withConditions(figure, trial, "congruency", conditions);
+    const panel = shown.conditions!;
+    expect(panel.heading.text).toBe("By congruency");
+    expect(panel.cells.map((cell) => [cell.picture, cell.caption])).toEqual([
+      [B, "congruent"],
+      [C, "incongruent"],
+    ]);
+    expect(panel.cells[0].y).toBeGreaterThan(figure.height);
+    expect(panel.cells[1].x).toBeGreaterThan(panel.cells[0].x + panel.screen.width);
+    expect(panel.screen.width).toBeLessThan(figure.screen.width);
+    expect(shown.height).toBeGreaterThan(panel.captionY);
+    expect(shown.screens).toEqual(figure.screens);
+  });
+
+  it("names the screen in each caption when more than one differs", () => {
+    const two = [
+      { label: "a", pictures: [A, undefined, B] },
+      { label: "b", pictures: [B, undefined, C] },
+    ];
+    const panel = withConditions(layoutTrialFigure(trial, "row"), trial, "c", two).conditions!;
+    expect(panel.cells.map((cell) => cell.caption)).toEqual([
+      "Fixation: a",
+      "Fixation: b",
+      "Target: a",
+      "Target: b",
+    ]);
+  });
+
+  it("leaves the figure alone when nothing differs or there is one condition", () => {
+    const figure = layoutTrialFigure(trial, "stack");
+    const alike = [conditions[0], { ...conditions[0], label: "again" }];
+    expect(withConditions(figure, trial, "c", alike)).toBe(figure);
+    expect(withConditions(figure, trial, "c", [conditions[0]])).toBe(figure);
+  });
+
+  it("draws the panel's heading, screens and captions", () => {
+    const shown = withConditions(
+      layoutTrialFigure(trial, "stack"),
+      trial,
+      "congruency",
+      conditions,
+    );
+    const root = parse(trialFigureSvg(shown, "t", undefined, conditions[0].pictures));
+    const text = root.textContent ?? "";
+    expect(text).toContain("By congruency");
+    expect(text).toContain("incongruent");
+    expect(root.querySelectorAll(`image[*|href="${C}"]`)).toHaveLength(1);
+    expect(Number(root.getAttribute("height"))).toBe(shown.height);
   });
 });

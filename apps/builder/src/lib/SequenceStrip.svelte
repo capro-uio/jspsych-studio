@@ -6,6 +6,7 @@
   import {
     activeSegment,
     detailText,
+    conditionColumns,
     rowLabels,
     sequenceAt,
     sweepMs,
@@ -30,12 +31,15 @@
   let row = $state(0);
   let figureError = $state("");
   const rows = $derived(sequence ? rowLabels(project.spec, sequence.path) : []);
+  let byColumn = $state("");
+  const columns = $derived(sequence ? conditionColumns(project.spec, sequence.path) : []);
   const sequenceKey = $derived(sequence?.path.join(".") ?? "");
 
   // A row picked for one block means nothing for another, so each starts from its first.
   $effect(() => {
     void sequenceKey;
     row = 0;
+    byColumn = "";
     figureError = "";
   });
 
@@ -74,9 +78,24 @@
     figureError = "";
     try {
       const { captureScreens } = await import("./screen-capture.ts");
-      const pictures = await captureScreens(spec, drawn, { row, signal }).catch(() => []);
-      if (signal.aborted) return;
-      const figure = sequenceFigure(spec, drawn, { arrangement, size }, pictures);
+      const condition = columns.find((each) => each.column === byColumn);
+      // With conditions shown, the sequence is pictured once for each, starting from the first.
+      const runs = condition ? condition.values : [{ value: "", row }];
+      const pictured: (string | undefined)[][] = [];
+      for (const run of runs) {
+        pictured.push(await captureScreens(spec, drawn, { row: run.row, signal }).catch(() => []));
+        if (signal.aborted) return;
+      }
+      const figure = sequenceFigure(
+        spec,
+        drawn,
+        { arrangement, size },
+        pictured[0],
+        condition && {
+          column: condition.column,
+          conditions: runs.map((run, index) => ({ label: run.value, pictures: pictured[index] })),
+        },
+      );
       const name = `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}`;
       if (format === "svg") {
         download(`${name}.svg`, figure.svg, "image/svg+xml");
@@ -123,7 +142,20 @@
               <option value="row">Screens in a row</option>
             </select>
           </label>
-          {#if rows.length > 1}
+          {#if columns.length > 0}
+            <label>
+              Show conditions by
+              <select bind:value={byColumn} data-testid="sequence-figure-conditions">
+                <option value="">None</option>
+                {#each columns as { column, values } (column)}
+                  <option value={column}
+                    >{column} ({values.map((each) => each.value).join(", ")})</option
+                  >
+                {/each}
+              </select>
+            </label>
+          {/if}
+          {#if rows.length > 1 && !byColumn}
             <label>
               Conditions row
               <select bind:value={row} data-testid="sequence-figure-row">

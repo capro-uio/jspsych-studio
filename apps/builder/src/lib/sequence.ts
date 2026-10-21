@@ -161,6 +161,35 @@ export function rowLabels(spec: Spec, path: number[]) {
   });
 }
 
+/** The most conditions a figure shows side by side; a column with more is not a condition. */
+export const MAX_CONDITIONS = 4;
+
+export interface ConditionColumn {
+  column: string;
+  /** Each value the column takes, with the first row that holds it, in the order they appear. */
+  values: { value: string; row: number }[];
+}
+
+/**
+ * The columns of the table the steps at a path read that divide its rows into a few conditions,
+ * two to {@link MAX_CONDITIONS} values, each with the first row that holds each value.
+ */
+export function conditionColumns(spec: Spec, path: number[]): ConditionColumn[] {
+  const table = tableAt(spec, path);
+  const rows = table === null ? [] : (spec.conditions?.[table] ?? []);
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  return columns.flatMap((column) => {
+    const values: { value: string; row: number }[] = [];
+    rows.forEach((row, index) => {
+      const cell = row[column];
+      if (typeof cell !== "string" && typeof cell !== "number") return;
+      const value = plainText(String(cell));
+      if (value && !values.some((seen) => seen.value === value)) values.push({ value, row: index });
+    });
+    return values.length >= 2 && values.length <= MAX_CONDITIONS ? [{ column, values }] : [];
+  });
+}
+
 // Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.
 function durationOf(cell: unknown) {
   if (typeof cell === "number") return cell;
