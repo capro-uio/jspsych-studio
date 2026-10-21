@@ -25,25 +25,38 @@ import {
   walkNodes,
 } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
-import { pluginRuleProblems } from "./plugin-rules.ts";
+import { gapCount, pluginRuleProblems, pluginRuleWarnings } from "./plugin-rules.ts";
 import { gridShape, type GridPlace } from "./grids.ts";
 import { setupOrderProblems } from "./setup-order.ts";
 import { gazeProblems } from "./gaze.ts";
 import { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 import { appearanceProblems } from "./appearance.ts";
 
+/**
+ * An error stops the study from being built; a warning names settings that run, but may not do
+ * what was meant, such as a step nothing ends, which some designs want.
+ */
+export type Severity = "error" | "warning";
+
 /** Where a problem is, as a path of indices through the timeline; absent when it is the whole spec. */
 export interface Problem {
   message: string;
   path?: number[];
+  severity: Severity;
 }
 
+export function isError(problem: Problem) {
+  return problem.severity === "error";
+}
+
+/** Thrown when a spec has errors; its problems hold its warnings too, so nothing goes unsaid. */
 export class SpecError extends Error {
   readonly problems: Problem[];
 
   constructor(name: string, problems: Problem[]) {
+    const errors = problems.filter(isError);
     super(
-      `${name}: ${problems.length} problem(s)\n  - ${problems.map((p) => p.message).join("\n  - ")}`,
+      `${name}: ${errors.length} problem(s)\n  - ${errors.map((p) => p.message).join("\n  - ")}`,
     );
     this.problems = problems;
   }
@@ -135,6 +148,21 @@ function answerKeyProblems(trial: TrialNode, schema: PluginSchema) {
     }
   }
   return problems;
+}
+
+// A scoring rule compares the whole response with one answer, as text. A step that keeps an answer
+// for each question, each end of a scale, or each gap records them together, so its response as
+// text equals no single answer, except where a list holds just one.
+const ANSWERS_BY_NAME = new Set(["maxdiff", "survey-html-form"]);
+
+function scoringProblem(trial: TrialNode, schema: PluginSchema) {
+  if (ANSWERS_BY_NAME.has(trial.plugin) || "questions" in schema.properties) {
+    return "records several answers together, so a scoring rule, which compares a single answer, never matches";
+  }
+  if (trial.plugin === "cloze" && (gapCount(trial.params?.text) ?? 0) > 1) {
+    return "records the answers to all its gaps together, so a scoring rule, which compares a single answer, only works with one gap";
+  }
+  return null;
 }
 
 // A plugin that reads a fixed number of entries, such as a same/different pair, shows nothing
@@ -245,7 +273,8 @@ function checkTrial(
   problems: Problem[],
   path: number[],
 ) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => problems.push({ message, path, severity: "error" });
+  const warn = (message: string) => problems.push({ message, path, severity: "warning" });
   const assets = spec.assets ?? [];
   const schema = schemas[trial.plugin];
   if (!schema) {
@@ -327,9 +356,13 @@ function checkTrial(
   // over by a second rule.
   if (trial.score && schema.records.includes("correct")) {
     report(`${where} scores its answers itself, so it takes no scoring rule`);
+  } else if (trial.score) {
+    const problem = scoringProblem(trial, schema);
+    if (problem) report(`${where} ${problem}`);
   }
   for (const problem of answerKeyProblems(trial, schema)) report(`${where} ${problem}`);
   for (const problem of pluginRuleProblems(trial)) report(`${where} ${problem}`);
+  for (const warning of pluginRuleWarnings(trial)) warn(`${where} ${warning}`);
   for (const problem of exclusionProblems(trial, spec)) report(`${where} ${problem}`);
   for (const problem of gazeProblems(trial)) report(`${where} ${problem}`);
   const expected = trial.score?.correct_if_response_equals;
@@ -431,7 +464,8 @@ function checkObjectEntries(
   where: string,
   context: EntryContext,
 ) {
-  const report = (message: string) => context.problems.push({ message, path: context.path });
+  const report = (message: string) =>
+    context.problems.push({ message, path: context.path, severity: "error" });
   const item = parameter.items;
   if (!item?.properties || !Array.isArray(value)) return;
   const fields = item.properties;
@@ -483,7 +517,7 @@ function checkObjectEntries(
 }
 
 function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: number[]) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => problems.push({ message, path, severity: "error" });
   if (node.record_as && STUDY_COLUMNS.includes(node.record_as)) {
     report(`a split cannot record its group as "${node.record_as}", ${STUDY_COLUMN}`);
   }
@@ -516,7 +550,7 @@ function checkCounterbalance(
   problems: Problem[],
   path: number[],
 ) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => problems.push({ message, path, severity: "error" });
   if (node.tasks.length < 2) report("counterbalancing needs at least two tasks");
   const names = node.tasks.map((task) => task.name);
   if (names.some((name) => !name)) report("every task needs a name");
@@ -601,7 +635,7 @@ function questionProblem(rule: ResponseRule, names: string[] | null) {
 }
 
 function checkBranch(node: BranchNode, spec: Spec, problems: Problem[], path: number[]) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => problems.push({ message, path, severity: "error" });
   if (node.then.length === 0 && (node.otherwise ?? []).length === 0) {
     report("a branch needs steps on at least one of its paths");
   }
@@ -675,7 +709,7 @@ function checkColumn(
   problems: Problem[],
   path: number[],
 ) {
-  const report = (message: string) => problems.push({ message, path });
+  const report = (message: string) => problems.push({ message, path, severity: "error" });
   if (columns.has(column)) return;
   const available = [...columns];
   report(
@@ -694,7 +728,7 @@ function checkNodes(
 ) {
   nodes.forEach((node, index) => {
     const here = [...path, index];
-    const report = (message: string) => problems.push({ message, path: here });
+    const report = (message: string) => problems.push({ message, path: here, severity: "error" });
 
     if (node.kind === "checkpoint") {
       if (!node.name) report("a checkpoint needs a name");
@@ -753,13 +787,15 @@ function checkNodes(
   });
 }
 
-export function validateSpec(spec: Spec, schemas: PluginSchemas) {
+/** Throws a SpecError when the spec has errors; otherwise returns its warnings, if any. */
+export function validateSpec(spec: Spec, schemas: PluginSchemas): Problem[] {
   // jsPsych throws on an empty timeline, so an experiment with nothing in it is not runnable.
   const problems: Problem[] =
-    spec.timeline.length === 0 ? [{ message: "the timeline has no steps" }] : [];
+    spec.timeline.length === 0 ? [{ message: "the timeline has no steps", severity: "error" }] : [];
   if (spec.data?.save === "post" && !spec.data.experiment_id) {
     problems.push({
       message: "uploading data needs an experiment id from the service receiving it",
+      severity: "error",
     });
   }
   problems.push(...recruitmentProblems(spec));
@@ -768,5 +804,6 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas) {
   problems.push(...setupOrderProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
 
-  if (problems.length > 0) throw new SpecError(spec.name, problems);
+  if (problems.some(isError)) throw new SpecError(spec.name, problems);
+  return problems;
 }

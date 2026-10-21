@@ -13,6 +13,11 @@ const study = (plugin: string, params: Record<string, unknown>): Spec => ({
 
 const compiles = (spec: Spec) => () => compileSpec(spec, schemas);
 
+const warningsOf = (spec: Spec) =>
+  compileSpec(spec, schemas).warnings.map((warning) => warning.message);
+
+const STUCK = /has nothing to end it/;
+
 describe("visual search", () => {
   const search = (params: Record<string, unknown>) =>
     study("visual-search-circle", { target_present: true, fixation_image: "a.png", ...params });
@@ -55,6 +60,25 @@ describe("visual search", () => {
       compiles(search({ target: "a.png", foil: "a.png", set_size: 4, target_absent_key: "J" })),
     ).toThrow(/uses "j" for both target_present_key and target_absent_key/);
   });
+
+  describe("when nothing ends it", () => {
+    const shown = (params: Record<string, unknown>) =>
+      search({ target: "a.png", foil: "a.png", set_size: 4, ...params });
+
+    it("warns when a response does not end it and there is no time limit", () => {
+      expect(warningsOf(shown({ response_ends_trial: false }))).toEqual([
+        expect.stringMatching(STUCK),
+      ]);
+    });
+
+    it("says nothing when a time limit ends it", () => {
+      expect(warningsOf(shown({ response_ends_trial: false, trial_duration: 2000 }))).toEqual([]);
+    });
+
+    it("says nothing when a response ends it", () => {
+      expect(warningsOf(shown({}))).toEqual([]);
+    });
+  });
 });
 
 describe("cloze", () => {
@@ -91,6 +115,40 @@ describe("the implicit association test", () => {
       /parameter "left_category_label" takes 1 to 2 entries/,
     );
   });
+
+  it.each(["iat-html", "iat-image"])(
+    "%s warns when a response does not end it and there is no time limit",
+    (plugin) => {
+      const stimulus = plugin === "iat-html" ? "<p>tulip</p>" : "a.png";
+      const spec = study(plugin, {
+        stimulus,
+        stim_key_association: "left",
+        response_ends_trial: false,
+      });
+      expect(warningsOf(spec)).toEqual([expect.stringMatching(STUCK)]);
+    },
+  );
+
+  it("says nothing when a time limit ends it", () => {
+    expect(warningsOf(iat({ response_ends_trial: false, trial_duration: 1500 }))).toEqual([]);
+  });
+
+  it("warns that a response ending the trial switches off its time limit", () => {
+    expect(warningsOf(iat({ trial_duration: 1500 }))).toEqual([
+      expect.stringMatching(/ignores its time limit \(trial_duration\) while a response ends/),
+    ]);
+  });
+
+  it("says nothing when it waits for a response with no time limit, as by default", () => {
+    expect(warningsOf(iat({}))).toEqual([]);
+  });
+
+  it("leaves a response_ends_trial read from a column to be known when it runs", () => {
+    const spec = iat({ response_ends_trial: { var: "ends" } });
+    spec.conditions = { rows: [{ ends: false }] };
+    spec.timeline = [{ kind: "block", conditions: "rows", children: spec.timeline }];
+    expect(warningsOf(spec)).toEqual([]);
+  });
 });
 
 describe("most and least", () => {
@@ -106,6 +164,52 @@ describe("drawing", () => {
     expect(compiles(study("sketchpad", { canvas_shape: "triangle" }))).toThrow(
       /parameter "canvas_shape" expects one of "rectangle", "circle"/,
     );
+  });
+
+  describe("when nothing ends it", () => {
+    const unbuttoned = (params: Record<string, unknown>) =>
+      study("sketchpad", { show_finished_button: false, ...params });
+
+    it.each([{}, { choices: "NO_KEYS" }, { choices: [] }])(
+      "warns with no finished button, no key and no time limit: %j",
+      (keys) => {
+        expect(warningsOf(unbuttoned(keys))).toEqual([expect.stringMatching(STUCK)]);
+      },
+    );
+
+    it.each([{ choices: ["Enter"] }, { trial_duration: 30000 }])(
+      "says nothing when something else ends it: %j",
+      (way) => {
+        expect(warningsOf(unbuttoned(way))).toEqual([]);
+      },
+    );
+
+    it("says nothing when the finished button ends it", () => {
+      expect(warningsOf(study("sketchpad", {}))).toEqual([]);
+    });
+  });
+
+  describe("drawing on an image", () => {
+    it.each(["https://example.com/map.png", "//example.com/map.png"])(
+      "rejects an image from another site, which stops the drawing saving: %s",
+      (background_image) => {
+        expect(compiles(study("sketchpad", { background_image }))).toThrow(
+          /an image from another site, which stops the drawing being saved/,
+        );
+      },
+    );
+
+    it("takes an image from another site when the drawing is not saved as an image", () => {
+      const spec = study("sketchpad", {
+        background_image: "https://example.com/map.png",
+        save_final_image: false,
+      });
+      expect(compiles(spec)).not.toThrow();
+    });
+
+    it("takes a file added to the study", () => {
+      expect(compiles(study("sketchpad", { background_image: "a.png" }))).not.toThrow();
+    });
   });
 });
 

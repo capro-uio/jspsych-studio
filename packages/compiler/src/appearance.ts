@@ -18,6 +18,7 @@ export function appearanceProblems(settings: ExperimentSettings | undefined) {
     })
     .map((key) => ({
       message: `${key} is ${JSON.stringify(settings?.[key])}, which is not a colour`,
+      severity: "error" as const,
     }));
 }
 

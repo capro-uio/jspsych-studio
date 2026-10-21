@@ -363,7 +363,7 @@ function extensionOf(spec: Spec, bundle: SchemaBundle, name: string) {
   const extension = bundle.extensions[name];
   if (!extension) {
     throw new SpecError(spec.name, [
-      { message: `the schema bundle has no entry for extension "${name}"` },
+      { message: `the schema bundle has no entry for extension "${name}"`, severity: "error" },
     ]);
   }
   return extension;
@@ -374,7 +374,7 @@ export function compileSpec(
   bundle: SchemaBundle,
   options: CompileOptions = {},
 ): CompileResult {
-  validateSpec(spec, bundle.plugins);
+  const warnings = validateSpec(spec, bundle.plugins);
   const plugins = new Set<string>();
   const assets = spec.assets ?? [];
   const context: CompileContext = {
@@ -405,7 +405,7 @@ export function compileSpec(
       const schema = bundle.plugins[plugin];
       if (!schema) {
         throw new SpecError(spec.name, [
-          { message: `the schema bundle has no entry for plugin "${plugin}"` },
+          { message: `the schema bundle has no entry for plugin "${plugin}"`, severity: "error" },
         ]);
       }
       return [plugin, { name: schema.package, version: schema.version }];
@@ -460,6 +460,7 @@ export function compileSpec(
     styles: compileAppearance(spec.settings),
     plugins: [...plugins],
     columns,
+    warnings,
     jspsych: bundle.jspsych,
     packages,
     scripts,

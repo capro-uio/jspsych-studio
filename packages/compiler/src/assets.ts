@@ -42,6 +42,20 @@ export function assetPath(asset: Asset) {
   return `${ASSET_DIRECTORY}/${asset.name}`;
 }
 
+// A plugin may write a file's address into CSS without quotes, as the viewing-distance check
+// does its card, where a space or a bracket ends the address. Escaped, the address still names
+// the same file, and has none of either.
+const escapeCharacter = (character: string) =>
+  `%${character.charCodeAt(0).toString(16).toUpperCase()}`;
+
+/** Where the page finds a file beside it, escaped so it reads the same wherever it is written. */
+export function assetAddress(asset: Asset) {
+  return assetPath(asset)
+    .split("/")
+    .map((part) => encodeURIComponent(part).replace(/[!'()*]/g, escapeCharacter))
+    .join("/");
+}
+
 // jsPsych's video plugins read a video's type from the end of its address, which a data URL does
 // not have, and a page opened from disk does not preload videos into playable copies. So an
 // embedded video is turned into a blob URL, which plays from wherever the page was opened.
@@ -74,7 +88,7 @@ export const NAME_FILES_IN_DATA =
 export function compileAssetMap(assets: Asset[], mode: "inline" | "files" = "inline") {
   const entries = assets.map(
     (asset) =>
-      `  ${literal(asset.name)}: ${literal(mode === "files" ? assetPath(asset) : asset.url)}`,
+      `  ${literal(asset.name)}: ${literal(mode === "files" ? assetAddress(asset) : asset.url)}`,
   );
   const embedsVideo =
     mode === "inline" && assets.some((asset) => asset.url.startsWith("data:video/"));

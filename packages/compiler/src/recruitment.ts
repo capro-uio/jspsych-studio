@@ -125,16 +125,20 @@ export function recruitmentProblems(spec: Spec): Problem[] {
   if (recruitment.platform !== undefined && !isPlatform(recruitment.platform)) {
     problems.push({
       message: `recruitment names an unknown platform "${String(recruitment.platform)}"`,
+      severity: "error",
     });
   }
   const endings: unknown = recruitment.endings ?? {};
   if (!isEndingSet(endings)) {
-    return [...problems, { message: "recruitment endings must be a set of named endings" }];
+    return [
+      ...problems,
+      { message: "recruitment endings must be a set of named endings", severity: "error" },
+    ];
   }
   let redirectsAfterSaving = false;
   for (const [name, ending] of Object.entries(endings)) {
     const problem = endingProblem(name, ending);
-    if (problem) problems.push({ message: problem });
+    if (problem) problems.push({ message: problem, severity: "error" });
     if (isEndingSet(ending) && ending.url !== undefined && ending.keep !== "nothing") {
       redirectsAfterSaving = true;
     }
@@ -144,6 +148,7 @@ export function recruitmentProblems(spec: Spec): Problem[] {
   if (redirectsAfterSaving && spec.data?.save !== "post") {
     problems.push({
       message: "sending participants back to a recruitment platform needs data uploaded first",
+      severity: "error",
     });
   }
   return problems;

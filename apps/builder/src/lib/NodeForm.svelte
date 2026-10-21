@@ -31,7 +31,7 @@
     selectedNode,
   } from "./project.svelte.ts";
   import { editableParameters, paramsForPlugin, pluginChoices, pluginSchema } from "./schemas.ts";
-  import { currentProblems, problemsAt } from "./problems.svelte.ts";
+  import { currentProblems, errorsOf, problemsAt, warningsOf } from "./problems.svelte.ts";
 
   const node = $derived(selectedNode());
   const stepProblems = $derived(
@@ -90,12 +90,22 @@
   }
 </script>
 
-{#if stepProblems.length > 0}
+{#if errorsOf(stepProblems).length > 0}
   <ul class="problems" data-testid="step-problems">
-    {#each stepProblems as problem (problem.message)}
+    {#each errorsOf(stepProblems) as problem (problem.message)}
       <li>{problem.message}</li>
     {/each}
   </ul>
+{/if}
+{#if warningsOf(stepProblems).length > 0}
+  <div class="warnings" data-testid="step-warnings">
+    <p class="warnings-title"><span aria-hidden="true">⚠</span> Worth checking</p>
+    <ul>
+      {#each warningsOf(stepProblems) as problem (problem.message)}
+        <li>{problem.message}</li>
+      {/each}
+    </ul>
+  </div>
 {/if}
 
 {#if !node}
@@ -659,6 +669,21 @@
     padding-left: 1rem;
     color: var(--danger);
     font-size: 0.85rem;
+  }
+  .warnings {
+    margin: 0 0 0.5rem;
+    padding: 0.3rem 0.5rem;
+    border-left: 3px solid var(--caution);
+    font-size: 0.85rem;
+  }
+  .warnings ul {
+    margin: 0;
+    padding-left: 1rem;
+  }
+  .warnings-title {
+    margin: 0;
+    color: var(--caution);
+    font-weight: 600;
   }
   .empty,
   .help {

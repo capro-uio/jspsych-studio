@@ -204,4 +204,36 @@ describe("questionNames", () => {
   it("says when the tagged trials ask no questions", () => {
     expect(questionNames([screening], "screening")).toBeNull();
   });
+
+  it("names the two ends of a most-and-least scale left and right, as it records them", () => {
+    const ranking = { kind: "trial" as const, plugin: "maxdiff", tag: "rank", params: {} };
+    expect(questionNames([ranking], "rank")).toEqual(["left", "right"]);
+  });
+});
+
+describe("branching on a most-and-least answer", () => {
+  const ranking = {
+    kind: "trial" as const,
+    plugin: "maxdiff",
+    tag: "rank",
+    params: { alternatives: ["tea", "coffee"], labels: ["least", "most"] },
+  };
+  const onRanking = (when: Record<string, unknown>): Spec => ({
+    name: "routing",
+    timeline: [ranking, branch({ when: { scope: "rank", ...when } as BranchNode["when"] })],
+  });
+
+  it("reads the alternative chosen at one end", () => {
+    const { source } = compileSpec(
+      onRanking({ response_equals: "tea", question: "right" }),
+      schemas,
+    );
+    expect(source).toContain('latest.response?.["right"]');
+  });
+
+  it("needs the end it reads", () => {
+    expect(() => compileSpec(onRanking({ response_equals: "tea" }), schemas)).toThrow(
+      /a branch on the answers to "rank" needs the question it reads \(questions: left, right\)/,
+    );
+  });
 });

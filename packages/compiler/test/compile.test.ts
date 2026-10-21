@@ -93,6 +93,40 @@ describe("validateSpec", () => {
     );
   });
 
+  describe("a scoring rule on a step that records several answers together", () => {
+    const scored = (plugin: string, params: Record<string, unknown>): Spec => ({
+      name: "scored",
+      timeline: [
+        {
+          kind: "trial",
+          plugin,
+          params: params as TrialNode["params"],
+          score: { correct_if_response_equals: "cat" },
+        },
+      ],
+    });
+
+    it.each([
+      ["maxdiff", { alternatives: ["a", "b"], labels: ["least", "most"] }],
+      ["survey-multi-select", { questions: [{ prompt: "Pets?", options: ["cat", "dog"] }] }],
+      ["survey-html-form", { html: '<input name="age">' }],
+    ])("is refused on %s", (plugin, params) => {
+      expect(() => compileSpec(scored(plugin, params), schemas)).toThrow(
+        /records several answers together, so a scoring rule, which compares a single answer, never matches/,
+      );
+    });
+
+    it("is refused on fill in the blanks with more than one gap", () => {
+      const spec = scored("cloze", { text: "<p>The %cat% sat on the %mat%.</p>" });
+      expect(() => compileSpec(spec, schemas)).toThrow(/only works with one gap/);
+    });
+
+    it("is taken on fill in the blanks with one gap, whose list of one reads as its answer", () => {
+      const spec = scored("cloze", { text: "<p>The %cat% sat.</p>" });
+      expect(() => compileSpec(spec, schemas)).not.toThrow();
+    });
+  });
+
   const sorting = (params: Record<string, unknown>, plugin = "categorize-html"): Spec => ({
     name: "sorting",
     timeline: [{ kind: "trial", plugin, params: { stimulus: "<p>a</p>", ...params } }],
@@ -284,6 +318,44 @@ describe("validateSpec", () => {
       timeline: [{ kind: "block", conditions: "missing", children: [] }],
     } as Spec;
     expect(() => compileSpec(spec, schemas)).toThrow(/does not define/);
+  });
+});
+
+describe("warnings", () => {
+  const unending = {
+    kind: "trial" as const,
+    plugin: "sketchpad",
+    params: { show_finished_button: false },
+  };
+  const unnamed = {
+    kind: "trial" as const,
+    plugin: "html-keyboard-response",
+    params: {},
+  };
+
+  it("never stop a study from being built, and say which step they are about", () => {
+    const { source, warnings } = compileSpec({ name: "w", timeline: [unending] }, schemas);
+    expect(source).toContain("jsPsychSketchpad");
+    expect(warnings.map(({ path, severity }) => ({ path, severity }))).toEqual([
+      { path: [0], severity: "warning" },
+    ]);
+    expect(warnings[0].message).toMatch(/^step "[^"]+" \(sketchpad\) has nothing to end it/);
+  });
+
+  it("are none for a study with nothing to question", () => {
+    expect(compileSpec(flanker, schemas).warnings).toEqual([]);
+  });
+
+  it("travel with the errors that stop a study, but are not counted among them", () => {
+    let thrown: SpecError | undefined;
+    try {
+      compileSpec({ name: "both", timeline: [unending, unnamed] }, schemas);
+    } catch (error) {
+      thrown = error as SpecError;
+    }
+    expect(thrown?.problems.map((problem) => problem.severity)).toEqual(["warning", "error"]);
+    expect(thrown?.message).toMatch(/^both: 1 problem\(s\)\n {2}- step .* requires parameter/);
+    expect(thrown?.message).not.toContain("nothing to end it");
   });
 });
 

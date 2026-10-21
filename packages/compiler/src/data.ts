@@ -240,10 +240,17 @@ export function streamingProblems(spec: Spec): Problem[] {
   const stream: unknown = spec.data?.stream;
   if (stream === undefined || stream === false) return [];
   if (stream !== true) {
-    return [{ message: `saving data as it goes is true or false, not ${JSON.stringify(stream)}` }];
+    return [
+      {
+        message: `saving data as it goes is true or false, not ${JSON.stringify(stream)}`,
+        severity: "error",
+      },
+    ];
   }
   if (spec.data?.save !== "post") {
-    return [{ message: "saving data as it goes needs data uploaded to DataPipe" }];
+    return [
+      { message: "saving data as it goes needs data uploaded to DataPipe", severity: "error" },
+    ];
   }
   return endingNames(spec.recruitment)
     .filter((name) => retentionOf(endingOf(spec.recruitment, name)) !== "all")
@@ -251,6 +258,7 @@ export function streamingProblems(spec: Spec): Problem[] {
       message:
         `the "${name}" ending keeps less than all the data, but data saved as it goes has ` +
         "already been sent; keep all of it, or save the data only at the end",
+      severity: "error",
     }));
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { usesDevices } from "../src/setup-order.ts";
-import type { DataSettings, Spec, SpecNode } from "../src/types.ts";
+import { checksDevices, usesDevices } from "../src/setup-order.ts";
+import type { DataSettings, Spec, SpecNode, TrialNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const speak: SpecNode = {
@@ -117,5 +117,29 @@ describe("usesDevices", () => {
     expect(usesDevices(study([setUpMicrophone]))).toBe(true);
     expect(usesDevices(study([{ kind: "trial", plugin: "mirror-camera" }]))).toBe(true);
     expect(usesDevices(study([tagged]))).toBe(false);
+  });
+});
+
+describe("checksDevices", () => {
+  const check = (params?: Record<string, unknown>): TrialNode => ({
+    kind: "trial",
+    plugin: "browser-check",
+    params: params as TrialNode["params"],
+  });
+
+  it("finds a browser check that records every feature, as by default", () => {
+    expect(checksDevices(study([check()]))).toBe(true);
+  });
+
+  it.each(["webcam", "microphone"])("finds a browser check that looks for the %s", (device) => {
+    expect(checksDevices(study([check({ features: ["width", device] })]))).toBe(true);
+  });
+
+  it("counts a list of features read from a column as possibly holding either", () => {
+    expect(checksDevices(study([check({ features: { var: "features" } })]))).toBe(true);
+  });
+
+  it("passes over a browser check that looks for neither, and other steps", () => {
+    expect(checksDevices(study([check({ features: ["width", "height"] }), tagged]))).toBe(false);
   });
 });

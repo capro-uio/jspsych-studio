@@ -67,6 +67,7 @@ const spec = JSON.parse(readFileSync(specPath, "utf8")) as Spec;
 
 try {
   const result = compileSpec(spec, schemas);
+  for (const warning of result.warnings) console.warn(`warning: ${warning.message}`);
   const { html } = await emitHtml(result, { title: spec.name, base: optionValue("base", "cdn") });
   const outputPath = optionValue("out", `${basename(specPath, ".json")}.html`);
   writeFileSync(outputPath, html);

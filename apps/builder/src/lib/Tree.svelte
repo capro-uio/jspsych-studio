@@ -3,7 +3,7 @@
   import AddStep from "./AddStep.svelte";
   import { usesCode } from "./code.ts";
   import { pluginTitle } from "./schemas.ts";
-  import { currentProblems, problemsAt } from "./problems.svelte.ts";
+  import { currentProblems, errorsOf, problemsAt, warningsOf } from "./problems.svelte.ts";
   import type { SpecNode } from "@tachisto/compiler";
   import Tree from "./Tree.svelte";
   import { moveNode, project, removeNode, type NodePath } from "./project.svelte.ts";
@@ -45,6 +45,8 @@
   {#each nodes as node, index (node)}
     <AddStep {path} {index} variant="between" />
     {@const childPath = [...path, index]}
+    {@const errors = errorsOf(problemsAt(problems, childPath))}
+    {@const warnings = warningsOf(problemsAt(problems, childPath))}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
         <button
@@ -57,11 +59,17 @@
           {#if usesCode(node)}
             <span class="code-badge" title="Runs code written for this study">code</span>
           {/if}
-          {#if problemsAt(problems, childPath).length > 0}
+          {#if errors.length > 0}
             <span
               class="issue"
               data-testid={`issue-${childPath.join("-")}`}
-              title={problemsAt(problems, childPath)[0].message}>needs attention</span
+              title={errors[0].message}>needs attention</span
+            >
+          {:else if warnings.length > 0}
+            <span
+              class="caution"
+              data-testid={`caution-${childPath.join("-")}`}
+              title={warnings[0].message}><span aria-hidden="true">⚠</span> worth checking</span
             >
           {/if}
         </button>
@@ -125,6 +133,11 @@
     display: block;
     font-size: 0.7rem;
     color: var(--danger);
+  }
+  .caution {
+    display: block;
+    font-size: 0.7rem;
+    color: var(--caution);
   }
   .group {
     border-left: 2px solid var(--line);

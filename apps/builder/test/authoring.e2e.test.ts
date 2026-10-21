@@ -4,6 +4,7 @@ import { chromium, type Browser, type Page } from "playwright";
 import { build, preview, type PreviewServer } from "vite";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { addStep, addTrial } from "./steps.ts";
+import { brandColour } from "./brand.ts";
 import type { Spec, SpecNode } from "@tachisto/compiler";
 
 const CONDITIONS_CSV = [
@@ -617,6 +618,78 @@ describe("a browser check that turns people away", () => {
     ).toBeUndefined();
     await page.close();
   }, 180_000);
+});
+
+describe("settings worth checking", () => {
+  const spec = {
+    name: "drawing",
+    timeline: [
+      { kind: "trial", plugin: "browser-check" },
+      { kind: "trial", plugin: "sketchpad", params: { show_finished_button: false } },
+    ],
+  };
+
+  async function openDrawing(page: Page) {
+    await page.goto(appUrl);
+    await page.getByTestId("header-menu").click();
+    await page.getByTestId("import-spec").setInputFiles({
+      name: "drawing.json",
+      mimeType: "application/json",
+      buffer: Buffer.from(JSON.stringify(spec)),
+    });
+  }
+
+  const colourOf = (page: Page, selector: string) =>
+    page
+      .locator(selector)
+      .first()
+      .evaluate((element) => getComputedStyle(element).color);
+
+  it("are shown apart from errors, and leave the experiment to run", async () => {
+    const page = await browser.newPage();
+    await openDrawing(page);
+
+    await expect
+      .poll(() => page.getByTestId("compile-warnings").innerText(), { timeout: 5_000 })
+      .toContain("1 step has settings that may not do what you meant");
+    await expect.poll(() => page.getByTestId("compile-error").count(), { timeout: 5_000 }).toBe(0);
+    await expect.poll(() => page.getByTestId("preview").count(), { timeout: 15_000 }).toBe(1);
+
+    expect(await page.getByTestId("caution-1").innerText()).toContain("worth checking");
+    expect(await page.getByTestId("issue-1").count()).toBe(0);
+
+    await page.getByTestId("node-1").click();
+    expect(await page.getByTestId("step-warnings").innerText()).toContain("has nothing to end it");
+    expect(await page.getByTestId("step-problems").count()).toBe(0);
+    await page.close();
+  }, 120_000);
+
+  it("are marked in the caution colour, in light and in dark", async () => {
+    for (const scheme of ["light", "dark"] as const) {
+      const page = await browser.newPage({ colorScheme: scheme });
+      await openDrawing(page);
+      await page.getByTestId("node-1").click();
+      const caution = brandColour("caution", scheme);
+      expect(await colourOf(page, '[data-testid="caution-1"]')).toBe(caution);
+      expect(await colourOf(page, '[data-testid="step-warnings"] .warnings-title')).toBe(caution);
+      expect(await colourOf(page, '[data-testid="compile-warnings"] .warnings-title')).toBe(
+        caution,
+      );
+      await page.close();
+    }
+  }, 120_000);
+
+  it("include that a browser check in the preview finds no camera or microphone", async () => {
+    const page = await browser.newPage();
+    await openDrawing(page);
+    expect(await page.getByTestId("device-check-note").innerText()).toContain(
+      "records both as missing",
+    );
+    await page.getByTestId("node-0").click();
+    await page.getByTestId("trial-plugin").selectOption("html-keyboard-response");
+    expect(await page.getByTestId("device-check-note").count()).toBe(0);
+    await page.close();
+  }, 120_000);
 });
 
 describe("a grid of squares", () => {

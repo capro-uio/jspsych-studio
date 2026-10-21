@@ -27,6 +27,11 @@ function visualSearchProblems(params: Record<string, ParameterValue>) {
   return [];
 }
 
+/** How many gaps a cloze text makes, one for each pair of percent signs; null for no written text. */
+export function gapCount(text: ParameterValue | undefined) {
+  return typeof text === "string" ? Math.floor((text.split("%").length - 1) / 2) : null;
+}
+
 // Cloze makes a gap of every word between percent signs. Text with none makes the plugin fail as
 // the trial starts, and a stray one opens a gap that runs to the end of the text.
 function clozeProblems(params: Record<string, ParameterValue>) {
@@ -106,16 +111,78 @@ function gridProblems(params: Record<string, ParameterValue>, keyed: boolean) {
   return problems;
 }
 
-const RULES: Record<string, (params: Record<string, ParameterValue>) => string[]> = {
+// A canvas showing an image from another site cannot be read back, so a drawing saved as an image,
+// as it is unless told otherwise, fails to save and the step never ends. A file added to the
+// study comes from the study's own site, or from inside the page.
+function sketchpadProblems(params: Record<string, ParameterValue>) {
+  const image = params.background_image;
+  if (typeof image !== "string" || !/^(https?:)?\/\//i.test(image)) return [];
+  if (params.save_final_image === false) return [];
+  return [
+    `draws on "${image}", an image from another site, which stops the drawing being saved; ` +
+      "add the image to the study's files instead, or turn off saving the drawing (save_final_image)",
+  ];
+}
+
+type Rule = (params: Record<string, ParameterValue>) => string[];
+
+const RULES: Record<string, Rule> = {
   "serial-reaction-time": (params) => gridProblems(params, true),
   "serial-reaction-time-mouse": (params) => gridProblems(params, false),
   "visual-search-circle": visualSearchProblems,
   cloze: clozeProblems,
   "external-html": externalPageProblems,
   "virtual-chinrest": viewingDistanceProblems,
+  sketchpad: sketchpadProblems,
+};
+
+// Only a time limit ends a step whose response does not. A setting read from a column or computed
+// is known only at run time, so it is not judged here.
+function waitsForever(params: Record<string, ParameterValue>) {
+  if (params.response_ends_trial !== false || isGiven(params.trial_duration)) return [];
+  return [
+    "has nothing to end it: a response does not end the trial (response_ends_trial) and there " +
+      "is no time limit (trial_duration), so the participant stays on it",
+  ];
+}
+
+// The implicit association test starts its time limit only when a response does not end the trial.
+function iatWarnings(params: Record<string, ParameterValue>) {
+  if ((params.response_ends_trial ?? true) === true && isGiven(params.trial_duration)) {
+    return [
+      "ignores its time limit (trial_duration) while a response ends the trial " +
+        "(response_ends_trial), so it waits for a key however long that takes",
+    ];
+  }
+  return waitsForever(params);
+}
+
+// A drawing ends with its finished button, a key among its choices, or its time limit.
+function sketchpadWarnings(params: Record<string, ParameterValue>) {
+  const choices = params.choices ?? "NO_KEYS";
+  const noKeys = choices === "NO_KEYS" || (Array.isArray(choices) && choices.length === 0);
+  if (params.show_finished_button !== false || !noKeys || isGiven(params.trial_duration)) {
+    return [];
+  }
+  return [
+    "has nothing to end it: no finished button (show_finished_button), no key that ends it " +
+      "(choices) and no time limit (trial_duration), so the participant stays on it",
+  ];
+}
+
+const WARNINGS: Record<string, Rule> = {
+  "iat-html": iatWarnings,
+  "iat-image": iatWarnings,
+  "visual-search-circle": waitsForever,
+  sketchpad: sketchpadWarnings,
 };
 
 /** What is wrong with how a step combines its settings, by its plugin's own rules. */
 export function pluginRuleProblems(trial: TrialNode) {
   return RULES[trial.plugin]?.(trial.params ?? {}) ?? [];
+}
+
+/** Settings that run but may not do what was meant, such as a step that nothing ends. */
+export function pluginRuleWarnings(trial: TrialNode) {
+  return WARNINGS[trial.plugin]?.(trial.params ?? {}) ?? [];
 }

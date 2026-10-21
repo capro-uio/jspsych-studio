@@ -1,6 +1,6 @@
 export { compileSpec, STEP_COLUMN } from "./compile.ts";
 export { usesRecordings } from "./recordings.ts";
-export { isEyeTrackingStep, usesDevices } from "./setup-order.ts";
+export { checksDevices, isEyeTrackingStep, usesDevices } from "./setup-order.ts";
 export { usesEyeTracking } from "./gaze.ts";
 export { gridShape } from "./grids.ts";
 export type { GridPlace, GridShape } from "./grids.ts";
@@ -41,7 +41,7 @@ export type { ProjectFile } from "./targets/project.ts";
 export type { HtmlOutput, HtmlTargetOptions } from "./targets/html.ts";
 export { NODE_KINDS, SPEC_SCHEMA_ID, specSchema } from "./spec-schema.ts";
 export { SpecError, validateSpec } from "./validate.ts";
-export type { Problem } from "./validate.ts";
+export type { Problem, Severity } from "./validate.ts";
 export {
   childrenOf,
   conditionColumns,
