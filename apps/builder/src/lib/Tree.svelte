@@ -43,7 +43,7 @@
 
 <ul>
   {#each nodes as node, index (node)}
-    <AddStep {path} {index} />
+    <AddStep {path} {index} variant="between" />
     {@const childPath = [...path, index]}
     <li>
       <div class="row" class:selected={isSelected(childPath)}>
