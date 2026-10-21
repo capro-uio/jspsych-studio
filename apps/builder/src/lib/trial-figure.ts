@@ -396,6 +396,17 @@ export function trialFigureSvg(
   });
 }
 
+/**
+ * How large a figure of a given width prints and how many pixels wide a PNG of it is: at screen
+ * size, twice its width in pixels; made for a column, its units at a quarter of a millimetre, or
+ * the column's width if it is wider, at print resolution.
+ */
+export function pageSize(width: number, size: FigureSize) {
+  if (size === "screen") return { widthMm: undefined, pixelWidth: width * SCREEN_PIXEL_RATIO };
+  const widthMm = Math.min(width * MM_PER_UNIT, COLUMN_WIDTH_MM[size]);
+  return { widthMm, pixelWidth: Math.round((widthMm / 25.4) * PRINT_DPI) };
+}
+
 export interface FigureChoices {
   arrangement: Arrangement;
   size: FigureSize;
@@ -419,21 +430,13 @@ export function sequenceFigure(
     byColumn
       ? withConditions(figure, sequence, byColumn.column, byColumn.conditions, maxWidth)
       : figure;
-  if (size === "screen") {
-    const figure = addConditions(layoutTrialFigure(sequence, arrangement));
-    return {
-      svg: trialFigureSvg(figure, title, spec.settings, pictures),
-      pixelWidth: figure.width * SCREEN_PIXEL_RATIO,
-    };
-  }
-  const column = COLUMN_WIDTH_MM[size];
-  const figure = addConditions(
-    fitTrialFigure(sequence, arrangement, column / MM_PER_UNIT),
-    column / MM_PER_UNIT,
-  );
-  const widthMm = Math.min(figure.width * MM_PER_UNIT, column);
-  return {
-    svg: trialFigureSvg(figure, title, spec.settings, pictures, widthMm),
-    pixelWidth: Math.round((widthMm / 25.4) * PRINT_DPI),
-  };
+  const figure =
+    size === "screen"
+      ? addConditions(layoutTrialFigure(sequence, arrangement))
+      : addConditions(
+          fitTrialFigure(sequence, arrangement, COLUMN_WIDTH_MM[size] / MM_PER_UNIT),
+          COLUMN_WIDTH_MM[size] / MM_PER_UNIT,
+        );
+  const { widthMm, pixelWidth } = pageSize(figure.width, size);
+  return { svg: trialFigureSvg(figure, title, spec.settings, pictures, widthMm), pixelWidth };
 }

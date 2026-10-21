@@ -1,6 +1,7 @@
 import type { Spec } from "@tachisto/compiler";
 import { ARROW_ID, figureSvg, ink, svgText } from "./figure.ts";
 import { specFilename } from "./files.ts";
+import { pageSize, type FigureSize } from "./trial-figure.ts";
 import {
   centred,
   cornerRadius,
@@ -81,7 +82,7 @@ function boxSvg(box: FlowBox) {
 }
 
 /** The flow as a standalone SVG figure. */
-export function flowFigureSvg(layout: FlowLayout, title: string) {
+export function flowFigureSvg(layout: FlowLayout, title: string, widthMm?: number) {
   const edges = layout.edges
     .map((edge) => {
       const stroke = edge.repeat ? ink("flow-loop") : ink("ink-muted");
@@ -99,6 +100,7 @@ export function flowFigureSvg(layout: FlowLayout, title: string) {
     width: layout.width,
     height: layout.height,
     title,
+    widthMm,
     body: [...layout.boxes.map(boxSvg), `<g>${edges}</g>`],
   });
 }
@@ -106,4 +108,15 @@ export function flowFigureSvg(layout: FlowLayout, title: string) {
 /** A study's flow as the figure the flow view downloads and the project zip carries. */
 export function studyFlowFigure(spec: Spec, layout = layoutFlow(spec)) {
   return flowFigureSvg(layout, `${specFilename(spec)}: study flow`);
+}
+
+/**
+ * The flow made at a figure size, with how many pixels wide a PNG of it is. Its text is the same
+ * 12 units as a trial figure's, so made for a column it prints at the same size; a flow wider
+ * than the column is scaled to it.
+ */
+export function flowFigure(spec: Spec, size: FigureSize) {
+  const layout = layoutFlow(spec);
+  const { widthMm, pixelWidth } = pageSize(layout.width, size);
+  return { svg: flowFigureSvg(layout, `${specFilename(spec)}: study flow`, widthMm), pixelWidth };
 }

@@ -17,6 +17,7 @@
     type FigureProgress,
   } from "./lib/experiment.svelte.ts";
   import { downloads, setSelfContained } from "./lib/downloads.svelte.ts";
+  import { figureChoices } from "./lib/figure-choices.svelte.ts";
   import { backgroundColor, textColor } from "@tachisto/compiler";
   import NodeForm from "./lib/NodeForm.svelte";
   import SequenceStrip from "./lib/SequenceStrip.svelte";
@@ -76,6 +77,7 @@
     return prepareDownload(async () => {
       const zip = await buildProjectZip({
         ...downloads,
+        choices: $state.snapshot(figureChoices),
         onProgress: (progress) => (picturing = progress),
       }).finally(() => (picturing = null));
       download(`${specFilename(project.spec)}.zip`, zip, "application/zip");

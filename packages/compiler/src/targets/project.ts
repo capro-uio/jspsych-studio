@@ -31,7 +31,7 @@ const NOTICE_FILE = "THIRD-PARTY.md";
 
 export interface ProjectOptions extends Partial<MetadataOptions> {
   /** Figures of the study by file name, such as the builder's flow diagram, saved under figures/. */
-  figures?: Record<string, string>;
+  figures?: Record<string, ProjectFile>;
   /**
    * Gets copies of the files the study loads from jsPsych and its plugins, keyed by
    * {@link packageFileKey}, so the download carries them under lib/ and loads nothing from
@@ -52,7 +52,7 @@ function decodeDataUrl(url: string) {
 function figuresLine(names: string[]) {
   if (names.length === 0) return "";
   const listed = names.map((name) => `\`${name}\``).join(", ");
-  return `- \`${FIGURES_DIR}/\` — figures of the study for a paper or poster, as SVG: ${listed}\n`;
+  return `- \`${FIGURES_DIR}/\` — figures of the study for a paper or poster: ${listed}\n`;
 }
 
 function packagesLine(selfContained: boolean) {

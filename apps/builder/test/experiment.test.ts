@@ -63,6 +63,20 @@ describe("studyFigures", () => {
     expect(progress).toEqual([0, 2, 1, 2]);
   });
 
+  it("makes each figure as chosen, with a PNG beside it when PNGs are chosen", async () => {
+    const toPng = vi.fn(() => Promise.resolve(new Blob([new Uint8Array([137, 80, 78, 71])])));
+    const figures = await studyFigures(flanker as Spec, {
+      capture: pictureFirst,
+      toPng,
+      choices: { arrangement: "row", size: "single", format: "png", blocks: {} },
+    });
+    expect(figures["block-flanker_trials.svg"]).toMatch(/width="[\d.]+mm"/);
+    expect(figures["block-flanker_trials.png"]).toEqual(new Uint8Array([137, 80, 78, 71]));
+    expect(figures["flow.png"]).toEqual(new Uint8Array([137, 80, 78, 71]));
+    expect(figures["flow.svg"]).toMatch(/width="[\d.]+mm"/);
+    expect(toPng).toHaveBeenCalledTimes(3);
+  });
+
   it("tells apart two blocks that run the same table", async () => {
     const twice: Spec = {
       name: "twice",
