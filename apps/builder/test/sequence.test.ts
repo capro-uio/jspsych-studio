@@ -1,13 +1,16 @@
 import { describe, expect, it } from "vitest";
+import stroop from "../../../examples/stroop.json";
 import type { Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import {
   activeSegment,
+  conditionColumns,
   containerName,
   containerPaths,
   detailText,
   rowLabels,
   segmentFor,
+  segmentInputs,
   segmentHolds,
   sequenceAt,
   sweepMs,
@@ -398,3 +401,44 @@ function specWithTable(rows: Record<string, unknown>[]): Spec {
     timeline: [{ kind: "block", conditions: "words", children: [keyTrial({ stimulus: "x" })] }],
   };
 }
+
+describe("conditionColumns", () => {
+  it("offers the columns that split the rows into a few conditions, each with its first row", () => {
+    const spec = specWithTable([
+      { congruency: "congruent", word: "RED", trial: 1, constant: "x" },
+      { congruency: "incongruent", word: "RED", trial: 2, constant: "x" },
+      { congruency: "congruent", word: "BLUE", trial: 3, constant: "x" },
+      { congruency: "incongruent", word: "BLUE", trial: 4, constant: "x" },
+      { congruency: "congruent", word: "GREEN", trial: 5, constant: "x" },
+    ]);
+    expect(conditionColumns(spec, [0, 0])).toEqual([
+      {
+        column: "congruency",
+        values: [
+          { value: "congruent", row: 0 },
+          { value: "incongruent", row: 1 },
+        ],
+      },
+      {
+        column: "word",
+        values: [
+          { value: "RED", row: 0 },
+          { value: "BLUE", row: 2 },
+          { value: "GREEN", row: 4 },
+        ],
+      },
+    ]);
+  });
+});
+
+describe("segmentInputs", () => {
+  it("gives each step's settings with the row's values in place of its columns", () => {
+    const spec = stroop as Spec;
+    const sequence = sequenceAt(spec, [2, 1], pluginSchema)!;
+    const [fixationFirst, wordFirst] = segmentInputs(spec, sequence, 0);
+    const [fixationSecond, wordSecond] = segmentInputs(spec, sequence, 1);
+    expect(fixationFirst).toBe(fixationSecond);
+    expect(wordFirst).not.toBe(wordSecond);
+    expect(wordFirst).toContain(JSON.stringify(spec.conditions!.stroop_trials[0].stimulus));
+  });
+});

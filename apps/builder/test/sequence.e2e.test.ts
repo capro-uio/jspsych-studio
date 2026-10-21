@@ -147,6 +147,24 @@ describe("the timing strip", () => {
     await page.close();
   }, 150_000);
 
+  it("shows the screen that differs in each condition, side by side", async () => {
+    const page = await openStroop();
+    await page.getByTestId("node-2-1").click();
+    await page.getByTestId("sequence-figure").locator("summary").click();
+    await page.getByTestId("sequence-figure-conditions").selectOption("congruency");
+    const [file] = await Promise.all([
+      page.waitForEvent("download", { timeout: 90_000 }),
+      page.getByTestId("download-sequence-figure").click(),
+    ]);
+    const svg = readFileSync(await file.path(), "utf8");
+    expect(svg).toContain("Conditions by congruency");
+    expect(svg).toContain(">congruent<");
+    expect(svg).toContain(">incongruent<");
+    expect(svg.match(/<image /g) ?? []).toHaveLength(4);
+    if (process.env.FIGURE_OUT) writeFileSync(process.env.FIGURE_OUT, svg);
+    await page.close();
+  }, 150_000);
+
   it("selects a step when its segment is clicked", async () => {
     const page = await openStroop();
     await page.getByTestId("node-2-1").click();

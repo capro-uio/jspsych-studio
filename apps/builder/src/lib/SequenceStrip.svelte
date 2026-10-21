@@ -6,13 +6,20 @@
   import {
     activeSegment,
     detailText,
+    conditionColumns,
     rowLabels,
+    segmentInputs,
     sequenceAt,
     sweepMs,
     timingText,
     type Segment,
   } from "./sequence.ts";
-  import { sequenceFigure, type Arrangement, type FigureSize } from "./trial-figure.ts";
+  import {
+    sequenceFigure,
+    varyingScreens,
+    type Arrangement,
+    type FigureSize,
+  } from "./trial-figure.ts";
 
   const sequence = $derived(sequenceAt(project.spec, project.selection, pluginSchema));
   const selectedKey = $derived(project.selection?.join(".") ?? "");
@@ -30,13 +37,30 @@
   let row = $state(0);
   let figureError = $state("");
   const rows = $derived(sequence ? rowLabels(project.spec, sequence.path) : []);
+  let byColumn = $state("");
+  const columns = $derived(sequence ? conditionColumns(project.spec, sequence.path) : []);
+  let figureNote = $state("");
+  let progress = $state("");
+
+  // A column edited away is no longer a choice.
+  $effect(() => {
+    if (byColumn && !columns.some((each) => each.column === byColumn)) byColumn = "";
+  });
+
+  const OPTION_LENGTH = 48;
+  const optionLabel = (column: string, values: { value: string }[]) => {
+    const label = `${column} (${values.map((each) => each.value).join(", ")})`;
+    return label.length > OPTION_LENGTH ? `${label.slice(0, OPTION_LENGTH - 1)}…` : label;
+  };
   const sequenceKey = $derived(sequence?.path.join(".") ?? "");
 
   // A row picked for one block means nothing for another, so each starts from its first.
   $effect(() => {
     void sequenceKey;
     row = 0;
+    byColumn = "";
     figureError = "";
+    figureNote = "";
   });
 
   // The options close as a menu does: on Escape, or once a click or focus lands elsewhere. The
@@ -74,9 +98,39 @@
     figureError = "";
     try {
       const { captureScreens } = await import("./screen-capture.ts");
-      const pictures = await captureScreens(spec, drawn, { row, signal }).catch(() => []);
-      if (signal.aborted) return;
-      const figure = sequenceFigure(spec, drawn, { arrangement, size }, pictures);
+      const condition = columns.find((each) => each.column === byColumn);
+      // With conditions shown, the sequence is pictured once for each, starting from the first.
+      const runs = condition ? condition.values : [{ value: "", row }];
+      const pictured: (string | undefined)[][] = [];
+      for (const [index, run] of runs.entries()) {
+        if (condition) progress = `Picturing ${run.value}, ${index + 1} of ${runs.length}…`;
+        pictured.push(await captureScreens(spec, drawn, { row: run.row, signal }).catch(() => []));
+        if (signal.aborted) return;
+      }
+      const conditions = runs.map((run, index) => ({
+        label: run.value,
+        pictures: pictured[index],
+        inputs: segmentInputs(spec, drawn, run.row),
+      }));
+      figureNote = "";
+      if (condition) {
+        const varying = varyingScreens(drawn, conditions);
+        const shown = varying.filter((index) =>
+          conditions.every((each) => each.pictures[index] !== undefined),
+        );
+        if (varying.length === 0) {
+          figureNote = `No screen differs between the values of ${condition.column}.`;
+        } else if (shown.length < varying.length) {
+          figureNote = "Some screens that differ could not be pictured, so they are left out.";
+        }
+      }
+      const figure = sequenceFigure(
+        spec,
+        drawn,
+        { arrangement, size },
+        pictured[0],
+        condition && { column: condition.column, conditions },
+      );
       const name = `${specFilename(spec)}-${drawn.kind}-${drawn.path.join("-")}`;
       if (format === "svg") {
         download(`${name}.svg`, figure.svg, "image/svg+xml");
@@ -88,6 +142,7 @@
     } catch (error) {
       figureError = `The figure could not be made: ${(error as Error).message}`;
     } finally {
+      progress = "";
       capturing = false;
       capture = null;
     }
@@ -123,7 +178,22 @@
               <option value="row">Screens in a row</option>
             </select>
           </label>
-          {#if rows.length > 1}
+          {#if columns.length > 0}
+            <label>
+              Show conditions by
+              <select
+                bind:value={byColumn}
+                title="Each condition is pictured from the first row that has its value"
+                data-testid="sequence-figure-conditions"
+              >
+                <option value="">None</option>
+                {#each columns as { column, values } (column)}
+                  <option value={column}>{optionLabel(column, values)}</option>
+                {/each}
+              </select>
+            </label>
+          {/if}
+          {#if rows.length > 1 && !byColumn}
             <label>
               Conditions row
               <select bind:value={row} data-testid="sequence-figure-row">
@@ -157,8 +227,13 @@
               ? "Add a step to this block to draw its figure"
               : "These steps as screens, as the participant sees them"}
             data-testid="download-sequence-figure"
-            >{capturing ? "Drawing the screens…" : "Download figure"}</button
+            >{capturing ? progress || "Drawing the screens…" : "Download figure"}</button
           >
+          {#if figureNote}
+            <p class="figure-note" role="status" data-testid="sequence-figure-note">
+              {figureNote}
+            </p>
+          {/if}
           {#if figureError}
             <p class="figure-error" role="alert" data-testid="sequence-figure-error">
               {figureError}
@@ -270,6 +345,10 @@
   }
   .options select {
     color: var(--ink);
+  }
+  .figure-note {
+    margin: 0;
+    color: var(--ink-muted);
   }
   .figure-error {
     margin: 0;

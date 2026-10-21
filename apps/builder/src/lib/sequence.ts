@@ -161,6 +161,74 @@ export function rowLabels(spec: Spec, path: number[]) {
   });
 }
 
+/** A value with each column it names replaced by that column's cell in the row. */
+function withRow(value: unknown, row: Row): unknown {
+  if (isVariableReference(value as ParameterValue)) return row[(value as { var: string }).var];
+  if (Array.isArray(value)) return value.map((item) => withRow(item, row));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [key, withRow(item, row)]),
+    );
+  }
+  return value;
+}
+
+function trialsUnder(node: SpecNode | undefined): TrialNode[] {
+  if (!node) return [];
+  if (node.kind === "trial") return [node];
+  const children = [
+    ...(node.kind === "block" || node.kind === "loop" ? node.children : []),
+    ...(slotsOf(node) ?? []).flatMap((slot) => slot.children),
+  ];
+  return children.flatMap(trialsUnder);
+}
+
+/**
+ * What each segment's steps are given for one row of the table: their plugins and settings, with
+ * the row's values in place of the columns they name. Two rows that give a segment the same show
+ * the same screen, however a picture of it might come out.
+ */
+export function segmentInputs(spec: Spec, sequence: Sequence, row: number) {
+  const table = tableAt(spec, sequence.path);
+  const cells = (table === null ? [] : (spec.conditions?.[table] ?? []))[row] ?? {};
+  return sequence.segments.map((segment) => {
+    if (!segment.path) return "";
+    const trials = trialsUnder(nodesAlong(spec.timeline, segment.path).at(-1)?.node);
+    return JSON.stringify(
+      trials.map((trial) => ({ plugin: trial.plugin, params: withRow(trial.params ?? {}, cells) })),
+    );
+  });
+}
+
+/** The most conditions a figure shows side by side; a column with more is not a condition. */
+export const MAX_CONDITIONS = 4;
+
+export interface ConditionColumn {
+  column: string;
+  /** Each value the column takes, with the first row that holds it, in the order they appear. */
+  values: { value: string; row: number }[];
+}
+
+/**
+ * The columns of the table the steps at a path read that divide its rows into a few conditions,
+ * two to {@link MAX_CONDITIONS} values, each with the first row that holds each value.
+ */
+export function conditionColumns(spec: Spec, path: number[]): ConditionColumn[] {
+  const table = tableAt(spec, path);
+  const rows = table === null ? [] : (spec.conditions?.[table] ?? []);
+  const columns = [...new Set(rows.flatMap((row) => Object.keys(row)))];
+  return columns.flatMap((column) => {
+    const values: { value: string; row: number }[] = [];
+    rows.forEach((row, index) => {
+      const cell = row[column];
+      if (typeof cell !== "string" && typeof cell !== "number") return;
+      const value = plainText(String(cell));
+      if (value && !values.some((seen) => seen.value === value)) values.push({ value, row: index });
+    });
+    return values.length >= 2 && values.length <= MAX_CONDITIONS ? [{ column, values }] : [];
+  });
+}
+
 // Number() reads a blank cell, a missing one or `false` as 0, which would pass for a duration.
 function durationOf(cell: unknown) {
   if (typeof cell === "number") return cell;
