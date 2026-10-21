@@ -6,7 +6,7 @@ import {
   type Spec,
 } from "@tachisto/compiler";
 import { zipSync, strToU8 } from "fflate";
-import { studyFlowFigure } from "./flow-figure.ts";
+import { flowFigure } from "./flow-figure.ts";
 import { asText, fetchPackageSources } from "./package-sources.ts";
 import { exportedSpec } from "./project.svelte.ts";
 import { pluginSchema, schemas } from "./schemas.ts";
@@ -71,7 +71,8 @@ export async function studyFigures(
   spec: Spec,
   { capture, onProgress, choices = PLAIN_CHOICES, toPng }: StudyFigureOptions = {},
 ) {
-  const figures: Record<string, string | Uint8Array> = { "flow.svg": studyFlowFigure(spec) };
+  const flow = flowFigure(spec, choices.size);
+  const figures: Record<string, string | Uint8Array> = { "flow.svg": flow.svg };
   const sequences = containerPaths(spec.timeline)
     .map((path) => sequenceAt(spec, path, pluginSchema))
     .filter((sequence): sequence is Sequence => sequence !== null && sequence.segments.length > 0);
@@ -90,6 +91,14 @@ export async function studyFigures(
     return pictures;
   };
   const drawPng = toPng ?? (await import("./figure-png.ts")).figurePng;
+  if (choices.format === "png") {
+    try {
+      const png = await drawPng(flow.svg, flow.pixelWidth);
+      figures["flow.png"] = new Uint8Array(await png.arrayBuffer());
+    } catch {
+      // The flow's SVG is carried whatever happens to its PNG.
+    }
+  }
   const deadline = new AbortController();
   const timer = setTimeout(() => deadline.abort(), FIGURES_DEADLINE);
   try {
@@ -100,7 +109,7 @@ export async function studyFigures(
           spec,
           sequence,
           choices,
-          choices.blocks[blockKey(sequence.path)] ?? NO_CONDITIONS,
+          choices.blocks[blockKey(spec, sequence.path)] ?? NO_CONDITIONS,
           {
             capture: pictureScreens && !deadline.signal.aborted ? watched : undefined,
             signal: deadline.signal,

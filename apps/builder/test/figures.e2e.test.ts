@@ -65,8 +65,10 @@ describe("the Figures view", () => {
         timeout: 60_000,
       })
       .toBe("true");
-    const source = (await block.getByTestId("figure-preview").getAttribute("src")) ?? "";
-    expect(images(decodeURIComponent(source))).toHaveLength(2);
+    const preview = await block
+      .getByTestId("figure-preview")
+      .evaluate((image: HTMLImageElement) => fetch(image.src).then((response) => response.text()));
+    expect(images(preview)).toHaveLength(2);
     await page.close();
   }, 150_000);
 

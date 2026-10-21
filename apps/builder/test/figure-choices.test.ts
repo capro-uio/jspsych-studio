@@ -1,5 +1,9 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { Spec } from "@tachisto/compiler";
+import stroop from "../../../examples/stroop.json";
+
+const spec = stroop as Spec;
 
 const fresh = async () => {
   vi.resetModules();
@@ -12,7 +16,7 @@ describe("figure choices", () => {
   it("start stacked, as drawn, as SVG, with no block's conditions chosen", async () => {
     const { figureChoices, blockChoice } = await fresh();
     expect(figureChoices).toMatchObject({ arrangement: "stack", size: "screen", format: "svg" });
-    expect(blockChoice([2])).toEqual({ byColumn: "", row: 0 });
+    expect(blockChoice(spec, [2])).toEqual({ byColumn: "", row: 0 });
   });
 
   it("remember the layout, size and format the next time the builder opens", async () => {
@@ -31,10 +35,22 @@ describe("figure choices", () => {
 
   it("keep each block's own choice apart", async () => {
     const { blockChoice, setBlockChoice } = await fresh();
-    setBlockChoice([2], { byColumn: "congruency" });
-    setBlockChoice([1, 0], { row: 3 });
-    expect(blockChoice([2])).toEqual({ byColumn: "congruency", row: 0 });
-    expect(blockChoice([1, 0])).toEqual({ byColumn: "", row: 3 });
+    setBlockChoice(spec, [2], { byColumn: "congruency" });
+    setBlockChoice(spec, [1], { row: 3 });
+    expect(blockChoice(spec, [2])).toEqual({ byColumn: "congruency", row: 0 });
+    expect(blockChoice(spec, [1])).toEqual({ byColumn: "", row: 3 });
+  });
+
+  it("do not pass a block's choice to another put in its place", async () => {
+    const { blockChoice, setBlockChoice } = await fresh();
+    setBlockChoice(spec, [2], { byColumn: "congruency" });
+    const other = { ...spec.timeline[2], conditions: "other_trials" };
+    const changed = {
+      ...spec,
+      conditions: { ...spec.conditions, other_trials: [] },
+      timeline: [...spec.timeline.slice(0, 2), other],
+    } as Spec;
+    expect(blockChoice(changed, [2])).toEqual({ byColumn: "", row: 0 });
   });
 
   it("are still made when the browser will not remember them", async () => {

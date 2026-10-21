@@ -72,7 +72,9 @@ describe("studyFigures", () => {
     });
     expect(figures["block-flanker_trials.svg"]).toMatch(/width="[\d.]+mm"/);
     expect(figures["block-flanker_trials.png"]).toEqual(new Uint8Array([137, 80, 78, 71]));
-    expect(toPng).toHaveBeenCalledTimes(2);
+    expect(figures["flow.png"]).toEqual(new Uint8Array([137, 80, 78, 71]));
+    expect(figures["flow.svg"]).toMatch(/width="[\d.]+mm"/);
+    expect(toPng).toHaveBeenCalledTimes(3);
   });
 
   it("tells apart two blocks that run the same table", async () => {

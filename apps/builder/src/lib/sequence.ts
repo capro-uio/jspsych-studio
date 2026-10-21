@@ -93,12 +93,17 @@ export function containerPaths(timeline: SpecNode[], path: number[] = []): numbe
   });
 }
 
+/** The step at a path, if there is one. */
+export function containerNode(spec: Spec, path: number[]): SpecNode | undefined {
+  return nodesAlong(spec.timeline, path).at(-1)?.node;
+}
+
 /**
  * What a block or loop at a path is called, for naming its figure: a block by the conditions
  * table it runs, a loop by its id, or by what it is.
  */
 export function containerName(spec: Spec, path: number[]) {
-  const node = nodesAlong(spec.timeline, path).at(-1)?.node;
+  const node = containerNode(spec, path);
   if (node?.kind === "block") return node.conditions;
   if (node?.kind === "loop") return node.id ?? "loop";
   return "steps";

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Spec } from "@tachisto/compiler";
 import stroop from "../../../examples/stroop.json";
-import { figureName, makeFigure, NO_CONDITIONS } from "../src/lib/figure-making.ts";
+import {
+  figureName,
+  figureStamp,
+  makeFigure,
+  NO_CONDITIONS,
+  resolveBlockChoice,
+} from "../src/lib/figure-making.ts";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import { sequenceAt } from "../src/lib/sequence.ts";
 
@@ -70,5 +76,50 @@ describe("figureName", () => {
       timeline: [{ ...spec.timeline[2], conditions: "Main Trials!" }],
     } as Spec;
     expect(figureName(odd, { ...sequence, path: [0] })).toBe("block-main-trials");
+  });
+});
+
+describe("resolveBlockChoice", () => {
+  it("keeps a choice the block still has", () => {
+    expect(resolveBlockChoice(spec, sequence, { byColumn: "congruency", row: 3 })).toEqual({
+      byColumn: "congruency",
+      row: 3,
+    });
+  });
+
+  it("sets aside a column the block no longer divides by, and a row it no longer has", () => {
+    expect(resolveBlockChoice(spec, sequence, { byColumn: "gone", row: 9 })).toEqual({
+      byColumn: "",
+      row: 0,
+    });
+  });
+});
+
+describe("figureStamp", () => {
+  const stamp = (changed: Spec, block = NO_CONDITIONS) =>
+    figureStamp(changed, sequence, choices, block);
+
+  it("changes with the block's steps, its table and the choices it is made with", () => {
+    const base = stamp(spec);
+    const fewerRows = {
+      ...spec,
+      conditions: { stroop_trials: spec.conditions!.stroop_trials.slice(1) },
+    };
+    expect(stamp(fewerRows)).not.toBe(base);
+    expect(stamp(spec, { byColumn: "congruency", row: 0 })).not.toBe(base);
+    expect(figureStamp(spec, sequence, { ...choices, size: "single" }, NO_CONDITIONS)).not.toBe(
+      base,
+    );
+  });
+
+  it("stays as it was when the study changes elsewhere", () => {
+    const renamed = { ...spec, name: "another name" };
+    const retitled = { ...spec, timeline: [{ ...spec.timeline[0] }, ...spec.timeline.slice(1)] };
+    expect(stamp(renamed)).toBe(stamp(spec));
+    expect(stamp(retitled)).toBe(stamp(spec));
+  });
+
+  it("reads a stale choice as the choice it falls back to", () => {
+    expect(stamp(spec, { byColumn: "gone", row: 9 })).toBe(stamp(spec));
   });
 });

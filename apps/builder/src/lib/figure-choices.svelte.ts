@@ -1,4 +1,6 @@
+import type { Spec } from "@tachisto/compiler";
 import { NO_CONDITIONS, type BlockChoice } from "./figure-making.ts";
+import { containerName } from "./sequence.ts";
 import { readStored, writeStored } from "./storage.ts";
 import type { Arrangement, FigureSize } from "./trial-figure.ts";
 
@@ -8,7 +10,7 @@ export interface FigureChoicesState {
   arrangement: Arrangement;
   size: FigureSize;
   format: FigureFormat;
-  /** Each block's own choices, by its path, as "2" or "1.0". */
+  /** Each block's own choices, by its place and what it runs, as "2:stroop_trials". */
   blocks: Record<string, BlockChoice>;
 }
 
@@ -53,12 +55,17 @@ export function rememberFigureChoices() {
   }
 }
 
-export const blockKey = (path: number[]) => path.join(".");
+/**
+ * Which block a choice belongs to: its place and what it runs. A block moved, or another put in
+ * its place, starts afresh rather than taking on a choice made for a different one.
+ */
+export const blockKey = (spec: Spec, path: number[]) =>
+  `${path.join(".")}:${containerName(spec, path)}`;
 
-export function blockChoice(path: number[]): BlockChoice {
-  return figureChoices.blocks[blockKey(path)] ?? NO_CONDITIONS;
+export function blockChoice(spec: Spec, path: number[]): BlockChoice {
+  return figureChoices.blocks[blockKey(spec, path)] ?? NO_CONDITIONS;
 }
 
-export function setBlockChoice(path: number[], choice: Partial<BlockChoice>) {
-  figureChoices.blocks[blockKey(path)] = { ...blockChoice(path), ...choice };
+export function setBlockChoice(spec: Spec, path: number[], choice: Partial<BlockChoice>) {
+  figureChoices.blocks[blockKey(spec, path)] = { ...blockChoice(spec, path), ...choice };
 }

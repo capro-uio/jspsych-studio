@@ -1,6 +1,13 @@
 import type { Spec } from "@tachisto/compiler";
 import type { captureScreens } from "./screen-capture.ts";
-import { conditionColumns, containerName, segmentInputs, type Sequence } from "./sequence.ts";
+import {
+  conditionColumns,
+  containerName,
+  containerNode,
+  segmentInputs,
+  tableAt,
+  type Sequence,
+} from "./sequence.ts";
 import { sequenceFigure, varyingScreens, type FigureChoices } from "./trial-figure.ts";
 
 /** What a block's figure shows of its conditions: a column to show side by side, or one row. */
@@ -40,6 +47,44 @@ export const figureName = (spec: Spec, sequence: Sequence) =>
   `${sequence.kind}-${fileSafe(containerName(spec, sequence.path))}`;
 
 /**
+ * A block's choice as it applies to the block now: a column it no longer divides into conditions
+ * is set aside, and a row it no longer has becomes its first. What is shown, what is drawn and
+ * what the download carries all read the choice through this, so they never disagree.
+ */
+export function resolveBlockChoice(spec: Spec, sequence: Sequence, choice: BlockChoice) {
+  const columns = conditionColumns(spec, sequence.path);
+  const table = tableAt(spec, sequence.path);
+  const rows = table === null ? 0 : (spec.conditions?.[table]?.length ?? 0);
+  return {
+    byColumn: columns.some((each) => each.column === choice.byColumn) ? choice.byColumn : "",
+    row: choice.row >= 0 && choice.row < rows ? choice.row : 0,
+  };
+}
+
+/**
+ * What a block's figure is made from: its own steps, its table, how the study looks and the
+ * files it shows, and the choices it is made with. A picture taken from anything else is out of
+ * date, and an edit elsewhere in the study leaves it as it is.
+ */
+export function figureStamp(
+  spec: Spec,
+  sequence: Sequence,
+  choices: FigureChoices,
+  block: BlockChoice,
+) {
+  const table = tableAt(spec, sequence.path);
+  return JSON.stringify([
+    containerNode(spec, sequence.path),
+    table === null ? null : spec.conditions?.[table],
+    spec.settings,
+    spec.assets?.map((asset) => [asset.name, asset.url.length]),
+    choices.arrangement,
+    choices.size,
+    resolveBlockChoice(spec, sequence, block),
+  ]);
+}
+
+/**
  * A block's or loop's figure as chosen: pictured for the row asked, or once for each condition of
  * the column asked, with the screens that differ between them shown side by side. A choice the
  * block no longer has, such as a column since removed, is set aside. A screen that cannot be
@@ -52,10 +97,11 @@ export async function makeFigure(
   block: BlockChoice,
   { capture, signal, onProgress }: MakingOptions = {},
 ): Promise<MadeFigure> {
+  const chosen = resolveBlockChoice(spec, sequence, block);
   const condition = conditionColumns(spec, sequence.path).find(
-    (each) => each.column === block.byColumn,
+    (each) => each.column === chosen.byColumn,
   );
-  const runs = condition ? condition.values : [{ value: "", row: block.row }];
+  const runs = condition ? condition.values : [{ value: "", row: chosen.row }];
   const pictured: (string | undefined)[][] = [];
   for (const [index, run] of runs.entries()) {
     if (condition) onProgress?.(`Picturing ${run.value}, ${index + 1} of ${runs.length}…`);

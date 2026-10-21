@@ -7,8 +7,14 @@
     rememberFigureChoices,
     setBlockChoice,
   } from "./figure-choices.svelte.ts";
-  import { figureName, makeFigure, type MadeFigure } from "./figure-making.ts";
-  import { studyFlowFigure } from "./flow-figure.ts";
+  import {
+    figureName,
+    figureStamp,
+    makeFigure,
+    resolveBlockChoice,
+    type MadeFigure,
+  } from "./figure-making.ts";
+  import { flowFigure } from "./flow-figure.ts";
   import { exportedSpec } from "./project.svelte.ts";
   import { pluginSchema } from "./schemas.ts";
   import {
@@ -22,62 +28,85 @@
   import { sequenceFigure } from "./trial-figure.ts";
 
   const spec = $derived($state.snapshot(exportedSpec()));
-  const specJson = $derived(JSON.stringify(spec));
-  const sequences = $derived(
+  const shared = $derived({ arrangement: figureChoices.arrangement, size: figureChoices.size });
+  const flow = $derived(flowFigure(spec, figureChoices.size));
+
+  // Each block's card, worked out once for each change rather than on every look at it.
+  const cards = $derived(
     containerPaths(spec.timeline)
       .map((path) => sequenceAt(spec, path, pluginSchema))
-      .filter(
-        (sequence): sequence is Sequence => sequence !== null && sequence.segments.length > 0,
-      ),
+      .filter((sequence): sequence is Sequence => sequence !== null && sequence.segments.length > 0)
+      .map((sequence) => {
+        const choice = resolveBlockChoice(spec, sequence, blockChoice(spec, sequence.path));
+        const name = containerName(spec, sequence.path);
+        return {
+          sequence,
+          key: blockKey(spec, sequence.path),
+          title: `${sequence.kind === "block" ? "Block" : "Loop"} · ${name}`,
+          choice,
+          columns: conditionColumns(spec, sequence.path),
+          rows: rowLabels(spec, sequence.path),
+          stamp: figureStamp(spec, sequence, shared, choice),
+          // Until its screens are pictured, a figure is drawn at once with plain ones.
+          plain: sequenceFigure(spec, sequence, shared).svg,
+        };
+      }),
   );
-  const flowSvg = $derived(studyFlowFigure(spec));
-
-  // What a figure was made from; a picture taken from anything else is out of date.
-  const stampOf = (sequence: Sequence) =>
-    JSON.stringify([
-      specJson,
-      figureChoices.arrangement,
-      figureChoices.size,
-      blockChoice(sequence.path),
-    ]);
+  type Card = (typeof cards)[number];
 
   let pictured = $state<Record<string, { stamp: string; made: MadeFigure }>>({});
   let busy = $state<Record<string, string>>({});
   let errors = $state<Record<string, string>>({});
+  let urls = $state<Record<string, string>>({});
   const stop = new AbortController();
   $effect(() => () => stop.abort());
 
-  function current(sequence: Sequence) {
-    const kept = pictured[blockKey(sequence.path)];
-    return kept && kept.stamp === stampOf(sequence) ? kept.made : null;
-  }
+  const madeFor = (card: Card) =>
+    pictured[card.key]?.stamp === card.stamp ? pictured[card.key].made : null;
 
-  // Until its screens are pictured, a figure is drawn at once with plain ones.
-  function plain(sequence: Sequence) {
-    return sequenceFigure(spec, sequence, figureChoices).svg;
-  }
+  // Previews are shown from object URLs rather than data URLs, which for a figure with its
+  // screens in it would run to megabytes; each is let go once it is replaced.
+  $effect(() => {
+    const made: Record<string, string> = { flow: flow.svg };
+    for (const card of cards) made[card.key] = madeFor(card)?.svg ?? card.plain;
+    const next = Object.fromEntries(
+      Object.entries(made).map(([key, svg]) => [
+        key,
+        URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" })),
+      ]),
+    );
+    urls = next;
+    return () => Object.values(next).forEach((url) => URL.revokeObjectURL(url));
+  });
 
-  const imageOf = (svg: string) => `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  // Pictures of blocks that are gone are let go of too.
+  $effect(() => {
+    const keys = new Set(cards.map((card) => card.key));
+    for (const key of Object.keys(pictured)) if (!keys.has(key)) delete pictured[key];
+  });
 
-  async function picture(sequence: Sequence) {
-    const key = blockKey(sequence.path);
-    const stamp = stampOf(sequence);
-    busy[key] = "Picturing the screens…";
-    errors[key] = "";
+  async function picture(card: Card) {
+    // Everything the figure is made from is fixed now, so an edit made while it is pictured
+    // cannot leave it marked as made from something it was not.
+    const fixedSpec = spec;
+    const fixedChoices = { ...shared };
+    const stamp = card.stamp;
+    busy[card.key] = "Picturing the screens…";
+    errors[card.key] = "";
     try {
       const { captureScreens } = await import("./screen-capture.ts");
-      const made = await makeFigure(spec, sequence, figureChoices, blockChoice(sequence.path), {
+      const made = await makeFigure(fixedSpec, card.sequence, fixedChoices, card.choice, {
         capture: captureScreens,
         signal: stop.signal,
-        onProgress: (message) => (busy[key] = message),
+        onProgress: (message) => (busy[card.key] = message),
       });
-      if (!stop.signal.aborted) pictured[key] = { stamp, made };
+      if (!stop.signal.aborted) pictured[card.key] = { stamp, made };
       return made;
     } catch (error) {
-      errors[key] = `The figure could not be made: ${(error as Error).message}`;
+      errors[card.key] = `The figure could not be made: ${(error as Error).message}`;
       return null;
     } finally {
-      delete busy[key];
+      delete busy[card.key];
     }
   }
 
@@ -90,21 +119,21 @@
     download(`${name}.png`, await figurePng(svg, pixelWidth), "image/png");
   }
 
-  async function downloadFigure(sequence: Sequence) {
-    const made = current(sequence) ?? (await picture(sequence));
+  async function downloadFigure(card: Card) {
+    const made = madeFor(card) ?? (await picture(card));
     if (!made || stop.signal.aborted) return;
-    const name = `${specFilename(spec)}-${figureName(spec, sequence)}`;
+    const name = `${specFilename(spec)}-${figureName(spec, card.sequence)}`;
     await save(name, made.svg, made.pixelWidth).catch((error: Error) => {
-      errors[blockKey(sequence.path)] = `The figure could not be made: ${error.message}`;
+      errors[card.key] = `The figure could not be made: ${error.message}`;
     });
   }
 
-  function downloadFlow() {
-    const width = Number(/viewBox="0 0 (\d+(?:\.\d+)?)/.exec(flowSvg)?.[1] ?? 600);
-    void save(`${specFilename(spec)}-flow`, flowSvg, width * 2);
+  async function downloadFlow() {
+    errors.flow = "";
+    await save(`${specFilename(spec)}-flow`, flow.svg, flow.pixelWidth).catch((error: Error) => {
+      errors.flow = `The figure could not be made: ${error.message}`;
+    });
   }
-
-  const kindLabel = (sequence: Sequence) => (sequence.kind === "block" ? "Block" : "Loop");
 </script>
 
 <div class="figures" data-testid="figures">
@@ -153,52 +182,59 @@
   <article class="card" data-testid="figure-flow">
     <header>
       <h3>Study flow</h3>
-      <button type="button" onclick={downloadFlow} data-testid="figure-flow-download"
-        >Download</button
+      <button
+        type="button"
+        onclick={downloadFlow}
+        aria-label="Download the study flow"
+        data-testid="figure-flow-download">Download</button
       >
     </header>
-    <img src={imageOf(flowSvg)} alt="The study's flow, as a figure" />
+    <img src={urls.flow} alt="The study's flow, as a figure" />
+    {#if errors.flow}
+      <p class="error" role="alert">{errors.flow}</p>
+    {/if}
   </article>
 
-  {#each sequences as sequence (blockKey(sequence.path))}
-    {@const key = blockKey(sequence.path)}
-    {@const choice = blockChoice(sequence.path)}
-    {@const columns = conditionColumns(spec, sequence.path)}
-    {@const rows = rowLabels(spec, sequence.path)}
-    {@const made = current(sequence)}
-    <article class="card" data-testid={`figure-${sequence.path.join("-")}`}>
+  {#each cards as card (card.key)}
+    {@const made = madeFor(card)}
+    <article class="card" data-testid={`figure-${card.sequence.path.join("-")}`}>
       <header>
-        <h3>{kindLabel(sequence)} · {containerName(spec, sequence.path)}</h3>
+        <h3>{card.title}</h3>
         <div class="actions">
           <button
             type="button"
-            onclick={() => picture(sequence)}
-            disabled={key in busy || made !== null}
+            onclick={() => picture(card)}
+            disabled={card.key in busy || made !== null}
+            title={made ? "The preview already shows the screens" : undefined}
+            aria-label={`Show the screens of ${card.title}`}
             data-testid="figure-picture">Show the screens</button
           >
           <button
             type="button"
-            onclick={() => downloadFigure(sequence)}
-            disabled={key in busy}
-            aria-busy={key in busy}
-            data-testid="figure-download">{busy[key] ?? "Download"}</button
+            onclick={() => downloadFigure(card)}
+            disabled={card.key in busy}
+            aria-busy={card.key in busy}
+            aria-label={`Download ${card.title}`}
+            data-testid="figure-download">{busy[card.key] ?? "Download"}</button
           >
         </div>
       </header>
-      {#if columns.length > 0 || rows.length > 1}
+      {#if card.columns.length > 0 || card.rows.length > 1}
         <div class="choices">
-          {#if columns.length > 0}
+          {#if card.columns.length > 0}
             <label>
               Show conditions by
               <select
-                value={choice.byColumn}
+                value={card.choice.byColumn}
                 onchange={(event) =>
-                  setBlockChoice(sequence.path, { byColumn: event.currentTarget.value })}
+                  setBlockChoice(spec, card.sequence.path, {
+                    byColumn: event.currentTarget.value,
+                  })}
                 title="Each condition is pictured from the first row that has its value"
                 data-testid="figure-conditions"
               >
                 <option value="">None</option>
-                {#each columns as { column, values } (column)}
+                {#each card.columns as { column, values } (column)}
                   <option value={column}
                     >{column} ({values.map((each) => each.value).join(", ")})</option
                   >
@@ -206,16 +242,18 @@
               </select>
             </label>
           {/if}
-          {#if rows.length > 1 && !choice.byColumn}
+          {#if card.rows.length > 1 && !card.choice.byColumn}
             <label>
               Conditions row
               <select
-                value={choice.row < rows.length ? choice.row : 0}
+                value={card.choice.row}
                 onchange={(event) =>
-                  setBlockChoice(sequence.path, { row: Number(event.currentTarget.value) })}
+                  setBlockChoice(spec, card.sequence.path, {
+                    row: Number(event.currentTarget.value),
+                  })}
                 data-testid="figure-row"
               >
-                {#each rows as label, index (index)}
+                {#each card.rows as label, index (index)}
                   <option value={index}>{label}</option>
                 {/each}
               </select>
@@ -224,18 +262,18 @@
         </div>
       {/if}
       <img
-        src={imageOf(made?.svg ?? plain(sequence))}
-        alt={`${kindLabel(sequence)} ${containerName(spec, sequence.path)}, screen by screen`}
+        src={urls[card.key]}
+        alt={`${card.title}, screen by screen`}
         data-testid="figure-preview"
         data-pictured={made !== null}
       />
       {#if made?.note}
         <p class="note" role="status">{made.note}</p>
-      {:else if !made && choice.byColumn}
+      {:else if !made && card.choice.byColumn}
         <p class="note">Show the screens to see each condition side by side.</p>
       {/if}
-      {#if errors[key]}
-        <p class="error" role="alert">{errors[key]}</p>
+      {#if errors[card.key]}
+        <p class="error" role="alert">{errors[card.key]}</p>
       {/if}
     </article>
   {:else}
