@@ -1,5 +1,5 @@
-import { isVariableReference, slotsOf } from "@tachisto/compiler";
-import type { ParameterValue, Spec, SpecNode, TrialNode } from "@tachisto/compiler";
+import { isVariableReference, nodesAlongPath, trialsOf, walkNodes } from "@tachisto/compiler";
+import type { ParameterValue, PlacedNode, Spec, SpecNode, TrialNode } from "@tachisto/compiler";
 import type { PluginSchema } from "@tachisto/schemas";
 import type { Playback } from "./playback.svelte.ts";
 
@@ -49,53 +49,22 @@ export const UNTIMED_WEIGHT = 1000;
 type Lookup = (plugin: string) => PluginSchema | undefined;
 type Row = Record<string, unknown>;
 
-/** The nodes along a path, outermost first; empty if the path leads nowhere. */
-function nodesAlong(timeline: SpecNode[], path: number[]) {
-  const found: { node: SpecNode; path: number[] }[] = [];
-  let nodes = timeline;
-  for (let position = 0; position < path.length; position += 1) {
-    const node = nodes[path[position]];
-    if (!node) return [];
-    found.push({ node, path: path.slice(0, position + 1) });
-    const slots = slotsOf(node);
-    if (slots) {
-      position += 1;
-      if (position >= path.length) break;
-      const slot = slots[path[position]];
-      if (!slot) return [];
-      nodes = slot.children;
-    } else if (node.kind === "block" || node.kind === "loop") {
-      nodes = node.children;
-    } else if (position < path.length - 1) {
-      return [];
-    }
-  }
-  return found;
-}
-
 /**
  * The path of every block and loop in a timeline, outermost first, written as a selection is, so
  * each can be handed to {@link sequenceAt}: a step's index, and a slot's index after the step
  * that holds it.
  */
-export function containerPaths(timeline: SpecNode[], path: number[] = []): number[][] {
-  return timeline.flatMap((node, index) => {
-    const here = [...path, index];
-    const slots = slotsOf(node);
-    if (slots)
-      return slots.flatMap((slot, slotIndex) =>
-        containerPaths(slot.children, [...here, slotIndex]),
-      );
-    if (node.kind === "block" || node.kind === "loop") {
-      return [here, ...containerPaths(node.children, here)];
-    }
-    return [];
+export function containerPaths(timeline: SpecNode[]): number[][] {
+  const paths: number[][] = [];
+  walkNodes(timeline, (node, path) => {
+    if (node.kind === "block" || node.kind === "loop") paths.push(path);
   });
+  return paths;
 }
 
 /** The step at a path, if there is one. */
 export function containerNode(spec: Spec, path: number[]): SpecNode | undefined {
-  return nodesAlong(spec.timeline, path).at(-1)?.node;
+  return nodesAlongPath(spec.timeline, path).at(-1)?.node;
 }
 
 /**
@@ -125,7 +94,7 @@ function rowsFor(spec: Spec, along: { node: SpecNode }[]): Row[] {
 
 /** The conditions table the steps at a path read their columns from, if any. */
 export function tableAt(spec: Spec, path: number[]) {
-  return tableFor(nodesAlong(spec.timeline, path));
+  return tableFor(nodesAlongPath(spec.timeline, path));
 }
 
 const ROW_LABEL_LENGTH = 40;
@@ -178,16 +147,6 @@ function withRow(value: unknown, row: Row): unknown {
   return value;
 }
 
-function trialsUnder(node: SpecNode | undefined): TrialNode[] {
-  if (!node) return [];
-  if (node.kind === "trial") return [node];
-  const children = [
-    ...(node.kind === "block" || node.kind === "loop" ? node.children : []),
-    ...(slotsOf(node) ?? []).flatMap((slot) => slot.children),
-  ];
-  return children.flatMap(trialsUnder);
-}
-
 /**
  * What each segment's steps are given for one row of the table: their plugins and settings, with
  * the row's values in place of the columns they name. Two rows that give a segment the same show
@@ -198,7 +157,8 @@ export function segmentInputs(spec: Spec, sequence: Sequence, row: number) {
   const cells = (table === null ? [] : (spec.conditions?.[table] ?? []))[row] ?? {};
   return sequence.segments.map((segment) => {
     if (!segment.path) return "";
-    const trials = trialsUnder(nodesAlong(spec.timeline, segment.path).at(-1)?.node);
+    const step = nodesAlongPath(spec.timeline, segment.path).at(-1)?.node;
+    const trials = step ? trialsOf([step]) : [];
     return JSON.stringify(
       trials.map((trial) => ({ plugin: trial.plugin, params: withRow(trial.params ?? {}, cells) })),
     );
@@ -318,10 +278,9 @@ function groupTitle(node: SpecNode) {
   return node.kind;
 }
 
-type Along = ReturnType<typeof nodesAlong>[number];
 type Container = Extract<SpecNode, { kind: "block" | "loop" }>;
 
-const isContainer = (entry: Along): entry is Along & { node: Container } =>
+const isContainer = (entry: PlacedNode): entry is PlacedNode & { node: Container } =>
   entry.node.kind === "block" || entry.node.kind === "loop";
 
 /**
@@ -330,7 +289,7 @@ const isContainer = (entry: Along): entry is Along & { node: Container } =>
  */
 export function sequenceAt(spec: Spec, selection: number[] | null, lookup: Lookup) {
   if (!selection) return null;
-  const along = nodesAlong(spec.timeline, selection);
+  const along = nodesAlongPath(spec.timeline, selection);
   const around = [...along].reverse().find(isContainer);
   if (!around) return null;
   const { node: container, path } = around;

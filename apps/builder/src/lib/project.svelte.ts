@@ -1,5 +1,11 @@
 import { conditionColumns as columnsOfTable } from "@tachisto/compiler";
-import { earlyEndingNames, slotsOf } from "@tachisto/compiler";
+import {
+  childrenOf,
+  earlyEndingNames,
+  nodesAlongPath,
+  slotsOf,
+  trialsOf,
+} from "@tachisto/compiler";
 import { NODE_KINDS, SPEC_SCHEMA_ID } from "@tachisto/compiler";
 import { unique } from "./lists.ts";
 import { addEnding, DEFAULT_EARLY_ENDING } from "./recruitment.ts";
@@ -34,20 +40,18 @@ export const project = $state<{ spec: Spec; selection: NodePath | null; insertio
 // A path walks the tree one index per level. A node with several child lists — a split's groups,
 // a branch's paths — consumes two: the node, then which list, since a list is not a step itself.
 export function childrenAt(path: NodePath): SpecNode[] {
-  let nodes = project.spec.timeline;
-  for (let position = 0; position < path.length; position += 1) {
-    const node = nodes[path[position]];
-    const slots = slotsOf(node);
-    if (slots) {
-      position += 1;
-      nodes = slots[path[position]].children;
-    } else if (node.kind === "block" || node.kind === "loop") {
-      nodes = node.children;
-    } else {
-      throw new Error(`a ${node.kind} cannot hold other steps`);
-    }
+  if (path.length === 0) return project.spec.timeline;
+  const last = nodesAlongPath(project.spec.timeline, path).at(-1);
+  if (!last) throw new Error(`no step at ${path.join(".")}`);
+  const slots = slotsOf(last.node);
+  if (slots) {
+    const slot = slots[path[last.path.length]];
+    if (!slot) throw new Error(`a ${last.node.kind} holds its steps in paths, and none was named`);
+    return slot.children;
   }
-  return nodes;
+  const children = childrenOf(last.node);
+  if (!children) throw new Error(`a ${last.node.kind} cannot hold other steps`);
+  return children;
 }
 
 export function nodeAt(path: NodePath): SpecNode {
@@ -185,17 +189,7 @@ export function newLoop(first: SpecNode): SpecNode {
 
 /** Tags already used earlier in the experiment, which is what a branch can judge. */
 export function tagsInUse(): string[] {
-  const found: string[] = [];
-  const walk = (nodes: SpecNode[]) => {
-    for (const node of nodes) {
-      if (node.kind === "trial") {
-        if (node.tag) found.push(node.tag);
-      } else if (node.kind === "block" || node.kind === "loop") walk(node.children);
-      else for (const slot of slotsOf(node) ?? []) walk(slot.children);
-    }
-  };
-  walk(project.spec.timeline);
-  return unique(found);
+  return unique(trialsOf(project.spec.timeline).flatMap((trial) => (trial.tag ? [trial.tag] : [])));
 }
 
 export function conditionTableNames() {

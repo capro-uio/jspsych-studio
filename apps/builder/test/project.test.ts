@@ -1,14 +1,19 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { compileSpec, specSchema } from "@tachisto/compiler";
+import { compileSpec, specSchema, type SpecNode, type TrialNode } from "@tachisto/compiler";
 import {
+  canHoldChildren,
+  childrenAt,
   exportedSpec,
   isUntouched,
   newCounterbalance,
   newEnd,
   newTrial,
+  nodeAt,
   parseSpec,
   project,
+  selectedNode,
   startNewProject,
+  tagsInUse,
 } from "../src/lib/project.svelte.ts";
 import { schemas } from "../src/lib/schemas.ts";
 
@@ -133,5 +138,78 @@ describe("newEnd", () => {
   it("adds an ending to reach when there is none, so the step is ready to run", () => {
     expect(newEnd()).toEqual({ kind: "end", ending: "ended_early" });
     expect(project.spec.recruitment?.endings?.ended_early?.message).toMatch(/Thank you/);
+  });
+});
+
+const tagged = (tag: string): TrialNode => ({
+  kind: "trial",
+  plugin: "html-keyboard-response",
+  tag,
+});
+
+const tagsOf = (nodes: SpecNode[]) => nodes.map((node) => (node as TrialNode).tag);
+
+describe("childrenAt", () => {
+  beforeEach(() => {
+    startNewProject();
+    project.spec.timeline = [
+      tagged("intro"),
+      { kind: "block", conditions: "t", children: [tagged("cue")] },
+      {
+        kind: "assign",
+        method: "random",
+        groups: [
+          { name: "a", children: [tagged("left")] },
+          { name: "b", children: [tagged("right")] },
+        ],
+      },
+    ];
+  });
+
+  it("gives the timeline itself for the empty path", () => {
+    expect(childrenAt([])).toBe(project.spec.timeline);
+  });
+
+  it("gives a block's steps, and a group's once the group is named", () => {
+    expect(tagsOf(childrenAt([1]))).toEqual(["cue"]);
+    expect(tagsOf(childrenAt([2, 1]))).toEqual(["right"]);
+  });
+
+  it("refuses a path that leads to no list of steps", () => {
+    expect(() => childrenAt([0])).toThrow(/a trial cannot hold other steps/);
+    expect(() => childrenAt([2])).toThrow(/none was named/);
+    expect(() => childrenAt([2, 5])).toThrow(/no step at 2\.5/);
+    expect(() => childrenAt([9])).toThrow(/no step at 9/);
+  });
+
+  it("tells which paths can take new steps", () => {
+    expect(canHoldChildren([1])).toBe(true);
+    expect(canHoldChildren([2, 0])).toBe(true);
+    expect(canHoldChildren([0])).toBe(false);
+  });
+
+  it("finds the step a selection names, and nothing for a group", () => {
+    expect(nodeAt([2, 0, 0])).toEqual(tagged("left"));
+    project.selection = [1, 0];
+    expect(selectedNode()).toEqual(tagged("cue"));
+    project.selection = [2, 0];
+    expect(selectedNode()).toBeNull();
+  });
+});
+
+describe("tagsInUse", () => {
+  beforeEach(() => startNewProject());
+
+  it("gathers each tag once, however deep it sits", () => {
+    project.spec.timeline = [
+      tagged("practice"),
+      {
+        kind: "branch",
+        when: { scope: "practice", accuracy_below: 0.5 },
+        then: [{ kind: "block", conditions: "t", children: [tagged("main")] }],
+        otherwise: [tagged("practice")],
+      },
+    ];
+    expect(tagsInUse()).toEqual(["practice", "main"]);
   });
 });

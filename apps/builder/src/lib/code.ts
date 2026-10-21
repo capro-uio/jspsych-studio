@@ -2,8 +2,8 @@ import {
   containsCode,
   isCode,
   isVariableReference,
-  slotsOf,
   takesFunction,
+  trialsOf,
   type ParameterValue,
   type SpecNode,
 } from "@tachisto/compiler";
@@ -37,7 +37,5 @@ export function codeHint(parameter: ParameterSchema) {
 
 /** Whether a step, or any step inside it, runs code its author wrote. */
 export function usesCode(node: SpecNode): boolean {
-  if (node.kind === "trial") return Object.values(node.params ?? {}).some(containsCode);
-  if (node.kind === "block" || node.kind === "loop") return node.children.some(usesCode);
-  return (slotsOf(node) ?? []).some((slot) => slot.children.some(usesCode));
+  return trialsOf([node]).some((trial) => Object.values(trial.params ?? {}).some(containsCode));
 }

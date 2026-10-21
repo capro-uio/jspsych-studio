@@ -42,5 +42,14 @@ export type { HtmlOutput, HtmlTargetOptions } from "./targets/html.ts";
 export { NODE_KINDS, SPEC_SCHEMA_ID, specSchema } from "./spec-schema.ts";
 export { SpecError, validateSpec } from "./validate.ts";
 export type { Problem } from "./validate.ts";
-export { childrenOf, conditionColumns, isVariableReference, slotsOf } from "./variables.ts";
+export {
+  childrenOf,
+  conditionColumns,
+  isVariableReference,
+  nodesAlongPath,
+  slotsOf,
+  trialsOf,
+  walkNodes,
+} from "./variables.ts";
+export type { PlacedNode } from "./variables.ts";
 export type * from "./types.ts";
