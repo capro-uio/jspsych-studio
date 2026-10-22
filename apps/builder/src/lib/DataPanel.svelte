@@ -1,9 +1,18 @@
 <script lang="ts">
-  import { DATAPIPE_URL, usesRecordings } from "@tachisto/compiler";
+  import {
+    conditionFallbackNote,
+    conditionFallbackOf,
+    conditionSteps,
+    DATAPIPE_URL,
+    usesRecordings,
+  } from "@tachisto/compiler";
+  import DataPipeSetup from "./DataPipeSetup.svelte";
   import { project } from "./project.svelte.ts";
 
   const mode = $derived(project.spec.data?.save ?? "none");
   const records = $derived(usesRecordings(project.spec));
+  const asksForConditions = $derived(conditionSteps(project.spec).length > 0);
+  const drawsLocally = $derived(conditionFallbackOf(project.spec.data) === "random");
 
   function setMode(value: string) {
     if (value === "none") delete project.spec.data;
@@ -22,6 +31,12 @@
     if (stream) project.spec.data.stream = true;
     else delete project.spec.data.stream;
   }
+
+  function setDrawsLocally(random: boolean) {
+    if (!project.spec.data) return;
+    if (random) project.spec.data.condition_fallback = "random";
+    else delete project.spec.data.condition_fallback;
+  }
 </script>
 
 <section>
@@ -39,6 +54,7 @@
   {/if}
 
   {#if mode === "post"}
+    <DataPipeSetup />
     <label for="data-experiment-id">Experiment ID</label>
     <input
       id="data-experiment-id"
@@ -73,6 +89,20 @@
         A participant who closes the page partway, withdrawing included, still leaves a partial file
         on DataPipe, recordings and all. Say so in your consent form. Every ending then keeps all
         the data.
+      </p>
+    {/if}
+    {#if asksForConditions}
+      <label class="check">
+        <input
+          type="checkbox"
+          data-testid="data-condition-fallback"
+          checked={drawsLocally}
+          onchange={(e) => setDrawsLocally(e.currentTarget.checked)}
+        />
+        If DataPipe cannot hand out a group or order, draw one in the browser
+      </label>
+      <p class={drawsLocally ? "warn" : "muted"} data-testid="data-condition-fallback-note">
+        {conditionFallbackNote(project.spec.data)}
       </p>
     {/if}
     {#if records}

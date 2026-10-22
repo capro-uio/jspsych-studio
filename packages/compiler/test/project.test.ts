@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import manifest from "../package.json" with { type: "json" };
+import { dataPipeSetupMarkdown } from "../src/datapipe-setup.ts";
 import type { DatasetDescription } from "../src/metadata.ts";
 import { projectFiles, type ProjectFile } from "../src/targets/project.ts";
 import type { Spec } from "../src/types.ts";
@@ -32,6 +33,7 @@ describe("downloading the whole project", () => {
   it("includes the page, the experiment, the project file and a readme", async () => {
     const files = await projectFiles(spec, schemas);
     expect(Object.keys(files).sort()).toEqual([
+      "DATAPIPE-SETUP.md",
       "README.md",
       "assets/face.png",
       "dataset_description.json",
@@ -86,6 +88,18 @@ describe("downloading the whole project", () => {
 
     const nowhere = await projectFiles({ ...spec, data: undefined }, schemas);
     expect(nowhere["README.md"]).toContain("does not keep its results");
+  });
+
+  it("carries a DataPipe setup checklist, linked from the readme, only when it uploads", async () => {
+    const uploading = await projectFiles(spec, schemas);
+    expect(uploading["DATAPIPE-SETUP.md"]).toBe(dataPipeSetupMarkdown(spec));
+    expect(uploading["README.md"]).toContain("[`DATAPIPE-SETUP.md`](DATAPIPE-SETUP.md)");
+
+    for (const data of [undefined, { save: "download" as const }]) {
+      const files = await projectFiles({ ...spec, data }, schemas);
+      expect(files["DATAPIPE-SETUP.md"]).toBeUndefined();
+      expect(files["README.md"]).not.toContain("DATAPIPE-SETUP.md");
+    }
   });
 
   it("describes the data it will produce, in Psych-DS form", async () => {
