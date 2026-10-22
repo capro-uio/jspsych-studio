@@ -56,6 +56,9 @@
   },
   "overrides": {
     "vite": "$vite",
-    "@grpc/grpc-js": "^1.13.6"
+    "@grpc/grpc-js": "^1.13.6",
+    "@tensorflow/tfjs": {
+      "argparse": "^2.0.1"
+    }
   }
 }
