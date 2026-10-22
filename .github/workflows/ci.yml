@@ -17,11 +17,16 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install --with-deps chromium webkit
       - run: npx prettier --check .
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run coverage
+      - name: Picture screens in WebKit, Safari's engine
+        working-directory: apps/builder
+        env:
+          PLAYWRIGHT_BROWSER: webkit
+        run: npx vitest run test/figures.e2e.test.ts test/text-screen.e2e.test.ts
       # Dependabot's runs get no Actions secrets, and a dependency bump changes no lines to cover.
       - if: github.event.pull_request.user.login != 'dependabot[bot]'
         uses: codecov/codecov-action@v7

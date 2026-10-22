@@ -36,7 +36,7 @@ export interface FigureFrame {
   widthMm?: number;
 }
 
-const round = (value: number) => Math.round(value * 100) / 100;
+export const round = (value: number) => Math.round(value * 100) / 100;
 
 /**
  * A figure as a standalone SVG for a paper or a poster: every colour and font is written on the

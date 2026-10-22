@@ -2,6 +2,7 @@ import captureLibrary from "html-to-image/dist/html-to-image.js?raw";
 import { STEP_COLUMN, walkNodes, type Spec, type SpecNode } from "@tachisto/compiler";
 import { compilePreview, isStepId, previewPage, tracedPreview } from "./preview.ts";
 import { segmentHolds, tableAt, type Segment, type Sequence } from "./sequence.ts";
+import { measureTextScreen, readTextScreen, type ScreenPicture } from "./text-screen.ts";
 
 /** The size the participant's screen is drawn at: the figure's screens, five times over. */
 export const CAPTURE_SIZE = { width: 800, height: 500 };
@@ -56,8 +57,10 @@ export function captureSpec(spec: Spec, sequence: Sequence, row = 0) {
 // once still do, since jsPsych uses them to move on), and each step is ended once pictured. Sound
 // is silenced, since a step ended this way never stops what it played. Steps that are not the
 // study's own, such as the preload jsPsych adds, are neither pictured nor ended: they end
-// themselves, and ending one early would end the step after it instead.
+// themselves, and ending one early would end the step after it instead. A screen of nothing but
+// text is also measured, so the figure can draw its text as text.
 const CAPTURE_SCRIPT = `(() => {
+  const measureTextScreen = (${measureTextScreen.toString()});
   const setTimer = window.setTimeout.bind(window);
   const wait = (ms) => new Promise((done) => setTimer(done, ms));
   window.setTimeout = (callback, ms, ...rest) => (ms > 0 ? 0 : setTimer(callback, ms, ...rest));
@@ -75,18 +78,27 @@ const CAPTURE_SCRIPT = `(() => {
     const started = ++steps;
     await wait(100);
     await Promise.all([...document.images].map((image) => image.decode().catch(() => {})));
+    await document.fonts.ready;
     if (started !== steps) return;
+    let text = null;
+    try {
+      text = measureTextScreen(${CAPTURE_SIZE.width}, ${CAPTURE_SIZE.height});
+    } catch {}
     let png = null;
     try {
-      png = await htmlToImage.toPng(document.body, {
+      const options = {
         width: ${CAPTURE_SIZE.width},
         height: ${CAPTURE_SIZE.height},
         pixelRatio: ${PIXEL_RATIO},
         backgroundColor: getComputedStyle(document.body).backgroundColor,
-      });
+      };
+      // WebKit draws the page before the pictures in it have loaded, leaving out images and
+      // canvases the first time; by the second they are loaded.
+      await htmlToImage.toPng(document.body, options);
+      png = await htmlToImage.toPng(document.body, options);
     } catch {}
     if (started !== steps) return;
-    parent.postMessage({ source: "${MESSAGE_SOURCE}", step, png }, "*");
+    parent.postMessage({ source: "${MESSAGE_SOURCE}", step, png, text }, "*");
     window.studioExperiment.jsPsych.finishTrial();
   };
 })();`;
@@ -96,23 +108,26 @@ const CAPTURE_HOOKS =
   `if (step) window.tachistoCapture(step); }, ` +
   `on_finish: () => { parent.postMessage({ source: "${MESSAGE_SOURCE}", done: true }, "*"); }`;
 
-export type CaptureMessage = { done: true } | { done: false; step: string; png: string | null };
+export type CaptureMessage =
+  { done: true } | { done: false; step: string; picture: ScreenPicture | null };
 
 // A capture is written straight into the figure's markup, so only a plain base64 PNG is taken.
 const PNG_DATA = /^data:image\/png;base64,[A-Za-z0-9+/]+=*$/;
 
-/** A message from the capture frame, if it is one the capture script sends. */
+/**
+ * A message from the capture frame, if it is one the capture script sends. A step is pictured by
+ * its text where the frame measured it and every part of it reads, and by its PNG otherwise.
+ */
 export function readCaptureMessage(message: unknown): CaptureMessage | null {
   if (typeof message !== "object" || message === null) return null;
-  const { source, done, step, png } = message as Record<string, unknown>;
+  const { source, done, step, png, text } = message as Record<string, unknown>;
   if (source !== MESSAGE_SOURCE) return null;
   if (done === true) return { done: true };
   if (!isStepId(step)) return null;
-  if (png === null) return { done: false, step, png };
-  if (typeof png !== "string" || png.length > MAX_PICTURE_LENGTH || !PNG_DATA.test(png)) {
-    return null;
-  }
-  return { done: false, step, png };
+  const readablePng =
+    typeof png === "string" && png.length <= MAX_PICTURE_LENGTH && PNG_DATA.test(png);
+  if (png !== null && !readablePng) return null;
+  return { done: false, step, picture: readTextScreen(text) ?? png };
 }
 
 /** The page that runs one pass through the sequence and pictures each step. */
@@ -129,15 +144,15 @@ const pictured = (segment: Segment) => segment.role !== "gap";
 /** Where a picture of a step goes: the segment that holds the step, once. */
 export function placeCapture(
   sequence: Sequence,
-  screens: (string | undefined)[],
+  screens: (ScreenPicture | undefined)[],
   step: string,
-  png: string,
+  picture: ScreenPicture,
 ) {
   const index = sequence.segments.findIndex(
     (segment) => pictured(segment) && segmentHolds(segment, step),
   );
   if (index === -1 || screens[index] !== undefined) return false;
-  screens[index] = png;
+  screens[index] = picture;
   return true;
 }
 
@@ -166,10 +181,10 @@ function hiddenFrame() {
 }
 
 /**
- * A picture of the screen each segment of a sequence starts with, as a participant would see it
- * for one row of its conditions. It runs the steps in a hidden frame sealed off like the preview;
- * a step that cannot be pictured, or does not finish in time, is left without one. Aborting stops
- * the capture and removes the frame.
+ * A picture of the screen each segment of a sequence starts with, or its text where it shows
+ * nothing else, as a participant would see it for one row of its conditions. It runs the steps
+ * in a hidden frame sealed off like the preview; a step that cannot be pictured, or does not
+ * finish in time, is left without one. Aborting stops the capture and removes the frame.
  */
 export async function captureScreens(
   spec: Spec,
@@ -177,7 +192,7 @@ export async function captureScreens(
   { row = 0, signal }: { row?: number; signal?: AbortSignal } = {},
 ) {
   const html = await capturePage(spec, sequence, row);
-  const screens: (string | undefined)[] = sequence.segments.map(() => undefined);
+  const screens: (ScreenPicture | undefined)[] = sequence.segments.map(() => undefined);
   const wanted = sequence.segments.filter(pictured).length;
   const frame = hiddenFrame();
   let placed = 0;
@@ -195,7 +210,9 @@ export async function captureScreens(
         const message = readCaptureMessage(event.data);
         if (!message) return;
         if (message.done) return finish();
-        if (message.png && placeCapture(sequence, screens, message.step, message.png)) placed += 1;
+        if (message.picture && placeCapture(sequence, screens, message.step, message.picture)) {
+          placed += 1;
+        }
         if (placed >= wanted) finish();
       }
       if (signal?.aborted) return finish();
