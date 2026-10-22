@@ -159,10 +159,14 @@ describe("a study that counterbalances the order of its tasks", () => {
     expect(new Set(rows.map((row) => row.order))).toEqual(new Set([order.join(" > ")]));
   }, 120_000);
 
-  it("still runs a row of the square when the data service fails", async () => {
+  it("still runs a row of the square when the data service fails, if the study opts in", async () => {
     server.failConditions = true;
     try {
-      const { visited, errors } = await run(study("latin_square"));
+      const spec = study("latin_square");
+      const { visited, errors } = await run({
+        ...spec,
+        data: { ...spec.data!, condition_fallback: "random" },
+      });
       expect(errors).toEqual([]);
       expect(latinSquareOrders(TASKS)).toContainEqual(visited);
     } finally {

@@ -6,7 +6,7 @@ import {
   SECURE_URL_PATTERN,
   VISIBLE_TEXT_PATTERN,
 } from "./recruitment.ts";
-import { STUDY_COLUMNS } from "./data.ts";
+import { CONDITION_FALLBACKS, STUDY_COLUMNS } from "./data.ts";
 import { COLOR_PATTERN } from "./appearance.ts";
 import { takesFunction } from "./code.ts";
 import type { SpecNode } from "./types.ts";
@@ -523,6 +523,14 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
               "keeps. Only for uploaded data, and only when every ending keeps all of it.",
             type: "boolean",
           },
+          condition_fallback: {
+            title: "What happens when DataPipe cannot hand out a condition.",
+            description:
+              "`stop` (the default) ends the study with a message to the participant. `random` " +
+              "draws a group or task order in the browser instead, which keeps the session " +
+              "running but may leave groups unbalanced. Only for uploaded data.",
+            enum: [...CONDITION_FALLBACKS],
+          },
         },
         additionalProperties: false,
         allOf: [
@@ -537,6 +545,13 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             if: { properties: { stream: { const: true } }, required: ["stream"] },
             then: {
               title: "Saving data as it goes needs it uploaded to DataPipe.",
+              properties: { save: { const: "post" } },
+            },
+          },
+          {
+            if: { required: ["condition_fallback"] },
+            then: {
+              title: "What to do when no condition comes back needs data uploaded to DataPipe.",
               properties: { save: { const: "post" } },
             },
           },

@@ -1,7 +1,7 @@
 import { literal } from "./emit.ts";
 import { extensionIdentifier } from "./identifiers.ts";
 import { endingNames, endingOf, PARTICIPANT_PLACEHOLDER, retentionOf } from "./recruitment.ts";
-import type { DataSettings, Ending, Spec } from "./types.ts";
+import type { ConditionFallback, DataSettings, Ending, Spec } from "./types.ts";
 import type { Problem } from "./validate.ts";
 
 export const DATAPIPE_URL = "https://pipe.jspsych.org";
@@ -260,6 +260,42 @@ export function streamingProblems(spec: Spec): Problem[] {
         "already been sent; keep all of it, or save the data only at the end",
       severity: "error",
     }));
+}
+
+export const CONDITION_FALLBACKS: readonly ConditionFallback[] = ["stop", "random"];
+
+/** What the study does when DataPipe hands out no condition: stop, unless it opts to draw one. */
+export function conditionFallbackOf(data: DataSettings | undefined): ConditionFallback {
+  return data?.condition_fallback ?? "stop";
+}
+
+export function conditionFallbackNote(data: DataSettings | undefined) {
+  return conditionFallbackOf(data) === "random"
+    ? "If DataPipe cannot hand out a condition, the study draws one in the browser and keeps going, so groups may become unbalanced, and nothing in the data says which participants were drawn this way."
+    : "If DataPipe cannot hand out a condition, the study stops and tells the participant, as DataPipe advises, rather than guess.";
+}
+
+export function conditionFallbackProblems(spec: Spec): Problem[] {
+  const fallback: unknown = spec.data?.condition_fallback;
+  if (fallback === undefined) return [];
+  if (!CONDITION_FALLBACKS.includes(fallback as ConditionFallback)) {
+    const choices = CONDITION_FALLBACKS.map((choice) => `"${choice}"`).join(" or ");
+    return [
+      {
+        message: `when no condition comes back the study does ${choices}, not ${JSON.stringify(fallback)}`,
+        severity: "error",
+      },
+    ];
+  }
+  if (spec.data?.save !== "post") {
+    return [
+      {
+        message: "what to do when no condition comes back needs data uploaded to DataPipe",
+        severity: "error",
+      },
+    ];
+  }
+  return [];
 }
 
 function downloadStep(filename: string, ending: Ending | undefined, rows: string) {

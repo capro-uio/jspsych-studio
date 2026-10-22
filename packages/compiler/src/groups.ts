@@ -1,5 +1,5 @@
 import { literal } from "./emit.ts";
-import { dataPipeAddress } from "./data.ts";
+import { conditionFallbackOf, dataPipeAddress } from "./data.ts";
 import type { AssignNode, CheckpointNode, DataSettings } from "./types.ts";
 
 export const GROUP_VARIABLE = "assignedGroup";
@@ -31,8 +31,7 @@ export function compileAssignmentStep(node: AssignNode, data: DataSettings | und
   }
 
   // Balanced assignment needs to know what previous participants were given, which only the data
-  // service knows. If it cannot be reached, a local draw keeps the session running unbalanced
-  // rather than stranding the participant.
+  // service knows.
   const chooseCounted =
     `const names = ${literal(names)};\n      ` +
     `${GROUP_VARIABLE} = names[condition % names.length];`;
@@ -47,12 +46,26 @@ export function compileAssignmentStep(node: AssignNode, data: DataSettings | und
   };
 }
 
+const NO_CONDITION_MESSAGE =
+  "<p>Sorry, this study cannot start right now: it could not find out which version of the " +
+  "study to show you. Please close this window and let the researcher know.</p>";
+
 /**
  * Asks the data service for this participant's condition number, which it counts across
- * participants, and runs `chosen` with it bound as `condition`. `fallback` runs instead when no
- * usable number comes back.
+ * participants, and runs `chosen` with it bound as `condition`. When no usable number comes back
+ * the study stops with a message, as DataPipe advises, since a participant run in a guessed
+ * condition looks like a good session until someone reads the data. A study that opts in runs
+ * `drawLocally` instead, keeping the session going at the cost of balance.
  */
-export function requestCondition(data: DataSettings | undefined, chosen: string, fallback: string) {
+export function requestCondition(
+  data: DataSettings | undefined,
+  chosen: string,
+  drawLocally: string,
+) {
+  const fallback =
+    conditionFallbackOf(data) === "random"
+      ? drawLocally
+      : `jsPsych.abortExperiment(${literal(NO_CONDITION_MESSAGE)});\n      return;`;
   const endpoint = `${dataPipeAddress(data)}/api/condition/`;
   return `try {
       const response = await fetch(${literal(endpoint)}, {

@@ -258,6 +258,18 @@ describe("the validator and the spec schema agree", () => {
     );
   });
 
+  it("on what a study does when DataPipe hands out no condition", () => {
+    agreeOn(
+      [
+        [{ save: "post", experiment_id: "abc", condition_fallback: "stop" }, true],
+        [{ save: "post", experiment_id: "abc", condition_fallback: "random" }, true],
+        [{ save: "post", experiment_id: "abc", condition_fallback: "guess" }, false],
+        [{ save: "download", condition_fallback: "random" }, false],
+      ],
+      (data) => study([practice], { data: data as Spec["data"] }),
+    );
+  });
+
   it("on the columns a study writes itself", () => {
     agreeOn(
       [["word_shown", true], ...STUDY_COLUMNS.map((column): [string, boolean] => [column, false])],

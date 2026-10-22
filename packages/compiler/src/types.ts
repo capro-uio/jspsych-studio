@@ -158,7 +158,15 @@ export interface DataSettings {
    * still leaves a partial file. Only with `"post"`, and only when every ending keeps all the data.
    */
   stream?: boolean;
+  /**
+   * What happens when DataPipe cannot hand out a condition for balanced groups or a Latin-square
+   * order: the study stops and tells the participant (`"stop"`, the default), or draws one in the
+   * browser (`"random"`), which keeps the session running but may leave groups unbalanced.
+   */
+  condition_fallback?: ConditionFallback;
 }
+
+export type ConditionFallback = "stop" | "random";
 
 export type RecruitmentPlatform = "prolific" | "sona" | "connect" | "custom";
 

@@ -56,7 +56,7 @@ export function compileOrderStep(node: CounterbalanceNode, data: DataSettings | 
   }
 
   // Only the data service knows how many participants came before, so it picks the row of the
-  // square. If it cannot be reached, a random row keeps every order one the square contains.
+  // square. A study that draws locally when it cannot be reached still runs a row of the square.
   return {
     async: true,
     // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
