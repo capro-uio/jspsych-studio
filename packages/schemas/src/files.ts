@@ -19,8 +19,9 @@ export async function integrityOf(bytes: Uint8Array<ArrayBuffer>) {
 // Text inside an element can end it, or for a script change how the rest is read: a script
 // element ends at "</script", and "<!--" or "<script" inside one shift the browser into reading
 // it differently; a style element ends at "</style". Rewriting these could change what a file
-// does, so a file that holds one is refused instead. Other tags are only text there, such as the
-// "</style>" several jsPsych plugins build into their own markup.
+// does, so a file that holds one is never written in as text; a page carries it encoded instead.
+// Other tags are only text there, such as the "</style>" several jsPsych plugins build into their
+// own markup.
 const BREAKS_OUT = { script: /<\/script|<script|<!--/i, style: /<\/style/i };
 
 export type Element = keyof typeof BREAKS_OUT;

@@ -3,6 +3,7 @@ import { ARROW_ID, CHAR_WIDTH, figureSvg, ink, svgText, textWidth } from "./figu
 import { specFilename } from "./files.ts";
 import type { Point } from "./flow.ts";
 import { detailText, timingText, type Segment, type Sequence } from "./sequence.ts";
+import { isTextScreen, textScreenSvg, type Box, type ScreenPicture } from "./text-screen.ts";
 
 /** A diagonal stack of screens, each stepping down and right from the last, or a single row. */
 export type Arrangement = "stack" | "row";
@@ -55,7 +56,7 @@ export interface TrialFigure {
 /** One condition of the sequence: its value, its pictures, and what each screen is given. */
 export interface ConditionPictures {
   label: string;
-  pictures: (string | undefined)[];
+  pictures: (ScreenPicture | undefined)[];
   /** What each segment's steps are given in this condition, to tell which screens differ. */
   inputs: string[];
 }
@@ -63,7 +64,7 @@ export interface ConditionPictures {
 export interface ConditionCell {
   x: number;
   y: number;
-  picture: string;
+  picture: ScreenPicture;
   caption: string;
   /** Where the caption's middle sits below its screen. */
   captionY: number;
@@ -226,20 +227,41 @@ function screenContent(screen: FigureScreen, size: Size, colour: string) {
   return `<text x="${centre.x}" y="${centre.y + 4}" text-anchor="middle" font-size="11" fill="${colour}" opacity="0.6">${svgText(fitted(title, size))}</text>`;
 }
 
+const boxAttributes = (box: Box) =>
+  `x="${box.x}" y="${box.y}" width="${box.width}" height="${box.height}"`;
+
+/**
+ * A captured screen inside its outline: its text, where it showed nothing else, or the
+ * participant's page itself as a picture.
+ */
+function picturedSvg(
+  box: Box,
+  picture: ScreenPicture,
+  settings: ExperimentSettings | undefined,
+  outline: string,
+) {
+  const attributes = boxAttributes(box);
+  const [background, content] = isTextScreen(picture)
+    ? [picture.background ?? backgroundColor(settings), textScreenSvg(picture, box)]
+    : [
+        backgroundColor(settings),
+        `<image ${attributes} preserveAspectRatio="xMidYMid meet" xlink:href="${picture}"/>`,
+      ];
+  return `<rect ${attributes} fill="${background}"/>${content}<rect ${attributes} rx="2" fill="none" ${outline}/>`;
+}
+
 function screenSvg(
   screen: FigureScreen,
   size: Size,
   settings: ExperimentSettings | undefined,
-  picture: string | undefined,
+  picture: ScreenPicture | undefined,
 ) {
-  const { x, y } = screen;
+  const box = { x: screen.x, y: screen.y, ...size };
   const dash = screen.segment.role === "group" ? ` stroke-dasharray="4 3"` : "";
-  const box = `x="${x}" y="${y}" width="${size.width}" height="${size.height}"`;
   const outline = `stroke="${ink("line-strong")}" stroke-width="1.25"${dash}`;
-  // A captured screen is the participant's page itself, drawn inside the screen's outline.
   const face = picture
-    ? `<rect ${box} fill="${backgroundColor(settings)}"/><image ${box} preserveAspectRatio="xMidYMid meet" xlink:href="${picture}"/><rect ${box} rx="2" fill="none" ${outline}/>`
-    : `<rect ${box} rx="2" fill="${backgroundColor(settings)}" ${outline}/>${screenContent(screen, size, textColor(settings))}`;
+    ? picturedSvg(box, picture, settings, outline)
+    : `<rect ${boxAttributes(box)} rx="2" fill="${backgroundColor(settings)}" ${outline}/>${screenContent(screen, size, textColor(settings))}`;
   const { at, anchor, lines } = screen.label;
   const label = lines
     .map(
@@ -337,13 +359,12 @@ export function withConditions(
 
 function conditionsSvg(panel: ConditionPanel, settings: ExperimentSettings | undefined) {
   const heading = `<text x="${panel.heading.at.x}" y="${panel.heading.at.y}" ${LABEL_STYLE.title}>${svgText(panel.heading.text)}</text>`;
+  const outline = `stroke="${ink("line-strong")}" stroke-width="1.25"`;
   const cells = panel.cells.map((cell) => {
-    const box = `x="${cell.x}" y="${cell.y}" width="${panel.screen.width}" height="${panel.screen.height}"`;
+    const box = { x: cell.x, y: cell.y, ...panel.screen };
     const middle = cell.x + panel.screen.width / 2;
     return (
-      `<g><rect ${box} fill="${backgroundColor(settings)}"/>` +
-      `<image ${box} preserveAspectRatio="xMidYMid meet" xlink:href="${cell.picture}"/>` +
-      `<rect ${box} rx="2" fill="none" stroke="${ink("line-strong")}" stroke-width="1.25"/>` +
+      `<g>${picturedSvg(box, cell.picture, settings, outline)}` +
       `<text x="${middle}" y="${cell.captionY}" text-anchor="middle" ${LABEL_STYLE.timing}>${svgText(cell.caption)}</text></g>`
     );
   });
@@ -374,7 +395,7 @@ export function trialFigureSvg(
   title: string,
   settings: ExperimentSettings | undefined,
   /** A picture of each screen, by segment, where one was captured. */
-  pictures: (string | undefined)[] = [],
+  pictures: (ScreenPicture | undefined)[] = [],
   widthMm?: number,
 ) {
   const { from, to } = figure.arrow;
@@ -421,7 +442,7 @@ export function sequenceFigure(
   spec: Spec,
   sequence: Sequence,
   { arrangement, size }: FigureChoices,
-  pictures: (string | undefined)[] = [],
+  pictures: (ScreenPicture | undefined)[] = [],
   /** Pictures of the sequence in each condition of a column, to show what differs between them. */
   byColumn?: { column: string; conditions: ConditionPictures[] },
 ) {

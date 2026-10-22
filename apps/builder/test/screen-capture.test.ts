@@ -10,10 +10,33 @@ import {
   readCaptureMessage,
 } from "../src/lib/screen-capture.ts";
 import { sequenceAt, type Sequence } from "../src/lib/sequence.ts";
+import type { ScreenPicture } from "../src/lib/text-screen.ts";
 
 const spec = stroop as Spec;
 const sequence = sequenceAt(spec, [2, 1], pluginSchema)!;
 const PNG = "data:image/png;base64,iVBORw0KGgo=";
+const TEXT = {
+  width: 800,
+  height: 500,
+  background: null,
+  lines: [
+    {
+      x: 400,
+      baseline: 260,
+      anchor: "middle",
+      spans: [
+        {
+          text: "RED",
+          fontFamily: '"Open Sans", Arial, sans-serif',
+          fontSize: 48,
+          fontWeight: "400",
+          fontStyle: "normal",
+          colour: "rgb(255, 0, 0)",
+        },
+      ],
+    },
+  ],
+};
 
 describe("captureSpec", () => {
   it("runs the block once, in order, for the row asked for, with no pause between steps", () => {
@@ -71,6 +94,7 @@ describe("capturePage", () => {
   it("carries the picturing library and the hooks that picture each step", async () => {
     const html = await capturePage(spec, sequence);
     expect(html).toContain("htmlToImage");
+    expect(html).toContain("const measureTextScreen = (function");
     expect(html).toContain(`trial.data?.${STEP_COLUMN}`);
     expect(html).toContain("window.tachistoCapture(step)");
     expect(html).toContain('"tachisto-capture"');
@@ -82,7 +106,7 @@ describe("readCaptureMessage", () => {
     expect(readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: PNG })).toEqual({
       done: false,
       step: "2.1",
-      png: PNG,
+      picture: PNG,
     });
     expect(readCaptureMessage({ source: "tachisto-capture", done: true })).toEqual({ done: true });
   });
@@ -110,8 +134,36 @@ describe("readCaptureMessage", () => {
     expect(readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: null })).toEqual({
       done: false,
       step: "2.1",
-      png: null,
+      picture: null,
     });
+  });
+
+  it("takes a step's text over its picture, where the step showed nothing else", () => {
+    const message = readCaptureMessage({
+      source: "tachisto-capture",
+      step: "2.1",
+      png: PNG,
+      text: TEXT,
+    });
+    expect(message).toMatchObject({ picture: { lines: [{ spans: [{ text: "RED" }] }] } });
+    expect(
+      readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: null, text: TEXT }),
+    ).toMatchObject({ picture: { width: 800 } });
+  });
+
+  it("falls back on the picture when the text cannot be read", () => {
+    const unreadable = { ...TEXT, lines: [{ ...TEXT.lines[0], anchor: "justify" }] };
+    for (const text of [null, unreadable, "RED"]) {
+      expect(
+        readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: PNG, text }),
+      ).toEqual({ done: false, step: "2.1", picture: PNG });
+    }
+  });
+
+  it("refuses a hostile picture even beside readable text", () => {
+    expect(
+      readCaptureMessage({ source: "tachisto-capture", step: "2.1", png: "<svg/>", text: TEXT }),
+    ).toBeNull();
   });
 
   it("ignores messages from anything else, and steps that are not places in the timeline", () => {
@@ -133,14 +185,14 @@ describe("placeCapture", () => {
   };
 
   it("gives a picture to the segment holding the step, and only the first one it gets", () => {
-    const screens: (string | undefined)[] = [undefined, undefined, undefined];
+    const screens: (ScreenPicture | undefined)[] = [undefined, undefined, undefined];
     expect(placeCapture(withPause, screens, "2.1.0", PNG)).toBe(true);
     expect(placeCapture(withPause, screens, "2.1.1", "data:image/png;base64,later")).toBe(false);
     expect(screens).toEqual([undefined, undefined, PNG]);
   });
 
   it("never gives one to a pause, or to a step outside the sequence", () => {
-    const screens: (string | undefined)[] = [undefined, undefined, undefined];
+    const screens: (ScreenPicture | undefined)[] = [undefined, undefined, undefined];
     expect(placeCapture(withPause, screens, "7", PNG)).toBe(false);
     expect(screens).toEqual([undefined, undefined, undefined]);
   });

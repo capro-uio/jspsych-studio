@@ -116,6 +116,19 @@ describe("a self-contained download", () => {
     expect(html).toContain(".jspsych-display-element");
   });
 
+  it("carries a study that saves as it goes in a single page, its extension checked", async () => {
+    vi.stubGlobal("fetch", installedFetch);
+    loadSpec({
+      ...(flanker as Spec),
+      data: { save: "post", experiment_id: "abc123DEF456", stream: true },
+    });
+    const html = await buildExperimentHtml({ selfContained: true });
+    expect(html).toMatch(
+      /<script data-package="@jspsych\/extension-pipe" src="data:text\/javascript;base64,[A-Za-z0-9+/=]+" integrity="sha384-[A-Za-z0-9+/=]+"><\/script>/,
+    );
+    expect(html).not.toMatch(/<script[^>]*\ssrc="(?!data:)|<link /);
+  });
+
   it("refuses an eye-tracking study as one page before fetching anything", async () => {
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);

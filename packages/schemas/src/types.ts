@@ -113,7 +113,7 @@ export interface PackageFiles extends Omit<PackageCredit, "package"> {
   bundles?: PackageCredit[];
   /**
    * The scripts and stylesheets that hold text which would end the element a page writes them
-   * into, so a page can only load them from a file.
+   * into, so a page loads them from a file, or carries them encoded rather than written in.
    */
   breaksOutOfPage?: string[];
 }
