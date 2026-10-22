@@ -7,7 +7,7 @@ import {
 } from "@tachisto/compiler";
 import { zipSync, strToU8 } from "fflate";
 import { flowFigure } from "./flow-figure.ts";
-import { asText, fetchPackageSources } from "./package-sources.ts";
+import { fetchPackageSources } from "./package-sources.ts";
 import { exportedSpec } from "./project.svelte.ts";
 import { pluginSchema, schemas } from "./schemas.ts";
 import type { captureScreens } from "./screen-capture.ts";
@@ -27,7 +27,7 @@ export async function buildExperimentHtml({ selfContained }: DownloadOptions) {
   const spec = exportedSpec();
   const compiled = compileSpec(spec, schemas);
   if (selfContained) assertFitsInOnePage(compiled);
-  const inline = selfContained ? asText(await fetchPackageSources(compiled.files)) : undefined;
+  const inline = selfContained ? await fetchPackageSources(compiled.files) : undefined;
   const { html } = await emitHtml(compiled, { title: spec.name, inline });
   return html;
 }

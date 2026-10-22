@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
 import { DATAPIPE_URL, savesAsItGoes } from "../src/data.ts";
 import { packageFileKey } from "../src/package-files.ts";
-import { assertFitsInOnePage } from "../src/targets/html.ts";
+import { assertFitsInOnePage, emitHtml } from "../src/targets/html.ts";
 import { projectFiles } from "../src/targets/project.ts";
 import type { DataSettings, Spec, SpecNode } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
@@ -145,10 +145,23 @@ describe("a study that saves its data as it goes", () => {
     );
   });
 
-  it("cannot be carried in one page, and points to the folder download", () => {
-    expect(() => assertFitsInOnePage(compileSpec(streaming(), schemas))).toThrow(
-      /extension-pipe\/dist\/index\.browser\.min\.js cannot be written into a page.*download the project folder instead/,
+  it("can be carried in one page, its extension loaded from a checked data: URL", async () => {
+    const compiled = compileSpec(streaming(), schemas);
+    expect(() => assertFitsInOnePage(compiled)).not.toThrow();
+    const copies = Object.fromEntries(
+      compiled.files.map((file) => [
+        packageFileKey(file),
+        new TextEncoder().encode(`/* ${packageFileKey(file)} */`),
+      ]),
     );
+    const { html } = await emitHtml(compiled, { title: "streaming", inline: copies });
+    const pipe = compiled.files.find((file) => packageFileKey(file) === PIPE_BUNDLE)!;
+    const encoded = btoa(`/* ${PIPE_BUNDLE} */`);
+    expect(html).toContain(
+      `<script data-package="@jspsych/extension-pipe" src="data:text/javascript;base64,${encoded}" ` +
+        `integrity="${pipe.integrity}"></script>`,
+    );
+    expect(html).not.toContain(`/* ${PIPE_BUNDLE} */`);
   });
 
   it("tells whoever hosts it that unfinished sessions leave a partial file", async () => {

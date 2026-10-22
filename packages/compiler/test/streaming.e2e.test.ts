@@ -1,11 +1,12 @@
-import { rmSync, writeFileSync } from "node:fs";
+import { readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { chromium, type Browser, type Download } from "playwright";
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
+import { packageFileKey } from "../src/package-files.ts";
 import { emitHtml } from "../src/targets/html.ts";
-import type { Spec } from "../src/types.ts";
+import type { CompileResult, Spec } from "../src/types.ts";
 import { serveDirectory, type StaticServer } from "./server.ts";
 import { recordsOf } from "./csv.ts";
 import { schemas } from "./schemas.ts";
@@ -13,6 +14,7 @@ import { schemas } from "./schemas.ts";
 const PAGE_NAME = "streaming.e2e.html";
 const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 const PLATFORM = "https://platform.example";
+const PIPE_BUNDLE = "@jspsych/extension-pipe/dist/index.browser.min.js";
 
 let browser: Browser;
 let server: StaticServer;
@@ -129,6 +131,59 @@ describe("a compiled experiment that saves its data as it goes", () => {
 
     await page.waitForURL(`${PLATFORM}/complete?pid=p42`, { timeout: 15_000 });
     expect(server.uploads).toHaveLength(1);
+    await page.close();
+  }, 120_000);
+});
+
+describe("a single-file experiment that saves its data as it goes", () => {
+  const installedCopies = (compiled: CompileResult) =>
+    Object.fromEntries(
+      compiled.files.map((file) => [
+        packageFileKey(file),
+        new Uint8Array(readFileSync(join(workspaceRoot, "node_modules", packageFileKey(file)))),
+      ]),
+    );
+
+  async function openSingleFile(alter = (copies: Record<string, Uint8Array>) => copies) {
+    const compiled = compileSpec(spec(), schemas);
+    const { html } = await emitHtml(compiled, {
+      title: "streaming",
+      inline: alter(installedCopies(compiled)),
+    });
+    expect(html).not.toMatch(/<script[^>]*\ssrc="(?!data:)|<link /);
+    writeFileSync(join(workspaceRoot, PAGE_NAME), html);
+    const page = await browser.newPage();
+    const errors: string[] = [];
+    page.on("pageerror", (error) => errors.push(error.message));
+    page.on("console", (message) => {
+      if (message.type() === "error") errors.push(message.text());
+    });
+    await page.goto(`${server.url}/${PAGE_NAME}?participant_id=p42`);
+    return { page, errors };
+  }
+
+  it("registers the DataPipe extension it carries, and saves through it", async () => {
+    const { page, errors } = await openSingleFile();
+    await page.locator("#jspsych-content").getByText("press y").waitFor({ timeout: 15_000 });
+    expect(await page.evaluate("Object.keys(jsPsych.extensions)")).toContain("pipe");
+    await page.keyboard.press("y");
+
+    await expect.poll(() => shown(page), { timeout: 15_000 }).toContain("Your data has been saved");
+    expect(server.sessions).toEqual([
+      { experimentID: "testExperiment", filename: "streaming_p42.csv" },
+    ]);
+    expect(server.uploads).toHaveLength(1);
+    expect(errors.filter((error) => !error.includes("503"))).toEqual([]);
+    await page.close();
+  }, 120_000);
+
+  it("refuses to run a carried file that is not the one Tachisto checked", async () => {
+    const { page, errors } = await openSingleFile((copies) => ({
+      ...copies,
+      [PIPE_BUNDLE]: new TextEncoder().encode("window.jsPsychExtensionPipe = 'tampered';"),
+    }));
+    await expect.poll(() => errors.join("\n"), { timeout: 15_000 }).toMatch(/integrity/i);
+    expect(await page.evaluate("typeof window.jsPsychExtensionPipe")).toBe("undefined");
     await page.close();
   }, 120_000);
 });

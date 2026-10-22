@@ -20,8 +20,12 @@ export interface HtmlTargetOptions {
    * file's recorded hash, or a path to a folder holding them as `<package>/<path>`.
    */
   base?: string;
-  /** The packages' files by {@link packageFileKey}, to write into the page instead of linking. */
-  inline?: Record<string, string>;
+  /**
+   * The packages' files by {@link packageFileKey}, to carry in the page instead of linking. Each is
+   * written in as it is, except a file that would break out of its element, which is carried
+   * encoded and checked against its recorded hash as it loads.
+   */
+  inline?: Record<string, Uint8Array>;
   /** Which Tachisto built the page; defaults to this build's own version. */
   tachisto?: string;
   /** Inline scripts that run before jsPsych loads, such as the preview's focus guard. */
@@ -65,22 +69,14 @@ export function filesLoadedWhileRunning(result: CompileResult) {
 
 /**
  * Refuses a study that loads files while it runs, such as the eye tracker's model, since a page
- * carrying its scripts inside it has no folder for them, or one that loads a file that would break
- * out of the element written around it, such as the DataPipe extension, which carries Firebase.
- * Asked before gathering any copies, so nobody waits for files that would only be thrown away.
+ * carrying its scripts inside it has no folder for them. Asked before gathering any copies, so
+ * nobody waits for files that would only be thrown away.
  */
 export function assertFitsInOnePage(result: CompileResult) {
   if (filesLoadedWhileRunning(result).length > 0) {
     throw new Error(
       "this study loads files while it runs, such as the eye tracker's model, so it cannot be " +
         "carried in one page; download the project folder instead",
-    );
-  }
-  const unwritable = result.files.filter((file) => file.breaksOutOfPage);
-  if (unwritable.length > 0) {
-    throw new Error(
-      `${unwritable.map(packageFileKey).join(", ")} cannot be written into a page as it is, so ` +
-        "this study cannot be carried in one page; download the project folder instead",
     );
   }
 }
@@ -99,26 +95,48 @@ function urlOf(file: PageFile, base: string) {
   return base === "cdn" ? cdnUrl(file) : `${base}/${packageFileKey(file)}`;
 }
 
+const BASE64_CHUNK = 0x8000;
+
+function base64Of(bytes: Uint8Array) {
+  let binary = "";
+  for (let start = 0; start < bytes.length; start += BASE64_CHUNK) {
+    binary += String.fromCharCode(...bytes.subarray(start, start + BASE64_CHUNK));
+  }
+  return btoa(binary);
+}
+
 function tagFor(file: PageFile, result: CompileResult, options: HtmlTargetOptions) {
   const isStylesheet = file.path.endsWith(".css");
   const name = file.named ? ` ${PACKAGE_ATTRIBUTE}="${escapeHtmlText(file.package)}"` : "";
+  const key = packageFileKey(file);
+  const recorded = result.files.find((each) => packageFileKey(each) === key);
+  let url: string;
+  let check = "";
   if (options.inline) {
-    const text = options.inline[packageFileKey(file)];
-    if (text === undefined) throw new Error(`no copy of ${packageFileKey(file)} to write in`);
-    const contents = insideElement(text, isStylesheet ? "style" : "script", packageFileKey(file));
-    return isStylesheet
-      ? `<style>\n${contents}\n</style>`
-      : `<script${name}>\n${contents}\n</script>`;
+    const copy = options.inline[key];
+    if (copy === undefined) throw new Error(`no copy of ${key} to write in`);
+    if (!recorded?.breaksOutOfPage) {
+      const text = new TextDecoder().decode(copy);
+      const contents = insideElement(text, isStylesheet ? "style" : "script", key);
+      return isStylesheet
+        ? `<style>\n${contents}\n</style>`
+        : `<script${name}>\n${contents}\n</script>`;
+    }
+    // A file that would break out of any element written around it is carried as a `data:` URL:
+    // base64 cannot end an attribute, the bytes stay exactly those checked, and the browser
+    // checks them again against the recorded hash, as it does a CDN copy. A script loaded this
+    // way still runs in its place among the others, before the experiment.
+    url = `data:text/${isStylesheet ? "css" : "javascript"};base64,${base64Of(copy)}`;
+    check = ` integrity="${recorded.integrity}"`;
+  } else {
+    const base = (options.base ?? "cdn").replace(/\/+$/, "");
+    url = urlOf(file, base);
+    // A CDN file is checked against the hash recorded for it, so a changed copy is refused rather
+    // than run; files beside the page are the author's own.
+    if (base === "cdn" && recorded) {
+      check = ` integrity="${recorded.integrity}" crossorigin="anonymous"`;
+    }
   }
-  const base = (options.base ?? "cdn").replace(/\/+$/, "");
-  const url = urlOf(file, base);
-  // A CDN file is checked against the hash recorded for it, so a changed copy is refused rather
-  // than run; files beside the page are the author's own.
-  const integrity =
-    base === "cdn"
-      ? result.files.find((each) => packageFileKey(each) === packageFileKey(file))?.integrity
-      : undefined;
-  const check = integrity ? ` integrity="${integrity}" crossorigin="anonymous"` : "";
   return isStylesheet
     ? `<link rel="stylesheet" href="${url}"${check} />`
     : `<script${name} src="${url}"${check}></script>`;

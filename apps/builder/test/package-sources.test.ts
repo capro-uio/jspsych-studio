@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { cdnUrl, filesOfPackages } from "@tachisto/compiler";
-import { asText, fetchPackageSources } from "../src/lib/package-sources.ts";
+import { fetchPackageSources } from "../src/lib/package-sources.ts";
 import { schemas } from "../src/lib/schemas.ts";
 import { installedCopy } from "./installed.ts";
 
@@ -15,7 +15,9 @@ describe("fetchPackageSources", () => {
     const fetcher = vi.fn((url: string) => respond(installedCopy(url)));
     const copies = await fetchPackageSources([css], fetcher as unknown as typeof fetch);
     expect(fetcher).toHaveBeenCalledWith(cdnUrl(css), expect.anything());
-    expect(asText(copies)["jspsych/css/jspsych.css"]).toContain(".jspsych-display-element");
+    expect(new TextDecoder().decode(copies["jspsych/css/jspsych.css"])).toContain(
+      ".jspsych-display-element",
+    );
   });
 
   it("refuses a copy that is not the file Tachisto checked", async () => {
