@@ -120,8 +120,11 @@ data behind, recordings included, so the consent form has to say that data from 
 session is kept. Rows already sent cannot be called back, so a study that saves as it goes cannot
 have an ending that keeps less than everything. The full upload at the end still falls back to a
 download if it fails, and a participant is only sent back to a platform once it has arrived. The
-extension carries Firebase, about 240 KB, and cannot be written into a single-file download, so
-such a study is downloaded as a project folder. The builder's preview never loads it.
+extension carries Firebase, about 240 KB. Firebase holds text that would end a `<script>` element,
+so a single-file download carries the extension base64-encoded in a `data:` URL, about 320 KB,
+which the browser checks against the extension's recorded hash before running it. A host whose
+Content-Security-Policy blocks `data:` scripts needs the project folder instead. The builder's
+preview never loads it.
 
 ## Recruiting from a platform
 
@@ -311,7 +314,10 @@ frame has nothing of yours to send.
   kept only if they match hashes recorded from the npm packages when Tachisto was built; a study
   that loads from unpkg instead has the browser check the same hashes for the scripts and
   stylesheet its page names (not for the eye tracker's model, which WebGazer fetches itself). Eye tracking loads a model
-  as it runs, so it is self-contained as a project folder, not as a single file.
+  as it runs, so it is self-contained as a project folder, not as a single file. A single file
+  writes each script and stylesheet into the page, except one holding text that would end its
+  element, such as the DataPipe extension's Firebase: that one is carried unchanged as a base64
+  `data:` URL, with the browser checking its recorded hash.
 - **Readable output.** The generated file is something a researcher can read, host, and hand to a
   collaborator. The builder shows the generated code as you edit.
 - **Browser-safe core.** Everything in `packages/compiler/src` except `cli.ts` must run in the

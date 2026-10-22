@@ -38,11 +38,3 @@ export async function fetchPackageSources(
     throw error;
   }
 }
-
-/** The copies as text, for writing scripts and styles into a page. */
-export function asText(copies: Record<string, Uint8Array>) {
-  const decoder = new TextDecoder();
-  return Object.fromEntries(
-    Object.entries(copies).map(([key, bytes]) => [key, decoder.decode(bytes)]),
-  );
-}

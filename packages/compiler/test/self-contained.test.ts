@@ -34,12 +34,14 @@ const tracking: Spec = {
   ],
 };
 
+const encoded = (text: string) => new TextEncoder().encode(text);
+
 /** A stand-in copy of every file a study loads, each saying which file it is. */
 function copiesOf(spec: Spec) {
   return Object.fromEntries(
     compileSpec(spec, schemas).files.map((file) => [
       packageFileKey(file),
-      `/* ${packageFileKey(file)} */`,
+      encoded(`/* ${packageFileKey(file)} */`),
     ]),
   );
 }
@@ -147,7 +149,7 @@ describe("a page that carries its files inside it", () => {
     ["an opening script tag", 'const tag = "<SCRIPT>";'],
     ["the start of a comment", "const c = '<!--';"],
   ])("refuses a file holding %s, rather than changing what it does", async (_what, text) => {
-    const copies = { ...copiesOf(plain), "jspsych/dist/index.browser.min.js": text };
+    const copies = { ...copiesOf(plain), "jspsych/dist/index.browser.min.js": encoded(text) };
     await expect(
       emitHtml(compileSpec(plain, schemas), { title: "p", inline: copies }),
     ).rejects.toThrow(
@@ -158,14 +160,14 @@ describe("a page that carries its files inside it", () => {
   it("leaves a script alone that only builds a closing style tag into its markup", async () => {
     const copies = {
       ...copiesOf(plain),
-      "jspsych/dist/index.browser.min.js": 'html += "</style>";',
+      "jspsych/dist/index.browser.min.js": encoded('html += "</style>";'),
     };
     const { html } = await emitHtml(compileSpec(plain, schemas), { title: "p", inline: copies });
     expect(html).toContain('<script>\nhtml += "</style>";\n</script>');
   });
 
   it("refuses a stylesheet that would end its style element", async () => {
-    const copies = { ...copiesOf(plain), "jspsych/css/jspsych.css": "/* </STYLE> */" };
+    const copies = { ...copiesOf(plain), "jspsych/css/jspsych.css": encoded("/* </STYLE> */") };
     await expect(
       emitHtml(compileSpec(plain, schemas), { title: "p", inline: copies }),
     ).rejects.toThrow(/jspsych\/css\/jspsych\.css holds "<\/STYLE"/);
@@ -191,8 +193,8 @@ describe("a project download that carries its files", () => {
     const files = await projectFiles(plain, schemas, {
       packageSources: () => Promise.resolve(copiesOf(plain)),
     });
-    expect(files["lib/jspsych/dist/index.browser.min.js"]).toBe(
-      "/* jspsych/dist/index.browser.min.js */",
+    expect(files["lib/jspsych/dist/index.browser.min.js"]).toEqual(
+      encoded("/* jspsych/dist/index.browser.min.js */"),
     );
     expect(files["index.html"]).toContain('src="./lib/jspsych/dist/index.browser.min.js"');
     expect(files["index.html"]).not.toContain("unpkg.com");
@@ -309,19 +311,69 @@ describe("the scripts and stylesheets Tachisto can carry in a page", () => {
     expect(breaksOut(readFileSync(join(nodeModules, key), "utf8"), element)).toBeNull();
   });
 
-  it("knows the DataPipe extension, whose Firebase builds a script tag, cannot be", () => {
+  it("knows the DataPipe extension, whose Firebase builds a script tag, cannot be as it is", () => {
     expect(pageFiles(false)).toEqual(["@jspsych/extension-pipe/dist/index.browser.min.js"]);
   });
+});
 
-  it("refuses one page to a study that loads a file which cannot be written into it", () => {
-    const compiled = compileSpec(plain, schemas);
-    const [first, ...rest] = compiled.files;
-    expect(() =>
-      assertFitsInOnePage({
-        ...compiled,
-        files: [{ ...first, breaksOutOfPage: true }, ...rest],
-      }),
-    ).toThrow(/jspsych\/.* cannot be written into a page as it is.*download the project folder/);
-    expect(() => assertFitsInOnePage(compiled)).not.toThrow();
+describe("a page that carries a file which cannot be written into it as it is", () => {
+  const JSPSYCH_KEY = "jspsych/dist/index.browser.min.js";
+  const STYLESHEET_KEY = "jspsych/css/jspsych.css";
+  const compiled = compileSpec(plain, schemas);
+  const flagging = (keys: string[]) => ({
+    ...compiled,
+    files: compiled.files.map((file) =>
+      keys.includes(packageFileKey(file)) ? { ...file, breaksOutOfPage: true as const } : file,
+    ),
+  });
+  const recordedIntegrity = (key: string) =>
+    compiled.files.find((file) => packageFileKey(file) === key)!.integrity;
+  const base64 = (bytes: Uint8Array) => Buffer.from(bytes).toString("base64");
+
+  it("fits in one page", () => {
+    expect(() => assertFitsInOnePage(flagging([JSPSYCH_KEY]))).not.toThrow();
+  });
+
+  it("loads it from a data: URL, checked against its recorded hash", async () => {
+    const script = 'document.write("<script></script>");';
+    const copies = { ...copiesOf(plain), [JSPSYCH_KEY]: encoded(script) };
+    const { html } = await emitHtml(flagging([JSPSYCH_KEY]), { title: "p", inline: copies });
+    expect(html).toContain(
+      `<script src="data:text/javascript;base64,${base64(encoded(script))}" ` +
+        `integrity="${recordedIntegrity(JSPSYCH_KEY)}"></script>`,
+    );
+    expect(html).not.toContain(script);
+  });
+
+  it("keeps its bytes exactly, even those that are not text", async () => {
+    const bytes = new Uint8Array([0xef, 0xbb, 0xbf, 0x3c, 0xff, 0x00, 0x2f]);
+    const copies = { ...copiesOf(plain), [JSPSYCH_KEY]: bytes };
+    const { html } = await emitHtml(flagging([JSPSYCH_KEY]), { title: "p", inline: copies });
+    expect(html).toContain(`src="data:text/javascript;base64,${base64(bytes)}"`);
+  });
+
+  it("loads it in its place, after jsPsych and before the plugins and the experiment", async () => {
+    const plugin = "@jspsych/plugin-html-keyboard-response/dist/index.browser.min.js";
+    const { html } = await emitHtml(flagging([JSPSYCH_KEY]), {
+      title: "p",
+      inline: copiesOf(plain),
+    });
+    const encoded = html.indexOf('src="data:text/javascript;base64,');
+    expect(encoded).toBeGreaterThan(html.indexOf(`/* ${STYLESHEET_KEY} */`));
+    expect(encoded).toBeLessThan(html.indexOf(`/* ${plugin} */`));
+    expect(encoded).toBeLessThan(html.indexOf("initJsPsych("));
+  });
+
+  it("links a stylesheet the same way", async () => {
+    const { html } = await emitHtml(flagging([STYLESHEET_KEY]), {
+      title: "p",
+      inline: copiesOf(plain),
+    });
+    const css = encoded(`/* ${STYLESHEET_KEY} */`);
+    expect(html).toContain(
+      `<link rel="stylesheet" href="data:text/css;base64,${base64(css)}" ` +
+        `integrity="${recordedIntegrity(STYLESHEET_KEY)}" />`,
+    );
+    expect(html).not.toContain("<style>\n/* jspsych/css/jspsych.css */");
   });
 });
