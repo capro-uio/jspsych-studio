@@ -8,6 +8,7 @@ import {
   tableAt,
   type Sequence,
 } from "./sequence.ts";
+import type { ScreenPicture } from "./text-screen.ts";
 import { sequenceFigure, varyingScreens, type FigureChoices } from "./trial-figure.ts";
 
 /** What a block's figure shows of its conditions: a column to show side by side, or one row. */
@@ -102,7 +103,7 @@ export async function makeFigure(
     (each) => each.column === chosen.byColumn,
   );
   const runs = condition ? condition.values : [{ value: "", row: chosen.row }];
-  const pictured: (string | undefined)[][] = [];
+  const pictured: (ScreenPicture | undefined)[][] = [];
   for (const [index, run] of runs.entries()) {
     if (condition) onProgress?.(`Picturing ${run.value}, ${index + 1} of ${runs.length}…`);
     const pictures = capture

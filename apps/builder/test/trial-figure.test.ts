@@ -4,6 +4,7 @@ import type { Spec } from "@tachisto/compiler";
 import stroop from "../../../examples/stroop.json";
 import { pluginSchema } from "../src/lib/schemas.ts";
 import { sequenceAt, type Segment, type Sequence } from "../src/lib/sequence.ts";
+import type { TextScreen } from "../src/lib/text-screen.ts";
 import { CHAR_WIDTH } from "../src/lib/figure.ts";
 import {
   COLUMN_WIDTH_MM,
@@ -28,6 +29,30 @@ const segment = (role: Segment["role"], title: string, extra: Partial<Segment> =
   timing: { kind: "fixed", ms: { min: 500, max: 500 } },
   weight: 500,
   ...extra,
+});
+
+const wordScreen = (text: string, background: string | null = null): TextScreen => ({
+  width: 800,
+  height: 500,
+  background,
+  lines: [
+    {
+      x: 400,
+      baseline: 260,
+      anchor: "middle",
+      spans: [
+        {
+          text,
+          fontFamily: "'Open Sans', sans-serif",
+          fontSize: 48,
+          fontWeight: "400",
+          fontStyle: "normal",
+          fill: "#ff0000",
+          opacity: 1,
+        },
+      ],
+    },
+  ],
 });
 
 const sequenceOf = (...segments: Segment[]): Sequence => ({ path: [0], kind: "block", segments });
@@ -193,6 +218,30 @@ describe("trialFigureSvg", () => {
     expect(groups[1].querySelector("image")).toBeNull();
     expect(groups[2].querySelector("image")).not.toBeNull();
     expect(groups[0].querySelector("path")).toBeNull();
+  });
+
+  it("draws a screen of text as text, on the page's background or the study's", () => {
+    const settings = { background_color: "#eeeeee" };
+    const root = parse(
+      trialFigureSvg(layoutTrialFigure(trial, "stack"), "t", settings, [
+        wordScreen("+", "#000000"),
+        undefined,
+        wordScreen("RED"),
+      ]),
+    );
+    expect(root.querySelector("image")).toBeNull();
+    const groups = [...root.querySelectorAll(":scope > g")];
+    const [fixation, , target] = groups;
+    expect(fixation.querySelector("rect")?.getAttribute("fill")).toBe("#000000");
+    expect(target.querySelector("rect")?.getAttribute("fill")).toBe("#eeeeee");
+    const word = target.querySelector("text[x]")!;
+    expect(word.textContent).toBe("RED");
+    expect(word.querySelector("tspan")?.getAttribute("fill")).toBe("#ff0000");
+    const outline = target.querySelectorAll("rect")[1];
+    expect(outline.getAttribute("fill")).toBe("none");
+    expect(Number(word.getAttribute("x"))).toBeCloseTo(
+      Number(outline.getAttribute("x")) + Number(outline.getAttribute("width")) / 2,
+    );
   });
 
   it("carries every label and an arrow marked as time", () => {
@@ -391,5 +440,17 @@ describe("conditions side by side", () => {
     expect(text).toContain("incongruent");
     expect(root.querySelectorAll(`image[*|href="${C}"]`)).toHaveLength(1);
     expect(Number(root.getAttribute("height"))).toBe(shown.height);
+  });
+
+  it("draws a condition's screen of text as text", () => {
+    const words = [
+      { label: "congruent", pictures: [A, undefined, wordScreen("RED")], inputs: ["", "", "1"] },
+      { label: "incongruent", pictures: [A, undefined, wordScreen("BLUE")], inputs: ["", "", "2"] },
+    ];
+    const shown = withConditions(layoutTrialFigure(trial, "stack"), trial, "ink", words);
+    const root = parse(trialFigureSvg(shown, "t", undefined, [undefined, undefined, undefined]));
+    expect(root.querySelector("image")).toBeNull();
+    const drawn = [...root.querySelectorAll("tspan[font-family]")].map((each) => each.textContent);
+    expect(drawn).toEqual(["RED", "BLUE"]);
   });
 });
