@@ -9,7 +9,9 @@ export { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 export { assetsOfType, isMediaType, preloadListOf } from "./assets.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
 export { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
-export { DATAPIPE_URL } from "./data.ts";
+export { conditionFallbackNote, conditionFallbackOf, DATAPIPE_URL } from "./data.ts";
+export { conditionSteps, dataPipeSetup } from "./datapipe-setup.ts";
+export type { SetupField } from "./datapipe-setup.ts";
 export { escapeHtmlText } from "./emit.ts";
 export {
   COMPLETE_ENDING,

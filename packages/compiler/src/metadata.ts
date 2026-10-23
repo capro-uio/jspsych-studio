@@ -86,6 +86,11 @@ function person(author: Author) {
   };
 }
 
+/** One sentence saying what the data is, wherever the dataset is described. */
+export function datasetSummary(spec: Spec) {
+  return `Behavioural data from "${spec.name}", an experiment built with ${GENERATOR}.`;
+}
+
 /** Psych-DS metadata, so the data arrives described rather than as a bare CSV. */
 export function datasetDescription(spec: Spec, columns: string[], options: MetadataOptions) {
   const authors = (spec.authors ?? []).filter((author) => author.name.trim());
@@ -94,7 +99,7 @@ export function datasetDescription(spec: Spec, columns: string[], options: Metad
     "@context": "https://schema.org/",
     "@type": "Dataset",
     name: spec.name,
-    description: `Behavioural data from "${spec.name}", an experiment built with ${GENERATOR}.`,
+    description: datasetSummary(spec),
     variableMeasured: columns,
     dateCreated: options.generatedAt ?? new Date().toISOString().slice(0, 10),
     // The people who made the experiment. Software belongs under isBasedOn, not here: author and

@@ -12897,6 +12897,14 @@
           "title": "Also send each step's row to DataPipe as it is recorded.",
           "description": "A participant who leaves partway then still leaves a partial file, which DataPipe keeps. Only for uploaded data, and only when every ending keeps all of it.",
           "type": "boolean"
+        },
+        "condition_fallback": {
+          "title": "What happens when DataPipe cannot hand out a condition.",
+          "description": "`stop` (the default) ends the study with a message to the participant. `random` draws a group or task order in the browser instead, which keeps the session running but may leave groups unbalanced. Only for uploaded data.",
+          "enum": [
+            "stop",
+            "random"
+          ]
         }
       },
       "additionalProperties": false,
@@ -12932,6 +12940,21 @@
           },
           "then": {
             "title": "Saving data as it goes needs it uploaded to DataPipe.",
+            "properties": {
+              "save": {
+                "const": "post"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "condition_fallback"
+            ]
+          },
+          "then": {
+            "title": "What to do when no condition comes back needs data uploaded to DataPipe.",
             "properties": {
               "save": {
                 "const": "post"

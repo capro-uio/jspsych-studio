@@ -103,6 +103,42 @@ do, and only works with `"save": "post"`. With data downloaded, only random orde
 Set the experiment's number of conditions on DataPipe to the number of orders the builder shows:
 as many as there are tasks, or twice that for an odd number of tasks.
 
+## When DataPipe hands out no condition
+
+Balanced groups and Latin-square orders ask DataPipe for each participant's condition. If no usable
+condition comes back, because DataPipe cannot be reached or refuses the request, the study stops
+and tells the participant, rather than guess: a participant run in a guessed condition looks like a
+good session until someone reads the data, which is DataPipe's own advice. A study that saves at the
+end uploads nothing, since it never reaches its end; one that saves as it goes uploads the rows
+recorded so far, as it does whenever a study stops.
+
+A study can instead draw the group or order in the browser and keep going, at the risk of
+unbalanced groups, and nothing in the data says which participants were drawn that way:
+
+```json
+"data": { "save": "post", "experiment_id": "abc123DEF456", "condition_fallback": "random" }
+```
+
+`"stop"` is the default, including for a project saved before the choice existed, which used to
+draw in the browser without saying so. The builder asks in the Study tab's Data section, once a
+step asks DataPipe for a condition.
+
+## Setting up DataPipe
+
+When a study uploads to DataPipe, the Data section of the builder's Study tab has a "Set up
+DataPipe" checklist, and a project download carries the same one as `DATAPIPE-SETUP.md`. It follows
+DataPipe's own order, filled in from the study, with a copy button for each value:
+
+1. **Create the experiment:** where DataPipe can store the data (Google Drive, Dataverse or Zenodo;
+   OSF takes no new experiments), and the title, authors and description.
+2. **On its dashboard:** each setting under DataPipe's label: base64 uploads on only for a study
+   that records sound or video; condition assignment on, with the number of conditions, only for a
+   study with balanced groups or a Latin square; an optional session limit; submission checks
+   allowing CSV and requiring the columns every upload has (`trial_type`, `trial_index`,
+   `time_elapsed` and `participant_id`); and Psych-DS metadata, which DataPipe locks once any data
+   arrives, a pilot included.
+3. **Paste the experiment ID:** the checklist ends just above the field it goes in.
+
 ## Saving data as it goes
 
 A study that uploads its data sends it all to [DataPipe](https://pipe.jspsych.org) once, at the
@@ -307,7 +343,8 @@ frame has nothing of yours to send.
 - **No backend.** Static tool. Results go to DataPipe, at pipe.jspsych.org or self-hosted, and a
   failed upload falls back to a download so a participant's data is never lost silently. Balanced group
   assignment and Latin-square task order ask that same service for the next participant's
-  condition, since only it can count participants.
+  condition, since only it can count participants; if it gives none, the study stops rather than
+  guess, unless the spec opts into drawing one in the browser.
 - **Self-contained downloads.** Media is embedded in the project and in the exported file (files
   are capped at 5 MB each), and by default a download carries jsPsych and its plugins too, so the
   study loads nothing from elsewhere. Those copies are fetched from unpkg at pinned versions and

@@ -12,7 +12,7 @@ import type {
   ResponseRule,
   TrialNode,
 } from "./types.ts";
-import { STUDY_COLUMNS, streamingProblems } from "./data.ts";
+import { conditionFallbackProblems, STUDY_COLUMNS, streamingProblems } from "./data.ts";
 import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, answersBySide, isResponseRule, questionNames } from "./conditions.ts";
@@ -799,6 +799,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas): Problem[] {
   }
   problems.push(...recruitmentProblems(spec));
   problems.push(...streamingProblems(spec));
+  problems.push(...conditionFallbackProblems(spec));
   problems.push(...appearanceProblems(spec.settings));
   problems.push(...setupOrderProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);

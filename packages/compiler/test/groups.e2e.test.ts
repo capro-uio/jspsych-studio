@@ -15,11 +15,14 @@ const workspaceRoot = fileURLToPath(new URL("../../../", import.meta.url));
 let browser: Browser;
 let server: StaticServer;
 
-const study = (method: "random" | "balanced"): Spec => ({
+const study = (
+  method: "random" | "balanced",
+  data: Partial<NonNullable<Spec["data"]>> = {},
+): Spec => ({
   name: "between-subjects",
   data:
     method === "balanced"
-      ? { save: "post", experiment_id: "testExperiment", endpoint: server.url }
+      ? { save: "post", experiment_id: "testExperiment", endpoint: server.url, ...data }
       : undefined,
   timeline: [
     {
@@ -41,7 +44,7 @@ const study = (method: "random" | "balanced"): Spec => ({
   ],
 });
 
-async function run(spec: Spec) {
+async function run(spec: Spec, expected = "group") {
   const { html } = await emitHtml(compileSpec(spec, schemas), {
     title: spec.name,
     base: "/node_modules",
@@ -56,7 +59,7 @@ async function run(spec: Spec) {
   // content rather than for the element to become visible.
   await expect
     .poll(() => page.locator("#jspsych-content").innerText(), { timeout: 20_000 })
-    .toContain("group");
+    .toContain(expected);
   const shown = await page.locator("#jspsych-content").innerText();
   await page.keyboard.press("Space");
   const rows = (await page.evaluate(() => window.studioExperiment.jsPsych.data.get().values())) as {
@@ -98,5 +101,54 @@ describe("a study that splits participants between groups", () => {
     server.nextCondition = 0;
     const first = await run(study("balanced"));
     expect(first.rows.find((row) => row.tag)?.tag).toBe("alpha");
+  }, 120_000);
+
+  it("stops with a message, running no group and uploading nothing, when no group comes back", async () => {
+    server.failConditions = true;
+    const uploadsBefore = server.uploads.length;
+    try {
+      const { shown, rows, errors } = await run(study("balanced"), "cannot start");
+      expect(errors).toEqual([]);
+      expect(shown).toContain("let the researcher know");
+      expect(shown).not.toContain("group");
+      expect(rows.filter((row) => row.tag)).toEqual([]);
+      expect(server.uploads.length).toBe(uploadsBefore);
+    } finally {
+      server.failConditions = false;
+    }
+  }, 120_000);
+
+  it("keeps its message on screen once a study that saves as it goes has uploaded", async () => {
+    server.failConditions = true;
+    const uploadsBefore = server.uploads.length;
+    try {
+      const { html } = await emitHtml(compileSpec(study("balanced", { stream: true }), schemas), {
+        title: "between-subjects",
+        base: "/node_modules",
+      });
+      writeFileSync(join(workspaceRoot, PAGE_NAME), html);
+      const page = await browser.newPage();
+      await page.goto(`${server.url}/${PAGE_NAME}`);
+      await expect.poll(() => server.uploads.length, { timeout: 20_000 }).toBe(uploadsBefore + 1);
+      await expect
+        .poll(() => page.locator("#jspsych-content").innerText(), { timeout: 5_000 })
+        .toContain("cannot start");
+      await page.close();
+    } finally {
+      server.failConditions = false;
+    }
+  }, 120_000);
+
+  it("draws a group in the browser instead when the study opts in", async () => {
+    server.failConditions = true;
+    try {
+      const { rows, errors } = await run(study("balanced", { condition_fallback: "random" }));
+      expect(errors).toEqual([]);
+      const seen = rows.filter((row) => row.tag);
+      expect(seen).toHaveLength(1);
+      expect(["alpha", "beta"]).toContain(seen[0].tag);
+    } finally {
+      server.failConditions = false;
+    }
   }, 120_000);
 });

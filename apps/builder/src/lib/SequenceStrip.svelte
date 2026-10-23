@@ -103,14 +103,6 @@
     font-size: 12px;
     color: var(--ink-muted);
   }
-  .visually-hidden {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
-  }
   .caption {
     margin: 0;
     font-size: 12px;

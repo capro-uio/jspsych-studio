@@ -49,13 +49,42 @@ describe("splitting participants between groups", () => {
     expect(source).toContain("async: true");
   });
 
-  it("falls back to a local draw if the service cannot be reached", () => {
+  it("stops with a message if the service hands out no group", () => {
     const { source } = compileSpec(
       study(assign({ method: "balanced" }), { save: "post", experiment_id: "x" }),
       schemas,
     );
-    const fallback = source.slice(source.indexOf("catch"));
-    expect(fallback).toContain("sampleWithoutReplacement");
+    const fallback = source.slice(source.indexOf("catch (error)"));
+    expect(fallback).toContain("jsPsych.abortExperiment(");
+    expect(fallback).toContain("could not find out which version of the study to show you");
+    expect(fallback).not.toContain("sampleWithoutReplacement");
+  });
+
+  it("draws a group in the browser instead, only when the study opts in", () => {
+    const { source } = compileSpec(
+      study(assign({ method: "balanced" }), {
+        save: "post",
+        experiment_id: "x",
+        condition_fallback: "random",
+      }),
+      schemas,
+    );
+    const start = source.indexOf("catch (error)");
+    const fallback = source.slice(start, source.indexOf("addProperties", start));
+    expect(fallback).toContain('sampleWithoutReplacement(["alpha","beta"], 1)[0]');
+    expect(fallback).not.toContain("abortExperiment");
+  });
+
+  it("refuses a fallback it does not know, or one with no data service to ask", () => {
+    const unknown = study(assign({ method: "balanced" }), {
+      save: "post",
+      experiment_id: "x",
+      condition_fallback: "guess" as never,
+    });
+    expect(() => compileSpec(unknown, schemas)).toThrow(/"stop" or "random", not "guess"/);
+
+    const downloaded = study(assign(), { save: "download", condition_fallback: "random" });
+    expect(() => compileSpec(downloaded, schemas)).toThrow(/needs data uploaded to DataPipe/);
   });
 
   it("refuses balanced groups with nowhere to keep the count", () => {

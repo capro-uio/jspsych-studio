@@ -139,9 +139,19 @@ describe("counterbalancing the order of tasks", () => {
     expect(source).toContain("async: true");
   });
 
-  it("falls back to a random row of the square if the service cannot be reached", () => {
+  it("stops with a message if the service hands out no row of the square", () => {
     const source = compiled([counterbalance({ method: "latin_square" })], uploading);
-    const fallback = source.slice(source.indexOf("catch"));
+    const fallback = source.slice(source.indexOf("catch (error)"));
+    expect(fallback).toContain("jsPsych.abortExperiment(");
+    expect(fallback).not.toContain("sampleWithoutReplacement");
+  });
+
+  it("draws a random row of the square instead when the study opts in", () => {
+    const source = compiled([counterbalance({ method: "latin_square" })], {
+      ...uploading,
+      condition_fallback: "random",
+    });
+    const fallback = source.slice(source.indexOf("catch (error)"));
     expect(fallback).toContain("sampleWithoutReplacement(orders, 1)[0]");
   });
 
