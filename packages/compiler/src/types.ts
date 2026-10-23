@@ -225,6 +225,8 @@ export interface Author {
   name: string;
   /** A URL that identifies them across datasets, usually an ORCID. */
   identifier?: string;
+  /** The institution they belong to, such as their university. */
+  affiliation?: string;
 }
 
 export interface Spec {
@@ -232,6 +234,8 @@ export interface Spec {
   $schema?: string;
   name: string;
   authors?: Author[];
+  /** How many participants the study plans to recruit. */
+  sample_size?: number;
   settings?: ExperimentSettings;
   data?: DataSettings;
   recruitment?: RecruitmentSettings;

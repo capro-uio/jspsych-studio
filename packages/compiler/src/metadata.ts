@@ -78,11 +78,24 @@ export interface MetadataOptions {
   tachisto?: string;
 }
 
+/** The authors who have given a name; a row left blank in the builder names no one. */
+export function namedAuthors(spec: Spec) {
+  return (spec.authors ?? []).filter((author) => author.name.trim());
+}
+
+/** An author's affiliation, or undefined when it is missing, blank or not text. */
+export function affiliationOf(author: Author) {
+  const affiliation: unknown = author.affiliation;
+  return (typeof affiliation === "string" && affiliation.trim()) || undefined;
+}
+
 function person(author: Author) {
+  const affiliation = affiliationOf(author);
   return {
     "@type": "Person",
     name: author.name,
     ...(author.identifier ? { identifier: author.identifier } : {}),
+    ...(affiliation ? { affiliation: { "@type": "Organization", name: affiliation } } : {}),
   };
 }
 
@@ -93,7 +106,7 @@ export function datasetSummary(spec: Spec) {
 
 /** Psych-DS metadata, so the data arrives described rather than as a bare CSV. */
 export function datasetDescription(spec: Spec, columns: string[], options: MetadataOptions) {
-  const authors = (spec.authors ?? []).filter((author) => author.name.trim());
+  const authors = namedAuthors(spec);
   const tachisto = options.tachisto ?? GENERATOR_VERSION;
   return {
     "@context": "https://schema.org/",

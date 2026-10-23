@@ -15,6 +15,7 @@ import {
   setEndingTarget,
   setIdParam,
   setRetention,
+  setSampleSize,
 } from "../src/lib/recruitment.ts";
 
 const blank = (): Spec => ({ name: "study", timeline: [] });
@@ -208,5 +209,21 @@ describe("what an early ending keeps", () => {
     setCompletionUrl(spec, PROLIFIC);
     setRetention(spec, "complete", "nothing");
     expect(spec.recruitment?.endings?.complete).toEqual({ url: PROLIFIC });
+  });
+});
+
+describe("the planned sample size", () => {
+  it("stores the number typed, and nothing for an empty field", () => {
+    const spec = blank();
+    setSampleSize(spec, " 120 ");
+    expect(spec.sample_size).toBe(120);
+    setSampleSize(spec, "");
+    expect(spec).not.toHaveProperty("sample_size");
+  });
+
+  it("keeps a number the checks reject, so they can say what is wrong with it", () => {
+    const spec = blank();
+    setSampleSize(spec, "2.5");
+    expect(spec.sample_size).toBe(2.5);
   });
 });

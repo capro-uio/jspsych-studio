@@ -14,6 +14,7 @@
     RETENTION_CHOICES,
     setRetention,
     setCompletionUrl,
+    setSampleSize,
     setEndingKind,
     setEndingTarget,
     setIdParam,
@@ -66,6 +67,21 @@
     {/if}
     <p class="muted">The preview never saves data, so it never sends anyone away.</p>
   {/if}
+
+  <label for="recruitment-sample-size">Participants you plan to recruit</label>
+  <input
+    id="recruitment-sample-size"
+    data-testid="recruitment-sample-size"
+    type="number"
+    min="1"
+    step="1"
+    placeholder="not decided yet"
+    value={project.spec.sample_size ?? ""}
+    onchange={(e) => setSampleSize(project.spec, e.currentTarget.value)}
+  />
+  <p class="muted">
+    Goes into the project's README and the DataPipe setup checklist's session limit.
+  </p>
 
   <h3>Ending early</h3>
   <p class="muted">

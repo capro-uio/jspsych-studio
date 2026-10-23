@@ -117,6 +117,25 @@ function returnAddressProblem(template: unknown) {
   return undefined;
 }
 
+function isSampleSize(value: unknown): value is number {
+  return Number.isInteger(value) && (value as number) > 0;
+}
+
+/** How many participants the study plans to recruit, when it says so as a whole number above 0. */
+export function sampleSizeOf(spec: Spec) {
+  return isSampleSize(spec.sample_size) ? spec.sample_size : undefined;
+}
+
+export function sampleSizeProblems(spec: Spec): Problem[] {
+  if (spec.sample_size === undefined || isSampleSize(spec.sample_size)) return [];
+  return [
+    {
+      message: `sample_size is ${JSON.stringify(spec.sample_size)}, which is not a whole number of participants above 0`,
+      severity: "error",
+    },
+  ];
+}
+
 // The compiler never runs the JSON Schema, so a hand-edited spec reaches these checks unfiltered.
 export function recruitmentProblems(spec: Spec): Problem[] {
   const recruitment = spec.recruitment;

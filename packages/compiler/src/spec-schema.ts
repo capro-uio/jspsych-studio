@@ -362,9 +362,18 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
               title: "A URL that identifies them across datasets, usually an ORCID.",
               type: "string",
             },
+            affiliation: {
+              title: "The institution they belong to, such as their university.",
+              type: "string",
+            },
           },
           additionalProperties: false,
         },
+      },
+      sample_size: {
+        title: "How many participants the study plans to recruit.",
+        type: "integer",
+        minimum: 1,
       },
       settings: reference("experimentSettings"),
       data: reference("dataSettings"),

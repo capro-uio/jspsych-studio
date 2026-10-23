@@ -112,6 +112,13 @@ export function setIdParam(spec: Spec, value: string) {
   else delete spec.recruitment.id_param;
 }
 
+/** An empty field stores no sample size; anything else is kept as typed, for the checks to judge. */
+export function setSampleSize(spec: Spec, value: string) {
+  const sampleSize = value.trim();
+  if (sampleSize) spec.sample_size = Number(sampleSize);
+  else delete spec.sample_size;
+}
+
 export function setCompletionUrl(spec: Spec, value: string) {
   if (!spec.recruitment) return;
   const url = value.trim();

@@ -135,6 +135,40 @@ describe("the checklist for setting up DataPipe", () => {
     await page.close();
   }, 120_000);
 
+  it("fills in the session limit and the affiliation once the study gives them", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await openStudy(page, study);
+    await page.getByTestId("data-mode").selectOption("post");
+    const limit = "datapipe-stop-after-a-set-number-of-sessions";
+    expect(await text(page, `${limit}-state`)).toBe("optional");
+    expect(await page.getByTestId("datapipe-affiliation-value").count()).toBe(0);
+
+    const sampleSize = page.getByTestId("recruitment-sample-size");
+    await sampleSize.fill("120");
+    await sampleSize.blur();
+    await expect.poll(() => text(page, `${limit}-state`)).toBe("on");
+    expect(await text(page, "datapipe-how-many-total-sessions-value")).toBe("120");
+
+    const affiliation = page.getByRole("textbox", { name: "affiliation of author 1" });
+    await affiliation.fill("University of Oslo");
+    await affiliation.blur();
+    await expect.poll(() => text(page, "datapipe-affiliation-value")).toBe("University of Oslo");
+
+    const spec = await authoredSpec(page);
+    expect(spec.sample_size).toBe(120);
+    expect(spec.authors).toEqual([{ name: "Ada Lovelace", affiliation: "University of Oslo" }]);
+
+    await page.getByTestId("tab-study").click();
+    await page.getByTestId("recruitment-sample-size").fill("");
+    await page.getByTestId("recruitment-sample-size").blur();
+    await page.getByTestId("author-affiliation-0").fill("  ");
+    await page.getByTestId("author-affiliation-0").blur();
+    const cleared = await authoredSpec(page);
+    expect(cleared.sample_size).toBeUndefined();
+    expect(cleared.authors).toEqual([{ name: "Ada Lovelace" }]);
+    await page.close();
+  }, 120_000);
+
   it("copies a value with a labelled button", async () => {
     const context = await browser.newContext({ viewport: { width: 1500, height: 900 } });
     await context.grantPermissions(["clipboard-read", "clipboard-write"], {
