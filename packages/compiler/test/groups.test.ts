@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import type { AssignNode, Spec } from "../src/types.ts";
+import type { AssignNode, CounterbalanceNode, Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
 const trial = (stimulus: string) => ({
@@ -28,15 +28,79 @@ const study = (node: AssignNode, data?: Spec["data"]): Spec => ({
 describe("splitting participants between groups", () => {
   it("draws a group in the browser and gates each branch on it", () => {
     const { source } = compileSpec(study(assign()), schemas);
-    expect(source).toContain("let assignedGroup = null;");
+    expect(source).toContain("const assignedGroups = {};");
     expect(source).toContain('sampleWithoutReplacement(["alpha","beta"], 1)[0]');
-    expect(source).toContain('conditional_function: () => assignedGroup === "alpha"');
-    expect(source).toContain('conditional_function: () => assignedGroup === "beta"');
+    expect(source).toContain('conditional_function: () => assignedGroups["group"] === "alpha"');
+    expect(source).toContain('conditional_function: () => assignedGroups["group"] === "beta"');
   });
 
   it("records the group on every row, under a chosen column name", () => {
     const { source } = compileSpec(study(assign({ record_as: "condition" })), schemas);
-    expect(source).toContain('addProperties({ ["condition"]: assignedGroup })');
+    expect(source).toContain('addProperties({ ["condition"]: assignedGroups["condition"] })');
+  });
+
+  it("records under the default column when the chosen name is left empty", () => {
+    const { source } = compileSpec(study(assign({ record_as: "" })), schemas);
+    expect(source).toContain('addProperties({ ["group"]: assignedGroups["group"] })');
+  });
+
+  it("draws a group only the first time a loop or block runs the split", () => {
+    const { source } = compileSpec(study(assign()), schemas);
+    expect(source).toContain(
+      'assignedGroups["group"] ??= jsPsych.randomization.sampleWithoutReplacement(["alpha","beta"], 1)[0];',
+    );
+  });
+
+  it("asks the service only the first time a loop or block runs the split", () => {
+    const { source } = compileSpec(
+      study(assign({ method: "balanced" }), { save: "post", experiment_id: "x" }),
+      schemas,
+    );
+    const body = source.slice(source.indexOf("async (done)"));
+    expect(body.indexOf('if (!assignedGroups["group"]) {')).toBeLessThan(body.indexOf("fetch("));
+    expect(body.indexOf("catch (error)")).toBeLessThan(body.indexOf("addProperties"));
+    expect(body).toContain('assignedGroups["group"] = options[condition % options.length];');
+  });
+
+  it("keeps each split's group under its own column, and gates each on its own", () => {
+    const outer = assign({
+      record_as: "arm",
+      groups: [
+        { name: "alpha", children: [assign({ record_as: "dose" })] },
+        { name: "beta", children: [trial("<p>Beta</p>")] },
+      ],
+    });
+    const { source } = compileSpec(study(outer), schemas);
+    expect(source).toContain('conditional_function: () => assignedGroups["arm"] === "beta"');
+    expect(source).toContain('conditional_function: () => assignedGroups["dose"] === "beta"');
+    expect(source).toContain('assignedGroups["arm"] ??=');
+    expect(source).toContain('assignedGroups["dose"] ??=');
+  });
+
+  it("refuses two steps that would record their choice in the same column", () => {
+    const nested = (inner: AssignNode | CounterbalanceNode) =>
+      study(
+        assign({
+          groups: [
+            { name: "alpha", children: [inner] },
+            { name: "beta", children: [trial("<p>Beta</p>")] },
+          ],
+        }),
+      );
+    expect(() => compileSpec(nested(assign()), schemas)).toThrow(
+      /also records its choice as "group"/,
+    );
+    const order: CounterbalanceNode = {
+      kind: "counterbalance",
+      method: "random",
+      record_as: "group",
+      tasks: [
+        { name: "first", children: [trial("a")] },
+        { name: "second", children: [trial("b")] },
+      ],
+    };
+    expect(() => compileSpec(nested(order), schemas)).toThrow(/also records its choice as "group"/);
+    expect(() => compileSpec(nested(assign({ record_as: "dose" })), schemas)).not.toThrow();
   });
 
   it("asks the data service for a balanced group when told to", () => {

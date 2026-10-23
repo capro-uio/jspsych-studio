@@ -132,10 +132,10 @@ describe("counterbalancing the order of tasks", () => {
 
   it("asks the data service which row of a Latin square to use", () => {
     const source = compiled([counterbalance({ method: "latin_square" })], uploading);
-    expect(source).toContain('const orders = [["flanker","stroop"],["stroop","flanker"]];');
+    expect(source).toContain('const options = [["flanker","stroop"],["stroop","flanker"]];');
     expect(source).toContain("/api/condition/");
     expect(source).toContain('experimentID: "abc123DEF456"');
-    expect(source).toContain('taskOrders["order"] = orders[condition % orders.length];');
+    expect(source).toContain('taskOrders["order"] = options[condition % options.length];');
     expect(source).toContain("async: true");
   });
 
@@ -152,7 +152,7 @@ describe("counterbalancing the order of tasks", () => {
       condition_fallback: "random",
     });
     const fallback = source.slice(source.indexOf("catch (error)"));
-    expect(fallback).toContain("sampleWithoutReplacement(orders, 1)[0]");
+    expect(fallback).toContain("sampleWithoutReplacement(options, 1)[0]");
   });
 
   it("asks the service only the first time a loop or block runs the step", () => {
@@ -299,7 +299,7 @@ describe("what counterbalancing refuses", () => {
         { name: "second", children: [trial("b")] },
       ],
     });
-    expect(() => compiled([outer])).toThrow(/also records its order as "order"/);
+    expect(() => compiled([outer])).toThrow(/also records its choice as "order"/);
 
     const renamed = counterbalance({
       tasks: [

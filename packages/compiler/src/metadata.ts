@@ -1,6 +1,7 @@
 import manifest from "../package.json" with { type: "json" };
 import { orderColumn } from "./counterbalance.ts";
 import { ENDING_COLUMN } from "./data.ts";
+import { groupColumn } from "./groups.ts";
 import { linkParamsOf, needsParticipantId } from "./recruitment.ts";
 import { walkNodes } from "./variables.ts";
 import { EXCLUDED_COLUMN } from "./exclusions.ts";
@@ -55,7 +56,7 @@ export function dataColumns(spec: Spec, recorded: Iterable<string>): string[] {
     }
     if (node.kind === "checkpoint") columns.add("checkpoint");
     if (node.kind === "end") columns.add(ENDING_COLUMN);
-    if (node.kind === "assign") columns.add(node.record_as ?? "group");
+    if (node.kind === "assign") columns.add(groupColumn(node));
     if (node.kind === "counterbalance") columns.add(orderColumn(node));
   });
   return [...columns].sort();

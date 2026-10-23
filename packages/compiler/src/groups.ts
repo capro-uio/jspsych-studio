@@ -2,10 +2,16 @@ import { literal } from "./emit.ts";
 import { conditionFallbackOf, dataPipeAddress } from "./data.ts";
 import type { AssignNode, CheckpointNode, DataSettings } from "./types.ts";
 
-export const GROUP_VARIABLE = "assignedGroup";
+export const GROUPS_VARIABLE = "assignedGroups";
 
 export function groupColumn(node: AssignNode) {
-  return node.record_as ?? "group";
+  return node.record_as || "group";
+}
+
+// Each split keeps its group under its own column, which validation keeps unique, so splits nested
+// inside one another, or repeated by a loop, never read each other's group.
+function chosenGroup(node: AssignNode) {
+  return `${GROUPS_VARIABLE}[${literal(groupColumn(node))}]`;
 }
 
 // jsPsych runs one timeline, so a between-subjects design is the whole study with every group's
@@ -13,34 +19,70 @@ export function groupColumn(node: AssignNode) {
 export function compileGroupGate(node: AssignNode, groupName: string, timeline: string) {
   return (
     `{\n  timeline: [${timeline}],\n` +
-    `  conditional_function: () => ${GROUP_VARIABLE} === ${literal(groupName)},\n}`
+    `  conditional_function: () => ${chosenGroup(node)} === ${literal(groupName)},\n}`
   );
 }
 
 export function compileAssignmentStep(node: AssignNode, data: DataSettings | undefined) {
   const names = node.groups.map((group) => group.name);
-  const column = literal(groupColumn(node));
+  const draw = `jsPsych.randomization.sampleWithoutReplacement(${literal(names)}, 1)[0]`;
+  return compileChoiceStep(
+    {
+      kept: chosenGroup(node),
+      column: groupColumn(node),
+      draw,
+      // Balanced assignment needs to know what previous participants were given, which only the
+      // data service knows.
+      counted:
+        node.method === "balanced" ? { options: literal(names), drawLocally: draw } : undefined,
+    },
+    data,
+  );
+}
 
-  const chooseLocally = `${GROUP_VARIABLE} = jsPsych.randomization.sampleWithoutReplacement(${literal(names)}, 1)[0];`;
+/** A choice a step makes for each participant once, and how the step makes it. */
+export interface Choice {
+  /** Where the generated code keeps the participant's choice. */
+  kept: string;
+  /** The column the choice is recorded under. */
+  column: string;
+  /** Draws the choice in the browser. */
+  draw: string;
+  /**
+   * Set when the data service's condition number picks the choice from `options`; a study that
+   * opts in runs `drawLocally` when the service gives no number.
+   */
+  counted?: { options: string; drawLocally: string };
+  /** Turns the kept choice into what is recorded, appended to it, such as `.join(", ")`. */
+  format?: string;
+}
 
-  if (node.method === "random") {
+// A participant gets one choice, however often a loop or block around the step runs it again:
+// drawing anew would move them between groups or orders partway through, and a counted choice
+// would take extra places in the data service's count.
+export function compileChoiceStep(choice: Choice, data: DataSettings | undefined) {
+  const { kept, counted } = choice;
+  const record = `jsPsych.data.addProperties({ [${literal(choice.column)}]: ${kept}${choice.format ?? ""} });`;
+
+  if (!counted) {
     return {
       async: false,
-      body: `() => {\n    ${chooseLocally}\n    jsPsych.data.addProperties({ [${column}]: ${GROUP_VARIABLE} });\n  }`,
+      body: `() => {
+    ${kept} ??= ${choice.draw};
+    ${record}
+  }`,
     };
   }
 
-  // Balanced assignment needs to know what previous participants were given, which only the data
-  // service knows.
-  const chooseCounted =
-    `const names = ${literal(names)};\n      ` +
-    `${GROUP_VARIABLE} = names[condition % names.length];`;
   return {
     async: true,
     // jsPsych ends an async call-function trial when `done` is called, not when the promise settles.
     body: `async (done) => {
-    ${requestCondition(data, chooseCounted, chooseLocally)}
-    jsPsych.data.addProperties({ [${column}]: ${GROUP_VARIABLE} });
+    if (!${kept}) {
+      const options = ${counted.options};
+      ${requestCondition(data, `${kept} = options[condition % options.length];`, `${kept} = ${counted.drawLocally};`)}
+    }
+    ${record}
     done();
   }`,
   };

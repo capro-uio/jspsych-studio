@@ -20,6 +20,7 @@ import {
 } from "./data.ts";
 import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
+import { groupColumn } from "./groups.ts";
 import { accuracyComparison, answersBySide, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems, sampleSizeProblems } from "./recruitment.ts";
 import {
@@ -538,14 +539,27 @@ function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: nu
   if (node.method === "balanced" && !(spec.data?.save === "post" && spec.data.experiment_id)) {
     report("balanced groups need data uploading to a service, which is what keeps the count");
   }
+  checkOwnColumn(groupColumn(node), spec, report);
 }
 
-function collectOrderColumns(nodes: SpecNode[]): string[] {
+function collectChoiceColumns(nodes: SpecNode[]): string[] {
   const columns: string[] = [];
   walkNodes(nodes, (node) => {
+    if (node.kind === "assign") columns.push(groupColumn(node));
     if (node.kind === "counterbalance") columns.push(orderColumn(node));
   });
   return columns;
+}
+
+// Two steps recording into one column overwrite each other in the data, and two splits, or two
+// counterbalanced steps, remember their choice by that column too, so they would share it.
+function checkOwnColumn(column: string, spec: Spec, report: (message: string) => void) {
+  if (collectChoiceColumns(spec.timeline).filter((other) => other === column).length > 1) {
+    report(
+      `another split or counterbalanced step also records its choice as "${column}", so one ` +
+        "would overwrite the other: give each its own column name",
+    );
+  }
 }
 
 function checkCounterbalance(
@@ -582,13 +596,7 @@ function checkCounterbalance(
         "participants; when data is downloaded, only random order is available",
     );
   }
-  const column = orderColumn(node);
-  if (collectOrderColumns(spec.timeline).filter((other) => other === column).length > 1) {
-    report(
-      `another counterbalanced step also records its order as "${column}", so one would ` +
-        "overwrite the other: give each its own column name",
-    );
-  }
+  checkOwnColumn(orderColumn(node), spec, report);
 }
 
 const ANSWER_TYPES = new Set(["string", "number", "boolean"]);
