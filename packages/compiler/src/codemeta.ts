@@ -2,6 +2,14 @@ import { JSPSYCH_URL } from "./metadata.ts";
 
 export type Codemeta = Record<string, unknown>;
 
+export const SPDX_PREFIX = "https://spdx.org/licenses/";
+
+export function withoutMissing<T extends object>(fields: T) {
+  return Object.fromEntries(
+    Object.entries(fields).filter(([, value]) => value !== undefined),
+  ) as Partial<T>;
+}
+
 /** The fields of the repository's package.json that codemeta also describes. */
 export interface PackageManifest {
   description?: string;
@@ -42,12 +50,12 @@ export function updateCodemeta(
     codeRepository,
     issueTracker: webAddress(manifest.bugs),
     url: manifest.homepage,
-    license: manifest.license ? `https://spdx.org/licenses/${manifest.license}` : undefined,
+    license: manifest.license ? `${SPDX_PREFIX}${manifest.license}` : undefined,
     keywords: manifest.keywords,
   };
   return {
     ...existing,
-    ...Object.fromEntries(Object.entries(fromManifest).filter(([, value]) => value !== undefined)),
+    ...withoutMissing(fromManifest),
     version: release.version,
     dateModified:
       existing.version !== release.version ? release.date : (existing.dateModified ?? release.date),

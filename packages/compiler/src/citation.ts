@@ -1,4 +1,4 @@
-import type { Codemeta } from "./codemeta.ts";
+import { SPDX_PREFIX, withoutMissing, type Codemeta } from "./codemeta.ts";
 
 interface CodemetaAgent {
   "@id"?: string;
@@ -13,7 +13,6 @@ interface CodemetaRequirement {
 }
 
 const ORCID_PREFIX = "https://orcid.org/";
-const SPDX_PREFIX = "https://spdx.org/licenses/";
 
 function authors(codemeta: Codemeta) {
   return ((codemeta.author ?? []) as CodemetaAgent[]).map((author) => ({
@@ -27,12 +26,6 @@ function authors(codemeta: Codemeta) {
 function spdxLicense(codemeta: Codemeta) {
   const license = codemeta.license as string | undefined;
   return license?.startsWith(SPDX_PREFIX) ? license.slice(SPDX_PREFIX.length) : license;
-}
-
-function withoutMissing<T extends object>(fields: T) {
-  return Object.fromEntries(
-    Object.entries(fields).filter(([, value]) => value !== undefined),
-  ) as Partial<T>;
 }
 
 /**
