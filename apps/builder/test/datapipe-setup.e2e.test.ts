@@ -132,7 +132,7 @@ describe("the checklist for setting up DataPipe", () => {
     await context.close();
   }, 120_000);
 
-  it("links to the study's DataPipe only when its address is a web address", async () => {
+  it("links to the study's DataPipe only when its address is usable, and says when it is not", async () => {
     const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
     await openStudy(page, study);
     await page.getByTestId("data-mode").selectOption("post");
@@ -146,6 +146,18 @@ describe("the checklist for setting up DataPipe", () => {
     await endpoint.blur();
     await expect.poll(() => checklist.getByRole("link").count()).toBe(0);
     expect(await checklist.innerText()).toContain("DataPipe (javascript:alert(1))");
+    await expect
+      .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 5_000 })
+      .toContain("the DataPipe address must be a full web address starting with https://");
+
+    await endpoint.fill("https://example.org/datapipe/");
+    await endpoint.blur();
+    await expect
+      .poll(() => checklist.getByRole("link", { name: "DataPipe" }).getAttribute("href"))
+      .toBe("https://example.org/datapipe");
+    await expect
+      .poll(() => page.getByTestId("compile-error").innerText(), { timeout: 5_000 })
+      .not.toContain("DataPipe address");
     await page.close();
   }, 120_000);
 

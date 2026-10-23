@@ -508,7 +508,8 @@ export function specSchema(schemas: PluginSchemas): JsonSchema {
             enum: ["download", "post"],
           },
           endpoint: {
-            title: "The address of the DataPipe to upload to; defaults to pipe.jspsych.org.",
+            title:
+              "The address of the DataPipe to upload to, a path prefix allowed; defaults to pipe.jspsych.org. It starts with https://, or http:// only for localhost, and holds no login, ? or #.",
             type: "string",
           },
           experiment_id: {

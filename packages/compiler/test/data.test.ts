@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
-import { DATAPIPE_URL } from "../src/data.ts";
+import { DATAPIPE_URL, dataPipeAddressProblem } from "../src/data.ts";
 import { reservedLinkColumns } from "../src/metadata.ts";
 import type { Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
@@ -75,6 +75,94 @@ describe("data collection", () => {
     expect(() => compileSpec(specWithData({ save: "post" }), schemas)).toThrow(
       /needs an experiment id/,
     );
+  });
+});
+
+describe("the DataPipe address", () => {
+  const uploadingTo = (endpoint: unknown) =>
+    specWithData({ save: "post", experiment_id: "x", endpoint } as Spec["data"]);
+  const sourceFor = (endpoint: unknown) => compileSpec(uploadingTo(endpoint), schemas).source;
+
+  it("takes an https address", () => {
+    expect(dataPipeAddressProblem("https://pipe.example.org")).toBeNull();
+    expect(sourceFor("https://pipe.example.org")).toContain('"https://pipe.example.org/api/data/"');
+  });
+
+  it("takes an http address only on this computer", () => {
+    for (const local of [
+      "http://localhost:8080",
+      "http://127.0.0.1:3000",
+      "http://[::1]:3000",
+      "HTTP://LOCALHOST",
+    ]) {
+      expect(dataPipeAddressProblem(local), local).toBeNull();
+    }
+    for (const remote of ["http://pipe.example.org", "http://localhost.example.org"]) {
+      expect(dataPipeAddressProblem(remote), remote).toMatch(/http:\/\/ is only for a DataPipe/);
+    }
+    expect(() => sourceFor("http://pipe.example.org")).toThrow(/must start with https:\/\//);
+  });
+
+  it("refuses anything that is not a full web address", () => {
+    for (const odd of [
+      "javascript:alert(1)",
+      "data:text/plain,hi",
+      "ftp://pipe.example.org",
+      "/datapipe",
+      "pipe.example.org",
+      "//pipe.example.org",
+      "https:pipe.example.org",
+      "https://",
+    ]) {
+      expect(dataPipeAddressProblem(odd), odd).toMatch(/must be a full web address/);
+    }
+    expect(() => sourceFor("javascript:alert(1)")).toThrow(/full web address/);
+  });
+
+  it("refuses spaces, hidden characters and characters a web address leaves out", () => {
+    for (const odd of [
+      " https://pipe.example.org",
+      "https://pipe.example.org/a b",
+      "https:\\\\evil.example",
+      "https://pipe.example.org\n",
+      "https://pipe.example.org/a>b",
+      'https://pipe.example.org/"onclick',
+      "https://pipe.example.org/`x`",
+    ]) {
+      expect(dataPipeAddressProblem(odd), odd).toMatch(/cannot hold spaces/);
+    }
+  });
+
+  it("refuses a login, a query or a fragment, since a path follows it", () => {
+    expect(dataPipeAddressProblem("https://user:secret@pipe.example.org")).toMatch(
+      /user name or password/,
+    );
+    expect(dataPipeAddressProblem("https://user@pipe.example.org")).toMatch(/user name/);
+    for (const odd of [
+      "https://pipe.example.org/?key=1",
+      "https://pipe.example.org?",
+      "https://pipe.example.org/#top",
+    ]) {
+      expect(dataPipeAddressProblem(odd), odd).toMatch(/cannot have a \? or # part/);
+    }
+  });
+
+  it("refuses an address that is not text", () => {
+    expect(() => sourceFor(42)).toThrow(/DataPipe address is a web address, not 42/);
+  });
+
+  it("keeps a path in front of DataPipe's routes, without doubling slashes", () => {
+    expect(dataPipeAddressProblem("https://example.org/datapipe")).toBeNull();
+    expect(dataPipeAddressProblem("https://example.org/datapipe/")).toBeNull();
+    const source = sourceFor("https://example.org/datapipe/");
+    expect(source).toContain('"https://example.org/datapipe/api/data/"');
+    expect(source).not.toContain("datapipe//api");
+  });
+
+  it("uses DataPipe's own address when none is given, or it is empty", () => {
+    for (const endpoint of [undefined, ""]) {
+      expect(sourceFor(endpoint)).toContain(`"${DATAPIPE_URL}/api/data/"`);
+    }
   });
 });
 

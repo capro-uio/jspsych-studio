@@ -142,7 +142,10 @@ DataPipe's own order, filled in from the study, with a copy button for each valu
 ## Saving data as it goes
 
 A study that uploads its data sends it all to [DataPipe](https://pipe.jspsych.org) once, at the
-end, gzipped. `endpoint` points it at a DataPipe you host yourself instead of pipe.jspsych.org.
+end, gzipped. `endpoint` points it at a DataPipe you host yourself instead of pipe.jspsych.org:
+an `https://` address, which may include a path such as `https://example.org/datapipe`, or
+`http://` only for `localhost`, `127.0.0.1` or `[::1]` while testing. It cannot hold a login, a
+`?` or a `#`, since the study adds DataPipe's own routes after it.
 With `"stream": true` it also sends each step's row as soon as it is recorded, through jsPsych's
 [DataPipe extension](https://www.jspsych.org/latest/extensions/pipe), so a participant who closes
 the page partway still leaves a partial file (`.partial.json`) on DataPipe:

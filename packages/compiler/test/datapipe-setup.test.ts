@@ -189,6 +189,16 @@ describe("what to set up on DataPipe", () => {
       study([screen("<p>hi</p>")], {}, { endpoint: "javascript:alert(1)" }),
     );
     expect(odd.link).toBeUndefined();
+    const local = dataPipeSetup(
+      study([screen("<p>hi</p>")], {}, { endpoint: "http://localhost:8080/" }),
+    );
+    expect(local.link).toBe("http://localhost:8080");
+    const plain = dataPipeSetup(
+      study([screen("<p>hi</p>")], {}, { endpoint: "http://pipe.example/" }),
+    );
+    expect(plain.link).toBeUndefined();
+    const empty = dataPipeSetup(study([screen("<p>hi</p>")], {}, { endpoint: "" }));
+    expect(empty.link).toBe("https://pipe.jspsych.org");
     const noId = dataPipeSetupMarkdown(study([screen("<p>hi</p>")], {}, { experiment_id: "" }));
     expect(noId).toContain("Paste it into “Experiment ID”");
     expect(noId).not.toContain("This download uploads to the experiment");

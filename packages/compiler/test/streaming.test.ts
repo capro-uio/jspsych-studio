@@ -59,6 +59,20 @@ describe("a study that saves its data as it goes", () => {
     expect(source).toContain('base_url: "https://pipe.example.org"');
   });
 
+  it("keeps a self-hosted DataPipe's path, so the extension's routes follow it", () => {
+    const { source } = compileSpec(
+      streaming({ endpoint: "https://example.org/datapipe/" }),
+      schemas,
+    );
+    expect(source).toContain('base_url: "https://example.org/datapipe"');
+  });
+
+  it("refuses to stream to an address that is not a web address", () => {
+    expect(() => compileSpec(streaming({ endpoint: "javascript:alert(1)" }), schemas)).toThrow(
+      /full web address/,
+    );
+  });
+
   it("leaves the upload to the extension, keeping the download for when it fails", () => {
     const { source } = compileSpec(streaming(), schemas);
     expect(source).not.toContain("postToDataPipe");

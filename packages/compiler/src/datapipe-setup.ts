@@ -1,5 +1,10 @@
 import { latinSquareOrders, orderColumn } from "./counterbalance.ts";
-import { conditionFallbackNote, dataPipeAddress, savesAsItGoes } from "./data.ts";
+import {
+  conditionFallbackNote,
+  dataPipeAddress,
+  dataPipeAddressProblem,
+  savesAsItGoes,
+} from "./data.ts";
 import { groupColumn } from "./groups.ts";
 import { dataColumns, datasetSummary } from "./metadata.ts";
 import { usesRecordings } from "./recordings.ts";
@@ -37,7 +42,7 @@ export interface ConditionStep {
 
 export interface DataPipeSetup {
   address: string;
-  /** The address as a link, only when it is a web address, so nothing else is ever linked. */
+  /** The address as a link, only when it is a usable DataPipe address, so nothing else is ever linked. */
   link?: string;
   titles: typeof TITLES;
   storage: StorageChoice[];
@@ -54,8 +59,6 @@ const TITLES = {
   partialFiles: "About .partial.json files",
   paste: "Paste the experiment ID",
 };
-
-const WEB_ADDRESS = /^https?:\/\/\S+$/i;
 
 // Columns every uploaded file has, whichever way the session ends: jsPsych writes the first three
 // on every row, and Tachisto adds the participant's id to every row of a study that saves data.
@@ -237,7 +240,7 @@ export function dataPipeSetup(spec: Spec): DataPipeSetup {
   const address = dataPipeAddress(spec.data);
   return {
     address,
-    ...(WEB_ADDRESS.test(address) ? { link: address } : {}),
+    ...(dataPipeAddressProblem(address) === null ? { link: address } : {}),
     titles: TITLES,
     storage: STORAGE,
     closedStorage: "OSF no longer takes new experiments.",
