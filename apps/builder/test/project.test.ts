@@ -1,10 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { compileSpec, specSchema, type SpecNode, type TrialNode } from "@tachisto/compiler";
 import {
+  addAtInsertion,
   canHoldChildren,
   childrenAt,
   exportedSpec,
   isUntouched,
+  newAssign,
   newCounterbalance,
   newEnd,
   newTrial,
@@ -90,6 +92,26 @@ describe("newCounterbalance", () => {
     expect(node.method).toBe("random");
     expect(node.tasks.map((task) => task.name)).toEqual(["task 1", "task 2"]);
     expect(() => compileSpec({ name: "x", timeline: [node] }, schemas)).not.toThrow();
+  });
+});
+
+describe("adding splits and counterbalances", () => {
+  beforeEach(() => startNewProject());
+  const step = (stimulus: string) => newTrial("html-keyboard-response", { stimulus });
+
+  it("gives each new one a column no other step records under, so none is a problem", () => {
+    addAtInsertion(newAssign(step("a"), step("b")));
+    addAtInsertion(newAssign(step("c"), step("d")));
+    addAtInsertion(newCounterbalance(step("e"), step("f")));
+    addAtInsertion(newCounterbalance(step("g"), step("h")));
+    addAtInsertion(newAssign(step("i"), step("j")));
+
+    expect(
+      project.spec.timeline.map((node) =>
+        node.kind === "assign" || node.kind === "counterbalance" ? node.record_as : "-",
+      ),
+    ).toEqual([undefined, "group_2", undefined, "order_2", "group_3"]);
+    expect(compileSpec(exportedSpec(), schemas).warnings).toEqual([]);
   });
 });
 

@@ -8,6 +8,7 @@ export { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 export { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 export { assetsOfType, isMediaType, preloadListOf } from "./assets.ts";
 export { latinSquareOrders, orderColumn } from "./counterbalance.ts";
+export { COLUMN_SETTINGS, firstFreeColumn, usualColumn } from "./choices.ts";
 export { accuracyComparison, isResponseRule, questionNames } from "./conditions.ts";
 export { conditionFallbackNote, conditionFallbackOf, DATAPIPE_URL } from "./data.ts";
 export { conditionSteps, dataPipeSetup } from "./datapipe-setup.ts";

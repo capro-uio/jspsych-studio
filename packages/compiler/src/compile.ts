@@ -20,7 +20,7 @@ import { compileCompletion, compileEndStep } from "./endings.ts";
 import { dataColumns, reservedLinkColumns } from "./metadata.ts";
 import { idParamOf, needsParticipantId } from "./recruitment.ts";
 import {
-  GROUP_VARIABLE,
+  GROUPS_VARIABLE,
   compileAssignmentStep,
   compileCheckpointStep,
   compileGroupGate,
@@ -439,7 +439,7 @@ export function compileSpec(
     (eyeTracker ? `${eyeTrackerSetup(eyeTracker.libraries[0].package)}\n\n` : "") +
     (streaming ? `${streaming.declaration}\n` : "") +
     `const jsPsych = initJsPsych(${initOptions(spec, extensions, options.initEntries)});\n\n` +
-    (context.usesGroups ? `let ${GROUP_VARIABLE} = null;\n\n` : "") +
+    (context.usesGroups ? `const ${GROUPS_VARIABLE} = {};\n\n` : "") +
     (context.usesCounterbalance ? `const ${ORDERS_VARIABLE} = {};\n\n` : "") +
     [...context.excludingPlugins].map((plugin) => `${compileExcludingPlugin(plugin)}\n`).join("") +
     (assets.length > 0 ? `${compileAssetMap(assets, options.assets ?? "inline")}\n` : "") +
