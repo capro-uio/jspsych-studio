@@ -299,7 +299,7 @@ describe("what counterbalancing refuses", () => {
         { name: "second", children: [trial("b")] },
       ],
     });
-    expect(() => compiled([outer])).toThrow(/also records its choice as "order"/);
+    expect(() => compiled([outer])).toThrow(/both record their choice in the column "order"/);
 
     const renamed = counterbalance({
       tasks: [

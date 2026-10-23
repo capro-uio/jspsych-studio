@@ -9,7 +9,7 @@
   import Field from "./Field.svelte";
   import GazeSection from "./GazeSection.svelte";
   import { offersGazeTracking, retargetGaze } from "./gaze.ts";
-  import { earlyEndingNames } from "@tachisto/compiler";
+  import { COLUMN_SETTINGS, earlyEndingNames } from "@tachisto/compiler";
   import {
     accuracyComparisonOf,
     branchBasis,
@@ -337,7 +337,7 @@
     </select>
   </div>
   <div class="field">
-    <label for="assign-column"><span class="name">record group as</span></label>
+    <label for="assign-column"><span class="name">{COLUMN_SETTINGS.assign}</span></label>
     <input
       id="assign-column"
       data-testid="assign-column"
@@ -401,7 +401,9 @@
     </p>
   {/if}
   <div class="field">
-    <label for="counterbalance-column"><span class="name">record order as</span></label>
+    <label for="counterbalance-column"
+      ><span class="name">{COLUMN_SETTINGS.counterbalance}</span></label
+    >
     <input
       id="counterbalance-column"
       data-testid="counterbalance-column"

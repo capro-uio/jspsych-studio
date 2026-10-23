@@ -7,6 +7,7 @@ import {
   trialsOf,
 } from "@tachisto/compiler";
 import { NODE_KINDS, SPEC_SCHEMA_ID } from "@tachisto/compiler";
+import { firstFreeColumn, usualColumn } from "@tachisto/compiler";
 import { unique } from "./lists.ts";
 import { addEnding, DEFAULT_EARLY_ENDING } from "./recruitment.ts";
 import { DEFAULT_THRESHOLD } from "./rules.ts";
@@ -129,10 +130,18 @@ export function newBlock(conditions: string, first: SpecNode): SpecNode {
   return { kind: "block", conditions, children: [first] };
 }
 
+// Every split and counterbalance records its choice in a column of its own, so a new one starts on
+// the first name no other step records under.
+function freeColumn(kind: "assign" | "counterbalance") {
+  const column = firstFreeColumn(kind, project.spec.timeline);
+  return column === usualColumn(kind) ? {} : { record_as: column };
+}
+
 export function newAssign(first: SpecNode, second: SpecNode): AssignNode {
   return {
     kind: "assign",
     method: "random",
+    ...freeColumn("assign"),
     groups: [
       { name: "group 1", children: [first] },
       { name: "group 2", children: [second] },
@@ -144,6 +153,7 @@ export function newCounterbalance(first: SpecNode, second: SpecNode): Counterbal
   return {
     kind: "counterbalance",
     method: "random",
+    ...freeColumn("counterbalance"),
     tasks: [
       { name: "task 1", children: [first] },
       { name: "task 2", children: [second] },

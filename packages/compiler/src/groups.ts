@@ -4,8 +4,10 @@ import type { AssignNode, CheckpointNode, DataSettings } from "./types.ts";
 
 export const GROUPS_VARIABLE = "assignedGroups";
 
+export const GROUP_COLUMN = "group";
+
 export function groupColumn(node: AssignNode) {
-  return node.record_as || "group";
+  return node.record_as || GROUP_COLUMN;
 }
 
 // Each split keeps its group under its own column, which validation keeps unique, so splits nested

@@ -9,8 +9,10 @@ export const TASK_VARIABLE = "counterbalanced_task";
 /** How the order is written in the data, e.g. "flanker > stroop". */
 export const ORDER_SEPARATOR = " > ";
 
+export const ORDER_COLUMN = "order";
+
 export function orderColumn(node: CounterbalanceNode) {
-  return node.record_as || "order";
+  return node.record_as || ORDER_COLUMN;
 }
 
 // Each counterbalanced step keeps its order under its own column, which validation keeps unique,

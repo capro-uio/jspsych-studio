@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { compileSpec } from "../src/compile.ts";
+import type { SpecError } from "../src/validate.ts";
 import type { AssignNode, CounterbalanceNode, Spec } from "../src/types.ts";
 import { schemas } from "./schemas.ts";
 
@@ -24,6 +25,15 @@ const study = (node: AssignNode, data?: Spec["data"]): Spec => ({
   data,
   timeline: [node],
 });
+
+const problemsOf = (spec: Spec) => {
+  try {
+    compileSpec(spec, schemas);
+    return [];
+  } catch (error) {
+    return (error as SpecError).problems.map((problem) => problem.message);
+  }
+};
 
 describe("splitting participants between groups", () => {
   it("draws a group in the browser and gates each branch on it", () => {
@@ -87,9 +97,19 @@ describe("splitting participants between groups", () => {
           ],
         }),
       );
-    expect(() => compileSpec(nested(assign()), schemas)).toThrow(
-      /also records its choice as "group"/,
-    );
+    const inner = assign({
+      groups: [
+        { name: "low", children: [trial("<p>Low</p>")] },
+        { name: "high", children: [trial("<p>High</p>")] },
+      ],
+    });
+    const fix = 'give one of them a different column name in its "record group as" setting';
+    expect(problemsOf(nested(inner))).toEqual([
+      'this split and the split into "low", "high" both record their choice in the column ' +
+        `"group", so they would overwrite each other's: ${fix}`,
+      'this split and the split into "alpha", "beta" both record their choice in the column ' +
+        `"group", so they would overwrite each other's: ${fix}`,
+    ]);
     const order: CounterbalanceNode = {
       kind: "counterbalance",
       method: "random",
@@ -99,8 +119,20 @@ describe("splitting participants between groups", () => {
         { name: "second", children: [trial("b")] },
       ],
     };
-    expect(() => compileSpec(nested(order), schemas)).toThrow(/also records its choice as "group"/);
-    expect(() => compileSpec(nested(assign({ record_as: "dose" })), schemas)).not.toThrow();
+    expect(problemsOf(nested(order))[0]).toBe(
+      'this split and the counterbalance of "first", "second" both record their choice in the ' +
+        'column "group", so they would overwrite each other\'s: give one of them a different ' +
+        'column name in its "record group as" or "record order as" setting',
+    );
+    const third = study({
+      ...assign(),
+      groups: [
+        { name: "alpha", children: [inner, assign()] },
+        { name: "beta", children: [trial("<p>Beta</p>")] },
+      ],
+    });
+    expect(problemsOf(third)[0]).toMatch(/^this split and the split into .* all record/);
+    expect(problemsOf(nested(assign({ record_as: "dose" })))).toEqual([]);
   });
 
   it("asks the data service for a balanced group when told to", () => {

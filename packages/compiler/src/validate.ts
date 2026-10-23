@@ -19,17 +19,11 @@ import {
   streamingProblems,
 } from "./data.ts";
 import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
-import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
-import { groupColumn } from "./groups.ts";
+import { ORDER_SEPARATOR, TASK_VARIABLE } from "./counterbalance.ts";
+import { choiceColumn, choiceNodes, COLUMN_SETTINGS, type ChoiceNode } from "./choices.ts";
 import { accuracyComparison, answersBySide, isResponseRule, questionNames } from "./conditions.ts";
 import { endingNames, recruitmentProblems, sampleSizeProblems } from "./recruitment.ts";
-import {
-  conditionColumns,
-  isVariableReference,
-  slotsOf,
-  trialsOf,
-  walkNodes,
-} from "./variables.ts";
+import { conditionColumns, isVariableReference, slotsOf, trialsOf } from "./variables.ts";
 import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { gapCount, pluginRuleProblems, pluginRuleWarnings } from "./plugin-rules.ts";
 import { gridShape, type GridPlace } from "./grids.ts";
@@ -539,27 +533,34 @@ function checkAssign(node: AssignNode, spec: Spec, problems: Problem[], path: nu
   if (node.method === "balanced" && !(spec.data?.save === "post" && spec.data.experiment_id)) {
     report("balanced groups need data uploading to a service, which is what keeps the count");
   }
-  checkOwnColumn(groupColumn(node), spec, report);
+  checkOwnColumn(node, spec, report);
 }
 
-function collectChoiceColumns(nodes: SpecNode[]): string[] {
-  const columns: string[] = [];
-  walkNodes(nodes, (node) => {
-    if (node.kind === "assign") columns.push(groupColumn(node));
-    if (node.kind === "counterbalance") columns.push(orderColumn(node));
-  });
-  return columns;
+const CHOICE_STEP = { assign: "split", counterbalance: "counterbalance" };
+
+function choiceStepName(node: ChoiceNode) {
+  const names = (node.kind === "assign" ? node.groups : node.tasks)
+    .map((slot) => `"${slot.name}"`)
+    .join(", ");
+  return `the ${CHOICE_STEP[node.kind]} ${node.kind === "assign" ? "into" : "of"} ${names}`;
 }
 
 // Two steps recording into one column overwrite each other in the data, and two splits, or two
-// counterbalanced steps, remember their choice by that column too, so they would share it.
-function checkOwnColumn(column: string, spec: Spec, report: (message: string) => void) {
-  if (collectChoiceColumns(spec.timeline).filter((other) => other === column).length > 1) {
-    report(
-      `another split or counterbalanced step also records its choice as "${column}", so one ` +
-        "would overwrite the other: give each its own column name",
-    );
-  }
+// counterbalanced steps, remember their choice by that column too, so they would share it. Each
+// step reports the problem, so the builder marks every one of them.
+function checkOwnColumn(node: ChoiceNode, spec: Spec, report: (message: string) => void) {
+  const column = choiceColumn(node);
+  const others = choiceNodes(spec.timeline).filter(
+    (other) => other !== node && choiceColumn(other) === column,
+  );
+  if (others.length === 0) return;
+  const settings = [...new Set([node, ...others].map((step) => `"${COLUMN_SETTINGS[step.kind]}"`))];
+  report(
+    `this ${CHOICE_STEP[node.kind]} and ${others.map(choiceStepName).join(" and ")} ` +
+      `${others.length > 1 ? "all" : "both"} record their choice in the column "${column}", so ` +
+      `they would overwrite each other's: give one of them a different column name in its ` +
+      `${settings.join(" or ")} setting`,
+  );
 }
 
 function checkCounterbalance(
@@ -596,7 +597,7 @@ function checkCounterbalance(
         "participants; when data is downloaded, only random order is available",
     );
   }
-  checkOwnColumn(orderColumn(node), spec, report);
+  checkOwnColumn(node, spec, report);
 }
 
 const ANSWER_TYPES = new Set(["string", "number", "boolean"]);
