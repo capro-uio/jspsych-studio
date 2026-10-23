@@ -364,12 +364,20 @@ frame has nothing of yours to send.
   jsPsych with their versions. Tachisto's comes from `packages/compiler/package.json`, so a release
   is a version bump and nothing else — `npm version <v> --workspaces` turns it on everywhere, and
   regenerates `codemeta.json` with the new version, its release URL and the jsPsych it builds for
-  (`npm run codemeta` does the same by hand; CI fails if it is out of date). The description,
-  licence, keywords and links come from the root `package.json`, so they are said once; only what
-  npm has no field for, such as the authors and development status, is written in
-  `codemeta.json` by hand.
+  (`npm run codemeta` does the same by hand; CI fails if it is out of date). The same run writes
+  `CITATION.cff` and `.zenodo.json` from `codemeta.json`, so the citation and the Zenodo archive
+  say what it says. The description, licence, keywords and links come from the root
+  `package.json`, so they are said once; only what npm has no field for, such as the authors and
+  development status, is written in `codemeta.json` by hand.
   While the workspaces sit at `0.0.0` no Tachisto version is claimed, because a dataset built by
   "Tachisto 0.0.0" names a build nobody can obtain.
+
+## Citing Tachisto
+
+GitHub's "Cite this repository" button, in the sidebar of the repository page, gives a citation
+in APA or BibTeX from [`CITATION.cff`](CITATION.cff). A DOI will follow with the first release
+archived on Zenodo, and each release after that will have its own, so a methods section can name
+the exact Tachisto that built an experiment.
 
 ## License
 

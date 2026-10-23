@@ -1,10 +1,11 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from "node:fs";
-import { basename } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { format, resolveConfig } from "prettier";
 import { fileURLToPath } from "node:url";
 import { extractBundle } from "@tachisto/schemas";
 import manifest from "../package.json" with { type: "json" };
+import { citationCff, toYaml, zenodoMetadata } from "./citation.ts";
 import { updateCodemeta, type Codemeta, type PackageManifest } from "./codemeta.ts";
 import { compileReport } from "./cli-report.ts";
 import { compileSpec } from "./compile.ts";
@@ -57,10 +58,20 @@ if (command === "codemeta") {
       date: new Date().toISOString().slice(0, 10),
     },
   );
+  const citationPath = join(dirname(outputPath), "CITATION.cff");
+  const zenodoPath = join(dirname(outputPath), ".zenodo.json");
   // Formatted as the repository formats it, so a regeneration diffs only where something changed.
-  const options = { ...(await resolveConfig(outputPath)), filepath: outputPath };
-  writeFileSync(outputPath, await format(JSON.stringify(updated), options));
-  console.log(`codemeta for Tachisto ${manifest.version} -> ${outputPath}`);
+  const writeFormatted = async (path: string, text: string) => {
+    const options = { ...(await resolveConfig(path)), filepath: path };
+    writeFileSync(path, await format(text, options));
+  };
+  await writeFormatted(outputPath, JSON.stringify(updated));
+  await writeFormatted(citationPath, toYaml(citationCff(updated)));
+  await writeFormatted(zenodoPath, JSON.stringify(zenodoMetadata(updated)));
+  console.log(
+    `codemeta, citation and Zenodo metadata for Tachisto ${manifest.version} -> ` +
+      [outputPath, citationPath, zenodoPath].join(", "),
+  );
   process.exit(0);
 }
 

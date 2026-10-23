@@ -63,8 +63,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run codemeta
-      - name: Fail if codemeta.json is behind the version or the jsPsych it builds for
-        run: git diff --exit-code codemeta.json
+      - name: Fail if codemeta.json, CITATION.cff or .zenodo.json is behind the version or the jsPsych it builds for
+        run: git diff --exit-code codemeta.json CITATION.cff .zenodo.json
 
   workflows:
     runs-on: ubuntu-latest
