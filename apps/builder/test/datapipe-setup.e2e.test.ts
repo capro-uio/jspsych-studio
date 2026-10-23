@@ -111,6 +111,30 @@ describe("the checklist for setting up DataPipe", () => {
     await page.close();
   }, 120_000);
 
+  it("gives no number of conditions when two steps share DataPipe's counter, and warns", async () => {
+    const page = await browser.newPage({ viewport: { width: 1500, height: 900 } });
+    await openStudy(page, {
+      ...study,
+      data: { save: "post", experiment_id: "abc123DEF456" },
+      timeline: [
+        ...study.timeline,
+        {
+          kind: "counterbalance",
+          method: "latin_square",
+          tasks: ["stroop", "flanker"].map((name) => ({ name, children: [screen(name)] })),
+        },
+      ],
+    });
+    await page.getByTestId("datapipe-setup").locator("summary").click();
+    expect(await text(page, "datapipe-how-many-conditions")).toContain("no single right number");
+    expect(await page.getByTestId("datapipe-how-many-conditions-value").count()).toBe(0);
+    await expect
+      .poll(() => page.getByTestId("compile-warnings").innerText(), { timeout: 5_000 })
+      .toContain("2 steps ask DataPipe for a condition");
+    expect(await page.getByTestId("compile-error").count()).toBe(0);
+    await page.close();
+  }, 120_000);
+
   it("copies a value with a labelled button", async () => {
     const context = await browser.newContext({ viewport: { width: 1500, height: 900 } });
     await context.grantPermissions(["clipboard-read", "clipboard-write"], {

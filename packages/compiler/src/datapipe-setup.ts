@@ -10,6 +10,7 @@ import { dataColumns, datasetSummary } from "./metadata.ts";
 import { usesRecordings } from "./recordings.ts";
 import { walkNodes } from "./variables.ts";
 import type { Spec } from "./types.ts";
+import type { Problem } from "./validate.ts";
 
 /** A value to type into DataPipe, or a note on what to type when Tachisto cannot know it. */
 export interface SetupField {
@@ -89,6 +90,37 @@ export function conditionSteps(spec: Spec): ConditionStep[] {
   return steps;
 }
 
+function stepName(step: ConditionStep, quote: (text: string) => string) {
+  const kind = step.kind === "groups" ? "split" : "counterbalance";
+  return `the ${kind} recording ${quote(step.column)} (${step.count} ${step.kind})`;
+}
+
+function listed(names: string[]) {
+  return names.length > 1 ? `${names.slice(0, -1).join(", ")} and ${names.at(-1)}` : names[0];
+}
+
+const SHARED_COUNTER =
+  "DataPipe keeps one condition counter per experiment and moves it on at every request, so " +
+  "these steps take turns with it instead of each counting participants. Their groups will not " +
+  "come out balanced, and can even put every participant in the same one. To keep one step " +
+  "balanced, have the others assign at random.";
+
+/**
+ * Steps sharing DataPipe's one condition counter still run, so this is a warning: a researcher
+ * may accept groups that are not balanced against each other.
+ */
+export function sharedConditionProblems(spec: Spec): Problem[] {
+  const steps = conditionSteps(spec);
+  if (spec.data?.save !== "post" || steps.length < 2) return [];
+  const names = steps.map((step) => stepName(step, (text) => `"${text}"`));
+  return [
+    {
+      message: `${steps.length} steps ask DataPipe for a condition: ${listed(names)}. ${SHARED_COUNTER}`,
+      severity: "warning",
+    },
+  ];
+}
+
 function authorNames(spec: Spec) {
   const names = (spec.authors ?? []).map((author) => author.name.trim()).filter(Boolean);
   return names.length > 0 ? names.join("; ") : undefined;
@@ -145,16 +177,21 @@ function conditionsSetting(spec: Spec): DashboardSetting {
     };
   }
   if (steps.length > 1) {
-    const listed = steps.map((step) => `“${step.column}” (${step.count} ${step.kind})`).join(", ");
+    const names = steps.map((step) => stepName(step, (text) => `“${text}”`));
     return {
       setting,
       value: "on",
       note: fallbackNote,
-      warning:
-        `This study asks DataPipe for a condition at ${steps.length} steps: ${listed}. DataPipe ` +
-        "keeps one count per experiment and moves it on at every request, so the steps are not " +
-        "balanced against each other. Count only one of them on DataPipe and draw the others at random.",
-      fields: [],
+      warning: `This study asks DataPipe for a condition at ${steps.length} steps: ${listed(names)}. ${SHARED_COUNTER}`,
+      fields: [
+        {
+          label: "How many conditions?",
+          note:
+            "There is no single right number for this study: each of its steps needs a count of " +
+            "its own, and DataPipe keeps only one. Settle the warning above first; the builder " +
+            "also shows it under “Worth checking”.",
+        },
+      ],
     };
   }
   const [{ kind, count }] = steps;

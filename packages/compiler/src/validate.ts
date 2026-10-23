@@ -33,6 +33,7 @@ import { codeProblem, containsCode, isCode, takesFunction } from "./code.ts";
 import { gapCount, pluginRuleProblems, pluginRuleWarnings } from "./plugin-rules.ts";
 import { gridShape, type GridPlace } from "./grids.ts";
 import { setupOrderProblems } from "./setup-order.ts";
+import { sharedConditionProblems } from "./datapipe-setup.ts";
 import { gazeProblems } from "./gaze.ts";
 import { canExcludeParticipants, excludesParticipants } from "./exclusions.ts";
 import { appearanceProblems } from "./appearance.ts";
@@ -806,6 +807,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas): Problem[] {
   problems.push(...recruitmentProblems(spec));
   problems.push(...streamingProblems(spec));
   problems.push(...conditionFallbackProblems(spec));
+  problems.push(...sharedConditionProblems(spec));
   problems.push(...appearanceProblems(spec.settings));
   problems.push(...setupOrderProblems(spec));
   checkNodes(spec.timeline, spec, schemas, new Set(), problems, []);
