@@ -32,3 +32,22 @@ describe("experiment-wide settings", () => {
     expect(source).toContain("on_finish: () => {}");
   });
 });
+
+describe("the study's planned sample size", () => {
+  const planned = (sampleSize: number): Spec => ({ ...spec(undefined), sample_size: sampleSize });
+
+  it("accepts a whole number of participants", () => {
+    expect(() => compileSpec(planned(40), schemas)).not.toThrow();
+  });
+
+  it.each([0, -3, 2.5, Number.NaN])("rejects a sample size of %s", (sampleSize) => {
+    expect(() => compileSpec(planned(sampleSize), schemas)).toThrow(
+      /sample_size is .* not a whole number of participants above 0/,
+    );
+  });
+
+  it("rejects a sample size written as text", () => {
+    const spec = { ...planned(1), sample_size: "40" } as unknown as Spec;
+    expect(() => compileSpec(spec, schemas)).toThrow(/sample_size is "40"/);
+  });
+});

@@ -9,6 +9,7 @@ import {
   endingOf,
   idParamOf,
   retentionOf,
+  sampleSizeOf,
 } from "../recruitment.ts";
 import { formatSource } from "../format.ts";
 import {
@@ -19,7 +20,7 @@ import {
 } from "../metadata.ts";
 import { packageFileKey, thirdPartyNotice, type PackageFile } from "../package-files.ts";
 import { emitHtml, filesLoadedWhileRunning } from "./html.ts";
-import type { Retention, Spec } from "../types.ts";
+import type { RecruitmentSettings, Retention, Spec } from "../types.ts";
 
 export type ProjectFile = string | Uint8Array;
 
@@ -123,20 +124,30 @@ ${recruitmentSection(spec)}`;
 }
 
 function recruitmentSection(spec: Spec) {
-  if (!spec.recruitment) return "";
-  const idParam = idParamOf(spec.recruitment);
-  const url = completionUrlOf(spec.recruitment);
+  const sampleSize = sampleSizeOf(spec);
+  const paragraphs: string[] = [];
+  if (sampleSize !== undefined) {
+    const participants = sampleSize === 1 ? "participant" : "participants";
+    paragraphs.push(`The study plans to recruit ${sampleSize} ${participants}.`);
+  }
+  if (spec.recruitment) paragraphs.push(participantIdNote(spec.recruitment));
+  if (paragraphs.length === 0) return "";
   return `
 ## Recruiting
 
-Each participant's id is read from the \`${idParam}\` parameter of the link they arrive by, and
+${paragraphs.join("\n\n")}
+${earlyEndingsNote(spec)}`;
+}
+
+function participantIdNote(recruitment: RecruitmentSettings) {
+  const url = completionUrlOf(recruitment);
+  return `Each participant's id is read from the \`${idParamOf(recruitment)}\` parameter of the link they arrive by, and
 recorded as \`participant_id\`. Without it they are given a random id.${
     url
       ? ` Once their data is uploaded they are sent to ${url}, or, if the upload fails, shown a link
 to it once their file has downloaded.`
       : ""
-  }
-${earlyEndingsNote(spec)}`;
+  }`;
 }
 
 const KEPT: Record<Retention, string> = {

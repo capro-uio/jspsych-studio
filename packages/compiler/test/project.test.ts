@@ -228,6 +228,29 @@ describe("downloading the whole project", () => {
     expect(plain["README.md"]).not.toContain("end early");
   });
 
+  it("says in its readme how many participants the study plans to recruit", async () => {
+    const planned = (await projectFiles({ ...spec, sample_size: 80 }, schemas))["README.md"];
+    expect(planned).toContain("## Recruiting");
+    expect(planned).toContain("The study plans to recruit 80 participants.");
+    expect(planned).not.toContain("parameter of the link");
+
+    const one = (await projectFiles({ ...spec, sample_size: 1 }, schemas))["README.md"];
+    expect(one).toContain("The study plans to recruit 1 participant.");
+
+    const recruitment = { id_param: "PROLIFIC_PID" };
+    const both = (await projectFiles({ ...spec, sample_size: 80, recruitment }, schemas))[
+      "README.md"
+    ];
+    expect(both).toContain("80 participants.\n\nEach participant's id is read from");
+  });
+
+  it("leaves the planned sample size out of the Psych-DS metadata, which has no field for it", async () => {
+    const options = { generatedAt: "2026-10-16" };
+    const planned = await projectFiles({ ...spec, sample_size: 80 }, schemas, options);
+    const unplanned = await projectFiles(spec, schemas, options);
+    expect(describedDataset(planned)).toEqual(describedDataset(unplanned));
+  });
+
   it("says in its readme what each early ending keeps", async () => {
     const message = "<p>Thank you.</p>";
     const recruitment = {
@@ -253,8 +276,12 @@ describe("downloading the whole project", () => {
     const withAuthors = {
       ...spec,
       authors: [
-        { name: "A Researcher", identifier: "https://orcid.org/0000-0002-1825-0097" },
-        { name: "Another Researcher" },
+        {
+          name: "A Researcher",
+          identifier: "https://orcid.org/0000-0002-1825-0097",
+          affiliation: " University of Oslo ",
+        },
+        { name: "Another Researcher", affiliation: "   " },
       ],
     };
     const files = await projectFiles(withAuthors, schemas);
@@ -265,6 +292,7 @@ describe("downloading the whole project", () => {
         "@type": "Person",
         name: "A Researcher",
         identifier: "https://orcid.org/0000-0002-1825-0097",
+        affiliation: { "@type": "Organization", name: "University of Oslo" },
       },
       { "@type": "Person", name: "Another Researcher" },
     ]);

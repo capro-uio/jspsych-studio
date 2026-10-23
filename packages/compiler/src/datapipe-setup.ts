@@ -6,7 +6,8 @@ import {
   savesAsItGoes,
 } from "./data.ts";
 import { groupColumn } from "./groups.ts";
-import { dataColumns, datasetSummary } from "./metadata.ts";
+import { affiliationOf, dataColumns, datasetSummary, namedAuthors } from "./metadata.ts";
+import { sampleSizeOf } from "./recruitment.ts";
 import { usesRecordings } from "./recordings.ts";
 import { walkNodes } from "./variables.ts";
 import type { Spec } from "./types.ts";
@@ -122,12 +123,18 @@ export function sharedConditionProblems(spec: Spec): Problem[] {
 }
 
 function authorNames(spec: Spec) {
-  const names = (spec.authors ?? []).map((author) => author.name.trim()).filter(Boolean);
+  const names = namedAuthors(spec).map((author) => author.name.trim());
   return names.length > 0 ? names.join("; ") : undefined;
+}
+
+function affiliations(spec: Spec) {
+  const named = namedAuthors(spec).map(affiliationOf).filter(Boolean);
+  return named.length > 0 ? [...new Set(named)].join("; ") : undefined;
 }
 
 function experimentFields(spec: Spec): SetupField[] {
   const authors = authorNames(spec);
+  const affiliation = affiliations(spec);
   return [
     { label: "Title", value: spec.name, note: "Every storage option asks for it." },
     {
@@ -139,7 +146,10 @@ function experimentFields(spec: Spec): SetupField[] {
     },
     {
       label: "Affiliation",
-      note: "Zenodo asks for it, optionally. Tachisto does not record affiliations, so type yours in.",
+      value: affiliation,
+      note:
+        "Zenodo asks for it, optionally." +
+        (affiliation ? "" : " Add it to the authors under “Who made this”, or type yours in."),
     },
     {
       label: "Description",
@@ -214,6 +224,34 @@ function conditionsSetting(spec: Spec): DashboardSetting {
   };
 }
 
+const SESSION_LIMIT_NOTE =
+  "Files from participants who left partway (.partial.json) do not count toward it.";
+
+function sessionLimitSetting(spec: Spec): DashboardSetting {
+  const setting = "Stop after a set number of sessions";
+  const sampleSize = sampleSizeOf(spec);
+  if (sampleSize === undefined) {
+    return {
+      setting,
+      value: "optional",
+      note: `Set it to the number of participants you plan to recruit, and DataPipe stops accepting data once that many have finished. ${SESSION_LIMIT_NOTE} Give the study's sample size under “Recruitment” to have it filled in here.`,
+      fields: [],
+    };
+  }
+  return {
+    setting,
+    value: "on",
+    note: `DataPipe then stops accepting data once the ${sampleSize} participants the study plans to recruit have finished. ${SESSION_LIMIT_NOTE}`,
+    fields: [
+      {
+        label: "How many total sessions?",
+        value: String(sampleSize),
+        note: "The study's planned sample size, set under “Recruitment”.",
+      },
+    ],
+  };
+}
+
 function dashboardSettings(spec: Spec): DashboardSetting[] {
   const recordings = usesRecordings(spec);
   return [
@@ -232,12 +270,7 @@ function dashboardSettings(spec: Spec): DashboardSetting[] {
       fields: [],
     },
     conditionsSetting(spec),
-    {
-      setting: "Stop after a set number of sessions",
-      value: "optional",
-      note: "Set it to the number of participants you plan to recruit, and DataPipe stops accepting data once that many have finished. Files from participants who left partway (.partial.json) do not count toward it.",
-      fields: [],
-    },
+    sessionLimitSetting(spec),
     {
       setting: "Check submissions before storing them",
       value: "on",

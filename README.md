@@ -130,10 +130,11 @@ DataPipe" checklist, and a project download carries the same one as `DATAPIPE-SE
 DataPipe's own order, filled in from the study, with a copy button for each value:
 
 1. **Create the experiment:** where DataPipe can store the data (Google Drive, Dataverse or Zenodo;
-   OSF takes no new experiments), and the title, authors and description.
+   OSF takes no new experiments), and the title, authors, their affiliations and description.
 2. **On its dashboard:** each setting under DataPipe's label: base64 uploads on only for a study
    that records sound or video; condition assignment on, with the number of conditions, only for a
-   study with balanced groups or a Latin square; an optional session limit; submission checks
+   study with balanced groups or a Latin square; a session limit, on at the study's planned
+   `sample_size` and optional when it gives none; submission checks
    allowing CSV and requiring the columns every upload has (`trial_type`, `trial_index`,
    `time_elapsed` and `participant_id`); and Psych-DS metadata, which DataPipe locks once any data
    arrives, a pilot included.

@@ -112,7 +112,8 @@ describe("exportedSpec", () => {
   it("keeps every field the spec format has", () => {
     project.spec = {
       name: "complete",
-      authors: [{ name: "A. Researcher" }],
+      authors: [{ name: "A. Researcher", affiliation: "University of Oslo" }],
+      sample_size: 60,
       settings: { default_iti: 250 },
       data: { save: "post", experiment_id: "abc" },
       recruitment: { platform: "prolific", id_param: "PROLIFIC_PID" },

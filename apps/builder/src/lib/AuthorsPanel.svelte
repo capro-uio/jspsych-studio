@@ -3,12 +3,11 @@
 
   const authors = $derived(project.spec.authors ?? []);
 
-  function update(index: number, field: "name" | "identifier", value: string) {
+  function update(index: number, field: "name" | "identifier" | "affiliation", value: string) {
     const list = project.spec.authors;
     if (!list) return;
-    if (value) list[index][field] = value;
-    else if (field === "identifier") delete list[index].identifier;
-    else list[index].name = "";
+    if (field === "name" || value.trim()) list[index][field] = value;
+    else delete list[index][field];
   }
 
   function add() {
@@ -33,17 +32,30 @@
     <div class="author">
       <input
         data-testid={`author-name-${index}`}
+        aria-label={`name of author ${index + 1}`}
         placeholder="name"
         value={author.name}
         onchange={(event) => update(index, "name", event.currentTarget.value)}
       />
       <input
+        data-testid={`author-affiliation-${index}`}
+        aria-label={`affiliation of author ${index + 1}`}
+        placeholder="affiliation (optional)"
+        value={author.affiliation ?? ""}
+        onchange={(event) => update(index, "affiliation", event.currentTarget.value)}
+      />
+      <input
         data-testid={`author-id-${index}`}
+        aria-label={`ORCID or other link of author ${index + 1}`}
         placeholder="ORCID or other link (optional)"
         value={author.identifier ?? ""}
         onchange={(event) => update(index, "identifier", event.currentTarget.value)}
       />
-      <button data-testid={`remove-author-${index}`} onclick={() => remove(index)}>✕</button>
+      <button
+        aria-label={`remove author ${index + 1}`}
+        data-testid={`remove-author-${index}`}
+        onclick={() => remove(index)}>✕</button
+      >
     </div>
   {/each}
 
@@ -63,14 +75,21 @@
     font-size: 1rem;
   }
   .author {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto;
     gap: 0.3rem;
   }
+  .author + .author {
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--line);
+  }
   .author input {
-    flex: 1;
+    grid-column: 1;
     min-width: 0;
   }
   .author button {
+    grid-row: 1;
+    grid-column: 2;
     border: 0;
     background: none;
     color: var(--ink-muted);

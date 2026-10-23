@@ -21,7 +21,7 @@ import {
 import { isMediaType, mediaListOf, preloadListOf, type PreloadList } from "./assets.ts";
 import { ORDER_SEPARATOR, TASK_VARIABLE, orderColumn } from "./counterbalance.ts";
 import { accuracyComparison, answersBySide, isResponseRule, questionNames } from "./conditions.ts";
-import { endingNames, recruitmentProblems } from "./recruitment.ts";
+import { endingNames, recruitmentProblems, sampleSizeProblems } from "./recruitment.ts";
 import {
   conditionColumns,
   isVariableReference,
@@ -805,6 +805,7 @@ export function validateSpec(spec: Spec, schemas: PluginSchemas): Problem[] {
   }
   problems.push(...dataPipeAddressProblems(spec));
   problems.push(...recruitmentProblems(spec));
+  problems.push(...sampleSizeProblems(spec));
   problems.push(...streamingProblems(spec));
   problems.push(...conditionFallbackProblems(spec));
   problems.push(...sharedConditionProblems(spec));

@@ -90,6 +90,23 @@ describe("what to set up on DataPipe", () => {
       datasetDescription(spec, [], { jspsych: "8.0.0" }).description,
     );
     expect(field(spec, "Affiliation")?.value).toBeUndefined();
+    expect(field(spec, "Affiliation")?.note).toContain("Who made this");
+  });
+
+  it("fills in the authors' affiliations, each once, ignoring blank ones and non-text", () => {
+    const spec = study([screen("<p>hi</p>")], {
+      authors: [
+        { name: "Ada Lovelace", affiliation: " University of London " },
+        { name: "Alan Turing", affiliation: "University of Manchester" },
+        { name: "Charles Babbage", affiliation: "University of London" },
+        { name: "Grace Hopper", affiliation: "  " },
+        { name: "Hand Edited", affiliation: 5 as unknown as string },
+        { name: " ", affiliation: "Nowhere" },
+      ],
+    });
+    const affiliation = field(spec, "Affiliation");
+    expect(affiliation?.value).toBe("University of London; University of Manchester");
+    expect(affiliation?.note).not.toContain("type yours in");
   });
 
   it("asks for authors when the study names none", () => {
@@ -165,10 +182,29 @@ describe("what to set up on DataPipe", () => {
     );
   });
 
-  it("leaves the session limit optional, since Tachisto knows no planned sample size", () => {
+  it("leaves the session limit optional when the study gives no planned sample size", () => {
     const limit = setting(study([screen("<p>hi</p>")]), "Stop after a set number of sessions");
     expect(limit.value).toBe("optional");
     expect(limit.note).toContain(".partial.json");
+    expect(limit.note).toContain("Recruitment");
+    expect(limit.fields).toEqual([]);
+  });
+
+  it("turns the session limit on at the study's planned sample size", () => {
+    const spec = study([screen("<p>hi</p>")], { sample_size: 120 });
+    const limit = setting(spec, "Stop after a set number of sessions");
+    expect(limit.value).toBe("on");
+    expect(limit.note).toContain("once the 120 participants the study plans to recruit");
+    expect(limit.note).toContain(".partial.json");
+    expect(limit.fields.map((entry) => [entry.label, entry.value])).toEqual([
+      ["How many total sessions?", "120"],
+    ]);
+    expect(dataPipeSetupMarkdown(spec)).toContain("**How many total sessions?:** `120`");
+  });
+
+  it.each([0, -5, 2.5])("gives no session limit for a sample size of %s", (sampleSize) => {
+    const spec = study([screen("<p>hi</p>")], { sample_size: sampleSize });
+    expect(setting(spec, "Stop after a set number of sessions").value).toBe("optional");
   });
 
   it("allows CSV and requires only the columns every upload has", () => {
