@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { Problem, Spec } from "@tachisto/compiler";
 import { loadSpec } from "../src/lib/project.svelte.ts";
-import { currentProblems, errorsOf, stepCount, warningsOf } from "../src/lib/problems.svelte.ts";
+import {
+  currentProblems,
+  errorsOf,
+  overallProblems,
+  stepCount,
+  warningsOf,
+} from "../src/lib/problems.svelte.ts";
 
 const unending = {
   kind: "trial" as const,
@@ -28,6 +34,29 @@ describe("the current experiment's problems", () => {
     const problems = currentProblems();
     expect(warningsOf(problems).map((problem) => problem.path)).toEqual([[0]]);
     expect(errorsOf(problems).map((problem) => problem.path)).toEqual([[1]]);
+  });
+
+  it("warns, about the whole experiment, when two steps share DataPipe's condition counter", () => {
+    const screen = { kind: "trial" as const, plugin: "html-keyboard-response", params: {} };
+    const slots = (names: string[]) => names.map((name) => ({ name, children: [screen] }));
+    loadSpec({
+      ...study([
+        { kind: "assign", method: "balanced", groups: slots(["red", "green"]) },
+        {
+          kind: "counterbalance",
+          method: "latin_square",
+          record_as: "order",
+          tasks: slots(["stroop", "flanker"]),
+        },
+      ]),
+      data: { save: "post", experiment_id: "abc123DEF456" },
+    });
+    const shared = currentProblems().filter((problem) =>
+      problem.message.includes("ask DataPipe for a condition"),
+    );
+    expect(shared).toEqual([expect.objectContaining({ severity: "warning" })]);
+    expect(shared[0].path).toBeUndefined();
+    expect(overallProblems(warningsOf(shared))).toEqual(shared);
   });
 
   it("is empty for an experiment with nothing to question", () => {

@@ -141,9 +141,28 @@ describe("what to set up on DataPipe", () => {
     const spec = study([groups(2), orders(2)]);
     expect(conditionSteps(spec)).toHaveLength(2);
     const conditions = setting(spec, "Assign conditions in sequence");
-    expect(conditions.fields).toEqual([]);
+    expect(conditions.value).toBe("on");
     expect(conditions.warning).toContain("at 2 steps");
-    expect(conditions.warning).toContain("“group” (2 groups)");
+    expect(conditions.warning).toContain(
+      "the split recording “group” (2 groups) and the counterbalance recording “task_order” (2 orders)",
+    );
+    expect(conditions.warning).toContain("will not come out balanced");
+    expect(conditions.fields).toHaveLength(1);
+    const [count] = conditions.fields;
+    expect(count.label).toBe("How many conditions?");
+    expect(count.value).toBeUndefined();
+    expect(count.note).toContain("no single right number");
+    expect(count.note).toContain("the warning above");
+  });
+
+  it("puts no number in the file's conditions row when several steps ask", () => {
+    const markdown = dataPipeSetupMarkdown(study([groups(2), orders(3)]));
+    expect(markdown).toContain(
+      "- **How many conditions?:** There is no single right number for this study",
+    );
+    expect(markdown).toContain(
+      "> **Warning:** This study asks DataPipe for a condition at 2 steps",
+    );
   });
 
   it("leaves the session limit optional, since Tachisto knows no planned sample size", () => {
