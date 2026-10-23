@@ -85,6 +85,26 @@ describe("downloading the whole project", () => {
   it("says where the data goes", async () => {
     const uploading = await projectFiles(spec, schemas);
     expect(uploading["README.md"]).toContain("abc123DEF456");
+    expect(uploading["README.md"]).toContain("Results are uploaded to DataPipe under");
+    const emptyAddress = await projectFiles(
+      { ...spec, data: { save: "post", experiment_id: "abc123DEF456", endpoint: "" } },
+      schemas,
+    );
+    expect(emptyAddress["README.md"]).toContain("Results are uploaded to DataPipe under");
+    const ownPipe = await projectFiles(
+      {
+        ...spec,
+        data: {
+          save: "post",
+          experiment_id: "abc123DEF456",
+          endpoint: "https://example.org/datapipe/",
+        },
+      },
+      schemas,
+    );
+    expect(ownPipe["README.md"]).toContain(
+      "Results are uploaded to https://example.org/datapipe under",
+    );
 
     const nowhere = await projectFiles({ ...spec, data: undefined }, schemas);
     expect(nowhere["README.md"]).toContain("does not keep its results");

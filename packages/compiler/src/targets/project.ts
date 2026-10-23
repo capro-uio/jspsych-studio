@@ -1,7 +1,7 @@
 import type { SchemaBundle } from "@tachisto/schemas";
 import { assetPath } from "../assets.ts";
 import { compileSpec } from "../compile.ts";
-import { ENDING_COLUMN } from "../data.ts";
+import { ENDING_COLUMN, ownDataPipeAddress } from "../data.ts";
 import { dataPipeSetupMarkdown } from "../datapipe-setup.ts";
 import {
   completionUrlOf,
@@ -114,7 +114,7 @@ ${assetCount > 0 ? `- \`assets/\` — the ${assetCount} file(s) the experiment s
 
 ${
   spec.data?.save === "post"
-    ? `Results are uploaded to ${spec.data.endpoint ?? "DataPipe"} under the experiment id \`${spec.data.experiment_id}\`. If an upload fails, the participant is asked to download the file and send it to you.${spec.data.stream ? STREAMING_NOTE : ""}\n\n[\`${DATAPIPE_SETUP_FILE}\`](${DATAPIPE_SETUP_FILE}) says how to set up the experiment on DataPipe to match this study, before anyone takes part.`
+    ? `Results are uploaded to ${ownDataPipeAddress(spec.data) ?? "DataPipe"} under the experiment id \`${spec.data.experiment_id}\`. If an upload fails, the participant is asked to download the file and send it to you.${spec.data.stream ? STREAMING_NOTE : ""}\n\n[\`${DATAPIPE_SETUP_FILE}\`](${DATAPIPE_SETUP_FILE}) says how to set up the experiment on DataPipe to match this study, before anyone takes part.`
     : spec.data?.save === "download"
       ? "Each participant's results download to their own computer at the end. You will need to collect those files from them."
       : "This experiment does not keep its results. Choose where data should go in the builder before recruiting anyone."

@@ -148,7 +148,10 @@ export interface Slot {
 export interface DataSettings {
   /** `"download"` saves a CSV on the participant's machine, `"post"` uploads it. */
   save: "download" | "post";
-  /** The address of the DataPipe to upload to; defaults to pipe.jspsych.org. */
+  /**
+   * The address of the DataPipe to upload to, a path prefix allowed; defaults to pipe.jspsych.org.
+   * It starts with https://, or http:// only for localhost, and holds no login, ? or #.
+   */
   endpoint?: string;
   /** The experiment id the endpoint files the data under. */
   experiment_id?: string;

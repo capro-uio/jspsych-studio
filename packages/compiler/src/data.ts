@@ -107,9 +107,51 @@ function withoutTrailingSlashes(url: string) {
   return url.slice(0, end);
 }
 
+/** The study's own DataPipe, when it names one; an empty address means DataPipe's own. */
+export function ownDataPipeAddress(settings: DataSettings | undefined) {
+  return settings?.endpoint ? withoutTrailingSlashes(settings.endpoint) : undefined;
+}
+
 /** Where the study's DataPipe is, without a trailing slash, so a route can follow it. */
 export function dataPipeAddress(settings: DataSettings | undefined) {
-  return withoutTrailingSlashes(settings?.endpoint ?? DATAPIPE_URL);
+  return ownDataPipeAddress(settings) ?? DATAPIPE_URL;
+}
+
+const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
+
+/**
+ * Why an address cannot be a study's DataPipe, or null when it can. The study adds `/api/...` to
+ * it, so it is a full https address, or http on this computer, that a path can follow.
+ */
+export function dataPipeAddressProblem(address: unknown): string | null {
+  if (typeof address !== "string") {
+    return `the DataPipe address is a web address, not ${JSON.stringify(address)}`;
+  }
+  if (/[\s"<>\\^`{|}\p{Cc}]/u.test(address)) {
+    return 'the DataPipe address cannot hold spaces, hidden characters or any of " < > \\ ^ ` { | }';
+  }
+  const url = /^https?:\/\//i.test(address) && URL.canParse(address) ? new URL(address) : null;
+  if (!url) {
+    return `the DataPipe address must be a full web address starting with https://, not ${JSON.stringify(address)}`;
+  }
+  if (url.protocol === "http:" && !LOCAL_HOSTS.has(url.hostname)) {
+    return "the DataPipe address must start with https://; http:// is only for a DataPipe on this computer (localhost)";
+  }
+  if (url.username || url.password) {
+    return "the DataPipe address cannot hold a user name or password";
+  }
+  if (address.includes("?") || address.includes("#")) {
+    return "the DataPipe address cannot have a ? or # part, because the study adds its own path after it";
+  }
+  return null;
+}
+
+/** Whether the study's own DataPipe address, if it gives one, is usable; none or empty means DataPipe's own. */
+export function dataPipeAddressProblems(spec: Spec): Problem[] {
+  const endpoint: unknown = spec.data?.endpoint;
+  if (endpoint === undefined || endpoint === "") return [];
+  const message = dataPipeAddressProblem(endpoint);
+  return message ? [{ message, severity: "error" }] : [];
 }
 
 // DataPipe takes a recording as base64 at its own address, and stores the file it decodes.
@@ -222,10 +264,11 @@ export const DATA_PIPE = "pipe";
  */
 export function compileStreaming(settings: DataSettings, experimentName: string) {
   const filename = participantFilename(settings, experimentName);
+  const ownAddress = ownDataPipeAddress(settings);
   const params = [
     `experiment_id: ${literal(settings.experiment_id ?? "")}`,
     `filename: () => ${filename}`,
-    ...(settings.endpoint ? [`base_url: ${literal(dataPipeAddress(settings))}`] : []),
+    ...(ownAddress ? [`base_url: ${literal(ownAddress)}`] : []),
     `wait_message: ${literal(`<p>${SAVING_MESSAGE}</p>`)}`,
     `on_save: (result) => ${AFTER_SAVING}(result.ok)`,
   ];
